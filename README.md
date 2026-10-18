@@ -4,15 +4,19 @@ A blocky three.js shooter you play in the browser against bots: 1v1, 2v2 or free
 
 **Duels** – pick **1v1**, **2v2** (you and a bot teammate against two bots; teammates spawn side by side, can't hurt each other, and once you're out you spectate your teammate) or **Free for all** (you against three bots, everyone for themselves; last one standing takes the round). First to five rounds, on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
 
-**Bot play styles** – pick one on the menu (in 2v2 and free for all every bot gets its own) or leave it on Mixed for a different style each round (with weapons to match; a bot that just won a round may keep its style):
-- **Rusher** – charges straight at you, jukes and jumps, never retreats; uses Blink/Ghost/Shield to close the gap.
-- **Sniper** – takes high ground far away with a view of you, scopes in, relocates after every couple of shots or when hit, and switches to its sidearm if you get close.
-- **Lurker** – hides out of your sight near you and waits; springs when you come within ~13 m or turn your back, ducks out of view if you spot it at range.
-- **Flanker** – circles round to your side out of view, attacks when you're not facing it, breaks off and repositions.
-- **Turtle** – walls up as soon as it sees you, peeks from cover, keeps its distance and backs off to reload when hurt.
-- **Duelist** – strafes and trades shots at mid range (the original bot).
+**Bot play styles** – every round each bot secretly picks one of ten styles (and weapons to match), so you have to work out what you're up against:
+- **Rusher** – charges straight at you, jukes and jumps, never retreats.
+- **Sniper** – takes high ground far away, scopes in, relocates after every couple of shots, switches to its sidearm if you get close.
+- **Lurker** – hides out of sight near you and springs when you come close or turn your back.
+- **Flanker** – circles round out of view and hits you from the side.
+- **Turtle** – walls up when it sees you, peeks from cover, backs off when hurt.
+- **Duelist** – strafes and trades shots at mid range.
+- **Hunter** – always has a rough fix on where you are and keeps tracking you down.
+- **Breacher** – shotgun; hops between hiding spots, each one closer, then bursts in.
+- **Kiter** – holds its favourite range: backs off as you push, follows as you run.
+- **Camper** – picks one spot with a view, walls up and holds the angle all round.
 
-All styles also react to the fight: they push when you're low, play safer when they're hurt, and chase the clock late in a round when behind on health. Sniper and Turtle aren't used in Rumble.
+All styles push when you're low, play safer when hurt, and chase the clock late in a round when behind on health. Sniper, Turtle, Kiter and Camper aren't used in Rumble.
 
 **Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (15 per punch), on the small Backyard map or The House. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Abilities, walls, pick-ups, slams and finishing moves all still work.
 

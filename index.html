@@ -143,8 +143,6 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .mode button{flex:1;padding:9px 11px;font-size:14px}
 .mpanel{display:flex;flex-direction:column;gap:inherit}
 .mgroup{display:flex;flex-direction:column;gap:7px}
-.seg.wrap{flex-wrap:wrap}.seg.wrap button{flex:1 0 auto}
-.d-style-note{margin:2px 2px 0;font:500 12px/1.35 var(--f-body);color:var(--muted);min-height:2.7em}
 .eyebrow-note{letter-spacing:.04em;text-transform:none;font-weight:500;margin-left:6px;opacity:.85}
 .d-maps{display:grid;grid-template-columns:1fr;gap:6px}
 .opt.map-opt{flex-direction:row;align-items:center;gap:12px;padding:6px}
@@ -516,9 +514,6 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
               <button role="radio" data-diff="normal" aria-checked="true">Normal</button>
               <button role="radio" data-diff="hard" aria-checked="false">Hard</button>
             </div>
-            <div class="msub">Bot play style</div>
-            <div class="seg wrap" role="radiogroup" aria-label="Bot play style" id="d-style"></div>
-            <p class="d-style-note" id="d-style-note"></p>
           </div>
         </section>
         <section class="mcol dcol2" id="col2">
@@ -2442,19 +2437,23 @@ const STYLES={
   sniper:{name:'Sniper',desc:'Finds high ground far away, scopes in, moves after every couple of shots.',aggr:.1,range:1.3,retreat:.45,build:.7,wallHp:70,strafe:.5,jump:.05,react:1.15,err:.7,shots:2,prim:['sniper','sniper','sniper','scout'],sec:['smg','stars']},
   lurker:{name:'Lurker',desc:'Hides out of sight near you and waits to ambush you up close.',aggr:.5,range:.6,retreat:.35,build:.4,wallHp:55,strafe:.9,jump:.1,react:.85,err:1,spring:13,prim:['ar','scout','mg'],sec:['sword','smg']},
   flanker:{name:'Flanker',desc:'Circles round out of sight and hits you from the side.',aggr:.65,range:.8,retreat:.3,build:.5,wallHp:60,strafe:1.15,jump:.2,react:.95,err:1,prim:['ar','scout','ar'],sec:['smg','stars','sword']},
-  turtle:{name:'Turtle',desc:'Walls up the moment it sees you, peeks from cover, backs off when hurt.',aggr:.2,range:1.1,retreat:.55,build:1.6,wallHp:95,strafe:.6,jump:.05,react:1,err:.85,hold:1.6,prim:['mg','ar'],sec:['stars','smg']},
+  turtle:{name:'Turtle',desc:'Walls up the moment it sees you, peeks from cover, backs off when hurt.',aggr:.2,range:1.1,retreat:.55,build:1.6,wallHp:95,strafe:.6,jump:.05,react:1,err:.85,hold:1.6,wallCD:10,prim:['mg','ar'],sec:['stars','smg']},
+  hunter:{name:'Hunter',desc:'Always has a rough idea where you are and keeps tracking you down at mid range.',aggr:.7,range:.85,retreat:.2,build:.6,wallHp:55,strafe:1.1,jump:.2,react:.9,err:1,prim:['ar','mg','scout'],sec:['smg','stars']},
+  breacher:{name:'Breacher',desc:'Shotgun. Hops between hiding spots, each one closer, then bursts in.',aggr:.6,range:1,retreat:.3,build:.4,wallHp:50,strafe:1.2,jump:.3,react:.8,err:1.1,prim:['shotgun'],sec:['smg','sword']},
+  kiter:{name:'Kiter',desc:'Holds its favourite range: backs off as you push, follows as you run.',aggr:.35,range:1,retreat:.4,build:.8,wallHp:65,strafe:1.4,jump:.25,react:.95,err:.95,prim:['ar','scout','mg'],sec:['stars','smg']},
+  camper:{name:'Camper',desc:'Picks one spot with a view, walls up and holds the angle all round.',aggr:.05,range:1,retreat:.6,build:1.3,wallHp:90,wallCD:25,strafe:.3,jump:0,react:1.05,err:.8,prim:['mg','ar','sniper'],sec:['smg']},
   duelist:{name:'Duelist',desc:'Strafes and trades shots at mid range.',aggr:.5,range:1,retreat:.25,build:1,wallHp:70,strafe:1,jump:.15,react:1,err:1,prim:['sniper','scout','ar','mg'],sec:['smg','stars','sword']}};
-const STYLE_IDS=Object.keys(STYLES),RUMBLE_STYLES=['rusher','lurker','flanker','duelist'];
+const STYLE_IDS=Object.keys(STYLES),RUMBLE_STYLES=['rusher','lurker','flanker','duelist','hunter','breacher'];
 const pickOf=l=>l[Math.floor(Math.random()*l.length)];
-function pickStyle(b){const ru=S.mode==='rumble',pool=ru?RUMBLE_STYLES:STYLE_IDS;if(S.style&&S.style!=='mixed'&&pool.includes(S.style))return S.style;
+function pickStyle(b){const ru=S.mode==='rumble',pool=ru?RUMBLE_STYLES:STYLE_IDS;if(S.forceStyle&&STYLES[S.forceStyle])return S.forceStyle; // test hook only
   const prev=b.ai.style;let l=pool.filter(k=>k!==prev);if(S.lastWin===b.team&&prev&&Math.random()<.4)return prev;return pickOf(l);}
-function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=st;const a=b.ai;a.P=P;a.style=st;a.mode=null;a.spot=null;a.shots=0;a.fired=0;a.side=Math.random()<.5?-1:1;
+function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=st;const a=b.ai;a.P=P;a.style=st;a.mode=null;a.spot=null;a.camp=null;a.wallCD=0;a.campMoved=false;a.track=null;a.shots=0;a.fired=0;a.side=Math.random()<.5?-1:1;
   if(S.mode!=='rumble'){b.primary=(b===BOT&&S.forceBot)||pickOf(P.prim);b.secondary=pickOf(P.sec);}
-  if(b===BOT&&S.players==='1v1')txt('d-botname',CHARS[BOT.char].name+' · '+P.name+' · '+GUNS[BOT.primary].name);}
+  if(b===BOT&&S.players==='1v1')txt('d-botname',CHARS[BOT.char].name+' · '+GUNS[BOT.primary].name);}
 const DIFF={easy:{name:'Easy',react:.75,err:3.4,head:.08,turn:4.5,strafe:.4,build:.25},normal:{name:'Normal',react:.42,err:1.9,head:.22,turn:8,strafe:.7,build:.5},hard:{name:'Hard',react:.22,err:1.0,head:.42,turn:14,strafe:1,build:.8}};
 const MOVES=['Home run','Axe drop','Execution'];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
-const S={touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:null,sec:null,xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:null,diff:store.get('duel:diff','normal'),style:store.get('duel:style','mixed'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:null,sec:null,xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:null,diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 const D={__studio(list,t){const PS=new THREE.Scene();PS.background=new THREE.Color('#dfe5ee');PS.add(new THREE.HemisphereLight('#ffffff','#9aa6b8',1.0));const dl=new THREE.DirectionalLight('#ffffff',1.8);dl.position.set(3,6,7);PS.add(dl);const rl=new THREE.DirectionalLight('#9fd3ff',.8);rl.position.set(-5,3,-6);PS.add(rl);
   const fl=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,.08,32),mat('#c3ccd8'));fl.position.y=-.04;PS.add(fl);
@@ -2759,6 +2758,7 @@ function botSpot(kind,f,o){const TG=o.T||ME;const meEye=eyeOf(TG,new V3()),body=
       sc=kind==='view'?Math.abs(dd-o.range)+travel*.35-(p.h>1?3:0):Math.abs(dd-o.range)*.5+travel*.25-Math.min(p.h,9)*1.6+(dd<16?30:0)+(o.away&&Math.hypot(p.x-o.away.x,p.z-o.away.z)<7?25:0);}
     else if(kind==='hide'){if(los(meEye,p.eye))continue;sc=travel*.6-Math.min(dd,o.far||30)*.5;}
     else if(kind==='ambush'){if(los(meEye,p.eye))continue;sc=travel*.35+Math.abs(dd-9)*.7;}
+    else if(kind==='creep'){if(dd>o.maxD||los(meEye,p.eye))continue;sc=dd*.7+travel*.4;}
     else sc=Math.hypot(p.x-cx,p.z-cz)+travel*.15+(los(meEye,p.eye)?9:0);
     if(sc<bs){bs=sc;best=p;}}
   return best;}
@@ -2788,16 +2788,16 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
     const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.hypot(dx,dz);const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
     const ang=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;const dir=new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang));f.slot=1;f.switchT=0;f.yaw=Math.atan2(dx,dz);fire(f,e,dir);f.slot=0;for(const k in f.guns)f.guns[k].visible=k===f.primary;}
   if(!see&&f.reloadT<=0&&f.ammo[gunOf(f)]<GUNS[gunOf(f)].mag*.5)startReload(f);
-  a.crT=(a.crT||0)-dt;if(a.crT<=0){a.crT=rnd(.6,1.8);a.crouch=see&&!CLOSE(id)&&Math.random()<.3*dif.strafe;}updCrouch(f,a.holdT>0||a.crouch||a.hunker,dt);
+  a.crT=(a.crT||0)-dt;if(a.crT<=0){a.crT=rnd(.6,1.8);a.crouch=see&&!CLOSE(id)&&Math.random()<.3*dif.strafe;}updCrouch(f,(a.holdT>0&&!a.peekUp)||a.crouch||a.hunker,dt);
   // build wall when under fire
-  f.buildT-=dt;if(see&&f.walls>0&&!CLOSE(id)&&(S.t-f.lastHurt<.35&&f.hp<P.wallHp||P.build>1.2&&a.seeT<1.2&&dist>9)&&Math.random()<dif.build*P.build*dt*8){const y=f.yaw;f.yaw=Math.atan2(T.pos.x-f.pos.x,T.pos.z-f.pos.z);if(buildWall(f))a.holdT=(1.2+Math.random())*(P.hold||1);f.yaw=y;}
+  f.buildT-=dt;if(see&&f.walls>0&&!CLOSE(id)&&(S.t-f.lastHurt<.35&&f.hp<P.wallHp||P.build>1.2&&a.seeT<1.2&&dist>9&&S.t>(a.wallCD||0))&&Math.random()<dif.build*P.build*dt*8){const y=f.yaw;f.yaw=Math.atan2(T.pos.x-f.pos.x,T.pos.z-f.pos.z);if(buildWall(f)){a.wallCD=S.t+(P.wallCD||0);a.holdT=(1.2+Math.random())*(P.hold||1);}f.yaw=y;}
   // abilities
   if(f.abilT<=0){const hurt=S.t-f.lastHurt<.4;
     if(f.char==='blaze'&&see&&dist<28){const d=tgtBody.clone().sub(eye);d.y+=dist*.02;useAbility(f,d.normalize());}
     else if(f.char==='tank'&&(hurt&&f.hp<f.hpMax*.7||a.mode==='rush'&&see&&dist<25))useAbility(f);
     else if(f.char==='ghost'&&(hurt&&f.hp<60||!see&&(a.mode==='ambush'||a.mode==='flank')&&dist<24||a.mode==='rush'&&see&&dist>10&&dist<30))useAbility(f);
-    else if(f.char==='blink'&&see&&(((CLOSE(id)||a.mode==='rush')&&dist>7&&dist<22)||(hurt&&f.hp<50)||(a.style==='sniper'&&dist<10))){const y=f.yaw;if(!CLOSE(id)&&a.mode!=='rush')f.yaw+=Math.PI/2*(Math.random()<.5?1:-1);useAbility(f);if(!CLOSE(id)&&a.mode!=='rush')f.yaw=y;}
-    else if(f.char==='jet'&&!see&&T.pos.y>f.pos.y+2&&a.lostT>2)useAbility(f);
+    else if(f.char==='blink'&&see&&(((CLOSE(id)||a.mode==='rush')&&dist>7&&dist<22)||(hurt&&f.hp<50)||(a.style==='sniper'&&dist<10)||(a.style==='kiter'&&dist<pr*.5))){const y=f.yaw;if(!CLOSE(id)&&a.mode!=='rush')f.yaw+=Math.PI/2*(Math.random()<.5?1:-1);useAbility(f);if(!CLOSE(id)&&a.mode!=='rush')f.yaw=y;}
+    else if(f.char==='jet'&&!see&&T.pos.y>f.pos.y+2&&(a.lostT>2||a.mode==='hunt'))useAbility(f);
     else if(f.char==='ace'&&a.stuckT>.4)useAbility(f);}
   // movement: play style decides the mode, the mode decides where to go
   const hpF=f.hp/f.hpMax,meF=T.downed?0:T.hp/T.hpMax,meEye=tgtHead;
@@ -2811,6 +2811,10 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
     else if(st==='sniper')mode=see&&dist<11?(a.seeT<2?'hide':'fight'):'snipe';
     else if(st==='lurker')mode=see&&(dist<=P.spring||(facing<.2&&dist<pr*1.6)||a.seeT>2.5)||!see&&a.lostT>12?'rush':see&&a.seeT>.35&&facing>.5?'hide':see?'fight':'ambush';
     else if(st==='flanker')mode=see&&(facing<.6||dist<9||a.seeT>2)?'fight':'flank';
+    else if(st==='hunter')mode=see?'fight':'hunt';
+    else if(st==='breacher')mode=see&&(dist<10||facing<.3||a.seeT>1.5)||dist<8?'rush':'creep';
+    else if(st==='kiter')mode=see?'kite':'fight';
+    else if(st==='camper')mode='camp';
     else mode='fight';}
   if(mode!==a.mode){a.mode=mode;a.modeLock=.5;a.path=null;a.goalT=0;a.spot=null;a.waitT=0;}
   a.goalT-=dt;let wx=0,wz=0,jump=false,usePath=false;a.hunker=false;a.fireOK=true;
@@ -2821,7 +2825,7 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
   const seenAt=p=>los(meEye,p.eye);
   const spotFor=(kind,o)=>{if(S.t<(a.retryT||0))return null;const r=botSpot(kind,f,Object.assign({T},o));if(!r)a.retryT=S.t+.8;return r;};
   const held=a.holdT>0;
-  if(held){a.holdT-=dt;a.peek-=dt;if(a.peek<=0){a.peek=rnd(.5,1.1);a.strafe=-a.strafe;}const px=Math.cos(f.yaw),pz=-Math.sin(f.yaw);wx=px*a.strafe*.6;wz=pz*a.strafe*.6;}
+  if(held){a.holdT-=dt;a.peek-=dt;if(a.peek<=0){a.peek=rnd(.5,1.1);a.strafe=-a.strafe;a.peekUp=!a.peekUp;}const px=Math.cos(f.yaw),pz=-Math.sin(f.yaw);wx=px*a.strafe*.6;wz=pz*a.strafe*.6;}
   else if(mode==='rush'){// straight at you, juking side to side
     if(see&&level){juke(.55*dif.strafe*P.strafe);if(!(CLOSE(id)&&dist<1.2)){wx+=toX/tl;wz+=toZ/tl;}a.path=null;if(f.grounded&&Math.random()<dt*P.jump*2)jump=true;}
     else goTo(T.pos.x,T.pos.y,T.pos.z,.6);}
@@ -2845,12 +2849,27 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
       a.spot=spotFor('flank',{cx,cz,r0:0,r1:7});if(!a.spot)a.side=-a.side;a.path=null;a.goalT=1;}
     if(a.spot)goTo(a.spot.x,a.spot.h,a.spot.z,1.3);else{const t=a.lastSeen&&a.lostT<6?a.lastSeen:T.pos;goTo(t.x,t.y,t.z,1);}
     if(at(a.spot)&&!see){a.side=-a.side;a.spot=null;}}
+  else if(mode==='hunt'){// homes in on a rough fix of where you are, refreshed every couple of seconds
+    a.trackT=(a.trackT||0)-dt;if(!a.track||a.trackT<=0){a.trackT=rnd(1.6,2.6);a.track={x:T.pos.x+rnd(-3,3),y:T.pos.y,z:T.pos.z+rnd(-3,3)};a.path=null;a.goalT=0;}
+    goTo(a.track.x,a.track.y,a.track.z,1);}
+  else if(mode==='creep'){// hop from one hidden spot to the next, each closer than the last
+    a.fireOK=dist<12;if(a.spot&&at(a.spot)){a.hunker=true;a.waitT+=dt;if(a.waitT>rnd(.6,1.4)||seenAt(a.spot)){a.spot=null;a.waitT=0;}}
+    if(!a.spot){a.spot=spotFor('creep',{cx:T.pos.x,cz:T.pos.z,r0:3,r1:Math.max(5,dist-4),maxD:dist-4});a.path=null;a.goalT=0;}
+    if(a.spot)goTo(a.spot.x,a.spot.h,a.spot.z,1.2);else goTo(T.pos.x,T.pos.y,T.pos.z,.8);}
+  else if(mode==='kite'){// keep the gap: back off when you push, follow when you run
+    const lo=pr*.8,hi=pr*1.25;juke(.75*dif.strafe*P.strafe);if(dist<lo){wx-=toX/tl;wz-=toZ/tl;}else if(dist>hi){wx+=toX/tl*.7;wz+=toZ/tl*.7;}a.path=null;
+    a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8)?a.stuckT+dt:0;if(a.stuckT>.45){a.strafe=-a.strafe;a.strafeT=rnd(.5,.9);jump=f.grounded;a.stuckT=0;}}
+  else if(mode==='camp'){// one spot with a view for the whole round; moves only when it's been hurt badly or lost you for ages
+    if(a.camp&&((S.t-f.lastHurt<.3&&hpF<.6&&!a.campMoved)||(at(a.camp)&&a.lostT>10))){a.campMoved=a.campMoved||S.t-f.lastHurt<.3;a.camp=null;}
+    if(!a.camp){a.camp=spotFor('view',{r0:2,r1:20,range:pr});a.path=null;a.goalT=0;}
+    if(a.camp){if(at(a.camp))a.hunker=true;else{const sp=a.spot;a.spot=a.camp;goTo(a.camp.x,a.camp.h,a.camp.z,1.5);if(!a.spot)a.camp=null;a.spot=sp;}}
+    else{const t=a.lastSeen&&a.lostT<6?a.lastSeen:T.pos;goTo(t.x,t.y,t.z,1.2);}}
   if(mode==='fight'&&!held){// the original duel: strafe at preferred range, else walk to a spot with a view
     if(see&&dist<pr*1.35&&dist>pr*.45){juke(dif.strafe*P.strafe);if(CLOSE(id)||dist>pr){wx+=toX/tl*.6;wz+=toZ/tl*.6;}a.path=null;}
     else{if(a.goalT<=0||!a.path){a.goalT=.7;let gx=T.pos.x,gz=T.pos.z,gy=T.pos.y;
       if(see&&dist<pr*.45&&!CLOSE(id)){const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;gx=f.pos.x+tx/l*8;gz=f.pos.z+tz/l*8;gy=f.pos.y;}
       else if(CLOSE(id)){gx=T.pos.x;gz=T.pos.z;gy=T.pos.y;}
-      else if(!see&&a.lastSeen&&a.lostT<6){gx=a.lastSeen.x;gz=a.lastSeen.z;gy=a.lastSeen.y;}
+      else if(!see&&a.lastSeen&&a.lostT<6&&st!=='turtle'){gx=a.lastSeen.x;gz=a.lastSeen.z;gy=a.lastSeen.y;}
       else{const b=botSpot('view',f,{T,r0:4,r1:26,range:pr});if(b){gx=b.x;gy=b.h;gz=b.z;}}
       a.path=findPath(f.pos.x,f.pos.y,f.pos.z,gx,gy,gz);}usePath=true;}}
   if(usePath){if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3){a.path.shift();}else if(l>.05){wx=dx/l;wz=dz/l;}}
@@ -3040,7 +3059,7 @@ function timeUp(){const h=f=>f.alive&&!f.downed?f.hp/f.hpMax:0;const tot={};for(
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
 function matchEnd(){S.state='done';if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=5;
   const rk=S.players==='1v1'?S.diff:S.diff+':'+S.players;const r=S.record[rk]||[0,0];r[won?0:1]++;S.record[rk]=r;store.set('duel:record',S.record);
-  const wt=S.score.findIndex(v=>v>=5),ld=f=>`${CHARS[f.char].name} (${f.ai.P&&f!==ME?f.ai.P.name+', ':''}${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
+  const wt=S.score.findIndex(v=>v>=5),ld=f=>`${CHARS[f.char].name} (${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
   $('dd-title').textContent=won?(S.players==='2v2'?'Your team wins':'You win'):teamName(wt)+(S.players==='1v1'?' wins':' wins');$('dd-score').textContent=scoreLine();
   $('dd-sub').textContent=`${MAPS[S.map].name} · ${DIFF[S.diff].name} bots · ${PLAYERS[S.players]} · ${[ME,...al].map(ld).join(' + ')} vs ${en.map(ld).join(S.players==='2v2'?' + ':', ')}`;
   const st=S.stats,acc=st.shots?Math.round(st.hits/st.shots*100):0;
@@ -3324,7 +3343,6 @@ function renderDuelMenu(){
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp" src="${PREV['g_'+k]||''}" alt=""${HERO[k]?` style="background:radial-gradient(70% 90% at 50% 55%,${HERO[k].bg[2]} 0%,${HERO[k].bg[1]} 45%,${HERO[k].bg[0]} 100%)"`:''}><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
   $('d-guns').innerHTML=PRIMARIES.map(k=>card(k,S.gun,'data-gun')).join('');
   $('d-secs').innerHTML=SECONDARIES.map(k=>card(k,S.sec,'data-sec')).join('');
-  {const ru=S.mode==='rumble',ids=['mixed',...(ru?RUMBLE_STYLES:STYLE_IDS)],cur=ids.includes(S.style)?S.style:'mixed';$('d-style').innerHTML=ids.map(k=>`<button role="radio" data-style="${k}" aria-checked="${k===cur}">${k==='mixed'?'Mixed':STYLES[k].name}</button>`).join('');$('d-style-note').textContent=cur==='mixed'?'A different play style every round, and its weapons to match.':STYLES[cur].desc;}
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',ru||(!!S.gun&&!!S.sec));
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';
@@ -3337,7 +3355,6 @@ $('d-secs').addEventListener('click',e=>{const b=e.target.closest('[data-sec]');
 setDuelMode(S.mode);
 $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 $('d-fin').addEventListener('click',e=>{const b=e.target.closest('[data-fin]');if(!b)return;S.fin=b.dataset.fin;store.set('duel:fin',S.fin);renderDuelMenu();});
-$('d-style').addEventListener('click',e=>{const b=e.target.closest('[data-style]');if(!b)return;S.style=b.dataset.style;store.set('duel:style',S.style);renderDuelMenu();});
 $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);renderDuelMenu();setTag();});
 $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]');if(!b)return;S.diff=b.dataset.diff;store.set('duel:diff',S.diff);renderDuelMenu();});
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});

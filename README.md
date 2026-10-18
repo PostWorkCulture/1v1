@@ -20,15 +20,17 @@ All styles push when you're low, play safer when hurt, and chase the clock late 
 
 **Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (15 per punch), on the small Backyard map or The House. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Abilities, walls, pick-ups, slams and finishing moves all still work.
 
-The menu is a full-screen, three-step setup: 1) mode and map, 2) character (with a profile preview), 3) primary and secondary weapons (with previews). Start turns green once everything is picked.
+The menu is a full-screen, three-step setup: 1) mode and map, 2) character (with a profile preview) and consumable, 3) primary and secondary weapons (with previews and stats). Start turns green once everything is picked.
 
 Characters: Ace (your original avatar; super-high double jump), Jet (an ace pilot with a chrome jetpack; flight), Blaze (a fire brawler with flame hair; fireballs), Blink (a street magician; teleport dash), Tank (a mech pilot in a yellow exo-frame; 150 HP and a shield) and Ghost (a hooded spectre; invisibility), each with an ability on E.
 
 At 0 HP you go down instead of dying, with your downed health at 50% (30 of 60), so you're quicker to finish off: you crawl slowly, take 20 less damage per hit (35 less from shotguns, grenades in full), can punch for 5 damage, and revive automatically after 4 seconds (getting hit doesn't reset it), or the opponent can walk up and press F for a finishing move (bat home run, axe drop or execution, chosen in the menu), or press C to pick you up and then click to throw you (fatal) or F to slam you down (hold C to sky slam: fly high, hold them up for 2 seconds, chuck them down, shoot them, then dive down and punch them out). Every elimination plays the winner's kill effect: each character has two kill effects of their own. XP: +10 per round won, +5 per round lost, 100 XP per level. Sniper headshots skip the downed state. Built walls break apart brick by brick.
 
-Weapons: pick one primary – Sniper (long range, headshot kills, 2 body shots), Scout (short-range sniper), AR or LMG – and one secondary – SMG, Ninja Stars or Sword. You also get four buildable walls per round. Magazines are small; empty guns reload automatically and R reloads early.
+Weapons: pick one primary – Sniper (long range, headshot kills, 2 body shots), Scout (short-range sniper), AR, Gold AR (harder hits, slower fire) or LMG – and one secondary – SMG, Hornet (heavier, steadier SMG), Rocket Launcher (slow-firing splash), Ninja Stars or Sword.
 
-Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch / pick up a downed opponent · E ability · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Touch controls (move stick, drag to look, on-screen buttons) switch on automatically on phones and tablets and can be toggled on the pause menu.
+Consumables (press G): Grenade (2 per round, 50 splash damage), Stim (+45% speed for 5s, 20s cooldown), Stun Grenade (2 per round, stuns anyone caught in the flash) or Sense Pack (see the enemy through walls for 6s, 25s cooldown). The bot gets a random one and uses it too. You also get four buildable walls per round. Magazines are small; empty guns reload automatically and R reloads early.
+
+Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch / pick up a downed opponent · E ability · G consumable · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Touch controls (move stick, drag to look, on-screen buttons) switch on automatically on phones and tablets and can be toggled on the pause menu.
 
 **Parkour** – 12 obstacle courses with double jump, swings and moving platforms.
 

@@ -4,7 +4,7 @@ A blocky three.js 1v1 shooter you play in the browser against a bot.
 
 **Duels 1v1** – first to five rounds against the bot on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
 
-**Rumble** – Duels with no guns: fists only (15 per punch), on the small Backyard map or The House. Abilities, walls, pick-ups, slams and finishing moves all still work.
+**Rumble** – Duels with no guns: fists only (15 per punch), on the small Backyard map or The House. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Abilities, walls, pick-ups, slams and finishing moves all still work.
 
 Characters: Ace (super-high double jump), Jet (jetpack flight), Blaze (fireballs), Blink (teleport dash), Tank (150 HP + shield) and Ghost (invisibility), each with an ability on E.
 
@@ -12,7 +12,7 @@ At 0 HP you go down instead of dying: you crawl slowly, take 20 less damage per 
 
 Weapons: Sniper (headshot kills, 2 body shots), Assault Rifle, SMG, Shotgun, Machine Gun, Rocket Launcher (slow, splash, rocket-jump by shooting your feet: no self damage, no fall damage), and Ninja Stars, plus a secondary of your choice (Pistol, Revolver, Knife or 3 Grenades at 50 damage) and four buildable walls per round. Magazines are small; empty guns reload automatically and R reloads early.
 
-Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch / pick up a downed opponent · E ability · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Needs a keyboard and mouse.
+Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch / pick up a downed opponent · E ability · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Touch controls (move stick, drag to look, on-screen buttons) switch on automatically on phones and tablets and can be toggled on the pause menu.
 
 **Parkour** – 12 obstacle courses with double jump, swings and moving platforms.
 

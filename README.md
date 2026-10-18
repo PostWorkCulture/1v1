@@ -6,11 +6,11 @@ A blocky three.js 1v1 shooter you play in the browser against a bot.
 
 Characters: Ace (super-high double jump), Jet (jetpack flight), Blaze (fireballs), Blink (teleport dash), Tank (150 HP + shield) and Ghost (invisibility), each with an ability on E.
 
-At 0 HP you go down instead of dying: hold E to revive, or the opponent can walk up and press F for one of six finishers (Firework, Freeze, Disco, Shrink, Lightning, Brick burst). Sniper headshots skip the downed state. Built walls break apart brick by brick.
+At 0 HP you go down instead of dying: you revive automatically if you avoid damage for about five seconds, or the opponent can walk up and press F to finish you. Every elimination plays the winner's kill effect: 12 effects (Brick burst, Firework, Shrink, Freeze, Disco, Lightning, Balloon, Tornado, Gold statue, Black hole, Rainbow beam, Spirit) unlock with XP from round wins, finishers and match wins. Sniper headshots skip the downed state. Built walls break apart brick by brick.
 
 Weapons: Sniper (headshot kills, 2 body shots), Assault Rifle, SMG, Shotgun, Machine Gun, Rocket Launcher, Ninja Stars and Sword, plus a pistol and four buildable walls per round. Magazines are small and reloading is manual.
 
-Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch · E ability (hold to revive when downed) · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Needs a keyboard and mouse.
+Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch · E ability · F finish · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Needs a keyboard and mouse.
 
 **Parkour** – 12 obstacle courses with double jump, swings and moving platforms.
 

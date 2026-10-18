@@ -119,7 +119,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .keys span{white-space:nowrap}
 .total{font:500 13px/1 var(--f-body);color:var(--muted)} .total b{color:var(--panel-ink);font-variant-numeric:tabular-nums}
 
-#pause,#done{justify-content:center;background:rgba(10,12,20,.35)}
+#pause,#done,#duel-pause,#duel-done{justify-content:center;background:rgba(10,12,20,.35)}
 .card{width:min(420px,100%);padding:24px;display:flex;flex-direction:column;gap:16px;text-align:center}
 .card h2{margin:0;font:400 clamp(30px,6vw,44px)/1 var(--f-display);text-wrap:balance}
 .card .btns{display:flex;flex-direction:column;gap:10px}
@@ -222,6 +222,14 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .feed .y{color:var(--accent-2)} .feed .o{color:var(--accent)} .feed em{font-style:normal;color:var(--muted);font-weight:500}
 .feed .hs{background:var(--gold);color:#16171c;padding:3px 5px;border-radius:4px;font-size:10.5px;letter-spacing:.08em}
 @keyframes feedin{from{transform:translateX(20px);opacity:0}}
+.pause-keys{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;text-align:left;padding:12px 14px;border-radius:calc(var(--radius) * .8);
+  background:color-mix(in srgb,var(--panel-ink) 6%,transparent);font:500 13.5px/1.3 var(--f-body)}
+.pause-keys span{white-space:nowrap;font-weight:600;color:var(--panel-ink)} .pause-keys em{font-style:normal;color:var(--muted)}
+.card{max-height:100%;overflow:auto}
+.sens-box{display:flex;flex-direction:column;gap:8px}
+.sens{display:grid;grid-template-columns:1fr minmax(0,150px) 52px;gap:10px;align-items:center;text-align:left;font:600 13.5px/1.2 var(--f-body);cursor:pointer}
+.sens input{width:100%;accent-color:var(--accent);cursor:pointer}
+.sens b{font-variant-numeric:tabular-nums;text-align:right}
 .dd-score{font:400 54px/1 var(--f-display);font-variant-numeric:tabular-nums}
 #d-hint{bottom:calc(env(safe-area-inset-bottom,0px) + 112px)}
 @media (max-height:820px) and (min-width:721px){ .menu-card.duels .tag{display:none} .menu-card.duels{gap:10px} .bars{gap:1px 8px} }
@@ -325,6 +333,14 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   <div id="pause" class="screen" hidden>
     <div class="panel card">
       <h2>Paused</h2>
+      <div class="pause-keys">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Move</em>
+        <span><kbd>Space</kbd></span><em>Jump, press again in mid-air to double jump</em>
+        <span>Drag</span><em>Look around</em>
+        <span><kbd>R</kbd></span><em>Respawn at last checkpoint</em>
+        <span><kbd>P</kbd> <kbd>Esc</kbd></span><em>Pause / resume</em>
+      </div>
+      <div class="sens-box"><label class="sens" for="sens-cam-pk"><span>Camera sensitivity</span><input type="range" id="sens-cam-pk" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.00×</b></label></div>
       <div class="btns">
         <button class="btn primary" id="resume">Resume</button>
         <button class="btn" id="restart">Restart level</button>
@@ -384,6 +400,18 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   <div id="duel-pause" class="screen" hidden>
     <div class="panel card">
       <h2>Paused</h2>
+      <div class="pause-keys">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Move</em>
+        <span><kbd>Space</kbd></span><em>Jump</em>
+        <span>Mouse</span><em>Aim (click the game to lock the mouse)</em>
+        <span>Left click</span><em>Fire</em>
+        <span>Right click</span><em>Aim down sights / sniper scope</em>
+        <span><kbd>R</kbd></span><em>Reload</em>
+        <span><kbd>1</kbd> <kbd>2</kbd> / wheel</span><em>Primary / pistol</em>
+        <span><kbd>Q</kbd></span><em>Build a wall (4 per round)</em>
+        <span><kbd>P</kbd> <kbd>Esc</kbd></span><em>Pause / resume</em>
+      </div>
+      <div class="sens-box"><label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.00×</b></label><label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.2" max="2" step="0.05"><b data-sens-val="ads">1.00×</b></label></div>
       <div class="btns">
         <button class="btn primary" id="dp-resume">Resume</button>
         <button class="btn" id="dp-leave">Leave duel</button>
@@ -1028,7 +1056,7 @@ const jumpHeld=()=>keys.Space||touchJump;
 let touchJump=false,dragId=null,dragX=0,dragY=0;
 canvas.addEventListener('pointerdown',e=>{if(dragId!==null||(window.__duel&&window.__duel.active))return;dragId=e.pointerId;dragX=e.clientX;dragY=e.clientY;canvas.setPointerCapture(e.pointerId);canvas.focus();});
 canvas.addEventListener('pointermove',e=>{if(e.pointerId!==dragId)return;const dx=e.clientX-dragX,dy=e.clientY-dragY;dragX=e.clientX;dragY=e.clientY;
-  if(G.state==='play'||G.state==='paused'){cam.yaw-=dx*.006;cam.pitch=clamp(cam.pitch+dy*.004,.05,1.15);}});
+  if(G.state==='play'||G.state==='paused'){const k=(window.SENS&&window.SENS.cam)||1;cam.yaw-=dx*.006*k;cam.pitch=clamp(cam.pitch+dy*.004*k,.05,1.15);}});
 const endDrag=e=>{if(e.pointerId===dragId)dragId=null;};canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
 const coarse=window.matchMedia&&window.matchMedia('(pointer: coarse)').matches;
 (function setupTouch(){const st=$('stick'),knob=st.querySelector('i');let id=null;
@@ -1463,6 +1491,12 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   freeze(v){frozen=v;},step(sec,n=30){for(let i=0;i<n;i++)step(sec/n);},render(){renderer.render(scene,camera);},keys,support,touchMove};
 })();
 </script>
+<script>
+(function(){let S={cam:1,ads:1};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);}catch(e){}
+  window.SENS=S;const sync=()=>{document.querySelectorAll('[data-sens]').forEach(i=>{i.value=S[i.dataset.sens];});document.querySelectorAll('[data-sens-val]').forEach(b=>{b.textContent=(+S[b.dataset.sensVal]).toFixed(2)+'×';});};
+  document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.sens;if(!k)return;S[k]=+e.target.value;try{localStorage.setItem('blockrush:sens',JSON.stringify(S));}catch(err){}sync();});
+  sync();})();
+</script>
 <script id="duel-src">
 (function(){
 'use strict';
@@ -1570,7 +1604,7 @@ function St(cx,cz,flip){const X=u=>cx+flip*u,Z=v=>cz+flip*v;
         const e=uS+dir*run*n,A0=Math.min(a,e),A1=Math.max(a,e);let p,q,r,s;if(alongV){p=X(v0);q=X(v1);r=Z(A0);s=Z(A1);}else{p=X(A0);q=X(A1);r=Z(v0);s=Z(v1);}
         collider(Math.min(p,q),Math.max(p,q),y0,top,Math.min(r,s),Math.max(r,s));}},
     X,Z};return S;}
-const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=2)=>({c,w,y0:0,y1:2.7});
+const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=2.1)=>({c,w,y0:0,y1:3.0});
 function windowGlassFrames(){}
 // two-storey house; balcony over the porch, optional attic loft that opens onto a rooftop terrace
 function houseA(cx,cz,flip,wall,roof,trim,loft){const S=St(cx,cz,flip),H=3.4,F=3.7,T=6.6,L=6.9,inner='#f3efe6';
@@ -1584,7 +1618,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft){const S=St(cx,cz,flip),H=3.4,F=3
   S.stairs(1.3,1,-5.3,-3.85,0,9,F/9,.5,'#8a5a34');S.box(1.6,4.6,-3.7,-3.55,F,F+1,'#ffffff');
   S.box(-4,-1,4,5,0,.9,'#a05ad6');S.box(-3,-1.8,-4.6,-2.6,0,.75,'#7a4c2a');S.box(2,5.6,4.2,5.2,0,1.05,'#ffffff');S.box(3,4.4,-.6,.8,0,1.05,'#7a4c2a');
   // first floor: balcony door onto the porch roof, windows all round
-  S.wall('u',-6,-5.5,5.5,F,T,[{c:0,w:1.6,y0:F,y1:F+2.8},WIN(-3,2,4.7,5.9),WIN(3,2,4.7,5.9)],wall);S.wall('u',6,-5.5,5.5,F,T,[WIN(0,2.4,4.7,5.9)],wall);
+  S.wall('u',-6,-5.5,5.5,F,T,[{c:0,w:1.8,y0:F,y1:F+2.85},WIN(-3,2,4.7,5.9),WIN(3,2,4.7,5.9)],wall);S.wall('u',6,-5.5,5.5,F,T,[WIN(0,2.4,4.7,5.9)],wall);
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,F,T,[WIN(-2.5,2,4.7,5.9),WIN(3,1.6,4.7,5.9)],wall);
   S.slab(-8.2,-6.15,-4,4,H,F,trim);for(const v of [-3.75,3.75])S.box(-8.1,-7.6,v-.25,v+.25,0,H,trim);
   S.box(-8.2,-7.95,-4,4,F,F+1,'#ffffff');for(const v of [-4,4])S.box(-8.2,-6.15,v-.12,v+.12,F,F+1,'#ffffff');
@@ -1595,7 +1629,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft){const S=St(cx,cz,flip),H=3.4,F=3
   S.slab(-5.85,5.85,-5.35,5.35,T,L,'#b9895a',{u0:-.15,u1:5.85,v0:3.7,v1:5.35},'wood');
   S.stairs(1,1,3.85,5.3,F,9,(L-F)/9,.5,'#8a5a34');S.box(-.15,3.9,3.55,3.7,L,L+1,'#ffffff');
   const R2=9.8;S.wall('u',6,-5.5,5.5,L,R2,[WIN(-2,1.6,7.8,8.9)],wall);for(const v of [-5.5,5.5])S.wall('v',v,0,5.85,L,R2,[WIN(3,1.6,7.8,8.9)],wall);
-  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:2,y0:L,y1:L+2.75},WIN(2.5,1.8,7.8,8.9)],wall);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
+  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:2,y0:L,y1:L+2.85},WIN(2.5,1.8,7.8,8.9)],wall);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
   roofGable(S.X(3),cz,6.4,11.4,R2+.3,roof,true);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5])S.box(-5.85,-.15,v-.15,v+.15,L,P,trim);
   S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
@@ -1610,7 +1644,7 @@ function houseB(cx,cz,flip,wall,trim){const S=St(cx,cz,flip),H=3.4,F=3.7,inner='
   S.wall('u',-6,-5.65,5.65,F,P,[slit(-3),slit(0),slit(3)],trim,.3);S.wall('u',6,-5.65,5.65,F,P,[slit(0)],trim,.3);
   S.wall('v',-5.5,-5.85,5.85,F,P,[slit(-2.5),slit(2.5)],trim,.3);S.wall('v',5.5,-5.85,5.85,F,P,[{c:1.55,w:1.7,y0:F,y1:P},slit(-3)],trim,.3);
   S.stairs(5.8,-1,5.65,7.05,0,9,F/9,.5,'#9aa0a8');S.box(-.2,1.3,5.65,7.05,F-.3,F,'#9aa0a8');S.box(-.2,1.3,6.9,7.05,F,F+1,'#ffffff');S.box(-.35,-.2,5.65,7.05,F,F+1,'#ffffff');S.box(-.3,.1,6.6,7.0,0,F-.3,'#9aa0a8');
-  S.box(-5.4,-4.4,1.2,4.6,0,.9,'#3bb54a');S.box(-2.6,-.9,-2.4,-.8,0,.75,'#7a4c2a');S.box(1.5,5.6,-5.2,-4.2,0,1.05,'#ffffff');S.box(3,5.6,3,5.2,0,.7,'#ff8fab');}
+  S.box(-5.4,-4.4,1.2,4.6,0,.9,'#3bb54a');S.box(-3.8,-2.6,2,3.4,0,.75,'#7a4c2a');S.box(1.5,5.6,-5.2,-4.2,0,1.05,'#ffffff');S.box(3,5.6,3,5.2,0,.7,'#ff8fab');}
 function fence(x0,z0,x1,z1,h,color,gap){const L=Math.hypot(x1-x0,z1-z0),alongX=Math.abs(x1-x0)>Math.abs(z1-z0);
   const seg=(a,b)=>{const cx=alongX?(a+b)/2:x0,cz=alongX?z0:(a+b)/2,len=b-a;if(len<.2)return;box(cx,0,cz,alongX?len:.25,h,alongX?.25:len,color,{edges:false});};
   const a0=alongX?Math.min(x0,x1):Math.min(z0,z1),a1=alongX?Math.max(x0,x1):Math.max(z0,z1);
@@ -1675,7 +1709,7 @@ const MAPS={
   // kitchen
   box(-14.2,0,-8.6,1.2,1.1,4.4,'#ffffff');box(-5.5,0,-9,4,1.1,1.6,'#e8463a');box(-.9,0,-6.95,1.4,2.6,1.3,'#d6dbe2');box(-.9,0,-11.3,1.2,1.1,1.2,'#3a3d45');
   // dining
-  box(7.5,0,-9,5,1.05,2.4,'#7a4c2a');for(const sx of [-1.6,0,1.6]){box(7.5+sx,0,-10.9,.8,1.6,.6,'#c99a5b');box(7.5+sx,0,-7.1,.8,1.6,.6,'#c99a5b');}box(13.8,0,-9,1.2,2.4,4,'#3a3d45');
+  box(6.8,0,-9,4.6,1.05,2.4,'#7a4c2a');for(const sx of [-1.4,0,1.4]){box(6.8+sx,0,-10.9,.8,1.6,.6,'#c99a5b');box(6.8+sx,0,-7.1,.8,1.6,.6,'#c99a5b');}box(13.8,0,-9,1.2,2.4,4,'#3a3d45');
   // bathroom + laundry
   box(-12,0,-21.8,5,1,2.4,'#ffffff');box(-8,0,-15,1.4,1,1.4,'#ffffff');box(-3,0,-22.6,1.6,1.4,1.4,'#e9eaee');box(-1.4,0,-22.6,1.6,1.4,1.4,'#e9eaee');
   // master bedroom (NE)
@@ -1705,7 +1739,7 @@ function fort(cx,cz,flip,c1,c2){const S=St(cx,cz,flip),H=3.4,F=3.7,P=F+1.4,o={tx
   const sl=c=>({c,w:1.4,y0:F+.8,y1:F+1.2});
   W('u',-5,-5.25,5.25,F,P,[sl(-2.8),sl(0),sl(2.8)],c1);W('u',5,-5.25,5.25,F,P,[sl(-2.8),sl(2.8)],c1);W('v',-5,-4.75,4.75,F,P,[sl(0)],c1);W('v',5,-4.75,4.75,F,P,[sl(-2.5),sl(2.5)],c1);
   S.box(-3.7,-.2,-3.2,-3.05,F,F+1,'#ffffff');
-  S.box(1.5,3.5,1,3,0,1.2,c2,o);S.box(1.5,2.5,1,2,F,F+1.2,c2,o);}
+  S.box(1.5,3.5,-1.6,.3,0,1.2,c2,o);S.box(1.5,2.5,1,2,F,F+1.2,c2,o);}
 function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);buildGrid();}
 
 /* ================= nav grid ================= */
@@ -1801,11 +1835,11 @@ const ME=makeFighter(false),BOT=makeFighter(true);
 const gunOf=f=>f.slot===0?f.primary:'pistol';
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;f.slot=slot;f.reloadT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
 function resetFighter(f,sp){f.pos.set(sp.x,0,sp.z);f.vel.set(0,0,0);f.yaw=sp.yaw;f.pitch=0;f.hp=100;f.alive=true;f.grounded=true;f.ammo={};f.ammo[f.primary]=GUNS[f.primary].mag;f.ammo.pistol=GUNS.pistol.mag;
-  f.fireT=0;f.reloadT=0;f.bloom=0;f.walls=4;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.ch.root.scale.setScalar(1);
+  f.fireT=0;f.reloadT=0;f.bloom=0;f.walls=4;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.scale=SC;f.ch.root.scale.setScalar(SC);
   const a=f.ai;a.path=null;a.pathT=0;a.goalT=0;a.seeT=0;a.lostT=9;a.holdT=0;a.err.set(0,0,0);}
 
 /* ================= physics ================= */
-const R=.5,HH=2.7,GRAV=36,JUMP=12,STEP=.55;
+const R=.45,HH=2.45,GRAV=36,JUMP=12,STEP=.55;
 function overlaps(b,x,z,y){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+HH;}
 function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;
   for(const b of allBoxes()){if(!overlaps(b,nx,nz,f.pos.y))continue;const need=b.y1-f.pos.y;
@@ -1824,6 +1858,7 @@ function physics(f,dt,wx,wz,jump,speed){
   f.pos.y=ny;}
 
 /* ================= state ================= */
+const SC=.88; // fighters are scaled down so they fit every doorway and stair with headroom
 const DIFF={easy:{name:'Easy',react:.75,err:3.4,head:.08,turn:4.5,strafe:.4,build:.25},normal:{name:'Normal',react:.42,err:1.9,head:.22,turn:8,strafe:.7,build:.5},hard:{name:'Hard',react:.22,err:1.0,head:.42,turn:14,strafe:1,build:.8}};
 const S={state:'off',map:store.get('duel:map','street'),gun:store.get('duel:gun','sniper'),diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
@@ -1886,7 +1921,7 @@ function clearWalls(){for(const w of M.walls)M.group.remove(w.mesh);M.walls=[];b
 function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L);return!h;}
 function prefRange(id){return id==='sniper'?34:id==='shotgun'?5:id==='mg'?16:id==='ar'?20:12;}
 function botThink(dt){const f=BOT,a=f.ai,dif=DIFF[S.diff];if(!f.alive)return{wx:0,wz:0,jump:false};
-  const eye=eyeOf(f,new V3()),tgtHead=eyeOf(ME,new V3()),tgtBody=new V3(ME.pos.x,ME.pos.y+1.25,ME.pos.z);
+  const eye=eyeOf(f,new V3()),tgtHead=eyeOf(ME,new V3()),tgtBody=new V3(ME.pos.x,ME.pos.y+1.25*SC,ME.pos.z);
   const seeB=ME.alive&&los(eye,tgtBody),seeH=!seeB&&ME.alive&&los(eye,tgtHead),see=seeB||seeH;if(see){a.seeT+=dt;a.lostT=0;a.lastSeen=ME.pos.clone();}else{a.seeT=0;a.lostT+=dt;}
   const dist=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z),id=gunOf(f),pr=prefRange(id);
   // weapon choice
@@ -1906,7 +1941,7 @@ function botThink(dt){const f=BOT,a=f.ai,dif=DIFF[S.diff];if(!f.alive)return{wx:
       if(see&&dist<pr*.45&&id!=='shotgun'){const tx=f.pos.x-ME.pos.x,tz=f.pos.z-ME.pos.z,l=Math.hypot(tx,tz)||1;gx=f.pos.x+tx/l*8;gz=f.pos.z+tz/l*8;}
       else if(!see&&a.lastSeen&&a.lostT<6&&ME.pos.y<1.5){gx=a.lastSeen.x;gz=a.lastSeen.z;}
       else if(id==='sniper'||id==='ar'||id==='mg'||ME.pos.y>1.5){let best=null,bs=1e9;for(let k=0;k<(ME.pos.y>1.5?60:26);k++){const ang=Math.random()*TAU,rr=rnd(4,ME.pos.y>1.5?30:22);const px=f.pos.x+Math.cos(ang)*rr,pz=f.pos.z+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))continue;
-          const p=new V3(px,2.35,pz);if(!los(p,tgtBody)&&!los(p,tgtHead))continue;const dd=Math.hypot(ME.pos.x-px,ME.pos.z-pz);const want=ME.pos.y>1.5?Math.max(pr,9):pr;const sc=Math.abs(dd-want)+rr*.4;if(sc<bs){bs=sc;best=[px,pz];}}
+          const p=new V3(px,2.35*SC,pz);if(!los(p,tgtBody)&&!los(p,tgtHead))continue;const dd=Math.hypot(ME.pos.x-px,ME.pos.z-pz);const want=ME.pos.y>1.5?Math.max(pr,9):pr;const sc=Math.abs(dd-want)+rr*.4;if(sc<bs){bs=sc;best=[px,pz];}}
         if(best){gx=best[0];gz=best[1];}else if(ME.pos.y>1.5){const ang=Math.random()*TAU;gx=f.pos.x+Math.cos(ang)*14;gz=f.pos.z+Math.sin(ang)*14;}}
       a.path=findPath(f.pos.x,f.pos.z,gx,gz);}
     if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.6){a.path.shift();}else{wx=dx/l;wz=dz/l;}}
@@ -1939,7 +1974,7 @@ canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused)return;if(!S.locked)lock();if(e.button===0)mouseL=true;if(e.button===2)mouseR=true;});
 window.addEventListener('mouseup',e=>{if(e.button===0)mouseL=false;if(e.button===2)mouseR=false;});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
-  const sc=ME.ads&&gunOf(ME)==='sniper'?.3:ME.ads?.65:1;ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
+  const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?SN.ads*(gunOf(ME)==='sniper'?.3:.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
 window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)equip(ME,ME.slot?0:1);},{passive:true});
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{S.lockOK=false;});}catch(err){S.lockOK=false;}}
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.lockOK)pause();});
@@ -1954,7 +1989,7 @@ const hc={};const txt=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}};
 let vigA=0;function vig(a){vigA=Math.max(vigA,a);}
 function hitMarker(head){const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');void h.offsetWidth;h.classList.add('on');}
 const nums=[];function dmgNumber(f,n,head){const el=document.createElement('div');el.className='dmg'+(head?' head':'');el.textContent=n;$('d-nums').appendChild(el);
-  nums.push({el,p:new V3(f.pos.x+rnd(-.4,.4),f.pos.y+2.9,f.pos.z+rnd(-.4,.4)),t:0});}
+  nums.push({el,p:new V3(f.pos.x+rnd(-.4,.4),f.pos.y+2.9*SC,f.pos.z+rnd(-.4,.4)),t:0});}
 function feed(you,gun,head){const el=document.createElement('div');el.className='panel feed';
   el.innerHTML=you?`<span class="y">You</span><em>${gun}</em><span class="o">Bot</span>`:`<span class="o">Bot</span><em>${gun}</em><span class="y">You</span>`;
   if(head)el.innerHTML+='<span class="hs">HEADSHOT</span>';const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
@@ -1974,8 +2009,8 @@ function updHUD(dt){
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}
     n.el.style.opacity=String(1-Math.max(0,n.t-.5)/.4);n.el.style.transform=`translate(${sc[0]}px,${sc[1]}px) translate(-50%,-50%) scale(${1+Math.max(0,.15-n.t)*3})`;}
-  const tag=$('d-tag');const tp=BOT.alive?toScreen(new V3(BOT.pos.x,BOT.pos.y+3.15,BOT.pos.z)):null;
-  const vis=tp&&S.state!=='menu'&&los(camera.position,new V3(BOT.pos.x,BOT.pos.y+2.4,BOT.pos.z));
+  const tag=$('d-tag');const tp=BOT.alive?toScreen(new V3(BOT.pos.x,BOT.pos.y+3.15*SC,BOT.pos.z)):null;
+  const vis=tp&&S.state!=='menu'&&los(camera.position,new V3(BOT.pos.x,BOT.pos.y+2.4*SC,BOT.pos.z));
   tag.style.opacity=vis?1:0;if(tp)tag.style.transform=`translate(${tp[0]}px,${tp[1]}px) translate(-50%,-100%)`;$('d-tag-hp').style.width=BOT.hp+'%';
 }
 
@@ -1995,7 +2030,7 @@ function updCamera(dt){
   const f=ME;const id=gunOf(f);const scoped=f.ads&&id==='sniper'&&f.alive;
   const fov=scoped?GUNS.sniper.zoom:f.ads?GUNS[id].zoom:70;camera.fov=damp(camera.fov,fov,scoped?30:14,dt);camera.updateProjectionMatrix();
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
-  const head=new V3(f.pos.x,f.pos.y+2.25,f.pos.z);
+  const head=new V3(f.pos.x,f.pos.y+2.25*SC,f.pos.z);
   if(!f.alive){const k=BOT.alive?BOT:f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);camera.position.lerp(new V3(f.pos.x,f.pos.y+7,f.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}
   if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
   else{const sh=f.ads?1.0:1.45,dist=f.ads?2.6:4.6;const pivot=head.clone().addScaledVector(right,sh);const want=pivot.clone().addScaledVector(dir,-dist).add(new V3(0,.45,0));

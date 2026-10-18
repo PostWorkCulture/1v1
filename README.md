@@ -2,7 +2,9 @@
 
 A blocky three.js 1v1 shooter you play in the browser against a bot.
 
-**Duels 1v1** – first to five rounds on Maple Street. Every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
+**Duels 1v1** – first to five rounds against the bot on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
+
+**Rumble** – Duels with no guns: fists only (15 per punch), on the small Backyard map or The House. Abilities, walls, pick-ups, slams and finishing moves all still work.
 
 Characters: Ace (super-high double jump), Jet (jetpack flight), Blaze (fireballs), Blink (teleport dash), Tank (150 HP + shield) and Ghost (invisibility), each with an ability on E.
 

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Block Rush: blocky parkour courses and a 1v1 Duels shooter mode, built with three.js.">
+<meta name="description" content="imok 1v1: a blocky 1v1 Duels shooter (plus a parkour mode), built with three.js.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>Block Rush</title>
+<title>imok 1v1</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -144,8 +144,17 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .mpanel{display:flex;flex-direction:column;gap:inherit}
 .mgroup{display:flex;flex-direction:column;gap:7px}
 .eyebrow-note{letter-spacing:.04em;text-transform:none;font-weight:500;margin-left:6px;opacity:.85}
-.d-maps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.d-maps{display:grid;grid-template-columns:1fr;gap:6px}
+.opt.map-opt{flex-direction:row;align-items:center;gap:12px;padding:6px}
+.map-opt .thumb{flex:0 0 auto;width:132px;aspect-ratio:16/9;max-width:100%;border-radius:calc(var(--radius) * .6);overflow:hidden;background:color-mix(in srgb,var(--panel-ink) 10%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--panel-ink) 25%,transparent)}
+.map-opt .thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.map-opt .mt{display:flex;flex-direction:column;gap:4px;min-width:0}
 .d-guns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.opt.gun-opt{padding:6px 10px;gap:2px}
+.gun-opt .t{display:flex;justify-content:space-between;gap:8px;font-size:13.5px}
+.gun-opt .t em{font-style:normal;font:600 11px/1.3 var(--f-body);color:var(--muted);white-space:nowrap}
+.gun-opt .b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-wname.alert{color:var(--accent)}
 .opt{display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;padding:8px 10px;min-width:0;
   border-radius:calc(var(--radius) * .8);border:1.5px solid color-mix(in srgb,var(--panel-ink) 16%,transparent);background:transparent}
 .opt:hover{border-color:var(--panel-ink)}
@@ -295,16 +304,16 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   </div>
 
   <div id="menu" class="screen">
-    <div class="panel menu-card">
+    <div class="panel menu-card duels">
       <div>
-        <h1 class="logo">Block<br><span>Rush</span></h1>
-        <p class="tag">Twelve parkour courses over the void. Double jump, ride swings and moving platforms, and land clean jumps to build your combo.</p>
+        <h1 class="logo">imok<br><span>1v1</span></h1>
+        <p class="tag">First to five rounds against a bot. Pick a gun, use the houses, build walls for cover, and aim for the head.</p>
       </div>
       <div class="seg mode" role="radiogroup" aria-label="Game mode" id="mode">
-        <button role="radio" data-mode="parkour" aria-checked="true">Parkour</button>
-        <button role="radio" data-mode="duels" aria-checked="false">Duels 1v1</button>
+        <button role="radio" data-mode="duels" aria-checked="true">Duels 1v1</button>
+        <button role="radio" data-mode="parkour" aria-checked="false">Parkour</button>
       </div>
-      <div id="pk-panel" class="mpanel">
+      <div id="pk-panel" class="mpanel" hidden>
         <div class="levels" id="levels"></div>
         <button class="btn primary" id="play">Play</button>
         <div class="row">
@@ -312,9 +321,9 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <div class="total">Best total <b id="besttotal">0</b></div>
         </div>
       </div>
-      <div id="duel-panel" class="mpanel" hidden>
+      <div id="duel-panel" class="mpanel">
         <div class="mgroup"><span class="eyebrow">Map</span><div class="d-maps" id="d-maps"></div></div>
-        <div class="mgroup"><span class="eyebrow">Primary weapon <span class="eyebrow-note">pistol and walls included</span></span><div class="d-guns" id="d-guns"></div></div>
+        <div class="mgroup"><span class="eyebrow">Primary weapon <span class="eyebrow-note">+ pistol and 4 walls</span></span><div class="d-guns" id="d-guns"></div></div>
         <div class="row"><span class="eyebrow">Opponent</span>
           <div class="seg" role="radiogroup" aria-label="Opponent difficulty" id="d-diff">
             <button role="radio" data-diff="easy" aria-checked="false">Easy</button>
@@ -323,7 +332,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           </div></div>
         <button class="btn primary" id="d-start">Start duel</button>
         <div class="row">
-          <div class="keys"><span>Mouse aim</span><span>Click fire</span><span>Right-click scope</span><span><kbd>Q</kbd> wall</span><span><kbd>R</kbd> reload</span></div>
+          <div class="keys"><span>Right-click aim</span><span><kbd>C</kbd> crouch</span><span><kbd>Q</kbd> wall</span><span><kbd>R</kbd> reload</span></div>
           <div class="total">Record <b id="d-record">0–0</b></div>
         </div>
       </div>
@@ -392,7 +401,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <span class="d-rl"><i id="d-rl"></i></span>
     </div>
     <div class="panel hint" id="d-hint">
-      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span><span><kbd>Space</kbd> jump</span><span>Click fire</span><span>Right-click aim</span>
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span><span><kbd>Space</kbd> jump</span><span>Click fire</span><span>Right-click aim</span><span><kbd>C</kbd> crouch</span>
       <span><kbd>Q</kbd> build wall</span><span><kbd>R</kbd> reload</span><span><kbd>1</kbd><kbd>2</kbd> switch</span><span><kbd>P</kbd> pause</span>
     </div>
   </div>
@@ -405,8 +414,9 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <span><kbd>Space</kbd></span><em>Jump</em>
         <span>Mouse</span><em>Aim (click the game to lock the mouse)</em>
         <span>Left click</span><em>Fire</em>
-        <span>Right click</span><em>Aim down sights / sniper scope</em>
-        <span><kbd>R</kbd></span><em>Reload</em>
+        <span>Right click</span><em>Aim down sights (every weapon) / sniper scope</em>
+        <span><kbd>C</kbd> (hold)</span><em>Crouch: smaller, steadier, slower</em>
+        <span><kbd>R</kbd></span><em>Reload (no auto-reload)</em>
         <span><kbd>1</kbd> <kbd>2</kbd> / wheel</span><em>Primary / pistol</em>
         <span><kbd>Q</kbd></span><em>Build a wall (4 per round)</em>
         <span><kbd>P</kbd> <kbd>Esc</kbd></span><em>Pause / resume</em>
@@ -1586,7 +1596,7 @@ function house(x,z,w,d,face,wall,roof){ // face: +1 = facade looks toward -x (st
   box(fx-face*.6,0,z-d*.22,1.2,.35,2,'#d8d4cc');}
 function collider(x0,x1,y0,y1,z0,z1){const b={x0,x1,y0,y1,z0,z1,mesh:null};M.boxes.push(b);return b;}
 // local frame: x=cx+flip*u, z=cz+flip*v (flip ±1 keeps boxes axis-aligned and lets maps stay point-symmetric)
-function St(cx,cz,flip){const X=u=>cx+flip*u,Z=v=>cz+flip*v;
+function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
   const S={
     box(u0,u1,v0,v1,y0,y1,color,o){const a=X(u0),b=X(u1),c=Z(v0),e=Z(v1);const x0=Math.min(a,b),x1=Math.max(a,b),z0=Math.min(c,e),z1=Math.max(c,e);
       if(x1-x0<.02||z1-z0<.02||y1-y0<.02)return null;return box((x0+x1)/2,y0,(z0+z1)/2,x1-x0,y1-y0,z1-z0,color,o);},
@@ -1607,7 +1617,7 @@ function St(cx,cz,flip){const X=u=>cx+flip*u,Z=v=>cz+flip*v;
 const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=2.1)=>({c,w,y0:0,y1:3.0});
 function windowGlassFrames(){}
 // two-storey house; balcony over the porch, optional attic loft that opens onto a rooftop terrace
-function houseA(cx,cz,flip,wall,roof,trim,loft){const S=St(cx,cz,flip),H=3.4,F=3.7,T=6.6,L=6.9,inner='#f3efe6';
+function houseA(cx,cz,flip,wall,roof,trim,loft,k=1){const S=St(cx,cz,flip,k),H=3.4,F=3.7,T=6.6,L=6.9,inner='#f3efe6';
   S.floor(-5.85,5.85,-5.35,5.35,.02,'#c99a5b','wood');
   // ground floor
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(3.5),WIN(-1.5)],wall);
@@ -1620,21 +1630,21 @@ function houseA(cx,cz,flip,wall,roof,trim,loft){const S=St(cx,cz,flip),H=3.4,F=3
   // first floor: balcony door onto the porch roof, windows all round
   S.wall('u',-6,-5.5,5.5,F,T,[{c:0,w:1.8,y0:F,y1:F+2.85},WIN(-3,2,4.7,5.9),WIN(3,2,4.7,5.9)],wall);S.wall('u',6,-5.5,5.5,F,T,[WIN(0,2.4,4.7,5.9)],wall);
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,F,T,[WIN(-2.5,2,4.7,5.9),WIN(3,1.6,4.7,5.9)],wall);
-  S.slab(-8.2,-6.15,-4,4,H,F,trim);for(const v of [-3.75,3.75])S.box(-8.1,-7.6,v-.25,v+.25,0,H,trim);
-  S.box(-8.2,-7.95,-4,4,F,F+1,'#ffffff');for(const v of [-4,4])S.box(-8.2,-6.15,v-.12,v+.12,F,F+1,'#ffffff');
+  const pu=-6-2.05/k;S.slab(pu,-6.15,-4,4,H,F,trim);for(const v of [-3.75,3.75])S.box(pu+.1/k,pu+.6/k,v-.25/k,v+.25/k,0,H,trim);
+  S.box(pu,pu+.25/k,-4,4,F,F+1,'#ffffff');for(const v of [-4,4])S.box(pu,-6.15,v-.12/k,v+.12/k,F,F+1,'#ffffff');
   S.box(-5.6,-3.4,1.2,4.6,F,F+.7,'#8ecae6');S.box(-1.2,.2,-5.3,-4.4,F,F+1.1,'#3bb54a');
-  if(!loft){S.box(4.4,5.6,2.4,5.2,F,F+2.4,'#8a5a34');roofGable(cx,cz,12,11,T,roof,true);return;}
+  if(!loft){S.box(4.4,5.6,2.4,5.2,F,F+2.4,'#8a5a34');roofGable(cx,cz,12*k,11*k,T,roof,true);return;}
   // attic loft: stairs up from the first floor, a room under a half roof and an open terrace over the front
   S.wall('u',-6,-5.65,5.65,T,L,[],trim);S.wall('u',6,-5.65,5.65,T,L,[],trim);
   S.slab(-5.85,5.85,-5.35,5.35,T,L,'#b9895a',{u0:-.15,u1:5.85,v0:3.7,v1:5.35},'wood');
   S.stairs(1,1,3.85,5.3,F,9,(L-F)/9,.5,'#8a5a34');S.box(-.15,3.9,3.55,3.7,L,L+1,'#ffffff');
   const R2=9.8;S.wall('u',6,-5.5,5.5,L,R2,[WIN(-2,1.6,7.8,8.9)],wall);for(const v of [-5.5,5.5])S.wall('v',v,0,5.85,L,R2,[WIN(3,1.6,7.8,8.9)],wall);
   S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:2,y0:L,y1:L+2.85},WIN(2.5,1.8,7.8,8.9)],wall);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
-  roofGable(S.X(3),cz,6.4,11.4,R2+.3,roof,true);
+  roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5])S.box(-5.85,-.15,v-.15,v+.15,L,P,trim);
   S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
 // single-storey house with a flat roof deck reached by outside stairs
-function houseB(cx,cz,flip,wall,trim){const S=St(cx,cz,flip),H=3.4,F=3.7,inner='#f3efe6';
+function houseB(cx,cz,flip,wall,trim,k=1){const S=St(cx,cz,flip,k),H=3.4,F=3.7,inner='#f3efe6';
   S.floor(-5.85,5.85,-5.35,5.35,.02,'#d6c3a5','wood');
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(-3),WIN(2.5)],wall);
   S.wall('v',-5.5,-5.85,5.85,0,H,[WIN(-2.5,1.6),WIN(3.2,1.6)],wall);S.wall('v',5.5,-5.85,5.85,0,H,[WIN(-2.5,1.6)],wall);
@@ -1654,7 +1664,7 @@ function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.
 
 const MAPS={
  street:{name:'Maple Street',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
-  const X=30,Z=56;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  const X=36,Z=56;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-80,80,-120,120,'#5fb24b','grass',-.02,1);
   floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
@@ -1662,9 +1672,10 @@ const MAPS={
   const cols=['#f6d7a7','#bfe0f2','#f3b8b0','#cfe8c3','#e5d4f0','#f9eec2','#d6dbe2','#ffd8a8'],roofs=['#8a3b2a','#3a4a63','#5b4a3a','#7a2e3a'];
   const trims=['#ffffff','#f3efe6','#e9eaee','#fff6e0'];
   let k=0;for(const side of [-1,1])for(const z of [-38,-13,13,38]){const flip=side>0?1:-1,ci=side<0?[-38,-13,13,38].indexOf(z):[-38,-13,13,38].indexOf(-z),kind=['A','B','C','A'][ci];
-    if(kind==='B')houseB(side*20,z,flip,cols[(ci*2+1)%cols.length],trims[(ci+1)%4]);else houseA(side*20,z,flip,cols[ci*2%cols.length],roofs[ci%roofs.length],trims[ci%4],kind==='C');k++;
-    fence(side*11.5,z-9,side*11.5,z+9,1.1,'#ffffff',[z-1.6,z+1.6]);
-    tree(side*12.8+side*1.2,z+(k%2?7.4:-7.4),.9);
+    const big=ci===0||ci===2,hk=big?1.6:1,cx=side*(14+6*hk),hw=5.5*hk;
+    if(kind==='B')houseB(cx,z,flip,cols[(ci*2+1)%cols.length],trims[(ci+1)%4],hk);else houseA(cx,z,flip,cols[ci*2%cols.length],roofs[ci%roofs.length],trims[ci%4],kind==='C',hk);k++;
+    fence(side*11.5,z-hw-1.2,side*11.5,z+hw+1.2,1.1,'#ffffff',[z-1.2*hk-.5,z+1.2*hk+.5]);
+    tree(side*13.2,z+(k%2?1:-1)*(hw+2),.9);
     box(side*10.5,0,z+1.9,.4,1.1,.4,'#3a3d45');box(side*10.5,1.1,z+1.9,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
@@ -1673,8 +1684,8 @@ const MAPS={
   box(0,.3,0,2.6,3,6.2,'#ffffff',{extra:{roughness:.4}});box(0,3.3,0,2.4,.8,4,'#ff8fab');
   box(-4.2,0,-44,1,.9,1,'#3bb54a');box(4.2,0,44,1,.9,1,'#3bb54a');
   for(const z of [-48,48])for(const x of [-3,3])box(x,0,z,.9,1.3,.9,'#2b2d33');
-  M.spawns=[{x:0,z:Z-4,yaw:Math.PI},{x:0,z:-Z+4,yaw:0}];}},
- house:{name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
+  M.spawns=[[0,52],[0,-52],[-31,46],[31,-46],[-29,-2],[29,2],[-7.6,-28],[7.6,28]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+ _house:{name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=4.2,T=.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-70,70,-90,90,'#5fb24b','grass',-.02,1);
   const W=(x0,z0,x1,z1,col,doors)=>{const alongX=Math.abs(x1-x0)>Math.abs(z1-z0);const a0=alongX?Math.min(x0,x1):Math.min(z0,z1),a1=alongX?Math.max(x0,x1):Math.max(z0,z1);
@@ -1715,7 +1726,7 @@ const MAPS={
   // master bedroom (NE)
   box(7.5,0,-20.5,5,.8,5.5,'#2f7fe0');box(7.5,0,-23.4,5,1.6,.4,'#ffffff');box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34');box(2,0,-14.8,1.4,1,1.4,'#7a4c2a');
   M.spawns=[{x:7.5,z:15,yaw:Math.PI},{x:-9,z:-17,yaw:0}];}},
- baseplate:{name:'Baseplate Arena',desc:'Open studs and block stacks for snipers',sw:['#a3a6ad','#e8463a','#2f7fe0'],build(){
+ _baseplate:{name:'Baseplate Arena',desc:'Open studs and block stacks for snipers',sw:['#a3a6ad','#e8463a','#2f7fe0'],build(){
   const X=34,Z=50;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-400,400,-400,400,'#a3a6ad','stud',0,1);
   const P=['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#f08a24','#a05ad6'];
@@ -1740,31 +1751,48 @@ function fort(cx,cz,flip,c1,c2){const S=St(cx,cz,flip),H=3.4,F=3.7,P=F+1.4,o={tx
   W('u',-5,-5.25,5.25,F,P,[sl(-2.8),sl(0),sl(2.8)],c1);W('u',5,-5.25,5.25,F,P,[sl(-2.8),sl(2.8)],c1);W('v',-5,-4.75,4.75,F,P,[sl(0)],c1);W('v',5,-4.75,4.75,F,P,[sl(-2.5),sl(2.5)],c1);
   S.box(-3.7,-.2,-3.2,-3.05,F,F+1,'#ffffff');
   S.box(1.5,3.5,-1.6,.3,0,1.2,c2,o);S.box(1.5,2.5,1,2,F,F+1.2,c2,o);}
+for(const k of Object.keys(MAPS))if(k[0]==='_')delete MAPS[k];
 function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);buildGrid();}
 
 /* ================= nav grid ================= */
-const CS=.5,CLR=.56;
-function buildGrid(){const b=M.bounds,nx=Math.ceil((b.x1-b.x0)/CS),nz=Math.ceil((b.z1-b.z0)/CS);const g={nx,nz,x0:b.x0,z0:b.z0,bl:new Uint8Array(nx*nz)};
-  for(const bx of allBoxes()){if(bx.y0>2.2||bx.y1<.4)continue;
-    const i0=Math.max(0,Math.floor((bx.x0-CLR-b.x0)/CS)),i1=Math.min(nx-1,Math.floor((bx.x1+CLR-b.x0)/CS)),j0=Math.max(0,Math.floor((bx.z0-CLR-b.z0)/CS)),j1=Math.min(nz-1,Math.floor((bx.z1+CLR-b.z0)/CS));
-    for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS;if(cx>bx.x0-CLR&&cx<bx.x1+CLR&&cz>bx.z0-CLR&&cz<bx.z1+CLR)g.bl[i+j*nx]=1;}}
-  for(let i=0;i<nx;i++){g.bl[i]=1;g.bl[i+(nz-1)*nx]=1;}for(let j=0;j<nz;j++){g.bl[j*nx]=1;g.bl[nx-1+j*nx]=1;}
+const CS=.5,CLR=.42,NL=4,NAV_H=2.45;
+// walkable surfaces per cell (ground, floors, stairs, roofs) so bots can climb wherever players can
+function buildGrid(){const b=M.bounds,nx=Math.ceil((b.x1-b.x0)/CS),nz=Math.ceil((b.z1-b.z0)/CS),N=nx*nz;
+  const g={nx,nz,x0:b.x0,z0:b.z0,h:new Float32Array(N*NL).fill(NaN),n:new Uint8Array(N)};const bins=new Array(N);
+  for(const bx of allBoxes()){const i0=Math.max(0,Math.floor((bx.x0-CLR-b.x0)/CS)),i1=Math.min(nx-1,Math.floor((bx.x1+CLR-b.x0)/CS)),j0=Math.max(0,Math.floor((bx.z0-CLR-b.z0)/CS)),j1=Math.min(nz-1,Math.floor((bx.z1+CLR-b.z0)/CS));
+    for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=i+j*nx;(bins[k]||(bins[k]=[])).push(bx);}}
+  for(let j=1;j<nz-1;j++)for(let i=1;i<nx-1;i++){const k=i+j*nx,cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS,L=bins[k]||[];
+    const cand=[0];for(const bx of L)if(cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1)cand.push(bx.y1);cand.sort((p,q)=>p-q);let n=0,prev=-9;
+    for(const h of cand){if(h-prev<.03)continue;prev=h;let ok=true;
+      for(const bx of L){const inC=cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1;
+        if(inC&&bx.y0<h-.05&&bx.y1>h+.05){ok=false;break;}
+        if(bx.y1>h+STEP&&bx.y0<h+NAV_H-.05&&cx>bx.x0-CLR&&cx<bx.x1+CLR&&cz>bx.z0-CLR&&cz<bx.z1+CLR){ok=false;break;}}
+      if(ok&&n<NL){g.h[k*NL+n]=h;n++;}}
+    g.n[k]=n;}
   M.grid=g;}
 const cellOf=(x,z)=>{const g=M.grid;return[clamp(Math.floor((x-g.x0)/CS),0,g.nx-1),clamp(Math.floor((z-g.z0)/CS),0,g.nz-1)];};
-const free=(i,j)=>{const g=M.grid;return i>=0&&j>=0&&i<g.nx&&j<g.nz&&!g.bl[i+j*g.nx];};
-function nearestFree(i,j){if(free(i,j))return[i,j];for(let r=1;r<12;r++)for(let a=-r;a<=r;a++)for(const [di,dj] of [[a,-r],[a,r],[-r,a],[r,a]])if(free(i+di,j+dj))return[i+di,j+dj];return[i,j];}
-function gridLine(x0,z0,x1,z1){const d=Math.hypot(x1-x0,z1-z0),n=Math.ceil(d/(CS*.5));for(let k=0;k<=n;k++){const t=k/n;const [i,j]=cellOf(lerp(x0,x1,t),lerp(z0,z1,t));if(!free(i,j))return false;}return true;}
-function findPath(fx,fz,tx,tz){const g=M.grid,nx=g.nx;let [si,sj]=nearestFree(...cellOf(fx,fz)),[ti,tj]=nearestFree(...cellOf(tx,tz));
-  const N=nx*g.nz,gs=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N);const heap=[];
+const cellK=(i,j)=>i+j*M.grid.nx;
+function layerAt(k,y){const g=M.grid;let best=-1,bd=1e9;for(let l=0;l<g.n[k];l++){const h=g.h[k*NL+l];const dd=h<=y+.7?y-h:(h-y)*4;if(dd<bd){bd=dd;best=l;}}return best;}
+function surfaceAt(x,z,y){const g=M.grid;if(!g)return null;const [i,j]=cellOf(x,z),k=cellK(i,j),l=layerAt(k,y);return l<0?null:g.h[k*NL+l];}
+const free=(i,j)=>{const g=M.grid;return i>0&&j>0&&i<g.nx-1&&j<g.nz-1&&g.n[i+j*g.nx]>0;};
+function nearestNode(x,y,z){const g=M.grid;let [i,j]=cellOf(x,z);for(let r=0;r<14;r++)for(let a=-r;a<=r;a++)for(const [di,dj] of (r?[[a,-r],[a,r],[-r,a],[r,a]]:[[0,0]])){const ii=i+di,jj=j+dj;if(!free(ii,jj))continue;const k=cellK(ii,jj),l=layerAt(k,y);if(l>=0)return k*NL+l;}return -1;}
+function flatLine(x0,z0,x1,z1,h){const dd=Math.hypot(x1-x0,z1-z0),n=Math.ceil(dd/(CS*.5));for(let s=0;s<=n;s++){const t=s/n;const [i,j]=cellOf(lerp(x0,x1,t),lerp(z0,z1,t));if(!free(i,j))return false;const k=cellK(i,j);let ok=false;for(let l=0;l<M.grid.n[k];l++)if(Math.abs(M.grid.h[k*NL+l]-h)<.05){ok=true;break;}if(!ok)return false;}return true;}
+function findPath(fx,fy,fz,tx,ty,tz){const g=M.grid,nx=g.nx,N=nx*g.nz*NL;const s=nearestNode(fx,fy,fz),t=nearestNode(tx,ty,tz);if(s<0||t<0)return null;
+  const gs=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N);const heap=[];
   const push=(k,f)=>{heap.push([f,k]);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}};
   const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m;}}return top;};
-  const s=si+sj*nx,t=ti+tj*nx;gs[s]=0;push(s,0);let it=0;
-  while(heap.length&&it++<20000){const [,k]=pop();if(closed[k])continue;closed[k]=1;if(k===t)break;const i=k%nx,j=(k-i)/nx;
-    for(const [di,dj,c] of [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]]){const a=i+di,b=j+dj;if(!free(a,b))continue;if(di&&dj&&(!free(i+di,j)||!free(i,j+dj)))continue;
-      const n=a+b*nx,ng=gs[k]+c;if(ng<gs[n]){gs[n]=ng;from[n]=k;push(n,ng+Math.hypot(a-ti,b-tj));}}}
-  if(from[t]<0&&t!==s)return null;const cells=[];for(let k=t;k>=0&&k!==s;k=from[k])cells.push(k);cells.reverse();
-  let pts=cells.map(k=>{const i=k%nx,j=(k-i)/nx;return{x:g.x0+(i+.5)*CS,z:g.z0+(j+.5)*CS};});
-  const out=[];let cx=fx,cz=fz,i=0;while(i<pts.length){let j=pts.length-1;while(j>i&&!gridLine(cx,cz,pts[j].x,pts[j].z))j--;out.push(pts[j]);cx=pts[j].x;cz=pts[j].z;i=j+1;}
+  const tk=(t/NL)|0,ti=tk%nx,tj=(tk-ti)/nx,th=g.h[t];const hasNear=(k,h)=>{for(let l=0;l<g.n[k];l++){const hh=g.h[k*NL+l];if(hh-h<=STEP+.02&&h-hh<=STEP+.02)return true;}return false;};
+  gs[s]=0;push(s,0);let it=0;
+  while(heap.length&&it++<60000){const [,id]=pop();if(closed[id])continue;closed[id]=1;if(id===t)break;const k=(id/NL)|0,h=g.h[id],i=k%nx,j=(k-i)/nx;
+    for(const [di,dj,c] of [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]]){const a=i+di,b=j+dj;if(!free(a,b))continue;const k2=a+b*nx;
+      if(di&&dj&&(!free(i+di,j)||!free(i,j+dj)||!hasNear(i+di+j*nx,h)||!hasNear(i+(j+dj)*nx,h)))continue;
+      for(let l=0;l<g.n[k2];l++){const h2=g.h[k2*NL+l],dh=h2-h;if(dh>STEP+.02||dh<-7)continue;if(di&&dj&&Math.abs(dh)>.05)continue;
+        const n2=k2*NL+l,ng=gs[id]+c+Math.abs(dh)*.6+(dh<-1?3:0);if(ng<gs[n2]){gs[n2]=ng;from[n2]=id;push(n2,ng+Math.hypot(a-ti,b-tj)+Math.abs(h2-th)*.5);}}}}
+  if(from[t]<0&&t!==s)return null;const ids=[];for(let k=t;k>=0&&k!==s;k=from[k])ids.push(k);ids.reverse();
+  const pts=ids.map(id=>{const k=(id/NL)|0,i=k%nx,j=(k-i)/nx;return{x:g.x0+(i+.5)*CS,z:g.z0+(j+.5)*CS,h:g.h[id]};});
+  const out=[];let cx=fx,cz=fz,ch=g.h[s],i=0;
+  while(i<pts.length){let j=i;while(j+1<pts.length&&Math.abs(pts[j+1].h-ch)<.05&&Math.abs(pts[i].h-ch)<.05)j++;
+    while(j>i&&!flatLine(cx,cz,pts[j].x,pts[j].z,ch))j--;out.push(pts[j]);cx=pts[j].x;cz=pts[j].z;ch=pts[j].h;i=j+1;}
   return out;}
 
 /* ================= collision / rays ================= */
@@ -1782,29 +1810,37 @@ function rayBoxes(o,d,maxT){let best=maxT,hit=null,nAx=0,nS=0;
 function slab(ox,oy,oz,dx,dy,dz,hx,y0,y1,hz){let t0=0,t1=1e9;const A=[[ox,dx,-hx,hx],[oy,dy,y0,y1],[oz,dz,-hz,hz]];
   for(const [o,d,mn,mx] of A){if(Math.abs(d)<1e-9){if(o<mn||o>mx)return -1;continue;}let a=(mn-o)/d,b=(mx-o)/d;if(a>b){const q=a;a=b;b=q;}if(a>t0)t0=a;if(b<t1)t1=b;if(t0>t1)return -1;}return t0;}
 function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Math.sin(f.yaw);const wx=o.x-f.pos.x,wz=o.z-f.pos.z,oy=o.y-f.pos.y;
-  const ox=wx*c-wz*s,oz=wx*s+wz*c,dx=d.x*c-d.z*s,dz=d.x*s+d.z*c;const sc=f.scale||1;
-  const th=slab(ox,oy,oz,dx,d.y,dz,.38*sc,2.0*sc,2.68*sc,.36*sc);const tb=slab(ox,oy,oz,dx,d.y,dz,1.0*sc,0,2.02*sc,.34*sc);
+  const ox=wx*c-wz*s,oz=wx*s+wz*c,dx=d.x*c-d.z*s,dz=d.x*s+d.z*c;const sc=f.scale||1,cy=sc*(1-.27*(f.cv||0));
+  const th=slab(ox,oy,oz,dx,d.y,dz,.38*sc,2.0*cy,2.68*cy,.36*sc);const tb=slab(ox,oy,oz,dx,d.y,dz,1.0*sc,0,2.02*cy,.34*sc);
   if(th>=0&&(tb<0||th<=tb+.05))return{t:th,part:'head'};if(tb>=0)return{t:tb,part:'body'};return null;}
 
 /* ================= weapons ================= */
 const GUNS={
-  sniper:{name:'Sniper',dmg:95,head:2,rate:1.3,mag:5,reload:2.6,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',range:'Long',bars:[5,5,1],note:'Headshot kills in one'},
-  shotgun:{name:'Shotgun',dmg:13,head:1.5,rate:.85,mag:6,reload:2.3,spread:6.5,adsSpread:4.5,pellets:9,fall:[7,22],zoom:58,auto:false,kick:.05,bloom:0,color:'#8a5a34',range:'Short',bars:[5,1,2],note:'Up to 117 damage close in'},
-  mg:{name:'Machine Gun',dmg:12,head:1.6,rate:.075,mag:75,reload:3.6,spread:2.6,adsSpread:1.5,pellets:1,fall:[28,70],zoom:52,auto:true,kick:.008,bloom:.18,color:'#e8463a',range:'Mid',bars:[2,3,5],note:'75-round belt, slow reload'},
-  ar:{name:'Assault Rifle',dmg:19,head:1.8,rate:.115,mag:30,reload:2.1,spread:1.5,adsSpread:.45,pellets:1,fall:[35,90],zoom:50,auto:true,kick:.01,bloom:.12,color:'#f08a24',range:'Mid',bars:[3,4,4],note:'Accurate all-rounder'},
-  pistol:{name:'Pistol',dmg:24,head:1.8,rate:.24,mag:12,reload:1.4,spread:1.4,adsSpread:.6,pellets:1,fall:[20,50],zoom:55,auto:false,kick:.02,bloom:.25,color:'#2f7fe0',range:'Mid',bars:[3,3,3]}
+  sniper:{name:'Sniper',dmg:60,head:2,rate:1.3,mag:3,reload:2.4,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',note:'Headshot kills, 2 body shots'},
+  ar:{name:'Assault Rifle',dmg:19,head:1.8,rate:.115,mag:20,reload:1.9,spread:1.5,adsSpread:.45,pellets:1,fall:[35,90],zoom:42,auto:true,kick:.01,bloom:.12,color:'#f08a24',note:'Accurate all-rounder'},
+  smg:{name:'SMG',dmg:11,head:1.6,rate:.065,mag:18,reload:1.5,spread:2.4,adsSpread:1.1,pellets:1,fall:[12,40],zoom:48,auto:true,kick:.006,bloom:.15,color:'#a05ad6',note:'Very fast fire up close'},
+  shotgun:{name:'Shotgun',dmg:13,head:1.5,rate:.85,mag:4,reload:2.0,spread:6.5,adsSpread:4.5,pellets:9,fall:[7,22],zoom:52,auto:false,kick:.05,bloom:0,color:'#8a5a34',note:'Up to 117 damage close in'},
+  mg:{name:'Machine Gun',dmg:12,head:1.6,rate:.075,mag:40,reload:3.2,spread:2.6,adsSpread:1.5,pellets:1,fall:[28,70],zoom:46,auto:true,kick:.008,bloom:.18,color:'#e8463a',note:'Big belt, slow reload'},
+  rocket:{name:'Rocket Launcher',type:'proj',dmg:110,radius:4.5,head:1,rate:1,mag:1,reload:2.6,spread:1.2,adsSpread:0,speed:40,grav:0,zoom:42,auto:false,kick:.07,bloom:0,color:'#3bb54a',note:'Splash damage, wrecks walls'},
+  stars:{name:'Ninja Stars',type:'proj',dmg:34,head:2,rate:.3,mag:4,reload:1.6,spread:1.2,adsSpread:.3,speed:52,grav:7,zoom:50,auto:false,kick:.01,bloom:.2,color:'#c9ced8',note:'Thrown, 2× on headshots'},
+  sword:{name:'Sword',type:'melee',dmg:55,head:1,rate:.55,mag:Infinity,reload:0,reach:3.1,arc:1.0,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#ffc61a',note:'Two hits, lunges forward'},
+  pistol:{name:'Pistol',dmg:24,head:1.8,rate:.24,mag:8,reload:1.3,spread:1.4,adsSpread:.6,pellets:1,fall:[20,50],zoom:50,auto:false,kick:.02,bloom:.25,color:'#2f7fe0'}
 };
-const PRIMARIES=['sniper','shotgun','mg','ar'];
+const PRIMARIES=['sniper','ar','smg','shotgun','mg','rocket','stars','sword'];
 function gunModel(id){const g=new THREE.Group();const dark=mat('#2b2d33',null,{roughness:.45,metalness:.4}),mid=mat('#5a5f69',null,{roughness:.4,metalness:.5}),acc=mat(GUNS[id].color,null,{roughness:.5});
   const P=(w,h,d,x,y,z,m)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=true;g.add(me);return me;};let L=1;
   if(id==='sniper'){P(.14,.18,1.0,0,0,.25,acc);P(.06,.06,.95,0,.03,1.2,dark);P(.1,.1,.45,0,.17,.32,dark);P(.12,.24,.42,0,-.06,-.36,acc);P(.06,.18,.1,0,-.15,.04,dark);L=1.68;}
   else if(id==='shotgun'){P(.15,.17,.8,0,0,.2,dark);P(.1,.1,.6,0,.04,.85,mid);P(.13,.11,.36,0,-.07,.74,acc);P(.13,.21,.46,0,-.05,-.36,acc);P(.06,.16,.1,0,-.14,.02,dark);L=1.16;}
   else if(id==='mg'){P(.2,.24,1.0,0,0,.25,dark);P(.09,.09,.75,0,.03,1.1,mid);P(.24,.26,.26,0,-.22,.22,acc);P(.15,.22,.42,0,-.04,-.4,dark);P(.04,.3,.04,.08,-.2,1.1,mid);P(.04,.3,.04,-.08,-.2,1.1,mid);L=1.48;}
   else if(id==='ar'){P(.14,.17,.86,0,0,.2,dark);P(.06,.06,.5,0,.02,.86,mid);P(.09,.28,.13,0,-.2,.24,acc);P(.12,.19,.4,0,-.03,-.36,acc);P(.05,.07,.26,0,.12,.14,mid);P(.06,.16,.1,0,-.14,-.05,dark);L=1.12;}
+  else if(id==='smg'){P(.13,.16,.6,0,0,.12,dark);P(.06,.06,.3,0,.02,.55,mid);P(.08,.28,.1,0,-.2,.16,acc);P(.06,.15,.1,0,-.13,-.08,dark);P(.1,.12,.22,0,-.02,-.28,acc);L=.72;}
+  else if(id==='rocket'){P(.27,.27,1.5,0,.13,.25,acc);P(.33,.33,.16,0,.13,1.0,dark);P(.33,.33,.16,0,.13,-.5,dark);P(.08,.22,.1,0,-.1,0,dark);P(.08,.08,.24,.16,.22,.3,mid);L=1.05;}
+  else if(id==='stars'){const sm=mat('#c9ced8',null,{roughness:.25,metalness:.8});const a=P(.42,.03,.1,0,0,.14,sm);a.rotation.y=Math.PI/4;const b=P(.42,.03,.1,0,0,.14,sm);b.rotation.y=-Math.PI/4;L=.15;}
+  else if(id==='sword'){const sm=mat('#dfe3ea',null,{roughness:.2,metalness:.85});P(.09,.035,1.45,0,0,.9,sm);P(.4,.07,.09,0,0,.14,mat('#ffc61a',null,{metalness:.6,roughness:.3}));P(.07,.07,.32,0,0,-.05,mat('#5b3a22'));L=1.6;}
   else{P(.11,.14,.44,0,0,.1,dark);P(.1,.22,.13,0,-.14,-.03,acc);L=.33;}
   const mz=new THREE.Object3D();mz.position.set(0,.03,L);g.add(mz);g.userData.muzzle=mz;
   const fl=new THREE.Mesh(new THREE.PlaneGeometry(.55,.55),new THREE.MeshBasicMaterial({color:'#ffd56a',transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,toneMapped:false}));
-  const fl2=fl.clone();fl2.rotation.y=Math.PI/2;fl.position.copy(mz.position);fl2.position.copy(mz.position);fl.material=fl.material;g.add(fl);g.add(fl2);g.userData.flash=[fl,fl2];
+  const fl2=fl.clone();fl2.rotation.y=Math.PI/2;fl.position.copy(mz.position);fl2.position.copy(mz.position);fl.material=fl.material;g.add(fl);g.add(fl2);g.userData.flash=[fl,fl2];if(id==='sword'||id==='stars'){fl.visible=fl2.visible=false;}
   return g;}
 
 /* ================= particles + tracers ================= */
@@ -1829,23 +1865,27 @@ function makeFighter(bot){
   ch.aL.p.rotation.order='YXZ';ch.aR.p.rotation.order='YXZ';
   const guns={};for(const id of Object.keys(GUNS)){const g=gunModel(id);g.position.set(0,-.86,.06);g.rotation.x=Math.PI/2;g.visible=false;ch.aR.p.add(g);guns[id]=g;}
   return{bot,ch,guns,pos:new V3(),vel:new V3(),yaw:0,pitch:0,hp:100,alive:true,grounded:true,primary:'sniper',slot:0,ammo:{},fireT:0,reloadT:0,switchT:0,bloom:0,walls:4,buildT:0,
-    lastHurt:-9,phase:0,kick:0,ads:false,trigger:false,triggerWas:false,flashT:0,scale:1,
+    lastHurt:-9,phase:0,kick:0,ads:false,cv:0,crouching:false,swingT:0,trigger:false,triggerWas:false,flashT:0,scale:1,
     ai:{path:null,pathT:0,goalT:0,goal:null,strafe:1,strafeT:0,seeT:0,lostT:9,aim:new V3(),err:new V3(),stuckT:0,lastPos:new V3(),holdT:0,peek:0}};}
 const ME=makeFighter(false),BOT=makeFighter(true);
 const gunOf=f=>f.slot===0?f.primary:'pistol';
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;f.slot=slot;f.reloadT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
 function resetFighter(f,sp){f.pos.set(sp.x,0,sp.z);f.vel.set(0,0,0);f.yaw=sp.yaw;f.pitch=0;f.hp=100;f.alive=true;f.grounded=true;f.ammo={};f.ammo[f.primary]=GUNS[f.primary].mag;f.ammo.pistol=GUNS.pistol.mag;
-  f.fireT=0;f.reloadT=0;f.bloom=0;f.walls=4;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.scale=SC;f.ch.root.scale.setScalar(SC);
+  f.fireT=0;f.reloadT=0;f.bloom=0;f.walls=4;f.cv=0;f.crouching=false;f.swingT=0;f.pos.y=sp.y||0;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.scale=SC;f.ch.root.scale.setScalar(SC);
   const a=f.ai;a.path=null;a.pathT=0;a.goalT=0;a.seeT=0;a.lostT=9;a.holdT=0;a.err.set(0,0,0);}
 
 /* ================= physics ================= */
 const R=.45,HH=2.45,GRAV=36,JUMP=12,STEP=.55;
-function overlaps(b,x,z,y){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+HH;}
-function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;
-  for(const b of allBoxes()){if(!overlaps(b,nx,nz,f.pos.y))continue;const need=b.y1-f.pos.y;
-    if(need<=STEP&&f.grounded){lift=Math.max(lift,need);continue;}if(overlaps(b,f.pos.x,f.pos.z,f.pos.y)&&b.y0<f.pos.y+HH*.5){continue;}return false;}
+const hhOf=f=>HH*(1-.3*(f.cv||0));
+function overlaps(b,x,z,y,h=HH){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+h;}
+function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;const H=hhOf(f);
+  for(const b of allBoxes()){if(!overlaps(b,nx,nz,f.pos.y,H))continue;const need=b.y1-f.pos.y;
+    if(need<=STEP&&f.grounded&&!allBoxes().some(o=>o!==b&&overlaps(o,nx,nz,f.pos.y+need,H)&&o.y1>f.pos.y+need+.02&&o.y0>=f.pos.y+need+.02&&o.y0<f.pos.y+need+H)){lift=Math.max(lift,need);continue;}
+    if(overlaps(b,f.pos.x,f.pos.z,f.pos.y,H)&&b.y0<f.pos.y+H*.5){continue;}return false;}
   const bd=M.bounds;f.pos.x=clamp(nx,bd.x0+R,bd.x1-R);f.pos.z=clamp(nz,bd.z0+R,bd.z1-R);f.pos.y+=lift;return true;}
-function physics(f,dt,wx,wz,jump,speed){
+function canStand(f){for(const b of allBoxes())if(b.x0<f.pos.x+R&&b.x1>f.pos.x-R&&b.z0<f.pos.z+R&&b.z1>f.pos.z-R&&b.y0>=f.pos.y+hhOf(f)-.05&&b.y0<f.pos.y+HH)return false;return true;}
+function updCrouch(f,want,dt){if(!want&&f.cv>0&&!canStand(f))want=true;f.crouching=want;f.cv=clamp((f.cv||0)+(want?1:-1)*dt*7,0,1);}
+function physics(f,dt,wx,wz,jump,speed){if(f.crouching){speed*=.5;jump=false;}
   const acc=f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   if(jump&&f.grounded){f.vel.y=JUMP;f.grounded=false;}
@@ -1853,29 +1893,67 @@ function physics(f,dt,wx,wz,jump,speed){
   if(!moveAxis(f,f.vel.x*dt,0))f.vel.x=0;if(!moveAxis(f,0,f.vel.z*dt))f.vel.z=0;
   let ny=f.pos.y+f.vel.y*dt,sup=0;
   for(const b of allBoxes()){if(b.x0<f.pos.x+R*.8&&b.x1>f.pos.x-R*.8&&b.z0<f.pos.z+R*.8&&b.z1>f.pos.z-R*.8&&b.y1<=f.pos.y+(f.grounded?STEP:.05)+.001&&b.y1>sup)sup=b.y1;}
-  if(f.vel.y>0){for(const b of allBoxes()){if(b.x0<f.pos.x+R*.8&&b.x1>f.pos.x-R*.8&&b.z0<f.pos.z+R*.8&&b.z1>f.pos.z-R*.8&&b.y0>=f.pos.y+HH-.05&&b.y0<ny+HH){ny=b.y0-HH;f.vel.y=0;}}}
+  const H=hhOf(f);if(f.vel.y>0){for(const b of allBoxes()){if(b.x0<f.pos.x+R*.8&&b.x1>f.pos.x-R*.8&&b.z0<f.pos.z+R*.8&&b.z1>f.pos.z-R*.8&&b.y0>=f.pos.y+H-.05&&b.y0<ny+H){ny=b.y0-H;f.vel.y=0;}}}
   if(ny<=sup){ny=sup;f.vel.y=0;f.grounded=true;}else if(f.grounded&&ny>sup&&f.pos.y-sup<.6&&f.vel.y<=0){ny=sup;f.vel.y=0;}else f.grounded=false;
   f.pos.y=ny;}
 
 /* ================= state ================= */
 const SC=.88; // fighters are scaled down so they fit every doorway and stair with headroom
 const DIFF={easy:{name:'Easy',react:.75,err:3.4,head:.08,turn:4.5,strafe:.4,build:.25},normal:{name:'Normal',react:.42,err:1.9,head:.22,turn:8,strafe:.7,build:.5},hard:{name:'Hard',react:.22,err:1.0,head:.42,turn:14,strafe:1,build:.8}};
-const S={state:'off',map:store.get('duel:map','street'),gun:store.get('duel:gun','sniper'),diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={state:'off',map:MAPS[store.get('duel:map','street')]?store.get('duel:map','street'):'street',gun:store.get('duel:gun','sniper'),diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 const D={__shot(p,l){camera.position.set(...p);camera.lookAt(...l);camera.fov=55;camera.updateProjectionMatrix();sky.position.copy(camera.position);renderer.render(scene,camera);},get __keys(){return keys;},__build:f=>buildWall(f),active:false,S,ME,BOT,M,frame,step,render,buildMap,startMatch,enterMenu,leave,GUNS,rayBoxes,findPath};window.__duel=D;
 
 /* ================= combat ================= */
 const tmpA=new V3(),tmpB=new V3(),tmpC=new V3();
-function eyeOf(f,out){return out.set(f.pos.x,f.pos.y+2.35*(f.scale||1),f.pos.z);}
+function eyeOf(f,out){return out.set(f.pos.x,f.pos.y+2.35*(f.scale||1)*(1-.27*(f.cv||0)),f.pos.z);}
 function dirOf(yaw,pitch,out){const cp=Math.cos(pitch);return out.set(Math.sin(yaw)*cp,Math.sin(pitch),Math.cos(yaw)*cp);}
 function spreadDir(d,deg){if(deg<=0)return d.clone();const a=deg*Math.PI/180*Math.sqrt(Math.random()),t=Math.random()*TAU;
   const up=Math.abs(d.y)>.95?new V3(1,0,0):new V3(0,1,0);const u=new V3().crossVectors(d,up).normalize(),v=new V3().crossVectors(d,u);
   return d.clone().multiplyScalar(Math.cos(a)).addScaledVector(u,Math.sin(a)*Math.cos(t)).addScaledVector(v,Math.sin(a)*Math.sin(t)).normalize();}
-function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;const sp=Math.hypot(f.vel.x,f.vel.z);if(sp>2)s*=1.45;if(!f.grounded)s*=2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;return s+f.bloom;}
+function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;const sp=Math.hypot(f.vel.x,f.vel.z);if(sp>2)s*=1.45;if(!f.grounded)s*=2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;if(f.crouching)s*=.65;return s+f.bloom;}
 function canFire(f){return f.alive&&f.fireT<=0&&f.reloadT<=0&&f.switchT<=0&&f.ammo[gunOf(f)]>0&&S.state==='fight';}
-function startReload(f){const id=gunOf(f);if(f.reloadT>0||f.ammo[id]>=GUNS[id].mag)return;f.reloadT=GUNS[id].reload;f.reloadMax=f.reloadT;}
+function startReload(f){const id=gunOf(f);if(f.reloadT>0||f.ammo[id]>=GUNS[id].mag||!isFinite(GUNS[id].mag))return;f.reloadT=GUNS[id].reload;f.reloadMax=f.reloadT;}
+const projs=[];
+const rocketMesh=()=>{const g=new THREE.Group();const b=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.7,10).rotateX(Math.PI/2),mat('#3bb54a'));const t=new THREE.Mesh(new THREE.ConeGeometry(.11,.25,10).rotateX(Math.PI/2),mat('#e8463a'));t.position.z=.47;
+  const fl=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),new THREE.MeshBasicMaterial({color:'#ffb347',toneMapped:false}));fl.position.z=-.42;g.add(b,t,fl);return g;};
+const starMesh=()=>{const g=new THREE.Group();const sm=mat('#c9ced8',null,{roughness:.25,metalness:.8});for(const r of [Math.PI/4,-Math.PI/4]){const m=new THREE.Mesh(new THREE.BoxGeometry(.44,.03,.11),sm);m.rotation.y=r;g.add(m);}return g;};
+function spawnProj(f,id,from,dir){const g=GUNS[id];const mesh=id==='rocket'?rocketMesh():starMesh();mesh.position.copy(from);scene.add(mesh);
+  projs.push({f,id,pos:from.clone(),vel:dir.clone().multiplyScalar(g.speed),life:4,mesh});}
+function clearProjs(){for(const p of projs)scene.remove(p.mesh);projs.length=0;}
+function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS[p.id];p.life-=dt;p.vel.y-=(g.grav||0)*dt;
+  const st=p.vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6)continue;const d=st.clone().divideScalar(L);
+  const foe=p.f===ME?BOT:ME;const hb=rayBoxes(p.pos,d,L),hf=rayFighter(p.pos,d,foe);let hit=null;
+  if(hf&&hf.t<=L&&(!hb||hf.t<hb.t))hit={t:hf.t,f:hf};else if(hb)hit={t:hb.t,b:hb};else if(p.pos.y+st.y<0)hit={t:L*p.pos.y/Math.max(1e-6,-st.y),g:1};
+  if(hit||p.life<=0){const at=hit?p.pos.clone().addScaledVector(d,hit.t):p.pos.clone();scene.remove(p.mesh);projs.splice(i,1);
+    if(p.id==='rocket')explode(p.f,at,hit&&hit.b?hit.b.n:null);
+    else if(hit&&hit.f){const head=hit.f.part==='head',dm=Math.round(g.dmg*(head?g.head:1));if(p.f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(dm,100);hitMarker(head);dmgNumber(foe,dm,head);}
+      emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,'stars');}
+    else{if(hit&&hit.b){const w=M.walls.find(w=>w.b===hit.b.box&&w.alive);if(w)damageWall(w,30);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:['#ffffff','#c9ced8']});}
+    continue;}
+  p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));if(Math.random()<.8)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:2,speed:.8,size:.22,life:.5,grav:-1,colors:['#ffb347','#f4f4f4','#9aa0a8']});}
+  else p.mesh.rotation.y+=dt*30;}}
+function explode(src,at,n){if(n)at.addScaledVector(n,.2);const g=GUNS.rocket,Rr=g.radius;
+  emit(at.x,at.y+.2,at.z,{n:70,speed:12,up:3,size:.38,life:.8,grav:4,colors:['#ffd23f','#ff7a1f','#ff3b1f','#3a3d45','#ffffff']});
+  if(ME.alive&&ME.pos.distanceTo(at)<14)S.shake=Math.max(S.shake,.6*(1-ME.pos.distanceTo(at)/14)+.15);
+  for(const o of [BOT,ME]){if(!o.alive)continue;const c=new V3(o.pos.x,o.pos.y+1.1*SC,o.pos.z),dd=c.distanceTo(at);if(dd>Rr+.6)continue;if(!los(at,c)&&dd>1.2)continue;
+    let dm=Math.round(Math.max(18,g.dmg*(1-Math.max(0,dd-.6)/Rr)));if(o===src)dm=Math.round(dm*.5);const kb=c.clone().sub(at).setY(0).normalize();o.vel.x+=kb.x*9;o.vel.z+=kb.z*9;o.vel.y=Math.max(o.vel.y,7);o.grounded=false;
+    if(src===ME&&o===BOT){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,src,false,'rocket');}
+  for(const w of M.walls){if(!w.alive)continue;const b=w.b;const q=new V3(clamp(at.x,b.x0,b.x1),clamp(at.y,b.y0,b.y1),clamp(at.z,b.z0,b.z1));const dd=q.distanceTo(at);if(dd<Rr)damageWall(w,300*(1-dd/Rr)+40);}}
+function melee(f){const g=GUNS.sword,foe=f===ME?BOT:ME;f.swingT=.32;f.vel.x+=Math.sin(f.yaw)*6;f.vel.z+=Math.cos(f.yaw)*6;
+  const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());for(let k=0;k<10;k++){const a=f.yaw+(k/9-.5)*1.6;emit(f.pos.x+Math.sin(a)*1.7,e.y-.6,f.pos.z+Math.cos(a)*1.7,{n:1,speed:.3,size:.16,life:.25,grav:0,colors:['#ffffff','#ffe9a8']});}
+  if(foe.alive){const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dy=foe.pos.y-f.pos.y,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
+    if(dist<g.reach&&Math.abs(dy)<1.9&&ang<g.arc&&los(e,new V3(foe.pos.x,foe.pos.y+1.2*SC,foe.pos.z))){const dm=g.dmg;emit(foe.pos.x,foe.pos.y+1.4,foe.pos.z,{n:14,speed:6,size:.14,colors:['#ff4a3d','#ffffff']});
+      if(f===ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=foe.hp);dmgNumber(foe,dm,false);}foe.vel.x+=dx/(dist||1)*5;foe.vel.z+=dz/(dist||1)*5;damage(foe,dm,f,false,'sword');return;}}
+  const hb=rayBoxes(e,fw,g.reach);if(hb){const w=M.walls.find(w=>w.b===hb.box&&w.alive);if(w)damageWall(w,70);}}
 function fire(f,origin,dir){
-  const id=gunOf(f),g=GUNS[id];f.fireT=g.rate;f.ammo[id]--;f.flashT=.05;f.kick=1;const foe=f===ME?BOT:ME;
+  const id=gunOf(f),g=GUNS[id];
+  if(g.type==='melee'){f.fireT=g.rate;f.kick=1;if(f===ME)S.stats.shots++;melee(f);return;}
+  if(g.type==='proj'){f.fireT=g.rate;f.ammo[id]--;f.kick=1;f.flashT=id==='rocket'?.08:0;const mz=f.guns[id].userData.muzzle.getWorldPosition(new V3());
+    const foe=f===ME?BOT:ME;const hb=rayBoxes(origin,dir,250),hf=rayFighter(origin,dir,foe);let t=200;if(hb)t=Math.min(t,hb.t);if(hf)t=Math.min(t,hf.t);
+    const aim=origin.clone().addScaledVector(dir,t);let d2=aim.sub(mz);if(d2.length()<.5)d2=dir.clone();d2.normalize();d2=spreadDir(d2,curSpread(f));
+    if(id==='rocket')emit(mz.x,mz.y,mz.z,{n:16,speed:3,size:.3,life:.5,grav:-1,colors:['#f4f4f4','#ffb347']});
+    spawnProj(f,id,mz,d2);if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick,-1.3,1.3);}f.bloom=Math.min(f.bloom+g.bloom,3);if(f.ammo[id]<=0&&f.bot)startReload(f);return;}f.fireT=g.rate;f.ammo[id]--;f.flashT=.05;f.kick=1;const foe=f===ME?BOT:ME;
   const mz=f.guns[id].userData.muzzle.getWorldPosition(new V3());const spr=curSpread(f);let anyHit=false,killed=false,head=false,total=0;
   for(let p=0;p<g.pellets;p++){const d=spreadDir(dir,spr);const hb=rayBoxes(origin,d,400);const hf=rayFighter(origin,d,foe);
     let end;if(hf&&(!hb||hf.t<hb.t)){end=origin.clone().addScaledVector(d,hf.t);const dist=hf.t;let dm=g.dmg*(hf.part==='head'?g.head:1);
@@ -1888,7 +1966,7 @@ function fire(f,origin,dir){
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){total=Math.round(total);killed=damage(foe,total,f,head,id);if(f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(total,100);hitMarker(head||killed);dmgNumber(foe,total,head);}}
   if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(Math.random()-.5)*g.kick*.4;}
-  f.bloom=Math.min(f.bloom+g.bloom,3);if(f.ammo[id]<=0)startReload(f);}
+  f.bloom=Math.min(f.bloom+g.bloom,3);if(f.ammo[id]<=0&&f.bot)startReload(f);}
 function damage(f,dmg,src,head,gun){if(!f.alive||S.state!=='fight')return false;f.hp=Math.max(0,f.hp-dmg);f.lastHurt=S.t;
   if(f===ME){vig(.55);S.shake=Math.max(S.shake,.18);}
   if(f.hp<=0){kill(f,src,head,gun);return true;}return false;}
@@ -1896,8 +1974,8 @@ function kill(f,src,head,gun){f.alive=false;S.slowT=1.1;S.shake=.5;
   f.ch.root.updateMatrixWorld(true);for(const part of f.ch.parts){const c=part.clone(true);part.getWorldPosition(c.position);part.getWorldQuaternion(c.quaternion);scene.add(c);
     debris.push({o:c,v:new V3(rnd(-6,6),rnd(6,12),rnd(-6,6)),w:new V3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),t:0});}
   f.ch.root.visible=false;emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:60,speed:11,up:4,size:.25,life:1,colors:f.bot?['#d8322b','#ffffff','#ffc61a']:['#71401d','#3a6cad','#ffffff']});
-  feed(src===ME,GUNS[gun].name,head);
-  endRound(src===ME?0:1,head);}
+  feed(f!==ME,GUNS[gun].name,head);
+  endRound(f===ME?1:0,head);}
 let debris=[];
 function updDebris(dt){for(const d of debris){d.t+=dt;d.v.y-=30*dt;d.o.position.addScaledVector(d.v,dt);d.o.rotation.x+=d.w.x*dt;d.o.rotation.y+=d.w.y*dt;d.o.rotation.z+=d.w.z*dt;if(d.o.position.y<.25&&d.v.y<0){d.o.position.y=.25;d.v.y*=-.35;d.v.x*=.7;d.v.z*=.7;d.w.multiplyScalar(.6);}}}
 function clearDebris(){for(const d of debris)scene.remove(d.o);debris=[];}
@@ -1919,15 +1997,17 @@ function clearWalls(){for(const w of M.walls)M.group.remove(w.mesh);M.walls=[];b
 
 /* ================= bot AI ================= */
 function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L);return!h;}
-function prefRange(id){return id==='sniper'?34:id==='shotgun'?5:id==='mg'?16:id==='ar'?20:12;}
+function prefRange(id){return {sniper:34,ar:20,smg:10,shotgun:5,mg:16,rocket:16,stars:12,sword:1.6,pistol:12}[id]||12;}
+const CLOSE=id=>id==='shotgun'||id==='sword';
 function botThink(dt){const f=BOT,a=f.ai,dif=DIFF[S.diff];if(!f.alive)return{wx:0,wz:0,jump:false};
   const eye=eyeOf(f,new V3()),tgtHead=eyeOf(ME,new V3()),tgtBody=new V3(ME.pos.x,ME.pos.y+1.25*SC,ME.pos.z);
   const seeB=ME.alive&&los(eye,tgtBody),seeH=!seeB&&ME.alive&&los(eye,tgtHead),see=seeB||seeH;if(see){a.seeT+=dt;a.lostT=0;a.lastSeen=ME.pos.clone();}else{a.seeT=0;a.lostT+=dt;}
   const dist=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z),id=gunOf(f),pr=prefRange(id);
   // weapon choice
-  if(f.slot===0&&f.ammo[f.primary]===0&&f.reloadT>0&&see&&dist<22&&GUNS[f.primary].reload>2){equip(f,1);}
+  if(f.slot===0&&f.ammo[f.primary]===0&&f.reloadT>0&&see&&dist<22&&GUNS[f.primary].reload>2&&f.primary!=='rocket'){equip(f,1);}
   else if(f.slot===1&&(!see||f.ammo.pistol===0)){equip(f,0);if(f.ammo[f.primary]<GUNS[f.primary].mag)startReload(f);}
   if(!see&&f.reloadT<=0&&f.ammo[gunOf(f)]<GUNS[gunOf(f)].mag*.5)startReload(f);
+  a.crT=(a.crT||0)-dt;if(a.crT<=0){a.crT=rnd(.6,1.8);a.crouch=see&&!CLOSE(id)&&Math.random()<.3*dif.strafe;}updCrouch(f,a.holdT>0||a.crouch,dt);
   // build wall when under fire
   f.buildT-=dt;if(see&&S.t-f.lastHurt<.35&&f.hp<70&&f.walls>0&&Math.random()<dif.build*dt*8){const y=f.yaw;f.yaw=Math.atan2(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z);if(buildWall(f))a.holdT=1.2+Math.random();f.yaw=y;}
   // movement goal
@@ -1935,27 +2015,31 @@ function botThink(dt){const f=BOT,a=f.ai,dif=DIFF[S.diff];if(!f.alive)return{wx:
   if(a.holdT>0){a.holdT-=dt;a.peek-=dt;if(a.peek<=0){a.peek=rnd(.5,1.1);a.strafe=-a.strafe;}const px=Math.cos(f.yaw),pz=-Math.sin(f.yaw);wx=px*a.strafe*.6;wz=pz*a.strafe*.6;}
   else if(see&&dist<pr*1.35&&dist>pr*.45){a.strafeT-=dt;if(a.strafeT<=0){a.strafeT=rnd(.35,1.1)/dif.strafe;a.strafe=Math.random()<.5?-1:1;if(Math.random()<.15*dif.strafe)jump=true;}
     const tx=ME.pos.x-f.pos.x,tz=ME.pos.z-f.pos.z,l=Math.hypot(tx,tz)||1;wx=-tz/l*a.strafe*dif.strafe;wz=tx/l*a.strafe*dif.strafe;
-    if(id==='shotgun'||dist>pr){wx+=tx/l*.6;wz+=tz/l*.6;}a.path=null;}
+    if(CLOSE(id)||dist>pr){wx+=tx/l*.6;wz+=tz/l*.6;}a.path=null;}
   else{
-    if(a.goalT<=0||!a.path){a.goalT=.7;let gx=ME.pos.x,gz=ME.pos.z;
-      if(see&&dist<pr*.45&&id!=='shotgun'){const tx=f.pos.x-ME.pos.x,tz=f.pos.z-ME.pos.z,l=Math.hypot(tx,tz)||1;gx=f.pos.x+tx/l*8;gz=f.pos.z+tz/l*8;}
-      else if(!see&&a.lastSeen&&a.lostT<6&&ME.pos.y<1.5){gx=a.lastSeen.x;gz=a.lastSeen.z;}
-      else if(id==='sniper'||id==='ar'||id==='mg'||ME.pos.y>1.5){let best=null,bs=1e9;for(let k=0;k<(ME.pos.y>1.5?60:26);k++){const ang=Math.random()*TAU,rr=rnd(4,ME.pos.y>1.5?30:22);const px=f.pos.x+Math.cos(ang)*rr,pz=f.pos.z+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))continue;
-          const p=new V3(px,2.35*SC,pz);if(!los(p,tgtBody)&&!los(p,tgtHead))continue;const dd=Math.hypot(ME.pos.x-px,ME.pos.z-pz);const want=ME.pos.y>1.5?Math.max(pr,9):pr;const sc=Math.abs(dd-want)+rr*.4;if(sc<bs){bs=sc;best=[px,pz];}}
-        if(best){gx=best[0];gz=best[1];}else if(ME.pos.y>1.5){const ang=Math.random()*TAU;gx=f.pos.x+Math.cos(ang)*14;gz=f.pos.z+Math.sin(ang)*14;}}
-      a.path=findPath(f.pos.x,f.pos.z,gx,gz);}
-    if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.6){a.path.shift();}else{wx=dx/l;wz=dz/l;}}
+    if(a.goalT<=0||!a.path){a.goalT=.7;let gx=ME.pos.x,gz=ME.pos.z,gy=ME.pos.y;
+      if(see&&dist<pr*.45&&!CLOSE(id)){const tx=f.pos.x-ME.pos.x,tz=f.pos.z-ME.pos.z,l=Math.hypot(tx,tz)||1;gx=f.pos.x+tx/l*8;gz=f.pos.z+tz/l*8;gy=f.pos.y;}
+      else if(CLOSE(id)){gx=ME.pos.x;gz=ME.pos.z;gy=ME.pos.y;}
+      else if(!see&&a.lastSeen&&a.lostT<6){gx=a.lastSeen.x;gz=a.lastSeen.z;gy=a.lastSeen.y;}
+      else{let best=null,bs=1e9;const g=M.grid;for(let k=0;k<40;k++){const ang=Math.random()*TAU,rr=rnd(4,26);const px=f.pos.x+Math.cos(ang)*rr,pz=f.pos.z+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))continue;
+          const kk=cellK(ci,cj),h=g.h[kk*NL+Math.floor(Math.random()*g.n[kk])];const p=new V3(px,h+2.35*SC,pz);if(!los(p,tgtBody)&&!los(p,tgtHead))continue;
+          const dd=Math.hypot(ME.pos.x-px,ME.pos.z-pz);const sc=Math.abs(dd-pr)+rr*.35-(h>1?3:0);if(sc<bs){bs=sc;best=[px,h,pz];}}
+        if(best){gx=best[0];gy=best[1];gz=best[2];}}
+      a.path=findPath(f.pos.x,f.pos.y,f.pos.z,gx,gy,gz);}
+    if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3){a.path.shift();}else if(l>.05){wx=dx/l;wz=dz/l;}}
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;}}
   // aim
-  if(see){const tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;
+  if(see){let tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;if(id==='rocket'&&ME.grounded&&seeB)tgt=new V3(ME.pos.x,ME.pos.y+.35,ME.pos.z);
     if(a.seeT<dt*1.5){a.err.set(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(dist*Math.tan(dif.err*3*Math.PI/180));a.headPick=Math.random()<dif.head;}
     a.err.multiplyScalar(Math.exp(-dt*2.2));const lead=ME.vel.clone().multiplyScalar(id==='sniper'?0:.05);
     const aim=tgt.clone().add(a.err).add(lead).add(new V3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).multiplyScalar(dist*Math.tan(dif.err*Math.PI/180)*.5));
+    if(id==='stars'){const tt=dist/GUNS.stars.speed;aim.y+=.5*GUNS.stars.grav*tt*tt;}
     const dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z;const wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));
     let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;const mxt=dif.turn*dt;f.yaw+=clamp(dyaw,-mxt,mxt);f.pitch=damp(f.pitch,wp,dif.turn,dt);
-    f.ads=id!=='shotgun'&&dist>10;
+    f.ads=!CLOSE(id)&&dist>10;
     const ready=a.seeT>dif.react*(id==='sniper'?1.5:1);
-    if(ready&&Math.abs(dyaw)<.06+(id==='shotgun'?.1:0)&&canFire(f)&&(id!=='shotgun'||dist<(ME.pos.y>1.5?26:18))&&(id!=='pistol'||Math.random()<.5)){
+    const inRange=id==='shotgun'?dist<18:id==='sword'?dist<2.7&&Math.abs(ME.pos.y-f.pos.y)<1.8:id==='rocket'?dist>5&&dist<45:id==='stars'?dist<34:true;
+    if(ready&&Math.abs(dyaw)<.06+(CLOSE(id)?.12:0)&&canFire(f)&&inRange&&(id!=='pistol'||Math.random()<.5)){
       const d=new V3(aim.x-eye.x,aim.y-eye.y,aim.z-eye.z).normalize();fire(f,eye,d);}}
   else{f.ads=false;const sp=Math.hypot(wx,wz);if(sp>.1){const wy=Math.atan2(wx,wz);let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-6*dt,6*dt);}f.pitch=damp(f.pitch,0,4,dt);}
   return{wx,wz,jump};}
@@ -1999,13 +2083,14 @@ function toScreen(p){proj.copy(p).project(camera);if(proj.z>1)return null;return
 function updHUD(dt){
   txt('d-s1',String(S.score[0]));txt('d-s2',String(S.score[1]));txt('d-round','Round '+S.round);txt('d-time',fmt(S.timer));
   txt('d-hp',String(Math.ceil(ME.hp)));const hb=$('d-hpbar');hb.style.width=ME.hp+'%';hb.style.background=ME.hp>50?'var(--good)':ME.hp>25?'var(--gold)':'var(--accent)';
-  txt('d-walls',String(ME.walls));const id=gunOf(ME),g=GUNS[id];txt('d-ammo',String(ME.ammo[id]));txt('d-mag','/ '+g.mag);txt('d-wname',ME.reloadT>0?'Reloading':g.name);
-  $('d-ammo').parentElement.classList.toggle('low',ME.ammo[id]<=Math.ceil(g.mag*.2));
+  txt('d-walls',String(ME.walls));const id=gunOf(ME),g=GUNS[id];const inf=!isFinite(g.mag);txt('d-ammo',inf?'∞':String(ME.ammo[id]));txt('d-mag',inf?'':'/ '+g.mag);const empty=!inf&&ME.ammo[id]===0&&ME.reloadT<=0;
+  txt('d-wname',ME.reloadT>0?'Reloading':empty?'Press R to reload':g.name);$('d-wname').classList.toggle('alert',empty&&(S.needR>0?Math.sin(S.t*20)>0:true));
+  $('d-ammo').parentElement.classList.toggle('low',!inf&&ME.ammo[id]<=Math.ceil(g.mag*.25));
   $('d-rl').style.transform=`scaleX(${ME.reloadT>0?1-ME.reloadT/ME.reloadMax:0})`;
   $('d-slot1').classList.toggle('on',ME.slot===0);$('d-slot2').classList.toggle('on',ME.slot===1);txt('d-slot1n',GUNS[ME.primary].name);
   const scoped=ME.ads&&id==='sniper'&&ME.alive;if($('d-scope').hidden===scoped)$('d-scope').hidden=!scoped;
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',Math.max(4,px).toFixed(1)+'px');cr.className='d-cross'+(id==='shotgun'?' ring':scoped?' dot':id==='sniper'?' ring':'');cr.style.opacity=S.state==='menu'?0:1;
+  cr.style.setProperty('--g',Math.max(4,px).toFixed(1)+'px');cr.className='d-cross'+(id==='shotgun'||id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='sniper'?' ring':'');cr.style.opacity=S.state==='menu'?0:1;
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}
     n.el.style.opacity=String(1-Math.max(0,n.t-.5)/.4);n.el.style.transform=`translate(${sc[0]}px,${sc[1]}px) translate(-50%,-50%) scale(${1+Math.max(0,.15-n.t)*3})`;}
@@ -2017,10 +2102,12 @@ function updHUD(dt){
 /* ================= animation / camera ================= */
 function animFighter(f,dt,menu){const ch=f.ch;ch.root.position.copy(f.pos);ch.root.rotation.y=f.yaw;const sp=Math.hypot(f.vel.x,f.vel.z);
   if(f.grounded){f.phase+=sp*dt*1.15;}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
-  ch.lL.p.rotation.x=damp(ch.lL.p.rotation.x,f.grounded?s:.5,16,dt);ch.lR.p.rotation.x=damp(ch.lR.p.rotation.x,f.grounded?-s:-.3,16,dt);
+  const cv=f.cv||0;ch.body.position.y=-1.25-.62*cv;
+  ch.lL.p.rotation.x=damp(ch.lL.p.rotation.x,(f.grounded?s*(1-cv*.6):.5)-1.25*cv,16,dt);ch.lR.p.rotation.x=damp(ch.lR.p.rotation.x,(f.grounded?-s*(1-cv*.6):-.3)+.25*cv,16,dt);
   f.kick=Math.max(0,f.kick-dt*9);const relo=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI)*.7:0;const sw=f.switchT>0?f.switchT*2:0;
+  f.swingT=Math.max(0,(f.swingT||0)-dt);const sg=f.swingT>0?Math.sin((1-f.swingT/.32)*Math.PI):0;
   const p=(menu?-.15:f.pitch)-relo-sw;const k=f.kick*.12;
-  ch.aR.p.rotation.set(-Math.PI/2-p-k,-.08,0);ch.aL.p.rotation.set(-Math.PI/2-p+.1-k,.62,0);
+  ch.aR.p.rotation.set(-Math.PI/2-p-k+sg*.9,-.08-sg*1.4,0);ch.aL.p.rotation.set(-Math.PI/2-p+.1-k,.62,0);
   ch.headG.rotation.x=-clamp(f.pitch,-.6,.6)*.6;
   const fl=f.guns[gunOf(f)].userData.flash;f.flashT-=dt;for(const m of fl){m.material.opacity=f.flashT>0?1:0;m.rotation.z=Math.random()*3;}}
 function updCamera(dt){
@@ -2030,12 +2117,19 @@ function updCamera(dt){
   const f=ME;const id=gunOf(f);const scoped=f.ads&&id==='sniper'&&f.alive;
   const fov=scoped?GUNS.sniper.zoom:f.ads?GUNS[id].zoom:70;camera.fov=damp(camera.fov,fov,scoped?30:14,dt);camera.updateProjectionMatrix();
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
-  const head=new V3(f.pos.x,f.pos.y+2.25*SC,f.pos.z);
+  const head=new V3(f.pos.x,f.pos.y+2.25*SC*(1-.27*(f.cv||0)),f.pos.z);
   if(!f.alive){const k=BOT.alive?BOT:f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);camera.position.lerp(new V3(f.pos.x,f.pos.y+7,f.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}
   if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
-  else{const sh=f.ads?1.0:1.45,dist=f.ads?2.6:4.6;const pivot=head.clone().addScaledVector(right,sh);const want=pivot.clone().addScaledVector(dir,-dist).add(new V3(0,.45,0));
-    const d=want.clone().sub(pivot);const L=d.length();d.divideScalar(L);const h=rayBoxes(pivot,d,L+.3);const use=h?Math.max(.4,h.t-.3):L;
-    camera.position.copy(pivot).addScaledVector(d,use);if(camera.position.y<.3)camera.position.y=.3;f.ch.root.visible=use>1.1;}
+  else{// indoors (ceiling overhead) the camera tucks in closer and lower and widens its view
+    const up=rayBoxes(head,new V3(0,1,0),3.2);S.indoor=damp(S.indoor||0,up?1:0,6,dt);const ind=S.indoor;
+    let sh=lerp(f.ads?1.0:1.45,f.ads?.7:.9,ind);const rs=rayBoxes(head,right,sh+.4);if(rs)sh=Math.max(0,rs.t-.4);
+    const pivot=head.clone().addScaledVector(right,sh);const dist=lerp(f.ads?2.6:4.6,f.ads?1.9:3.1,ind),lift=lerp(.45,.15,ind);
+    const want=pivot.clone().addScaledVector(dir,-dist).add(new V3(0,lift,0));const d=want.clone().sub(pivot);const L=d.length();d.divideScalar(L);
+    let use=L;const side=new V3().crossVectors(d,new V3(0,1,0)).normalize();
+    for(const [ox,oy] of [[0,0],[.28,0],[-.28,0],[0,.24],[0,-.24]]){const o=pivot.clone().addScaledVector(side,ox).add(new V3(0,oy,0));const h=rayBoxes(o,d,L+.4);if(h)use=Math.min(use,h.t-.4);}
+    use=Math.max(.35,use);camera.position.copy(pivot).addScaledVector(d,use);if(camera.position.y<.3)camera.position.y=.3;f.ch.root.visible=use>1.0;
+    if(!f.ads){camera.fov=damp(camera.fov,70+8*ind,10,dt);camera.updateProjectionMatrix();}
+    const lk=head.clone().addScaledVector(right,sh).addScaledVector(dir,60);if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}camera.lookAt(lk);return;}
   if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
@@ -2044,7 +2138,8 @@ function startMatch(){D.active=true;B.G.state='duel';S.score=[0,0];S.round=1;S.s
   BOT.primary=S.forceBot||PRIMARIES[Math.floor(Math.random()*PRIMARIES.length)];txt('d-botname','Bot · '+GUNS[BOT.primary].name);$('d-tag-name').textContent='Bot · '+DIFF[S.diff].name;
   if(M.id!==S.map)buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
   const h=$('d-hint');h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),8000);startRound();lock();}
-function startRound(){clearWalls();clearDebris();resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);S.timer=90;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
+function pickSpawns(){const sp=M.spawns,a=sp[Math.floor(Math.random()*sp.length)];let far=sp.filter(s=>s!==a&&Math.hypot(s.x-a.x,s.z-a.z)>45);if(!far.length)far=sp.filter(s=>s!==a);return[a,far[Math.floor(Math.random()*far.length)]];}
+function startRound(){clearWalls();clearDebris();clearProjs();const [s1,s2]=pickSpawns();resetFighter(ME,s1);resetFighter(BOT,s2);S.timer=90;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
   for(const n of nums)n.el.remove();nums.length=0;center('3','Round '+S.round);}
 function endRound(winner,head){if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;if(winner===0)S.stats.kills++;
   const done=winner>=0&&S.score[winner]>=5;
@@ -2071,18 +2166,18 @@ function step(rdt){
     const fi=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),si=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
-    f.ads=mouseR&&live;const id=gunOf(f);const spd=f.ads?(id==='sniper'?3.8:5.6):9;
+    f.ads=mouseR&&live;updCrouch(f,live&&!!keys.KeyC,dt);const id=gunOf(f);const spd=f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):9;
     if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&keys.Space,spd);
     if(live&&mouseL&&canFire(f)&&(GUNS[id].auto||!f.triggerWas)){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);
       const head=eyeOf(f,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(f,cam.addScaledVector(d,t0),d);}
-    else if(live&&mouseL&&f.ammo[id]===0&&f.reloadT<=0)startReload(f);
+    else if(live&&mouseL&&!f.triggerWas&&f.ammo[id]===0&&f.reloadT<=0)S.needR=1.2;
     f.triggerWas=mouseL;}
   for(const x of [ME,BOT]){x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.trigger?1:3));x.buildT-=x===ME?dt:0;if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}}
-  if(BOT.alive&&live){const c=botThink(dt);const id=gunOf(BOT);physics(BOT,dt,c.wx,c.wz,c.jump,BOT.ads?(id==='sniper'?3.8:5.6):8.6);}
+  if(BOT.alive&&live){const c=botThink(dt);const id=gunOf(BOT);physics(BOT,dt,c.wx,c.wz,c.jump,BOT.ads?(id==='sniper'?3.8:5.6):id==='sword'?9.4:8.6);}
   else if(BOT.alive)physics(BOT,dt,0,0,false,0);
   for(const w of M.walls){if(w.alive&&w.mesh.scale.y<1)w.mesh.scale.y=Math.min(1,w.mesh.scale.y+dt*5);}
   animFighter(ME,dt,S.state==='menu');animFighter(BOT,dt,S.state==='menu');
-  updDebris(dt);updParts(dt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
+  updProjs(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updParts(dt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
   updCamera(rdt);if(S.state!=='menu')updHUD(rdt);
   sky.position.copy(camera.position);const c=S.state==='menu'?M.center:ME.pos;sun.position.set(c.x+30,c.y+60,c.z+22);sun.target.position.set(c.x,0,c.z-4);
   fillL.position.copy(camera.position);fillL.target.position.copy(c);}
@@ -2091,30 +2186,38 @@ function frame(rdt){step(rdt);render();}
 
 /* ================= menu integration ================= */
 function renderRecord(){let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}$('d-record').textContent=`${w}–${l}`;}
-function enterMenu(){S.state='menu';S.paused=false;D.active=true;B.G.state='duel';if(M.id!==S.map)buildMap(S.map);clearWalls();clearDebris();
+function enterMenu(){if(!Object.keys(MAPS).every(k=>thumbs[k])){for(const k of Object.keys(MAPS))makeThumb(k);renderDuelMenu();}S.state='menu';S.paused=false;D.active=true;B.G.state='duel';if(M.id!==S.map)buildMap(S.map);clearWalls();clearDebris();
   resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.gun;equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===S.gun;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();}
 function leave(){if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 function setMode(m){document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
   $('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=m!=='duels';store.set('mode',m);document.querySelector('.menu-card').classList.toggle('duels',m==='duels');
-  document.querySelector('.tag').textContent=m==='duels'?'Duels: first to five rounds against a bot. Pick a map and a gun, build walls for cover, and aim for the head.':'Twelve parkour courses over the void. Double jump, ride swings and moving platforms, and land clean jumps to build your combo.';
+  document.querySelector('.tag').textContent=m==='duels'?'First to five rounds against a bot. Pick a gun, use the houses, build walls for cover, and aim for the head.':'Twelve parkour courses over the void. Double jump, ride swings and moving platforms, and land clean jumps to build your combo.';
   if(m==='duels')enterMenu();else{D.active=false;B.G.state='menu';}}
 function barHTML(v){return `<u><s style="width:${v*20}%"></s></u>`;}
+const thumbs={};
+function makeThumb(id){if(thumbs[id])return;const keep=M.id;buildMap(id);const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0);
+  const saveA=camera.aspect,saveF=camera.fov;const W=renderer.domElement.width,H=renderer.domElement.height;
+  camera.aspect=W/H;camera.fov=40;camera.position.set(c.x-r*.55,r*.62,c.z+r*.32);camera.lookAt(c.x+2,0,c.z);camera.updateProjectionMatrix();sky.position.copy(camera.position);
+  sun.position.set(c.x+30,60,c.z+22);sun.target.position.set(c.x,0,c.z);ME.ch.root.visible=false;BOT.ch.root.visible=false;renderer.render(scene,camera);
+  const tw=320,th=180,cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const s=Math.min(W/tw,H/th)*.8;
+  g.drawImage(renderer.domElement,(W-tw*s)/2,(H-th*s)/2,tw*s,th*s,0,0,tw,th);try{thumbs[id]=cv.toDataURL('image/jpeg',.82);}catch(e){}
+  camera.aspect=saveA;camera.fov=saveF;camera.updateProjectionMatrix();ME.ch.root.visible=true;BOT.ch.root.visible=true;if(keep&&keep!==id)buildMap(keep);}
 function renderDuelMenu(){
-  $('d-maps').innerHTML=Object.entries(MAPS).map(([k,m])=>`<button class="opt" data-map="${k}" aria-pressed="${k===S.map}"><span class="sw">${m.sw.map(c=>`<i style="background:${c}"></i>`).join('')}</span><span class="t">${m.name}</span><span class="b">${m.desc}</span></button>`).join('');
-  $('d-guns').innerHTML=PRIMARIES.map(k=>{const g=GUNS[k];return `<button class="opt" data-gun="${k}" aria-pressed="${k===S.gun}"><span class="t">${g.name}</span><span class="b">${g.note}</span>
-    <span class="bars"><span>Damage</span>${barHTML(g.bars[0])}<span>Range</span>${barHTML(g.bars[1])}<span>Fire rate</span>${barHTML(g.bars[2])}</span></button>`;}).join('');
+  $('d-maps').innerHTML=Object.entries(MAPS).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
+  $('d-guns').innerHTML=PRIMARIES.map(k=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" data-gun="${k}" aria-pressed="${k===S.gun}"><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;}).join('');
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));
   $('d-start').textContent=`Start duel · ${MAPS[S.map].name}`;}
 $('d-maps').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b)return;S.map=b.dataset.map;store.set('duel:map',S.map);renderDuelMenu();buildMap(S.map);enterMenu();});
 $('d-guns').addEventListener('click',e=>{const b=e.target.closest('[data-gun]');if(!b)return;S.gun=b.dataset.gun;store.set('duel:gun',S.gun);renderDuelMenu();ME.primary=S.gun;for(const k in ME.guns)ME.guns[k].visible=k===S.gun;});
+if(!GUNS[S.gun]||S.gun==='pistol')S.gun='sniper';
 $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]');if(!b)return;S.diff=b.dataset.diff;store.set('duel:diff',S.diff);renderDuelMenu();});
 $('d-start').addEventListener('click',startMatch);
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 $('dp-resume').addEventListener('click',resume);$('dp-leave').addEventListener('click',leave);
 $('dd-again').addEventListener('click',startMatch);$('dd-menu').addEventListener('click',leave);
 renderDuelMenu();renderRecord();
-if(store.get('mode','parkour')==='duels'){const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode('duels');else setTimeout(w,100);};setTimeout(w,100);}
+if(store.get('mode','duels')==='duels'){const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode('duels');else setTimeout(w,100);};setTimeout(w,100);}
 })();
 </script>
 </body>

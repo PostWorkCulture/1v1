@@ -1,8 +1,13 @@
-# Block Rush
+# imok 1v1
 
-A blocky three.js game with two modes, playable in the browser:
+A blocky three.js 1v1 shooter you play in the browser against a bot.
 
-- **Parkour** – 12 courses with double jump, swings, moving platforms, combo scoring and random chaos events. Controls: WASD to move, Space to jump (press again in mid-air to double jump), drag to look, R to respawn, P to pause.
-- **Duels 1v1** – first to five rounds against a bot on Maple Street, The House or Baseplate Arena. Choose a sniper, shotgun, machine gun or assault rifle; you also get a pistol and four buildable walls per round. Houses can be entered, with upstairs floors, balconies, lofts and rooftops. Controls: mouse to aim, click to fire, right-click to scope, Q to build a wall, R to reload, 1/2 to switch guns, P to pause. Needs a keyboard and mouse.
+**Duels 1v1** – first to five rounds on Maple Street. Every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
 
-It's a single static `index.html` (three.js and fonts load from CDNs), so it runs on GitHub Pages or any static host. To play locally, open `index.html` in a browser.
+Weapons: Sniper (headshot kills, 2 body shots), Assault Rifle, SMG, Shotgun, Machine Gun, Rocket Launcher, Ninja Stars and Sword, plus a pistol and four buildable walls per round. Magazines are small and reloading is manual.
+
+Controls: WASD move · Space jump · mouse aim (click to lock) · left click fire · right click aim down sights / scope · C crouch · R reload · 1/2 or wheel switch · Q build wall · P or Esc pause (controls and sensitivity sliders are on the pause menu). Needs a keyboard and mouse.
+
+**Parkour** – 12 obstacle courses with double jump, swings and moving platforms.
+
+It's a single static `index.html` (three.js and fonts load from CDNs), served by GitHub Pages. To play locally, open `index.html` in a browser.

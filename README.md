@@ -8,7 +8,7 @@ A blocky three.js 1v1 shooter you play in the browser against a bot.
 
 The menu is a full-screen, three-step setup: 1) mode and map, 2) character (with a profile preview), 3) primary and secondary weapons (with previews). Start turns green once everything is picked.
 
-Characters: Ace (super-high double jump), Jet (jetpack flight), Blaze (fireballs), Blink (teleport dash), Tank (150 HP + shield) and Ghost (invisibility; a hooded spectre in a tattered cloak), each with an ability on E.
+Characters: Ace (your original avatar; super-high double jump), Jet (an ace pilot with a chrome jetpack; flight), Blaze (a fire brawler with flame hair; fireballs), Blink (a street magician; teleport dash), Tank (a mech pilot in a yellow exo-frame; 150 HP and a shield) and Ghost (a hooded spectre; invisibility), each with an ability on E.
 
 At 0 HP you go down instead of dying: you crawl slowly, take 20 less damage per hit (35 less from shotguns, grenades in full), can punch for 5 damage, and revive automatically after 4 seconds (getting hit doesn't reset it), or the opponent can walk up and press F for a finishing move (bat home run, axe drop or execution, chosen in the menu), or press C to pick you up and then click to throw you (fatal) or F to slam you down (hold C to sky slam: fly high, hold them up for 2 seconds, chuck them down, shoot them, then dive down and punch them out). Every elimination plays the winner's kill effect: each character has two kill effects of their own. XP: +10 per round won, +5 per round lost, 100 XP per level. Sniper headshots skip the downed state. Built walls break apart brick by brick.
 

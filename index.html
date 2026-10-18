@@ -471,7 +471,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <span><kbd>1</kbd> <kbd>2</kbd> / wheel</span><em>Primary / secondary (pistol, revolver, grenades or knife)</em>
         <span><kbd>Q</kbd></span><em>Build a wall (4 per round), breaks brick by brick</em>
         <span><kbd>E</kbd></span><em>Character ability</em>
-        <span>Downed</span><em>Crawl fast, revive automatically after 4 seconds without damage, click to punch for 5</em>
+        <span>Downed</span><em>Move slightly faster, revive automatically after 4 seconds without damage, click to punch for 5</em>
         <span><kbd>F</kbd></span><em>Finish a downed opponent up close</em>
         <span><kbd>P</kbd> <kbd>Esc</kbd></span><em>Pause / resume</em>
       </div>
@@ -1875,7 +1875,7 @@ function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Mat
 /* ================= weapons ================= */
 const GUNS={
   sniper:{name:'Sniper',dmg:60,head:2,rate:1.3,mag:3,reload:2.4,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',note:'Headshot kills, 2 body shots'},
-  ar:{name:'Assault Rifle',dmg:19,head:1.8,rate:.115,mag:20,reload:1.9,spread:1.5,adsSpread:.45,pellets:1,fall:[35,90],zoom:42,auto:true,kick:.01,bloom:.12,color:'#f08a24',note:'Accurate all-rounder'},
+  ar:{name:'Assault Rifle',dmg:14,head:1.8,rate:.115,mag:20,reload:1.9,spread:1.5,adsSpread:.45,pellets:1,fall:[35,90],zoom:42,auto:true,kick:.01,bloom:.12,color:'#f08a24',note:'Accurate all-rounder'},
   smg:{name:'SMG',dmg:11,head:1.6,rate:.065,mag:18,reload:1.5,spread:2.4,adsSpread:1.1,pellets:1,fall:[12,40],zoom:48,auto:true,kick:.006,bloom:.15,color:'#a05ad6',note:'Very fast fire up close'},
   shotgun:{name:'Shotgun',dmg:6,head:1.5,rate:.85,mag:4,reload:2.0,spread:4.2,adsSpread:2.8,pellets:9,fall:[7,22],zoom:52,auto:false,kick:.05,bloom:0,color:'#8a5a34',note:'Up to 54 damage close in'},
   mg:{name:'Machine Gun',dmg:12,head:1.6,rate:.075,mag:40,reload:3.2,spread:2.6,adsSpread:1.5,pellets:1,fall:[28,70],zoom:46,auto:true,kick:.008,bloom:.18,color:'#e8463a',note:'Big belt, slow reload'},
@@ -1975,7 +1975,7 @@ function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;const H=
   const bd=M.bounds;f.pos.x=clamp(nx,bd.x0+R,bd.x1-R);f.pos.z=clamp(nz,bd.z0+R,bd.z1-R);f.pos.y+=lift;return true;}
 function canStand(f){for(const b of allBoxes())if(b.x0<f.pos.x+R&&b.x1>f.pos.x-R&&b.z0<f.pos.z+R&&b.z1>f.pos.z-R&&b.y0>=f.pos.y+hhOf(f)-.05&&b.y0<f.pos.y+HH)return false;return true;}
 function updCrouch(f,want,dt){if(!want&&f.cv>0&&!canStand(f))want=true;f.crouching=want;f.cv=clamp((f.cv||0)+(want?1:-1)*dt*7,0,1);}
-function physics(f,dt,wx,wz,jump,speed,jumpPress){const C=CHARS[f.char]||CHARS.ace;speed*=C.speed||1;if(f.downed){speed=7;jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}
+function physics(f,dt,wx,wz,jump,speed,jumpPress){const C=CHARS[f.char]||CHARS.ace;speed*=C.speed||1;if(f.downed){speed=10*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}
   const acc=f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1);

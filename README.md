@@ -1,10 +1,10 @@
 # imok 1v1
 
-A blocky three.js 1v1 shooter you play in the browser against a bot.
+A blocky three.js shooter you play in the browser against bots: 1v1, 2v2 or free for all.
 
-**Duels 1v1** – first to five rounds against the bot on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
+**Duels** – pick **1v1**, **2v2** (you and a bot teammate against two bots; teammates spawn side by side, can't hurt each other, and once you're out you spectate your teammate) or **Free for all** (you against three bots, everyone for themselves; last one standing takes the round). First to five rounds, on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
 
-**Bot play styles** – pick one on the menu or leave it on Mixed for a different style each round (with weapons to match; a bot that just won a round may keep its style):
+**Bot play styles** – pick one on the menu (in 2v2 and free for all every bot gets its own) or leave it on Mixed for a different style each round (with weapons to match; a bot that just won a round may keep its style):
 - **Rusher** – charges straight at you, jukes and jumps, never retreats; uses Blink/Ghost/Shield to close the gap.
 - **Sniper** – takes high ground far away with a view of you, scopes in, relocates after every couple of shots or when hit, and switches to its sidearm if you get close.
 - **Lurker** – hides out of your sight near you and waits; springs when you come within ~13 m or turn your back, ducks out of view if you spot it at range.
@@ -14,7 +14,7 @@ A blocky three.js 1v1 shooter you play in the browser against a bot.
 
 All styles also react to the fight: they push when you're low, play safer when they're hurt, and chase the clock late in a round when behind on health. Sniper and Turtle aren't used in Rumble.
 
-**Rumble** – Duels with no guns: fists only (15 per punch), on the small Backyard map or The House. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Abilities, walls, pick-ups, slams and finishing moves all still work.
+**Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (15 per punch), on the small Backyard map or The House. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Abilities, walls, pick-ups, slams and finishing moves all still work.
 
 The menu is a full-screen, three-step setup: 1) mode and map, 2) character (with a profile preview), 3) primary and secondary weapons (with previews). Start turns green once everything is picked.
 

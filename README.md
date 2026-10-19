@@ -2,7 +2,7 @@
 
 A blocky three.js shooter you play in the browser against bots: 1v1, 2v2 or free for all.
 
-**Duels** – pick **1v1**, **2v2** (you and a bot teammate against two bots; teammates spawn side by side, can't hurt each other, and once you're out you spectate your teammate) or **Free for all** (you against three bots, everyone for themselves; last one standing takes the round). First to five rounds, on Maple Street, The House (room-to-room fights) or Baseplate Arena (open studs and forts for snipers). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
+**Duels** – pick **1v1**, **2v2** (you and a bot teammate against two bots; teammates spawn side by side, can't hurt each other, and once you're out you spectate your teammate) or **Free for all** (you against three bots, everyone for themselves; last one standing takes the round). First to five rounds, on Maple Street (Sky Islands, Wreck Cove and Rail Yard are coming soon and show as locked tiles in the menu). On Maple Street every house can be entered; most have two floors, balconies, lofts with rooftop terraces, and windows to snipe from. Each round you and the bot start at two of eight spawn points, far apart. The bot climbs stairs and roofs too.
 
 **Bot play styles** – every round each bot secretly picks one of ten styles (and weapons to match), so you have to work out what you're up against:
 - **Rusher** – charges straight at you, jukes and jumps, never retreats.

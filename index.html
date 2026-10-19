@@ -2797,7 +2797,13 @@ function pickStyle(b){const ru=S.mode==='rumble',pool=ru?RUMBLE_STYLES:STYLE_IDS
 function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=st;const a=b.ai;a.P=P;a.style=st;a.mode=null;a.spot=null;a.camp=null;a.wallCD=0;a.campMoved=false;a.track=null;a.shots=0;a.fired=0;a.side=Math.random()<.5?-1:1;
   if(S.mode!=='rumble'){b.primary=(b===BOT&&S.forceBot)||pickOf(P.prim);b.secondary=pickOf(P.sec);}
   if(b===BOT&&S.players==='1v1')txt('d-botname',CHARS[BOT.char].name+' · '+GUNS[BOT.primary].name);}
-const DIFF={easy:{name:'Easy',react:.75,err:3.4,head:.08,turn:4.5,strafe:.4,build:.25},normal:{name:'Normal',react:.42,err:1.9,head:.22,turn:8,strafe:.7,build:.5},hard:{name:'Hard',react:.22,err:1.0,head:.42,turn:14,strafe:1,build:.8}};
+/* difficulty: react = s before first shot, err = aim spread (deg), head = headshot chance, turn = aim speed,
+   settle = how fast the first-sight error closes, sway = error that never settles (x err), flinch = deg of aim knocked off when hit,
+   recoil = deg added after each shot, lead = how well it leads a moving target, tol = how far off-target it still pulls the trigger (rad),
+   miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight */
+const DIFF={easy:{name:'Easy',react:1.15,err:5.5,head:.03,turn:3.2,strafe:.3,build:.2,settle:.8,sway:.9,flinch:6,recoil:2.2,lead:0,tol:.16,rof:1.35,burst:4,pause:[.6,1.2],hes:.3,miss:.5},
+  normal:{name:'Normal',react:.6,err:2.7,head:.14,turn:6.5,strafe:.6,build:.4,settle:1.4,sway:.5,flinch:3,recoil:1,lead:.5,tol:.09,rof:1.25,burst:6,pause:[.3,.7],hes:.12,miss:.25},
+  hard:{name:'Hard',react:.3,err:1.3,head:.34,turn:12,strafe:.95,build:.75,settle:2.2,sway:.25,flinch:1.2,recoil:.3,lead:1,tol:.06,rof:1.1,burst:0,pause:[0,0],hes:0,miss:.1}};
 const MOVES=['Ice sculpture','Dog pile','Sky drop','Hot potato','Pancake'];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 const S={optic:!!store.get('duel:optic',false),touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
@@ -3545,17 +3551,24 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;}}
   // aim
   if(see){let tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;if(id==='rocket'&&T.grounded&&seeB)tgt=new V3(T.pos.x,T.pos.y+.35,T.pos.z);
-    if(a.seeT<dt*1.5){a.err.set(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(dist*Math.tan(dif.err*P.err*3*Math.PI/180));a.headPick=Math.random()<dif.head;}
-    a.err.multiplyScalar(Math.exp(-dt*2.2));const lead=T.vel.clone().multiplyScalar(id==='sniper'?0:.05);
-    const aim=tgt.clone().add(a.err).add(lead).add(new V3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).multiplyScalar(dist*Math.tan(dif.err*P.err*Math.PI/180)*.5));
+    const spr=deg=>dist*Math.tan(Math.min(deg,30)*Math.PI/180),E=dif.err*P.err;
+    if(a.seeT<dt*1.5){a.err.set(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(spr(E*3));a.headPick=Math.random()<dif.head;a.hesT=Math.random()<dif.hes?rnd(.4,1.1):0;}
+    if(S.t-f.lastHurt<dt*1.5)a.err.add(new V3(rnd(-1,1),rnd(-.4,.8),rnd(-1,1)).multiplyScalar(spr(dif.flinch))); // getting shot knocks its aim off
+    a.err.multiplyScalar(Math.exp(-dt*dif.settle));
+    a.swayT=(a.swayT||0)-dt;if(a.swayT<=0||!a.sway){a.swayT=rnd(.35,.8);a.sway=new V3(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(spr(E*dif.sway));}a.swayC=(a.swayC||new V3()).lerp(a.sway,1-Math.exp(-dt*5)); // shaky hands that never settle
+    const lead=T.vel.clone().multiplyScalar(id==='sniper'?0:.05*dif.lead);
+    const aim=tgt.clone().add(a.err).add(a.swayC).add(lead).add(new V3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).multiplyScalar(spr(E)*.5));
     if(id==='stars'){const tt=dist/GUNS.stars.speed;aim.y+=.5*GUNS.stars.grav*tt*tt;}
     const dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z;const wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));
     let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;const mxt=dif.turn*dt;f.yaw+=clamp(dyaw,-mxt,mxt);f.pitch=damp(f.pitch,wp,dif.turn,dt);
     f.ads=!CLOSE(id)&&dist>10;
-    const ready=a.seeT>dif.react*P.react*(id==='sniper'?1.5:1)&&(a.fireOK||S.t-f.lastHurt<.6);
+    const ready=a.seeT>dif.react*P.react*(id==='sniper'?1.5:1)+(a.hesT||0)&&(a.fireOK||S.t-f.lastHurt<.6);
     const inRange=id==='shotgun'?dist<18:(id==='sword'||id==='fists')?dist<2.5&&Math.abs(T.pos.y-f.pos.y)<1.8:id==='rocket'?dist>5&&dist<45:id==='stars'?dist<34:true;
-    if(ready&&Math.abs(dyaw)<.06+(CLOSE(id)?.12:0)&&canFire(f)&&inRange&&(!GUNS[id].sec||Math.random()<.5)){
-      const d=new V3(aim.x-eye.x,aim.y-eye.y,aim.z-eye.z).normalize();fire(f,eye,d);a.shots=(a.shots||0)+1;a.fired=(a.fired||0)+1;}}
+    if(ready&&Math.abs(dyaw)<dif.tol+(CLOSE(id)?.12:0)&&canFire(f)&&inRange&&(!GUNS[id].sec||Math.random()<.5)){
+      if(!CLOSE(id)&&Math.random()<dif.miss){const sd=Math.random()<.5?-1:1,w=rnd(.9,1.8)*SC;aim.x+=-dz/Math.hypot(dx,dz)*sd*w;aim.z+=dx/Math.hypot(dx,dz)*sd*w;aim.y+=rnd(-.3,.9);} // a near miss
+      const d=new V3(aim.x-eye.x,aim.y-eye.y,aim.z-eye.z).normalize();fire(f,eye,d);a.shots=(a.shots||0)+1;a.fired=(a.fired||0)+1;
+      if(!CLOSE(id)){f.fireT=Math.max(f.fireT,(GUNS[id].rate||.1)*dif.rof);a.err.add(new V3(rnd(-1,1),rnd(-.2,1),rnd(-1,1)).multiplyScalar(spr(dif.recoil)));
+        a.burstN=(a.burstN||0)+1;if(dif.burst&&a.burstN>=dif.burst){a.burstN=0;f.fireT+=rnd(dif.pause[0],dif.pause[1]);}}}}
   else{f.ads=false;const sp=Math.hypot(wx,wz);if(sp>.1){const wy=Math.atan2(wx,wz);let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-6*dt,6*dt);}f.pitch=damp(f.pitch,0,4,dt);}
   if(f.char==='jet'&&!f.grounded&&T.pos.y>f.pos.y+1)jump=true;
   if(S.mode==='rumble'&&f.grounded&&see&&dist>2.2&&dist<4.6&&Math.abs(T.pos.y-f.pos.y)<1&&Math.random()<dt*1.5)jump=true;

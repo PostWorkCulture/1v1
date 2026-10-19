@@ -2183,7 +2183,7 @@ function buildShop(x,z,gy){
   M.shop={x,z,y:gy,coin,pad,sign};}
 
 /* ================= nav grid ================= */
-const CS=.5,CLR=.42,NL=4,NAV_H=2.45;
+const CS=.5,CLR=.42,NL=4,NAV_H=2.25;
 // walkable surfaces per cell (ground, floors, stairs, roofs) so bots can climb wherever players can
 function buildGrid(){const b=M.bounds,nx=Math.ceil((b.x1-b.x0)/CS),nz=Math.ceil((b.z1-b.z0)/CS),N=nx*nz;
   const g={nx,nz,x0:b.x0,z0:b.z0,h:new Float32Array(N*NL).fill(NaN),n:new Uint8Array(N)};const bins=new Array(N);
@@ -2649,7 +2649,7 @@ function resetFighter(f,sp){f.stunT=0;f.stam=STAM_MAX;f.stamLock=false;f.sprinti
   const a=f.ai;a.path=null;a.pathT=0;a.goalT=0;a.seeT=0;a.lostT=9;a.holdT=0;a.err.set(0,0,0);}
 
 /* ================= physics ================= */
-const R=.45,HH=2.45,GRAV=36,JUMP=12,STEP=.55;
+const R=.45,HH=2.25,GRAV=36,JUMP=12,STEP=.55;
 const hhOf=f=>HH*(1-.3*(f.cv||0));
 function overlaps(b,x,z,y,h=HH){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+h;}
 function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;const H=hhOf(f);
@@ -2677,7 +2677,7 @@ function physics(f,dt,wx,wz,jump,speed,jumpPress){const C=CHARS[f.char]||CHARS.b
   f.pos.y=ny;}
 
 /* ================= state ================= */
-const SC=.88; // fighters are scaled down so they fit every doorway and stair with headroom
+const SC=.8; // fighters are scaled down so they fit every doorway and stair with headroom
 /* bot play styles: aggr = how hard it pushes, range = x preferred weapon range, retreat = HP fraction it backs off at,
    build = wall eagerness, wallHp = HP below which it walls up when shot, strafe/jump = juking, react/err = aim timing and spread */
 const STYLES={
@@ -3321,11 +3321,14 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
     if(seen&&dd<2.3&&Math.abs(T.pos.y-f.pos.y)<1.9){f.yaw=Math.atan2(T.pos.x-f.pos.x,T.pos.z-f.pos.z);punch(f);return{wx:0,wz:0,jump:false};}
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
   if(f.carrying){if(f.skySlam)return{wx:0,wz:0,jump:false};f.carryT-=dt;f.yaw+=dt*1.5;if(f.carryT<=0){const r=Math.random();if(r<.34)throwV(f);else if(r<.67)slam(f);else skyLaunch(f);}return{wx:0,wz:0,jump:false};}
-  if(T.downed&&T.alive&&!T.finishing&&!(T.thrownT>0)){if(canPick(f,T)&&Math.random()<dt*3){if(Math.random()<.5){pickUp(f,T);f.carryT=1.1;}else finish(f,T);return{wx:0,wz:0,jump:false};}
+  // when the target goes down the bot either walks over to finish them (50%) or stays put and shoots them on the ground (50%)
+  if(a.planFor&&(a.planFor!==T||!T.downed))a.planFor=null;
+  if(T.downed&&T.alive&&!a.planFor){a.planFor=T;a.plan=Math.random()<.5?'finish':'shoot';}
+  if(T.downed&&T.alive&&!T.finishing&&!(T.thrownT>0)&&a.plan==='finish'){if(canPick(f,T)&&Math.random()<dt*3){if(Math.random()<.5){pickUp(f,T);f.carryT=1.1;}else finish(f,T);return{wx:0,wz:0,jump:false};}
     if(Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z)<70){a.goalT-=dt;if(a.goalT<=0||!a.path){a.goalT=.5;a.path=findPath(f.pos.x,f.pos.y,f.pos.z,T.pos.x,T.pos.y,T.pos.z);}
       let wx=0,wz=0;if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45)a.path.shift();else{wx=dx/l;wz=dz/l;}}else{const dx=T.pos.x-f.pos.x,dz=T.pos.z-f.pos.z,l=Math.hypot(dx,dz)||1;wx=dx/l;wz=dz/l;}
       if(wx||wz)f.yaw=Math.atan2(wx,wz);return{wx,wz,jump:false};}}
-  const eye=eyeOf(f,new V3()),tgtHead=eyeOf(T,new V3()),tgtBody=new V3(T.pos.x,T.pos.y+1.25*SC,T.pos.z);
+  const eye=eyeOf(f,new V3()),tgtHead=eyeOf(T,new V3()),tgtBody=new V3(T.pos.x,T.pos.y+(T.downed?.45:1.25*SC),T.pos.z);
   const ghosted=T.ghostT>0&&Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z)>8;const seeB=!ghosted&&T.alive&&los(eye,tgtBody),seeH=!ghosted&&!seeB&&T.alive&&los(eye,tgtHead),see=seeB||seeH;if(see){a.seeT+=dt;a.lostT=0;a.lastSeen=T.pos.clone();}else{a.seeT=0;a.lostT+=dt;if(f.senseT>0)a.lastSeen=T.pos.clone();}
   const P=a.P||STYLES.duelist,dist=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z),id=gunOf(f),pr=prefRange(id)*(CLOSE(id)?1:P.range);
   // weapon choice

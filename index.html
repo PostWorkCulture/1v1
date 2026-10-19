@@ -203,6 +203,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .d-cross.ring i{display:none}
 .d-cross.ring b{left:calc(-1 * var(--g));top:calc(-1 * var(--g));width:calc(2 * var(--g));height:calc(2 * var(--g));background:transparent;border:2px solid var(--cc,#fff);box-shadow:0 0 0 1.5px rgba(10,10,14,.6),inset 0 0 0 1.5px rgba(10,10,14,.6)}
 .d-cross.dot i{display:none}
+.d-cross.reddot i{display:none}.d-cross.reddot b{left:-3px;top:-3px;width:6px;height:6px;background:#ff2a2a;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 6px 1px rgba(255,40,40,.7)}
 .d-hit{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}
 .d-hit i{position:absolute;left:-9px;top:-1.5px;width:18px;height:3px;background:#fff;box-shadow:0 0 0 1px #111}
 .d-hit i:first-child{transform:rotate(45deg) translateX(13px)} .d-hit i:last-child{transform:rotate(-45deg) translateX(13px)}
@@ -215,8 +216,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #d-scope::before{left:calc(50% - var(--sr));right:calc(50% - var(--sr));top:50%;height:1.5px;margin-top:-.75px}
 #d-scope::after{top:calc(50% - var(--sr));bottom:calc(50% - var(--sr));left:50%;width:1.5px;margin-left:-.75px}
 #d-scope .ring{position:absolute;left:50%;top:50%;width:calc(2 * var(--sr));height:calc(2 * var(--sr));transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 0 3px var(--sc),0 0 14px 2px color-mix(in srgb,var(--sc) 55%,transparent)}
-#d-holo{--hr:min(15vw,15vh);--sc:#fff;position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 0 calc(var(--hr) * 1.35),rgba(8,10,14,.18) calc(var(--hr) * 3.2))}
-#d-holo .glass{position:absolute;left:50%;top:50%;width:calc(2 * var(--hr));height:calc(2 * var(--hr));transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.10),color-mix(in srgb,var(--sc) 7%,transparent) 60%);box-shadow:0 0 0 2px var(--sc),0 0 12px 1px color-mix(in srgb,var(--sc) 60%,transparent),inset 0 0 18px color-mix(in srgb,var(--sc) 30%,transparent)}
+#d-holo{--hr:min(3.75vw,3.75vh);--sc:#fff;position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 0 min(30vw,30vh),rgba(8,10,14,.16) min(80vw,80vh))}
+#d-holo .glass{position:absolute;left:50%;top:50%;width:calc(2 * var(--hr));height:calc(2 * var(--hr));transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.10),color-mix(in srgb,var(--sc) 7%,transparent) 60%);box-shadow:0 0 0 1.5px var(--sc),0 0 6px 1px color-mix(in srgb,var(--sc) 60%,transparent),inset 0 0 6px color-mix(in srgb,var(--sc) 30%,transparent)}
 #d-holo .rim{position:absolute;left:50%;top:50%;width:calc(2.28 * var(--hr));height:calc(2.28 * var(--hr));transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.35);box-shadow:0 0 0 1px rgba(10,12,16,.35)}
 #d-holo .tk{position:absolute;left:50%;top:50%;background:var(--sc);box-shadow:0 0 6px color-mix(in srgb,var(--sc) 70%,transparent)}
 #d-holo .tk.t{width:2px;height:calc(var(--hr) * .28);margin-left:-1px;top:calc(50% - var(--hr))}
@@ -3361,7 +3362,7 @@ function updHUD(dt){updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');
   const holo=holoOn(ME);{const ho=$('d-holo');if(ho.hidden===holo)ho.hidden=!holo;if(holo&&ho.dataset.g!==id){ho.dataset.g=id;ho.style.setProperty('--sc',XHAIR[id]);}}
   const scoped=ME.ads&&(id==='sniper'||id==='scout')&&ME.alive;{const sc=$('d-scope');if(sc.hidden===scoped)sc.hidden=!scoped;if(scoped){const c=id==='sniper'?'hdr':'kar';if(sc.className!==c){sc.className=c;sc.style.setProperty('--sc',XHAIR[id]);}}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='sniper'?' ring':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:1;cr.style.setProperty('--cc',XHAIR[id]||'#fff');
+  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:1;cr.style.setProperty('--cc',XHAIR[id]||'#fff');
   flashA=Math.max(0,flashA-dt*(flashA>.6?.55:1.1));$('d-flash').style.opacity=flashA.toFixed(3);{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}

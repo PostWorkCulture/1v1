@@ -2902,7 +2902,7 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 const DIFF={easy:{name:'Easy',react:1.15,err:5.5,head:.03,turn:3.2,strafe:.3,build:.2,settle:.8,sway:.9,flinch:6,recoil:2.2,lead:0,tol:.16,rof:1.35,burst:4,pause:[.6,1.2],hes:.3,miss:.5},
   normal:{name:'Normal',react:.6,err:2.7,head:.14,turn:6.5,strafe:.6,build:.4,settle:1.4,sway:.5,flinch:3,recoil:1,lead:.5,tol:.09,rof:1.25,burst:6,pause:[.3,.7],hes:.12,miss:.25},
   hard:{name:'Hard',react:.3,err:1.3,head:.34,turn:12,strafe:.95,build:.75,settle:2.2,sway:.25,flinch:1.2,recoil:.3,lead:1,tol:.06,rof:1.1,burst:0,pause:[0,0],hes:0,miss:.1}};
-const MOVES=['Ice sculpture','Dog pile','Hot potato','Pancake','Sky drop'];
+const MOVES=['Ice sculpture','Dog pile','Hot potato','Pancake','Sky drop','Heartbreaker'];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
@@ -3150,6 +3150,10 @@ function dogMesh(col){const g=new THREE.Group(),m=mat(col,null,{roughness:.85}),
   const tail=new THREE.Group();tail.position.set(0,.78,-.48);body.add(tail);piece(tail,new THREE.BoxGeometry(.08,.08,.36),m,0,0,-.16);
   const legs=[];for(const [x,z] of [[-.17,.35],[.17,.35],[-.17,-.35],[.17,-.35]]){const l=new THREE.Group();l.position.set(x,.46,z);body.add(l);piece(l,new THREE.BoxGeometry(.13,.46,.13),m,0,-.22,0);legs.push(l);}
   g.scale.setScalar(SC*1.1);return {g,body,head,jaw,tail,legs};}
+function heartMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:'#c8102e',roughness:.45,emissive:'#5a0010',emissiveIntensity:.35}),dk=new THREE.MeshStandardMaterial({color:'#7d0d17',roughness:.6});
+  piece(g,RBX(.15,.15,.13,.05),m,-.065,.05,0);piece(g,RBX(.15,.15,.13,.05),m,.065,.05,0);piece(g,RBX(.15,.15,.13,.03),m,0,-.04,0,{rot:[0,0,Math.PI/4]});
+  piece(g,new THREE.BoxGeometry(.04,.09,.04),dk,-.03,.15,0,{outline:false});piece(g,new THREE.BoxGeometry(.035,.07,.035),dk,.035,.14,.01,{outline:false,rot:[0,0,-.4]});
+  g.scale.setScalar(1.8);return g;}
 function potatoMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:'#b5793f',roughness:.8});
   const b=new THREE.Mesh(new THREE.SphereGeometry(.2,14,10),m);b.scale.set(1.3,.95,1);b.castShadow=true;g.add(b);const ol=new THREE.Mesh(b.geometry,OUTL);ol.scale.setScalar(1.08);b.add(ol);
   const top=.17,fg=new THREE.CylinderGeometry(.022,.022,1,6);fg.translate(0,.5,0);const fuse=new THREE.Mesh(fg,new THREE.MeshStandardMaterial({color:'#3a2a1e',roughness:.9}));fuse.position.set(.04,top,0);fuse.rotation.z=-.25;g.add(fuse);
@@ -3161,7 +3165,7 @@ function handW(f,left){f.ch.root.updateMatrixWorld(true);return (left?f.ch.aL:f.
 // put the attacker `dist` metres short of the victim's spot, facing them; vel drives the walk cycle
 function setAtt(a,F,dist,dt){const x=F.v0.x-F.fwd.x*dist,z=F.v0.z-F.fwd.z*dist;const vx=(x-a.pos.x)/Math.max(dt,1e-3),vz=(z-a.pos.z)/Math.max(dt,1e-3);
   a.pos.x=x;a.pos.z=z;a.pos.y=F.v0.y;a.vel.set(vx,0,vz);a.grounded=true;}
-const MOVE_DUR={'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.2,'Pancake':3.6};
+const MOVE_DUR={'Heartbreaker':3.9,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.2,'Pancake':3.6};
 function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,0),fx=F.fx,yawA=F.yaw0;
   const side=new V3(Math.cos(yawA),0,-Math.sin(yawA));// attacker's local +X
   const dA=Math.hypot(F.a0.x-F.v0.x,F.a0.z-F.v0.z);
@@ -3259,6 +3263,29 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       emit(c.x,c.y,c.z,{n:60,speed:11,size:.35,life:.7,grav:2,colors:['#ffb347','#ff7a1f','#ffe08a']});emit(c.x,c.y,c.z,{n:30,speed:3,up:3,size:.35,life:1.2,grav:-1.2,colors:['#4a4d55','#6b6f78','#8a8f99']});
       decal(F.v0.x,F.v0.y,F.v0.z,1.6,'#1d1b1a');shatter(v,{power:14,up:7,from:c.clone().add(new V3(0,-.4,0))});S.shake=1;slowMo(.4,a,v);vig(.2);say(a,v,'Hot potato!','Hot potato','You held the hot potato',false);}
     F.focus=new V3(F.v0.x*.65+a.pos.x*.35,F.v0.y+1.4,F.v0.z*.65+a.pos.z*.35);F.camD=10.5;}
+  else if(fx==='Heartbreaker'){
+    if(t<.35)v.downed=false;
+    const back=t<1.25?lerp(dA,.95,easeIO(segT(t,.05,.45))):lerp(.95,1.55,easeIO(segT(t,1.25,1.6)));setAtt(a,F,back,dt);a.yaw=yawA;if(t>1.6)a.vel.set(0,0,0);
+    // right arm: wind back, punch into the chest, rip out, then hold the heart up to the sky
+    const raise=easeIO(segT(t,1.5,2.0));
+    a.pose={ar:t<.45?[-.3,0,0]:t<.72?[lerp(-.3,.7,segT(t,.45,.72)),0,.1]:t<1.25?[-1.55,0,-.12]:t<1.5?[-1.3,0,-.1]:[lerp(-1.3,-3.0,raise),0,lerp(-.1,-.18,raise)],al:t>1.5?[-.35,0,.25]:[-.4,0,.15],head:t>1.6?-.35*raise:undefined};
+    if(t>=.78&&!F.hit){F.hit=1;S.shake=Math.max(S.shake,.45);const h=handW(a,false);spray(h,{n:6,cols:['#c8102e','#7d0d17'],s0:.05,s1:.09,power:2,up:2,floor:F.v0.y});}
+    if(t>=1.25&&!F.heart){F.heart=heartMesh();scene.add(F.heart);F.obj.push(F.heart);F.beat=0;
+      const h=handW(a,false);spray(h,{n:8,cols:['#c8102e','#7d0d17'],s0:.05,s1:.1,power:3,up:3,floor:F.v0.y});S.shake=Math.max(S.shake,.35);
+      // a dark hole where the heart was: find the chest surface facing the attacker
+      v.ch.root.updateMatrixWorld(true);const ray=new THREE.Raycaster(new V3(F.v0.x,F.v0.y+1.55*SC,F.v0.z).addScaledVector(fw,-2),fw,0,2.2);
+      const hits=ray.intersectObject(v.ch.root,true).filter(x=>{const m=Array.isArray(x.object.material)?x.object.material[0]:x.object.material;return x.object.visible&&m&&m.side!==THREE.BackSide;});
+      if(hits.length){const hole=new THREE.Mesh(new THREE.BoxGeometry(.26,.26,.05),new THREE.MeshBasicMaterial({color:'#1a0406'}));hole.position.copy(v.ch.body.worldToLocal(hits[0].point.clone().addScaledVector(fw,-.01)));v.ch.body.add(hole);F.hole=hole;}
+      say(a,v,'Heartbreaker!','Heartbreaker','Your heart got ripped out',false);}
+    if(F.heart){const h=handW(a,false);F.heart.position.copy(h).add(new V3(0,t>1.5?.32:.12,0));F.heart.rotation.y=a.yaw;
+      const alive=!F.landed,rate=alive?lerp(1.9,.7,segT(t,1.25,3.0)):0;F.beat+=dt*rate;const b=alive?Math.pow(Math.max(0,Math.sin(F.beat*Math.PI*2)),6):0;F.heart.scale.setScalar(1.8*(1+.28*b));
+      if(alive&&b>.9&&!F.drip){F.drip=1;emit(h.x,h.y,h.z,{n:2,speed:.4,up:-1,size:.07,life:.6,grav:8,colors:['#7d0d17','#c8102e']});}else if(b<.5)F.drip=0;}
+    // victim: stands, jolts when struck, then slumps and falls back to the ground
+    if(t>=.35){const slump=easeIO(segT(t,1.5,2.5)),fall=easeIn(segT(t,2.45,3.05)),jolt=t>.78&&t<1.3?1:0;
+      v.pos.set(F.v0.x+rnd(-.03,.03)*jolt,F.v0.y,F.v0.z+rnd(-.03,.03)*jolt);v.cv=lerp(.55*slump,.15,fall);
+      v.pose={root:[-Math.PI/2*fall+rnd(-.04,.04)*jolt,v.yaw,rnd(-.06,.06)*jolt],ar:jolt?[-.9,0,.9]:[lerp(-.6,-.05,slump),0,lerp(.4,.15,slump)],al:jolt?[-.9,0,-.9]:[lerp(-.6,-.05,slump),0,lerp(-.4,-.15,slump)],head:jolt?-.3:.55*slump,ll:fall?.3:undefined,lr:fall?-.2:undefined};
+      if(fall>=1&&!F.landed){F.landed=1;S.shake=Math.max(S.shake,.35);const C=F.v0.clone().addScaledVector(fw,1.2*SC);for(let i=0;i<14;i++){const an=i/14*TAU;emit(C.x+Math.cos(an)*.7,C.y+.15,C.z+Math.sin(an)*.7,{n:1,speed:4,up:1,size:.3,life:.5,grav:0,colors:['#c9bfae','#9a8f80']});}}}
+    F.focus=new V3((a.pos.x+F.v0.x)/2,F.v0.y+(t>1.5&&t<2.6?2.3:1.7),(a.pos.z+F.v0.z)/2);F.camD=5.6;F.camSide=.8;F.camBack=-.6;}
   else if(fx==='Pancake'){
     const ANG=2.1,hS=1.92*SC,armL=1.0*SC;
     setAtt(a,F,lerp(dA,1.0,easeIO(segT(t,.05,.4))),dt);a.yaw=yawA;if(t>.4)a.vel.set(0,0,0);

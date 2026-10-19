@@ -626,7 +626,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <span><kbd>R</kbd></span><em>Respawn at last checkpoint</em>
         <span><kbd>P</kbd> <kbd>Esc</kbd></span><em>Pause / resume</em>
       </div>
-      <div class="sens-box"><label class="sens" for="sens-cam-pk"><span>Camera sensitivity</span><input type="range" id="sens-cam-pk" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.00×</b></label></div>
+      <div class="sens-box"><label class="sens" for="sens-cam-pk"><span>Camera sensitivity</span><input type="range" id="sens-cam-pk" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.50×</b></label></div>
       <div class="btns">
         <button class="btn primary" id="resume">Resume</button>
         <button class="btn" id="restart">Restart level</button>
@@ -763,7 +763,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         </div></div>
       </div>
       <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
-<div class="sens-box"><label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.00×</b></label><label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.2" max="2" step="0.05"><b data-sens-val="ads">1.00×</b></label></div>
+<div class="sens-box"><label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.50×</b></label><label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.2" max="2" step="0.05"><b data-sens-val="ads">1.00×</b></label></div>
       <div class="btns">
         <button class="btn primary" id="dp-resume">Resume</button>
         <button class="btn" id="dp-leave">Leave duel</button>
@@ -1846,7 +1846,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 })();
 </script>
 <script>
-(function(){let S={cam:1,ads:1};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);}catch(e){}
+(function(){let S={cam:1.5,ads:1};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);}catch(e){}
   window.SENS=S;const sync=()=>{document.querySelectorAll('[data-sens]').forEach(i=>{i.value=S[i.dataset.sens];});document.querySelectorAll('[data-sens-val]').forEach(b=>{b.textContent=(+S[b.dataset.sensVal]).toFixed(2)+'×';});};
   document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.sens;if(!k)return;S[k]=+e.target.value;try{localStorage.setItem('blockrush:sens',JSON.stringify(S));}catch(err){}sync();});
   sync();})();
@@ -3446,7 +3446,6 @@ function updHUD(dt){updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');
     $('d-cons-bar').style.transform=`scaleX(${fr})`;txt('d-cons-c',cc.uses?'×'+ME.consN:(ME.consT>0&&!(ME.stimT>0||ME.senseT>0)?Math.ceil(ME.consT)+'s':''));}}
   const fu=$('d-fuel');fu.hidden=!C.jet;if(C.jet)fu.firstElementChild.style.transform=`scaleX(${ME.fuel/2.5})`;
   let pr='';if(!ME.alive&&S.state==='fight')pr='Eliminated · spectating until the round ends';else if(ME.stunT>0)pr='Stunned!';else if(ME.skySlam)pr='Sky slam!';else if(ME.carrying)pr='Click to throw · F to slam · hold C to sky slam';else if(ME.carriedBy)pr=nm(ME.carriedBy)+' picked you up!';else if(ME.alive&&!ME.downed&&FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0))pr='An enemy used a Sense Pack: they can see you';else if(ME.alive&&ME.downed&&!ME.finishing)pr=`Down · reviving ${Math.round(ME.revive*100)}% · click to punch (5)`;
-  else if(finishable(ME))pr='F to finish · C to pick up';else{const dv=FS.find(v=>isFoe(ME,v)&&v.downed&&v.alive&&!v.finishing);if(dv)pr=nm(dv)+' is down. Get close and press F, or shoot them';}
   // shop: menu pops up at the kiosk when your pick is ready
   {const near=nearShop(ME)&&canShopNow(),ready=!(ME.shopCD>0);if(near&&ready)openShop();else closeShop();if(S.shopOpen)renderShop(false);
     if(S.shopMsgT>0){S.shopMsgT-=dt;if(!pr)pr=S.shopMsg;}else if(!pr&&near&&!ready)pr=`Shop restocks in ${Math.ceil(ME.shopCD)}s`;

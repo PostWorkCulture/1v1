@@ -209,10 +209,22 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .d-hit.on{animation:hitm .22s ease-out}
 .d-hit.head i{background:var(--accent)}
 @keyframes hitm{0%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
-#d-scope{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 0 calc(min(40vw,40vh) - 2px),#0b0c10 min(40vw,40vh))}
-#d-scope::before,#d-scope::after{content:"";position:absolute;background:#0b0c10}
-#d-scope::before{left:0;right:0;top:50%;height:2px;margin-top:-1px}
-#d-scope::after{top:0;bottom:0;left:50%;width:2px;margin-left:-1px}
+#d-scope{--sr:min(40vw,40vh);--sc:#fff;position:absolute;inset:0;background:radial-gradient(circle at center,transparent 0 calc(var(--sr) - 1px),#0b0c10 var(--sr))}
+#d-scope.hdr{--sr:min(34vw,34vh)}#d-scope.kar{--sr:min(40vw,40vh)}
+#d-scope::before,#d-scope::after{content:"";position:absolute;background:rgba(11,12,16,.85)}
+#d-scope::before{left:calc(50% - var(--sr));right:calc(50% - var(--sr));top:50%;height:1.5px;margin-top:-.75px}
+#d-scope::after{top:calc(50% - var(--sr));bottom:calc(50% - var(--sr));left:50%;width:1.5px;margin-left:-.75px}
+#d-scope .ring{position:absolute;left:50%;top:50%;width:calc(2 * var(--sr));height:calc(2 * var(--sr));transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 0 3px var(--sc),0 0 14px 2px color-mix(in srgb,var(--sc) 55%,transparent)}
+#d-holo{--hr:min(15vw,15vh);--sc:#fff;position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,transparent 0 calc(var(--hr) * 1.35),rgba(8,10,14,.18) calc(var(--hr) * 3.2))}
+#d-holo .glass{position:absolute;left:50%;top:50%;width:calc(2 * var(--hr));height:calc(2 * var(--hr));transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.10),color-mix(in srgb,var(--sc) 7%,transparent) 60%);box-shadow:0 0 0 2px var(--sc),0 0 12px 1px color-mix(in srgb,var(--sc) 60%,transparent),inset 0 0 18px color-mix(in srgb,var(--sc) 30%,transparent)}
+#d-holo .rim{position:absolute;left:50%;top:50%;width:calc(2.28 * var(--hr));height:calc(2.28 * var(--hr));transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.35);box-shadow:0 0 0 1px rgba(10,12,16,.35)}
+#d-holo .tk{position:absolute;left:50%;top:50%;background:var(--sc);box-shadow:0 0 6px color-mix(in srgb,var(--sc) 70%,transparent)}
+#d-holo .tk.t{width:2px;height:calc(var(--hr) * .28);margin-left:-1px;top:calc(50% - var(--hr))}
+#d-holo .tk.b{width:2px;height:calc(var(--hr) * .28);margin-left:-1px;top:calc(50% + var(--hr) * .72)}
+#d-holo .tk.l{height:2px;width:calc(var(--hr) * .28);margin-top:-1px;left:calc(50% - var(--hr))}
+#d-holo .tk.r{height:2px;width:calc(var(--hr) * .28);margin-top:-1px;left:calc(50% + var(--hr) * .72)}
+#d-holo .dot{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ff2a2a;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 0 8px 2px rgba(255,40,40,.8)}
+#d-scope .dot{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#ff2a2a;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 8px 2px rgba(255,40,40,.75);z-index:1}
 #d-flash{position:absolute;inset:0;background:radial-gradient(ellipse at center,#fff 30%,#eef4ff);opacity:0;pointer-events:none}
 #d-sense{position:absolute;inset:0;pointer-events:none;opacity:0;box-shadow:inset 0 0 90px 10px rgba(54,243,255,.55);transition:opacity .3s}
 #d-sense.bot{box-shadow:inset 0 0 90px 10px rgba(255,59,92,.5)}
@@ -612,7 +624,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   </div>
 
   <div id="duel-hud" class="hud" hidden>
-    <div id="d-scope" hidden></div>
+    <div id="d-scope" hidden><i class="ring"></i><i class="dot"></i></div>
+    <div id="d-holo" hidden><i class="rim"></i><i class="glass"></i><i class="tk t"></i><i class="tk b"></i><i class="tk l"></i><i class="tk r"></i><i class="dot"></i></div>
     <div id="d-vig"></div>
     <div id="d-flash"></div>
     <div id="d-sense"></div>
@@ -674,6 +687,11 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <div class="seg" role="radiogroup" aria-label="Touch controls" id="dp-touch">
           <button role="radio" data-t="1" aria-checked="false">On</button>
           <button role="radio" data-t="0" aria-checked="true">Off</button>
+        </div></div>
+      <div class="row dt-row"><span class="eyebrow">Close-range scope <em style="font-style:normal;opacity:.7">(shop preview)</em></span>
+        <div class="seg" role="radiogroup" aria-label="Close-range scope" id="dp-optic">
+          <button role="radio" data-o="1" aria-checked="false">On</button>
+          <button role="radio" data-o="0" aria-checked="true">Off</button>
         </div></div>
             <div class="dt-guide">Left stick moves. Drag anywhere on the screen (or on Fire) to look. Grab picks up a downed opponent; hold it for a sky slam.</div>
       <div class="pk-groups">
@@ -2103,6 +2121,7 @@ function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Mat
   if(th>=0&&(tb<0||th<=tb+.05))return{t:th,part:'head'};if(tb>=0)return{t:tb,part:'body'};return null;}
 
 /* ================= weapons ================= */
+const OPTIC_GUNS=['ar','gar','mg','smg','hornet'];const holoOn=f=>f===ME&&f.ads&&f.alive&&!!D.S.optic&&OPTIC_GUNS.includes(gunOf(f));
 const XHAIR={sniper:'#2fe08a',scout:'#ff8a2a',ar:'#4d8dff',gar:'#ffd23f',mg:'#ff3b2f',smg:'#c062ff',hornet:'#ffd21f',rocket:'#22e0cc',stars:'#bfe6ff',sword:'#ffd23f'};
 const GUNS={
   sniper:{name:'HDR',dmg:60,head:2,rate:1.3,mag:3,reload:2.4,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',note:'Long-range sniper: headshot kills, 2 body shots'},
@@ -2558,7 +2577,7 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 const DIFF={easy:{name:'Easy',react:.75,err:3.4,head:.08,turn:4.5,strafe:.4,build:.25},normal:{name:'Normal',react:.42,err:1.9,head:.22,turn:8,strafe:.7,build:.5},hard:{name:'Hard',react:.22,err:1.0,head:.42,turn:14,strafe:1,build:.8}};
 const MOVES=['Ice sculpture','Dog pile','Sky drop','Hot potato','Pancake'];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
-const S={touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:null,sec:null,xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:!!store.get('duel:optic',false),touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:null,sec:null,xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 const D={__studio(list,t){const PS=new THREE.Scene();PS.background=new THREE.Color('#dfe5ee');PS.add(new THREE.HemisphereLight('#ffffff','#9aa6b8',1.0));const dl=new THREE.DirectionalLight('#ffffff',1.8);dl.position.set(3,6,7);PS.add(dl);const rl=new THREE.DirectionalLight('#9fd3ff',.8);rl.position.set(-5,3,-6);PS.add(rl);
   const fl=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,.08,32),mat('#c3ccd8'));fl.position.y=-.04;PS.add(fl);
@@ -3284,6 +3303,8 @@ function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;
 function applyTouch(){$('dtouch').hidden=!S.touch||S.paused;$('duel-pause').dataset.touch=S.touch?'1':'0';$('duel-hud').classList.toggle('touch',!!S.touch);$('duel-hud').classList.toggle('rumble',S.mode==='rumble');
   document.querySelectorAll('#dp-touch button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.t==='1')===!!S.touch)));if(S.touch){S.lockOK=false;try{document.exitPointerLock();}catch(e){}}}
+const syncOptic=()=>document.querySelectorAll('#dp-optic button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.o==='1')===!!S.optic)));syncOptic();
+$('dp-optic').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;S.optic=b.dataset.o==='1';store.set('duel:optic',S.optic);syncOptic();});
 $('dp-touch').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.touch=b.dataset.t==='1';store.set('duel:touch',S.touch);if(!S.touch)S.lockOK=true;applyTouch();});
 const lookBy=(dx,dy)=>{const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?SN.ads*(gunOf(ME)==='sniper'?.3:.65):1);ME.yaw-=dx*.0055*sc;ME.pitch=clamp(ME.pitch-dy*.0055*sc,-1.3,1.3);};
 const playing=()=>D.active&&S.touch&&S.state!=='menu'&&S.state!=='done'&&!S.paused;
@@ -3337,9 +3358,10 @@ function updHUD(dt){updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');
   $('d-ammo').parentElement.classList.toggle('low',!inf&&ME.ammo[id]<=Math.ceil(g.mag*.25));
   $('d-rl').style.transform=`scaleX(${ME.reloadT>0?1-ME.reloadT/ME.reloadMax:0})`;
   $('d-slot1').classList.toggle('on',ME.slot===0);$('d-slot2').classList.toggle('on',ME.slot===1);txt('d-slot1n',GUNS[ME.primary].name);txt('d-slot2n',GUNS[ME.secondary||'smg'].name);
-  const scoped=ME.ads&&id==='sniper'&&ME.alive;if($('d-scope').hidden===scoped)$('d-scope').hidden=!scoped;
+  const holo=holoOn(ME);{const ho=$('d-holo');if(ho.hidden===holo)ho.hidden=!holo;if(holo&&ho.dataset.g!==id){ho.dataset.g=id;ho.style.setProperty('--sc',XHAIR[id]);}}
+  const scoped=ME.ads&&(id==='sniper'||id==='scout')&&ME.alive;{const sc=$('d-scope');if(sc.hidden===scoped)sc.hidden=!scoped;if(scoped){const c=id==='sniper'?'hdr':'kar';if(sc.className!==c){sc.className=c;sc.style.setProperty('--sc',XHAIR[id]);}}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='sniper'?' ring':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'?0:1;cr.style.setProperty('--cc',XHAIR[id]||'#fff');
+  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='sniper'?' ring':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:1;cr.style.setProperty('--cc',XHAIR[id]||'#fff');
   flashA=Math.max(0,flashA-dt*(flashA>.6?.55:1.1));$('d-flash').style.opacity=flashA.toFixed(3);{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -3380,8 +3402,8 @@ function updCamera(dt){
       F.side=clear(camOff(pr))>=Dd*.9||clear(camOff(pr))>=clear(camOff(ot))?pr:ot;}
     const off=camOff(F.side),cl=clear(off),want=fc.clone().addScaledVector(off,Math.max(1.5,Math.min(cl,off.length()))/off.length());
     camera.position.lerp(want,1-Math.exp(-(F.camK||3.5)*dt));camera.lookAt(fc);camera.fov=damp(camera.fov,55,6,dt);camera.updateProjectionMatrix();if(a===ME)ME.ch.root.visible=true;return;}}
-  const f=ME;const id=gunOf(f);const scoped=f.ads&&id==='sniper'&&f.alive;
-  const fov=scoped?GUNS.sniper.zoom:f.ads?GUNS[id].zoom:70;camera.fov=damp(camera.fov,fov,scoped?30:14,dt);camera.updateProjectionMatrix();
+  const f=ME;const id=gunOf(f);const holo=holoOn(f);const scoped=(f.ads&&(id==='sniper'||id==='scout')&&f.alive)||holo;
+  const fov=holo?GUNS[id].zoom*.85:scoped?GUNS[id].zoom:f.ads?GUNS[id].zoom:70;camera.fov=damp(camera.fov,fov,scoped?30:14,dt);camera.updateProjectionMatrix();
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
   const head=new V3(f.pos.x,f.pos.y+2.25*SC*(1-.27*(f.cv||0)),f.pos.z);
   if(!f.alive){const k=FS.find(x=>x!==ME&&x.alive&&!isFoe(ME,x))||FS.find(x=>x!==ME&&x.alive)||f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);const bs=S.players==='1v1'?f:k;camera.position.lerp(new V3(bs.pos.x,bs.pos.y+7,bs.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}

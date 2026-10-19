@@ -750,7 +750,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <span class="rumble-k">Falling punch</span><em class="rumble-k">20 damage, both knocked back, they're stunned 1s</em>
           <span><kbd>Q</kbd></span><em>Build a wall (4 per round)</em>
           <span><kbd>E</kbd></span><em>Character ability</em>
-          <span><kbd>G</kbd></span><em>Use your consumable</em>
+          <span><kbd>G</kbd></span><em>Use your consumable (hold to aim a grenade, release to throw)</em>
           <span>Shop</span><em>Walk up to the kiosk in the middle, press 1–4 to pick (60s cooldown)</em>
           <span><kbd>T</kbd></span><em>Throw a grenade from the shop</em>
         </div></div>
@@ -3109,11 +3109,33 @@ const CONS={
   sense:{name:'Sense Pack',short:'Sense',desc:'See the enemy through walls for 6s',cd:25,dur:6,meta:'25s cooldown'}};
 const CONS_IDS=Object.keys(CONS);
 let flashA=0;
-function resetCons(f){const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.stimT=0;f.senseT=0;}
+function resetCons(f){f.aimThrow=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.stimT=0;f.senseT=0;}
 function consReady(f){const c=CONS[f.cons];if(!c)return false;return f.consT<=0&&(!c.uses||f.consN>0);}
-function throwDirFor(f){const e=eyeOf(f,new V3());if(f===ME){const d=new V3();camera.getWorldDirection(d);d.y+=.22;return d.normalize();}return dirOf(f.yaw,.35,new V3());}
+function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
+function throwDirFor(f){if(f===ME){/* heading toward whatever the crosshair is on, elevation from where you're looking */const cam=camera.position.clone(),cd=new V3();camera.getWorldDirection(cd);const hb=rayBoxes(cam,cd,120);const aim=cam.addScaledVector(cd,hb?Math.max(4,hb.t):120);const from=throwFrom(f);let yaw=Math.atan2(aim.x-from.x,aim.z-from.z);if(!isFinite(yaw))yaw=f.yaw;const d=dirOf(yaw,f.pitch,new V3());d.y+=.22;return d.normalize();}return dirOf(f.yaw,.35,new V3());}
+/* throw preview: simulates the same flight as updProjs (gravity, bounces, fuse) and draws it as a dotted arc */
+const TP={n:110,dots:null,ring:null,col:new THREE.Color()};
+{const g=new THREE.SphereGeometry(.11,10,8);TP.dots=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:1,depthWrite:false,depthTest:false,toneMapped:false}),TP.n);TP.dots.frustumCulled=false;TP.dots.count=0;TP.dots.renderOrder=5;scene.add(TP.dots);
+  TP.ring=new THREE.Mesh(new THREE.RingGeometry(.82,1,48),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));TP.ring.visible=false;TP.ring.renderOrder=5;scene.add(TP.ring);
+  TP.core=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));TP.ring.add(TP.core);}
+function simThrow(id,from,dir){const g=GUNS[id],bouncy=id==='grenade'||id==='stun';const pos=from.clone(),vel=dir.clone().multiplyScalar(g.speed);let life=g.fuse||2.2;const pts=[pos.clone()];let end=null,n=null;const dt=1/60;
+  for(let k=0;k<400&&life>0;k++){life-=dt;vel.y-=(g.grav||0)*dt;const st=vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6){continue;}const d=st.clone().divideScalar(L);
+    const hb=rayBoxes(pos,d,L);let hit=null;if(hb)hit={t:hb.t,n:hb.n.clone()};else if(pos.y+st.y<0)hit={t:L*pos.y/Math.max(1e-6,-st.y),n:new V3(0,1,0)};
+    if(hit){const at=pos.clone().addScaledVector(d,hit.t);if(!bouncy){end=at;n=hit.n;pts.push(at.clone());break;}
+      pos.copy(at.addScaledVector(hit.n,.06));vel.addScaledVector(hit.n,-2*vel.dot(hit.n)).multiplyScalar(.45);if(hit.n.y>.5&&Math.abs(vel.y)<1.5){vel.y=0;vel.x*=.8;vel.z*=.8;}n=hit.n;}
+    else pos.add(st);if(k%2===0)pts.push(pos.clone());}
+  if(!end){end=pos.clone();n=n||new V3(0,1,0);}return{pts,end,n,r:g.radius||.6};}
+function previewThrow(){let id=null,from,dir;
+  if(D.active&&S.state==='fight'&&ME.alive&&!ME.downed&&!S.paused){
+    if(ME.aimThrow&&(ME.cons==='grenade'||ME.cons==='stun')&&consReady(ME)){id=ME.cons;from=throwFrom(ME);dir=throwDirFor(ME);}
+    else if(ME.ads&&gunOf(ME)==='stars'&&ME.guns.stars){id='stars';from=ME.guns.stars.userData.muzzle.getWorldPosition(new V3());const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const hb=rayBoxes(cam,d,250);const aim=cam.addScaledVector(d,hb?Math.min(hb.t,200):200);dir=aim.sub(from).normalize();}}
+  if(!id){TP.dots.count=0;TP.ring.visible=false;return;}
+  const r=simThrow(id,from,dir);const col=id==='stun'?'#4fb0ff':id==='grenade'?'#ffcc1f':'#39c6ff';TP.dots.material.color.set(col);TP.ring.material.color.set(col);TP.core.material.color.set(col);
+  const m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3();const n=Math.min(TP.n,r.pts.length);
+  for(let i=0;i<n;i++){const k=i/(n-1||1);const s=(i<2?0:1-.35*k)*(1+.15*Math.sin(S.t*10-i*.6));sc.set(s,s,s);m.compose(r.pts[i],q,sc);TP.dots.setMatrixAt(i,m);}TP.dots.count=n;TP.dots.instanceMatrix.needsUpdate=true;
+  TP.ring.visible=true;TP.ring.position.copy(r.end).addScaledVector(r.n,.05);TP.ring.lookAt(r.end.clone().add(r.n));TP.ring.scale.setScalar(id==='stars'?.35:r.r);}
 function useCons(f,dir){if(!f.alive||f.downed||f.finishing||f.carriedBy||f.skySlam||f.stunT>0||S.state!=='fight'||!consReady(f))return false;const id=f.cons,c=CONS[id];
-  if(id==='grenade'||id==='stun'){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=e.addScaledVector(fw,.7).add(new V3(0,-.2,0));spawnProj(f,id,from,dir||throwDirFor(f));f.consN--;f.consT=.9;f.swingT=.32;}
+  if(id==='grenade'||id==='stun'){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=throwFrom(f);spawnProj(f,id,from,dir||throwDirFor(f));f.consN--;f.consT=.9;f.swingT=.32;}
   else if(id==='stim'){f.stimT=c.dur;f.consT=c.cd;emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:26,speed:4,size:.18,life:.5,grav:-1,colors:['#b6ff3b','#3bff8a','#ffffff']});if(f===ME)S.shake=Math.max(S.shake,.12);}
   else if(id==='sense'){f.senseT=c.dur;f.consT=c.cd;const o=f.pos;for(let i=0;i<36;i++){const a=i/36*TAU;emit(o.x+Math.cos(a)*1.2,o.y+1.2,o.z+Math.sin(a)*1.2,{n:1,speed:.4,vx:Math.cos(a)*9,vz:Math.sin(a)*9,size:.16,life:.5,grav:0,colors:['#36f3ff','#ffffff']});}}
   return true;}
@@ -3388,9 +3410,9 @@ window.addEventListener('keydown',e=>{if(!D.active||S.state==='menu'||S.state===
   if(S.paused)return;
   if(S.shopOpen&&/^Digit[1-9]$/.test(e.code)){buyShop(+e.code.slice(5)-1);return;}
   if(e.code==='KeyT')throwNade(ME);
-  if(e.code==='Digit1')equip(ME,0);if(e.code==='Digit2')equip(ME,1);if(e.code==='KeyR')startReload(ME);if(e.code==='KeyQ')buildWall(ME);if(e.code==='KeyE'&&!ME.downed)useAbility(ME);if(e.code==='KeyG')useCons(ME);if(e.code==='KeyF'){if(ME.carrying){if(!ME.skySlam)slam(ME);}else{const v=finishable(ME);if(v)finish(ME,v);}}if(e.code==='KeyC'&&!e.repeat){const v=finishable(ME);if(v&&canPick(ME,v)){pickUp(ME,v);ME.cHold=0;}}
+  if(e.code==='Digit1')equip(ME,0);if(e.code==='Digit2')equip(ME,1);if(e.code==='KeyR')startReload(ME);if(e.code==='KeyQ')buildWall(ME);if(e.code==='KeyE'&&!ME.downed)useAbility(ME);if(e.code==='KeyG'){if((ME.cons==='grenade'||ME.cons==='stun')&&consReady(ME))ME.aimThrow=true;else useCons(ME);}if(e.code==='KeyF'){if(ME.carrying){if(!ME.skySlam)slam(ME);}else{const v=finishable(ME);if(v)finish(ME,v);}}if(e.code==='KeyC'&&!e.repeat){const v=finishable(ME);if(v&&canPick(ME,v)){pickUp(ME,v);ME.cHold=0;}}
 },true);
-window.addEventListener('keyup',e=>{keys[e.code]=false;});
+window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyG'&&ME.aimThrow){ME.aimThrow=false;if(D.active&&!S.paused)useCons(ME);}});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0)mouseL=true;if(e.button===2)mouseR=true;});
 window.addEventListener('mouseup',e=>{if(e.button===0)mouseL=false;if(e.button===2)mouseR=false;});
@@ -3401,7 +3423,7 @@ function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.lockOK)pause();});
 document.addEventListener('pointerlockerror',()=>{S.lockOK=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseL=mouseR=false;});
-function pause(){if(S.state==='menu'||S.state==='done')return;closeShop();S.paused=true;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
+function pause(){if(S.state==='menu'||S.state==='done')return;closeShop();S.paused=true;ME.aimThrow=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
 function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.touch)lock();}
 /* ---- touch controls ---- */
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;
@@ -3618,7 +3640,7 @@ function step(rdt){
   updCamera(rdt);if(S.state!=='menu')updHUD(rdt);
   sky.position.copy(camera.position);const c=S.state==='menu'?M.center:ME.pos;sun.position.set(c.x+30,c.y+60,c.z+22);sun.target.position.set(c.x,0,c.z-4);
   fillL.position.copy(camera.position);fillL.target.position.copy(c);}
-function render(){updXray();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}renderer.render(scene,camera);}
+function render(){updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}renderer.render(scene,camera);}
 function frame(rdt){step(rdt);render();}
 
 /* ================= menu integration ================= */

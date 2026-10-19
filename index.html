@@ -2902,7 +2902,7 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 const DIFF={easy:{name:'Easy',react:1.15,err:5.5,head:.03,turn:3.2,strafe:.3,build:.2,settle:.8,sway:.9,flinch:6,recoil:2.2,lead:0,tol:.16,rof:1.35,burst:4,pause:[.6,1.2],hes:.3,miss:.5},
   normal:{name:'Normal',react:.6,err:2.7,head:.14,turn:6.5,strafe:.6,build:.4,settle:1.4,sway:.5,flinch:3,recoil:1,lead:.5,tol:.09,rof:1.25,burst:6,pause:[.3,.7],hes:.12,miss:.25},
   hard:{name:'Hard',react:.3,err:1.3,head:.34,turn:12,strafe:.95,build:.75,settle:2.2,sway:.25,flinch:1.2,recoil:.3,lead:1,tol:.06,rof:1.1,burst:0,pause:[0,0],hes:0,miss:.1}};
-const MOVES=['Ice sculpture','Dog pile','Hot potato','Pancake','Sky drop','Heartbreaker'];
+const MOVES=['Ice sculpture','Dog pile','Hot potato','Pancake','Sky drop','Heartbreaker','Knockout'];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
@@ -3154,6 +3154,8 @@ function heartMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial(
   piece(g,RBX(.15,.15,.13,.05),m,-.065,.05,0);piece(g,RBX(.15,.15,.13,.05),m,.065,.05,0);piece(g,RBX(.15,.15,.13,.03),m,0,-.04,0,{rot:[0,0,Math.PI/4]});
   piece(g,new THREE.BoxGeometry(.04,.09,.04),dk,-.03,.15,0,{outline:false});piece(g,new THREE.BoxGeometry(.035,.07,.035),dk,.035,.14,.01,{outline:false,rot:[0,0,-.4]});
   g.scale.setScalar(1.8);return g;}
+function gloveMesh(){const g=new THREE.Group(),red=new THREE.MeshStandardMaterial({color:'#d8202a',roughness:.35,emissive:'#4a0006',emissiveIntensity:.25}),wh=new THREE.MeshStandardMaterial({color:'#f4f4f2',roughness:.6});
+  piece(g,RBX(.72,.78,.66,.24),red,0,-.12,.06);piece(g,RBX(.26,.34,.24,.09),red,.38,-.04,.16,{rot:[0,0,-.35]});piece(g,RBX(.62,.2,.58,.08),wh,0,.33,0);return g;}
 function potatoMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:'#b5793f',roughness:.8});
   const b=new THREE.Mesh(new THREE.SphereGeometry(.2,14,10),m);b.scale.set(1.3,.95,1);b.castShadow=true;g.add(b);const ol=new THREE.Mesh(b.geometry,OUTL);ol.scale.setScalar(1.08);b.add(ol);
   const top=.17,fg=new THREE.CylinderGeometry(.022,.022,1,6);fg.translate(0,.5,0);const fuse=new THREE.Mesh(fg,new THREE.MeshStandardMaterial({color:'#3a2a1e',roughness:.9}));fuse.position.set(.04,top,0);fuse.rotation.z=-.25;g.add(fuse);
@@ -3165,7 +3167,7 @@ function handW(f,left){f.ch.root.updateMatrixWorld(true);return (left?f.ch.aL:f.
 // put the attacker `dist` metres short of the victim's spot, facing them; vel drives the walk cycle
 function setAtt(a,F,dist,dt){const x=F.v0.x-F.fwd.x*dist,z=F.v0.z-F.fwd.z*dist;const vx=(x-a.pos.x)/Math.max(dt,1e-3),vz=(z-a.pos.z)/Math.max(dt,1e-3);
   a.pos.x=x;a.pos.z=z;a.pos.y=F.v0.y;a.vel.set(vx,0,vz);a.grounded=true;}
-const MOVE_DUR={'Heartbreaker':3.9,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.2,'Pancake':3.6};
+const MOVE_DUR={'Knockout':4.1,'Heartbreaker':5.2,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.2,'Pancake':3.6};
 function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,0),fx=F.fx,yawA=F.yaw0;
   const side=new V3(Math.cos(yawA),0,-Math.sin(yawA));// attacker's local +X
   const dA=Math.hypot(F.a0.x-F.v0.x,F.a0.z-F.v0.z);
@@ -3286,6 +3288,39 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       v.pose={root:[-Math.PI/2*fall+rnd(-.04,.04)*jolt,v.yaw,rnd(-.06,.06)*jolt],ar:jolt?[-.9,0,.9]:[lerp(-.6,-.05,slump),0,lerp(.4,.15,slump)],al:jolt?[-.9,0,-.9]:[lerp(-.6,-.05,slump),0,lerp(-.4,-.15,slump)],head:jolt?-.3:.55*slump,ll:fall?.3:undefined,lr:fall?-.2:undefined};
       if(fall>=1&&!F.landed){F.landed=1;S.shake=Math.max(S.shake,.35);const C=F.v0.clone().addScaledVector(fw,1.2*SC);for(let i=0;i<14;i++){const an=i/14*TAU;emit(C.x+Math.cos(an)*.7,C.y+.15,C.z+Math.sin(an)*.7,{n:1,speed:4,up:1,size:.3,life:.5,grav:0,colors:['#c9bfae','#9a8f80']});}}}
     F.focus=new V3((a.pos.x+F.v0.x)/2,F.v0.y+(t>1.5&&t<2.6?2.3:1.7),(a.pos.z+F.v0.z)/2);F.camD=5.6;F.camSide=.8;F.camBack=-.6;}
+  else if(fx==='Knockout'){
+    const C=F.v0.clone().addScaledVector(fw,1.15*SC);
+    if(!F.ko){F.ko=1;v.yaw=yawA;F.T=C.clone().addScaledVector(side,1.15);F.fy=Math.atan2(-side.x,-side.z);
+      F.gl=[gloveMesh(),gloveMesh()];F.gl.forEach(g=>{g.visible=false;scene.add(g);F.obj.push(g);});
+      F.pal=[];v.ch.root.traverse(m=>{if(!m.isMesh||!shown(m,v.ch.root))return;const ms=Array.isArray(m.material)?m.material:[m.material];const mm=ms[4]||ms[0];if(!mm||mm.side===THREE.BackSide||mm.type==='MeshBasicMaterial')return;const c=matCol(mm);if(!F.pal.includes(c))F.pal.push(c);});if(!F.pal.length)F.pal=['#888888'];}
+    v.downed=true;v.pos.copy(F.v0);v.yaw=yawA;
+    // slow walk round to the side of the body
+    const u=easeIO(segT(t,0,1.0));const nx=lerp(F.a0.x,F.T.x,u),nz=lerp(F.a0.z,F.T.z,u);a.vel.set((nx-a.pos.x)/Math.max(dt,1e-3)*.6,0,(nz-a.pos.z)/Math.max(dt,1e-3)*.6);a.pos.set(nx,F.v0.y,nz);a.grounded=true;
+    if(t<1.0){const dx=F.T.x-F.a0.x,dz=F.T.z-F.a0.z;a.yaw=Math.hypot(dx,dz)>.3?Math.atan2(dx,dz):F.fy;if(t>.75)a.yaw=F.fy;}else{a.yaw=F.fy;a.vel.set(0,0,0);}
+    const look=t>1.0&&t<1.6;
+    // the gloves drop out of the sky, spinning, into his hands
+    const hands=[handW(a,false),handW(a,true)],q=new THREE.Quaternion();
+    F.gl.forEach((g,i)=>{if(t<1.0)return;g.visible=true;
+      if(t<1.55){const k=easeIn(segT(t,1.0,1.55)),top=F.T.clone().add(new V3(i?-.5:.5,10,0));g.position.copy(top).lerp(hands[i],k);g.rotation.set(t*14+i,t*9,t*6);}
+      else{(i?a.ch.aL:a.ch.aR).p.getWorldQuaternion(q);g.quaternion.copy(q);g.position.copy(hands[i]);}
+      if(Math.abs(t-1.55)<dt*.6&&!F['c'+i]){F['c'+i]=1;S.shake=Math.max(S.shake,.2);emit(hands[i].x,hands[i].y,hands[i].z,{n:8,speed:3,size:.12,life:.3,colors:['#ffffff','#ffd23f']});}});
+    // pummel: alternate fists into the body on the floor, getting faster, then a double-fist smash
+    let ar=[-.25,0,.1],al=[-.25,0,-.1],head;
+    if(look){ar=[-2.6,0,-.25];al=[-2.6,0,.25];head=-.6;}
+    else if(t>=1.6&&t<1.75){ar=[-1.6,0,-.2];al=[-1.6,0,.2];}
+    else if(t>=1.75&&t<3.0){const ph=F.ph=(F.ph||0)+dt*lerp(4,8,segT(t,1.75,3.0));const i=Math.floor(ph),f=ph-i;const sw=f<.55?lerp(-2.6,-.4,easeIn(f/.55)):lerp(-.4,-2.6,(f-.55)/.45);
+      if(i%2){al=[sw,0,.15];ar=[-2.3,0,-.15];}else{ar=[sw,0,-.15];al=[-2.3,0,.15];}head=.35;
+      if(i!==F.lastI&&f>=.55){F.lastI=i;const hit=C.clone().add(new V3(rnd(-.25,.25),.35,rnd(-.25,.25)));S.shake=Math.max(S.shake,.18);
+        emit(hit.x,hit.y,hit.z,{n:6,speed:4,up:2,size:.16,life:.3,colors:['#ffffff','#ffd23f','#c9bfae']});spray(hit,{n:2,cols:[F.pal[Math.floor(Math.random()*F.pal.length)]],s0:.07,s1:.13,power:3,up:4,floor:F.v0.y});F.jolt=1;}}
+    else if(t>=3.0&&t<3.25){const k=segT(t,3.0,3.25);ar=al=[k<.6?-2.9:lerp(-2.9,-.4,(k-.6)/.4),0,0];head=.3;}
+    else if(t>=3.25){const k=easeIO(segT(t,3.45,3.8));ar=[lerp(-.7,-2.85,k),0,lerp(0,-.35,k)];al=[lerp(-.7,-2.85,k),0,lerp(0,.35,k)];head=-.25*k;}
+    a.cv=t>=1.7&&t<3.45?.5:Math.max(0,(a.cv||0)-dt*4);
+    const lean=t>=1.7&&t<3.4?.42:0;a.pose={ar,al:al===ar?[ar[0],0,-ar[2]]:al,head,root:lean?[lean,a.yaw,0]:undefined};
+    if(!F.done){F.jolt=Math.max(0,(F.jolt||0)-dt*8);const j=F.jolt;v.pose={root:[1.3+rnd(-.06,.06)*j,yawA,rnd(-.08,.08)*j]};}
+    if(t>=3.25&&!F.done){F.done=1;S.shake=.9;S.slowT=.4;vig(.2);decal(C.x,F.v0.y,C.z,1.3,'#2b2622','#8a7f72');
+      for(let i=0;i<20;i++){const an=i/20*TAU;emit(C.x+Math.cos(an)*.6,F.v0.y+.2,C.z+Math.sin(an)*.6,{n:2,speed:7,up:1,size:.35,life:.6,grav:0,colors:['#c9bfae','#9a8f80']});}
+      shatter(v,{power:8,up:7,floor:F.v0.y,from:C.clone().add(new V3(0,1,0))});say(a,v,'Knockout!','Knockout','You got knocked out',false);}
+    F.focus=new V3((a.pos.x+C.x)/2,F.v0.y+(look?2.6:1.2),(a.pos.z+C.z)/2);F.camD=6.5;F.camSide=.9;F.camBack=.35;}
   else if(fx==='Pancake'){
     const ANG=2.1,hS=1.92*SC,armL=1.0*SC;
     setAtt(a,F,lerp(dA,1.0,easeIO(segT(t,.05,.4))),dt);a.yaw=yawA;if(t>.4)a.vel.set(0,0,0);

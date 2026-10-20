@@ -2262,7 +2262,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.mmPaint=null;M.shopAt=null;M.wade=null;M.reachSpawns=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.mmPaint=null;M.shopAt=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;}
 
 // Ringfenced next Duels maps: shown in the menu as Coming Soon, not playable yet.
 const SOON=[
@@ -2273,8 +2273,6 @@ const SOON=[
 // The beach is a low sand plateau (WC.G above the sea floor) so the shallows can sit just over your ankles.
 const WC={G:.4};
 const wcShore=z=>18+3*Math.sin(z*.11)+1.5*Math.sin(z*.27+1);
-function wcWave(x,z,t){const d=x-wcShore(z),a=clamp(d/6,.25,1)*(1+clamp((d-30)/80,0,1)*1.4);
-  return .28+a*(.05*Math.sin(x*.35+t*1.3)+.04*Math.sin(z*.42-t*1.1)+.025*Math.sin((x+z)*.9+t*2.1));}
 tex('sand',128,128,(g,w,h)=>speck(g,w,h,'#ffffff',['rgba(120,90,40,.10)','rgba(255,255,255,.4)','rgba(90,70,40,.14)'],900,2));
 tex('rock',128,128,(g,w,h)=>speck(g,w,h,'#ffffff',['rgba(0,0,0,.12)','rgba(255,255,255,.18)','rgba(40,30,20,.16)'],500,4));
 tex('thatch',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let y=0;y<8;y++){g.fillStyle='rgba(90,60,20,.22)';g.fillRect(0,y*16+12,w,4);
@@ -2328,31 +2326,139 @@ function wcSand(){const G=WC.G,x0=-60,x1=140,z0=-80,z1=80,nx=200,nz=160;const g=
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,map:TX.sand,roughness:.95}));m.receiveShadow=true;m.userData.dyn=1;M.group.add(m);
   // the walkable beach: 2 m strips that follow the curved shoreline
   for(let z=-60;z<60;z+=2){const b=collider(-60,wcShore(z+1),0,G,z,z+2);b.ground=1;}}
-function wcWater(){const g=new THREE.PlaneGeometry(700,640,200,170);g.rotateX(-Math.PI/2);g.translate(8+350,0,0);
-  const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),sh=new THREE.Color('#8ff0e2'),mid=new THREE.Color('#2fb0cc'),dp=new THREE.Color('#13598f');
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=x-wcShore(z);c.copy(sh).lerp(mid,clamp(d/16,0,1));if(d>16)c.lerp(dp,clamp((d-16)/110,0,1));col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
-  g.setAttribute('color',new THREE.BufferAttribute(col,3));
-  const uT={value:0},mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.08,metalness:.12,transparent:true,opacity:.84,depthWrite:false});
-  const fn=`uniform float uT;varying vec3 vWp;
+// ---- sea: one wave model shared by the shader (GLSL) and the boats/swash (JS) ----
+// a long swell rolls in toward the beach (13 m apart, one every 6 s), steepens over the sand bar, breaks a few metres out
+// and runs up the sand as a thin sheet of foamy water; small chop sits on top everywhere
+const WC_WK=Math.PI*2/13,WC_WW=Math.PI*2/6;
+const wcSS=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const wcPhase=(x,z,t)=>WC_WK*(x-wcShore(z))+WC_WW*t+.9*Math.sin(z*.045)+.5*Math.sin(z*.11+1.3);
+function wcWave(x,z,t){const d=x-wcShore(z),c=.5+.5*Math.sin(wcPhase(x,z,t)),A=(.08+.2*Math.exp(-(((d-6)/7)**2)))*wcSS(-.3,3,d);
+  const ch=clamp(d/8,0,1)*(.035*Math.sin(x*.33+z*.21-t*1.2)+.03*Math.sin(-x*.17+z*.41+t*1.05)+.018*Math.sin(x*.9+z*.7+t*2.3))*(1+clamp((d-30)/80,0,1)*1.5);
+  return .28+A*(Math.pow(c,2.5)*1.7-.5)+ch;}
+// phones and tablets get a lighter version (fewer noise layers, no caustics)
+const WC_LOWQ=typeof matchMedia==='function'&&matchMedia('(pointer: coarse)').matches;
+const WC_GLSL=(WC_LOWQ?'#define WC_LOW\n#define WC_OCT 3\n':'#define WC_OCT 4\n')+`
+uniform float uT;varying vec3 vWp;
 float wSh(float z){return 18.+3.*sin(z*.11)+1.5*sin(z*.27+1.);}
-vec3 wWave(vec2 p){float d=p.x-wSh(p.y);float a=clamp(d/6.,.25,1.)*(1.+clamp((d-30.)/80.,0.,1.)*1.4);
- float s1=p.x*.35+uT*1.3,s2=p.y*.42-uT*1.1,s3=(p.x+p.y)*.9+uT*2.1;
- float h=.05*sin(s1)+.04*sin(s2)+.025*sin(s3);float dx=.0175*cos(s1)+.0225*cos(s3);float dz=.0168*cos(s2)+.0225*cos(s3);return vec3(h,dx,dz)*a;}\n`;
-  mt.onBeforeCompile=sh=>{sh.uniforms.uT=uT;
-    sh.vertexShader=fn+sh.vertexShader.replace('#include <beginnormal_vertex>','vec3 wpos=(modelMatrix*vec4(position,1.)).xyz;vec3 ww=wWave(wpos.xz);vWp=wpos;vec3 objectNormal=normalize(vec3(-ww.y*2.2,1.,-ww.z*2.2));')
-      .replace('#include <begin_vertex>','vec3 transformed=vec3(position);transformed.y+=ww.x;');
-    sh.fragmentShader='uniform float uT;varying vec3 vWp;\n'+sh.fragmentShader
-      .replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n{vec2 q=vWp.xz;vec3 rp=vec3(sin(q.x*2.3+uT*2.)+sin(q.y*3.1-uT*1.7)+sin((q.x-q.y)*4.7+uT*3.1),0.,cos(q.y*2.7+uT*1.6)+cos(q.x*3.3-uT*2.3)+cos((q.x+q.y)*5.1-uT*2.7))*.035*clamp(1.-length(vViewPosition)/90.,0.,1.);normal=normalize(normal+(viewMatrix*vec4(rp,0.)).xyz);}')
-      .replace('#include <opaque_fragment>','{float fr=pow(1.-clamp(dot(normal,normalize(vViewPosition)),0.,1.),3.);outgoingLight=mix(outgoingLight,vec3(.62,.82,.93),fr*.55);diffuseColor.a=mix(diffuseColor.a,1.,fr*.8);}\n#include <opaque_fragment>');};
-  mt.customProgramCacheKey=()=>'wcwater';
-  const m=new THREE.Mesh(g,mt);m.position.y=.28;m.receiveShadow=true;m.userData.dyn=1;m.renderOrder=2;M.group.add(m);
-  // foam that laps up and down the wet sand
-  const foams=[];for(const ph of [0,Math.PI]){const N=130,pos=new Float32Array((N+1)*2*3),idx=[];for(let i=0;i<N;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
-    const fg=new THREE.BufferGeometry();fg.setAttribute('position',new THREE.BufferAttribute(pos,3));fg.setIndex(idx);
-    const fm=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.5,depthWrite:false});const f=new THREE.Mesh(fg,fm);f.userData.dyn=1;f.renderOrder=3;f.frustumCulled=false;M.group.add(f);foams.push({f,pos,ph,N});}
-  M.life.push((t)=>{uT.value=t;for(const o of foams){const k=Math.sin(t*.55+o.ph),off=.4+1.3*(k*.5+.5);o.f.material.opacity=.15+.45*(1-(k*.5+.5));
-    for(let i=0;i<=o.N;i++){const z=-65+i;const x=wcShore(z)+off-1.6+Math.sin(z*.6+t*.4+o.ph)*.25;const y=Math.max(wcWave(x,z,t),WC.G+(.03-WC.G)*clamp((x-wcShore(z)+1.6)/3.2,0,1))+.03;
-      o.pos.set([x-.25,y,z,x+.55,y,z],i*6);}o.f.geometry.attributes.position.needsUpdate=true;}});}
+const float WK=6.2831853/13.,WW=6.2831853/6.;
+float wPh(vec2 p,float t){return WK*(p.x-wSh(p.y))+WW*t+.9*sin(p.y*.045)+.5*sin(p.y*.11+1.3);}
+float wH(vec2 p,float t){float d=p.x-wSh(p.y),c=.5+.5*sin(wPh(p,t)),A=(.08+.2*exp(-pow((d-6.)/7.,2.)))*smoothstep(-.3,3.,d);
+  float ch=clamp(d/8.,0.,1.)*(.035*sin(p.x*.33+p.y*.21-t*1.2)+.03*sin(-p.x*.17+p.y*.41+t*1.05)+.018*sin(p.x*.9+p.y*.7+t*2.3))*(1.+clamp((d-30.)/80.,0.,1.)*1.5);
+  return A*(pow(c,2.5)*1.7-.5)+ch;}
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),u.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),u.x),u.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<WC_OCT;i++){s+=a*vn(p);p=mat2(1.6,1.2,-1.2,1.6)*p;a*=.5;}return s;}
+vec2 wor(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y));
+  vec2 o=vec2(h21(i+g),h21(i+g+17.31));o=.5+.45*sin(uT*.6+6.2831*o);float d=length(g+o-f);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}return vec2(d1,d2);}
+// sea foam: a lacy network of thin lines, little bubbles, and soft patches, pushed around by slow swirls
+vec2 swirl(vec2 p,float t){vec2 w=vec2(fbm(p*.13+vec2(t*.04,0.)),fbm(p*.13+vec2(5.2,1.3)-t*.035));return p+(w-.5)*7.;}
+float foamTex(vec2 q){vec2 w=wor(q*1.15);float lace=1.-smoothstep(.03,.2,w.y-w.x);
+#ifdef WC_LOW
+  float bub=0.;
+#else
+  vec2 b=wor(q*4.3+3.7);float bub=(1.-smoothstep(.07,.15,b.x))*step(.35,h21(floor(q*4.3+3.7)));
+#endif
+
+  float pa=smoothstep(.32,.62,fbm(q*.55+3.1));
+  return clamp((lace*.75+bub*.6)*(.35+.65*pa)+smoothstep(.5,.78,fbm(q*1.7))*.5,0.,1.);}
+`;
+function wcWater(){
+  const mk=(x0,x1,nx,nz)=>{const g=new THREE.PlaneGeometry(x1-x0,640,nx,nz);g.rotateX(-Math.PI/2);g.translate((x0+x1)/2,0,0);
+    const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),sh=new THREE.Color('#7fe6da'),mid=new THREE.Color('#22a9c8'),dp=new THREE.Color('#0f4f86');
+    for(let i=0;i<p.count;i++){const d=p.getX(i)-wcShore(p.getZ(i));c.copy(sh).lerp(mid,clamp(d/18,0,1));if(d>18)c.lerp(dp,clamp((d-18)/120,0,1));col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));return g;};
+  const uT={value:0},sun=new THREE.Vector3(30,60,26).normalize(),uSun={value:sun};
+  const mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.06,metalness:.05,transparent:true,depthWrite:false});
+  mt.onBeforeCompile=sh=>{sh.uniforms.uT=uT;sh.uniforms.uSun=uSun;
+    sh.vertexShader=WC_GLSL+sh.vertexShader
+      .replace('#include <beginnormal_vertex>',`vec3 wpos=(modelMatrix*vec4(position,1.)).xyz;vWp=wpos;float e=.35,h0=wH(wpos.xz,uT);
+        vec3 objectNormal=normalize(vec3(-(wH(wpos.xz+vec2(e,0.),uT)-h0)/e,1.,-(wH(wpos.xz+vec2(0.,e),uT)-h0)/e));`)
+      .replace('#include <begin_vertex>','vec3 transformed=vec3(position);transformed.y+=h0;');
+    sh.fragmentShader='uniform vec3 uSun;\n'+WC_GLSL+sh.fragmentShader
+      // colour: depth tint, lighter where a crest lifts the water, sun-lit caustics on the sand in the shallows, and foam
+      .replace('#include <color_fragment>',`#include <color_fragment>
+        vec2 P=vWp.xz;float d=P.x-wSh(P.y),ph=wPh(P,uT),u=fract((ph-1.5708)/6.2832),camD=length(vViewPosition);
+        float crest=pow(.5+.5*sin(ph),3.)*smoothstep(-.5,4.,d)*smoothstep(40.,8.,d);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.95,.9),crest*.35);
+        float wFoam=0.;
+        if(d<40.){vec2 q=swirl(P,uT);
+
+#ifndef WC_LOW
+          if(d<16.){vec2 cp=P+vec2(sin(P.y*.9+uT*.7),cos(P.x*.8-uT*.6))*.35;vec2 c1=wor(cp*.7+vec2(uT*.18,uT*.11)),c2=wor(cp*.95-vec2(uT*.13,-uT*.17));
+            float caus=(1.-smoothstep(0.,.16,c1.y-c1.x))*(1.-smoothstep(0.,.2,c2.y-c2.x));caus=caus*.8+(1.-smoothstep(0.,.07,c1.y-c1.x))*.12;
+            diffuseColor.rgb+=vec3(.8,1.,.95)*caus*.32*smoothstep(14.,1.,d)*smoothstep(-.6,.6,d)*smoothstep(50.,15.,camD);}
+#endif
+
+          // breaking waves: a white curl at the crest and a foamy bore trailing behind it all the way in
+          float zone=smoothstep(10.,5.,d)*smoothstep(-.6,.8,d);
+          float brk=zone*(smoothstep(.95,.992,u)*1.2+exp(-u*4.5)*1.1);
+          float lipL=zone*smoothstep(.972,.996,u)*(.75+.25*vn(P*vec2(.6,1.8)+uT));
+          // swirls of left-over foam drifting about in the shallows, and a lacy line where the water meets the sand
+          float res=smoothstep(15.,2.,d)*smoothstep(.52,.75,fbm(q*.3+vec2(uT*.03,0.)))*.6;
+          float edge=smoothstep(.9,0.,abs(d+.25+.3*sin(ph)))*.9;
+          float tx=foamTex(q+vec2(-u*2.,0.));
+          wFoam=clamp((brk+edge)*(.45+.8*tx)+res*tx+lipL,0.,1.);
+          // the odd whitecap further out
+          wFoam=max(wFoam,smoothstep(.985,1.,u)*smoothstep(.62,.8,fbm(P*.05+vec2(0.,uT*.05)))*smoothstep(12.,25.,d)*tx*.8);}
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.96,.98,1.),wFoam);
+        diffuseColor.a=mix(mix(.5,.93,smoothstep(-.5,12.,d)),1.,wFoam);`)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.05,.85,wFoam);')
+      // fine ripples on top of the swell (faded out with distance so far water doesn't shimmer)
+      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+        {vec2 q=vWp.xz;float fade=clamp(1.-camD/110.,0.,1.)*(1.-wFoam*.8);
+          vec3 rp=vec3(1.2*cos(q.x*2.1+q.y*.7+uT*2.1)+.8*cos(q.x*3.7-q.y*2.3-uT*2.9)+.5*cos(q.x*6.1+q.y*5.3+uT*4.1)+.35*cos(-q.x*9.3+q.y*7.7+uT*5.3),0.,
+                       .7*cos(q.x*2.1+q.y*.7+uT*2.1)-1.1*cos(q.x*3.7-q.y*2.3-uT*2.9)+.6*cos(q.x*6.1+q.y*5.3+uT*4.1)+.45*cos(-q.x*9.3+q.y*7.7+uT*5.3))*.045*fade;
+          normal=normalize(normal-(viewMatrix*vec4(rp,0.)).xyz);}`)
+      // sky reflection at grazing angles, the sun's glitter path and sparkling glints
+      .replace('#include <opaque_fragment>',`{vec3 V=normalize(vViewPosition),L=normalize((viewMatrix*vec4(normalize(vec3(.85,.4,.32)),0.)).xyz),H=normalize(L+V);
+          float fr=pow(1.-clamp(dot(normal,V),0.,1.),4.)*(1.-wFoam);
+          outgoingLight=mix(outgoingLight,vec3(.68,.86,.96),fr*.6);diffuseColor.a=mix(diffuseColor.a,1.,fr*.7);
+          // glints are tiny points that blink on and off (a random spot inside each small cell), not whole squares
+          vec2 gp=vWp.xz*5.,gc=floor(gp),gs=gc+floor(uT*7.+h21(gc)*7.)*vec2(1.7,3.1);float cell=h21(gs);vec2 go=vec2(h21(gs+5.3),h21(gs+9.1))*.7+.15;
+          float pt=smoothstep(.09+camD*.004,0.,length(fract(gp)-go));
+          float nh=max(dot(normal,H),0.);
+          float gl=(pow(nh,1400.)*9.+step(.8,cell)*pt*pow(nh,90.)*14.+pow(nh,40.)*.35)*(1.-wFoam);
+          outgoingLight+=vec3(1.,.97,.88)*gl;diffuseColor.a=min(1.,diffuseColor.a+gl*.5);}
+        #include <opaque_fragment>`);};
+  mt.customProgramCacheKey=()=>'wcwater2';
+  // fine mesh near the beach so the swell and breakers have shape, coarse mesh further out
+  for(const [x0,x1,nx,nz] of [[8,92,168,640],[90,700,122,128]]){const m=new THREE.Mesh(mk(x0,x1,nx,nz),mt);m.position.y=.28;m.receiveShadow=true;m.userData.dyn=1;m.renderOrder=2;m.frustumCulled=false;M.group.add(m);}
+  // the swash: each wave rushes up the sand as a thin sheet edged with bubbly foam, slides back leaving lace and dark wet sand
+  {const G=WC.G,nz=320,nd=30,D0=-8,D1=1,pos=new Float32Array((nz+1)*(nd+1)*3),idx=[];
+    const sandH=(x,z)=>{const d=x-wcShore(z);return d<-1.6?G+Math.max(0,Math.sin(x*.21)*Math.sin(z*.17))*.04:d<1.6?G+(.03-G)*(d+1.6)/3.2:.03;};
+    for(let j=0;j<=nz;j++)for(let i=0;i<=nd;i++){const z=-80+j*.5,x=wcShore(z)+D0+(D1-D0)*i/nd,o=(j*(nd+1)+i)*3;pos[o]=x;pos[o+1]=sandH(x,z)+.035;pos[o+2]=z;
+      if(i<nd&&j<nz){const a=j*(nd+1)+i,b=a+nd+1;idx.push(a,b,a+1,a+1,b,b+1);}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+    const sm=new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    sm.onBeforeCompile=sh=>{sh.uniforms.uT=uT;
+      sh.vertexShader='varying vec3 vWp;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvWp=(modelMatrix*vec4(position,1.)).xyz;');
+      sh.fragmentShader=WC_GLSL+sh.fragmentShader.replace('vec4 diffuseColor = vec4( diffuse, opacity );',`
+        vec2 P=vWp.xz;float d=P.x-wSh(P.y),cyc=(WW*uT+.9*sin(P.y*.045)+.5*sin(P.y*.11+1.3)-1.5708)/6.2832,n=floor(cyc),u=fract(cyc);
+        // how far this wave runs up the beach changes from wave to wave and along the shore
+        float rmax=2.4+2.6*vn(vec2(P.y*.07,n*3.1))+.8*vn(vec2(P.y*.45,n*7.3));
+        float R=-rmax*(u<.28?sin(u/.28*1.5708):1.-smoothstep(.28,1.,u))+.45*(vn(vec2(P.y*.9,n*5.))-.5)*smoothstep(0.,.25,u);
+        vec2 q=swirl(P,uT)+vec2(u*1.2,0.);float tx=foamTex(q*1.25);
+        float wet=(d<R?.3*(1.-clamp((R-d)/(rmax*.9),0.,1.))*smoothstep(-rmax-1.2,-rmax*.4,d):0.)+.1*smoothstep(-5.,-1.5,d);
+        float film=smoothstep(R-.05,R+.3,d)*mix(.55,.2,smoothstep(.28,1.,u));
+        float lip=exp(-max(d-R,0.)*3.2)*smoothstep(R-.12,R+.02,d)*(1.-.55*smoothstep(.3,.9,u));
+        float lace=smoothstep(R-.1,R+.5,d)*smoothstep(R+4.5,R+.6,d)*smoothstep(.22,.55,u)*(1.-u)*1.4;
+        // while it rushes up, the whole front of the sheet is churned white; a thin bright lip leads it
+        float sheet=smoothstep(R+3.,R+.2,d)*smoothstep(R-.1,R+.1,d)*(1.-smoothstep(.12,.4,u))*.85;
+        float foam=clamp(lip*(.65+.6*tx)+(lace+sheet)*tx+exp(-max(d-R,0.)*9.)*smoothstep(R-.08,R+.01,d)*.5,0.,1.);
+        vec3 c=vec3(.42,.32,.18);float a=wet;
+        c=mix(c,vec3(.6,.92,.9),film);a=film+a*(1.-film);
+        c=mix(c,vec3(.97,.99,1.),foam);a=foam+a*(1.-foam);
+        a*=smoothstep(.9,.0,d);
+        vec4 diffuseColor=vec4(c,a);`);};
+    sm.customProgramCacheKey=()=>'wcswash';
+    const m=new THREE.Mesh(g,sm);m.renderOrder=3;m.userData.dyn=1;m.frustumCulled=false;M.group.add(m);}
+  // spray: as each crest breaks over the bar it throws up white droplets along its length (only near the camera, to keep it cheap)
+  let sprT=0;M.life.push((t,dt)=>{uT.value=t;sprT-=dt;if(sprT>0||!dt)return;sprT=.05;const cz=camera.position.z;
+    for(let k=0;k<3;k++){const z=clamp(cz+(Math.random()-.5)*70,-58,58),w=.9*Math.sin(z*.045)+.5*Math.sin(z*.11+1.3);
+      // where along this line is a crest in the breaking zone right now?
+      const n=Math.ceil((WC_WW*t+w-Math.PI/2+WC_WK*2)/(Math.PI*2)),dc=(Math.PI/2+Math.PI*2*n-WC_WW*t-w)/WC_WK;
+      if(dc<2||dc>7.5)continue;const x=wcShore(z)+dc,y=wcWave(x,z,t)+.05,k2=1-Math.abs(dc-4.5)/3;
+      emit(x-.3,y,z,{n:1+Math.round(k2*2),speed:1.4,up:2.6+k2*1.8,vx:-1.6,size:.11,life:.55,grav:9,colors:['#ffffff','#e9fbff','#d6f6f6']});}});}
 // boats out at sea: bob on the same waves as the water
 function wcFloat(g,x,z,o={}){g.position.set(x,0,z);M.group.add(g);const ph=Math.random()*6;
   M.life.push((t,dt)=>{if(o.path){const P=o.path,a=t*P.sp+ph;g.position.x=P.x+Math.cos(a)*P.rx;g.position.z=P.z+Math.sin(a)*P.rz;g.rotation.y=Math.atan2(-Math.sin(a)*P.rx*P.sp,Math.cos(a)*P.rz*P.sp);}
@@ -2642,6 +2748,14 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       const x=wcShore(u.z)-3.2+Math.sin(k*.35)*2.6;g.position.set(x,WC.G+(x>wcShore(u.z)-1.6?-(x-wcShore(u.z)+1.6)*.11:0),u.z+Math.sin(k*.13)*1.5);g.rotation.y=Math.PI/2;g.position.y+=go?Math.abs(Math.sin(t*22+u.ph))*.03:0;}});}
 
   M.wade=(x,z)=>x>wcShore(z)+.4;
+  M.waterY=(x,z)=>x>wcShore(z)+.3&&x<700?wcWave(x,z,M.lifeT||0):null;
+  {const rg=new THREE.RingGeometry(.72,1,28);rg.rotateX(-Math.PI/2);const rings=[];let ri=0;
+    for(let i=0;i<28;i++){const m=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));m.visible=false;m.renderOrder=4;m.userData.dyn=1;M.group.add(m);rings.push({m,t:9,s:1});}
+    M.splash=(x,z,s=1)=>{const y=M.waterY(x,z);if(y==null)return;const r=rings[ri];ri=(ri+1)%rings.length;r.t=0;r.s=s;r.m.position.set(x,y+.02,z);r.m.visible=true;
+      emit(x,y+.05,z,{n:Math.round(4+s*8),speed:1.2+s*1.4,up:2+s*3.2,size:.07+s*.05,life:.45+s*.2,grav:15,colors:['#ffffff','#e6fbff','#bfeef5']});
+      if(s>.7){const r2=rings[ri];ri=(ri+1)%rings.length;r2.t=-.18;r2.s=s*1.5;r2.m.position.set(x,y+.02,z);}};
+    M.life.push((t,dt)=>{for(const r of rings){if(r.t>1.2)continue;r.t+=dt;if(r.t<0){r.m.visible=false;continue;}r.m.visible=r.t<1.2;const k=r.t/1.2;
+      r.m.scale.setScalar(.15+r.s*1.6*Math.sqrt(k));r.m.material.opacity=.55*(1-k)*(1-k);r.m.position.y=wcWave(r.m.position.x,r.m.position.z,t)+.02;}});}
   // only offer extra spawns you can walk to from the beach (no perches on top of the cliffs)
   M.reachSpawns=id=>{const g=M.grid,k=(id/NL)|0,i=k%g.nx,x=g.x0+(i+.5)*CS,z=g.z0+((k-i)/g.nx+.5)*CS;if(x>wcShore(z)-2)return false;if(!g.comp)return true;
     const sp=M.spawns[0],s0=nearestNode(sp.x,sp.y||0,sp.z);return s0<0||g.comp[id]===g.comp[s0];};
@@ -3347,7 +3461,7 @@ function depen(f){const H=hhOf(f);for(let it=0;it<4;it++){let moved=false;
 function physics(f,dt,wx,wz,jump,speed,jumpPress){const v=Math.max(Math.hypot(f.vel.x,f.vel.z),(speed||0)*1.25*((CHARS[f.char]||{}).speed||1)*(f.zipT>0?1.6:1))+Math.abs(f.vel.y)*.5;
   const n=Math.min(5,Math.max(1,Math.ceil(dt*60-.05),Math.ceil(v*dt/.45)));if(n===1){physics1(f,dt,wx,wz,jump,speed,jumpPress);}else for(let i=0;i<n;i++)physics1(f,dt/n,wx,wz,jump,speed,i===0&&jumpPress);
   const bd=M.bounds;if(bd){f.pos.x=clamp(f.pos.x,bd.x0+R,bd.x1-R);f.pos.z=clamp(f.pos.z,bd.z0+R,bd.z1-R);}}
-function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;if(f.grounded&&Math.hypot(f.vel.x,f.vel.z)>2&&Math.random()<dt*14)emit(f.pos.x+(Math.random()-.5)*.6,.3,f.pos.z+(Math.random()-.5)*.6,{n:2,speed:1.6,up:2.4,size:.09,life:.4,grav:14,colors:['#ffffff','#bfeef5']});}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
+function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash)M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
   const acc=f.thrownT>0?0:f.stunT>0?8:f.hookT>0?5:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
@@ -3431,6 +3545,7 @@ const stunMesh=()=>{const g=new THREE.Group();const b=new THREE.Mesh(new THREE.C
 function spawnProj(f,id,from,dir){const g=GUNS[id];const mesh=id==='rocket'?rocketMesh():id==='fireball'?fireMesh():id==='grenade'?grenMesh():id==='stun'?stunMesh():starMesh();mesh.position.copy(from);scene.add(mesh);
   projs.push({f,id,pos:from.clone(),vel:dir.clone().multiplyScalar(g.speed),life:g.landFuse?8:(g.fuse||4),armed:!g.landFuse,mesh});}
 function clearProjs(){for(const p of projs)scene.remove(p.mesh);projs.length=0;}
+function wetBoom(at){if(M.splash&&M.waterY(at.x,at.z)!=null&&at.y<1.2){M.splash(at.x,at.z,2.6);for(let i=0;i<3;i++)emit(at.x,.4,at.z,{n:10,speed:3,up:9-i*2,size:.2,life:1,grav:16,colors:['#ffffff','#d8f6f8','#9fe3ea']});}}
 function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS[p.id];p.life-=dt;if(g.accel){const sp=p.vel.length();if(sp<g.maxSpeed)p.vel.multiplyScalar(Math.min(g.maxSpeed,sp+g.accel*dt)/sp);}p.vel.y-=(g.grav||0)*dt;
   const st=p.vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6)continue;const d=st.clone().divideScalar(L);
   const hb=rayBoxes(p.pos,d,L),hf=rayFoes(p.pos,d,p.f);const foe=hf&&hf.who;let hit=null;if(p.id==='grenade'||p.id==='stun'){p.mesh.rotation.x+=dt*8;if(Math.random()<.3)emit(p.pos.x,p.pos.y+.2,p.pos.z,{n:1,speed:.3,size:.08,life:.3,grav:-1,colors:['#ffd23f']});}
@@ -3439,7 +3554,7 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
     {const v=p.vel.length();if(v>2.5&&S.t-(p.bT||-9)>.12){p.bT=S.t;sfx(Math.random()<.5?'bounce1':'bounce2',at,{vol:clamp(v/14,.3,1),range:12});}}if(!p.armed&&n.y>.5){p.armed=true;p.life=g.fuse;}p.vel.addScaledVector(n,-2*p.vel.dot(n)).multiplyScalar(.45);if(n.y>.5&&Math.abs(p.vel.y)<1.5){p.vel.y=0;p.vel.x*=.8;p.vel.z*=.8;}p.pos.copy(at);p.mesh.position.copy(at);continue;}
   if((p.id==='grenade'||p.id==='stun')&&p.life<=0)hit=null;
   if(hit||p.life<=0){const at=hit?p.pos.clone().addScaledVector(d,hit.t):p.pos.clone();scene.remove(p.mesh);projs.splice(i,1);
-    if(p.id==='rocket'){if(hit&&hit.b&&hit.b.n.y<.5)scorch(at.clone(),hit.b.n.clone(),hit.b.box);explode(p.f,at,hit&&hit.b?hit.b.n:null);}
+    if(p.id==='rocket'||p.id==='grenade'||p.id==='fireball')wetBoom(at);if(p.id==='rocket'){if(hit&&hit.b&&hit.b.n.y<.5)scorch(at.clone(),hit.b.n.clone(),hit.b.box);explode(p.f,at,hit&&hit.b?hit.b.n:null);}
     else if(p.id==='grenade')explode(p.f,at.add(new V3(0,.2,0)),null,{dmg:g.dmg,radius:g.radius,wall:150,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#9aa0a8','#ffffff']});
     else if(p.id==='stun')stunBlast(p.f,at.add(new V3(0,.3,0)));
     else if(p.id==='fireball')explode(p.f,at,hit&&hit.b?hit.b.n:null,{dmg:g.dmg,radius:g.radius,wall:90,gun:'fireball',burn:true,colors:['#ffd23f','#ff7a1f','#ff3b1f','#ffb347']});
@@ -3447,6 +3562,7 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
       emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,'stars');}
     else{if(hit&&hit.b)damageBrick(brickOf(hit.b.box),30);emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:['#ffffff','#c9ced8']});}
     continue;}
+  if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));}}
   p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));if(Math.random()<.8)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:2,speed:.8,size:.22,life:.5,grav:-1,colors:['#ffb347','#f4f4f4','#9aa0a8']});}
   else if(p.id==='fireball'){if(Math.random()<.9)emit(p.pos.x,p.pos.y,p.pos.z,{n:2,speed:.6,size:.3,life:.4,grav:-2,colors:['#ffd23f','#ff7a1f','#ff3b1f']});}
   else p.mesh.rotation.y+=dt*30;}}
@@ -3531,6 +3647,7 @@ function fire(f,origin,dir){f.shotT=S.t;f.shotP=f.pos.clone();
     else end=origin.clone().addScaledVector(d,180);
     {const et=origin.distanceTo(end);let wsnd=p>0;if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
+    if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){for(const [foe,hr] of hits){const total=Math.round(hr.t);if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(total,100);dmgNumber(foe,total,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
   if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(Math.random()-.5)*g.kick*.4;}

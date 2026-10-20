@@ -3906,7 +3906,7 @@ function handW(f,left){f.ch.root.updateMatrixWorld(true);return (left?f.ch.aL:f.
 function freeLine(F,sgn){const k=sgn>0?'fb':'ff';if(F[k]!=null)return F[k];let m=12;for(const y of [.35,1.2,2.0]){const o=new V3(F.v0.x,F.v0.y+y,F.v0.z),d=new V3(-F.fwd.x*sgn,0,-F.fwd.z*sgn);const h=rayBoxes(o,d,12);if(h&&h.box.y1-F.v0.y>STEP)m=Math.min(m,h.t-R-.05);}return F[k]=Math.max(0,m);}
 function setAtt(a,F,dist,dt){dist=dist>=0?Math.min(dist,freeLine(F,1)):-Math.min(-dist,freeLine(F,-1));const x=F.v0.x-F.fwd.x*dist,z=F.v0.z-F.fwd.z*dist;const vx=(x-a.pos.x)/Math.max(dt,1e-3),vz=(z-a.pos.z)/Math.max(dt,1e-3);
   a.pos.x=x;a.pos.z=z;a.pos.y=F.v0.y;a.vel.set(vx,0,vz);a.grounded=true;}
-const MOVE_DUR={'Roast':3.8,'Sawn in half':3.9,'Piledriver':3.6,'Shadow grab':3.6,'Clear!':4.0,'Overcharge':2.8,'Gone fishing':4.2,'Blur rush':3.2,'Overgrown':3.8,'Knockout':4.1,'Heartbreaker':5.2,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.2,'Pancake':3.6};
+const MOVE_DUR={'Roast':4.4,'Sawn in half':3.9,'Piledriver':3.6,'Shadow grab':3.6,'Clear!':4.0,'Overcharge':2.8,'Gone fishing':4.2,'Blur rush':3.2,'Overgrown':3.8,'Knockout':4.1,'Heartbreaker':5.2,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Hot potato':3.4,'Pancake':3.6};
 function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,0),fx=F.fx,yawA=F.yaw0;
   const side=new V3(Math.cos(yawA),0,-Math.sin(yawA));// attacker's local +X
   const dA=Math.hypot(F.a0.x-F.v0.x,F.a0.z-F.v0.z);
@@ -3918,7 +3918,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     const g=easeOut(segT(t,.3,.85));if(!F.done)F.ice.scale.y=Math.max(.01,g);
     if(t>.3&&t<.9&&Math.random()<.8)emit(v.pos.x+rnd(-.8,.8),v.pos.y+g*2.6*SC,v.pos.z+rnd(-.8,.8),{n:2,speed:1.5,size:.14,life:.4,grav:-1,colors:['#ffffff','#bfeaff']});
     if(t>.3&&!F.done)frostLook(v,Math.min(.45,(t-.3)));
-    const fr=t<.3?0:1;if(!F.done)v.pose={ar:[-2.4*fr,0,.45*fr],al:[-2.4*fr,0,-.45*fr],head:-.35*fr};
+    if(!F.done){const tr=easeOut(segT(t,.05,.3));v.yaw=yawA+Math.PI*(1-tr);/* turned away, mid-stride, looking back */v.pose={ar:[-1.3*tr,0,.25*tr],al:[.7*tr,0,-.15*tr],ll:-.55*tr,lr:.45*tr,head:-.25*tr,root:[.12*tr,v.yaw,0]};if(F.ice)F.ice.rotation.y=v.yaw;}
     const dist=t<1.0?lerp(dA,3.4,easeIO(segT(t,.35,1.0))):t<1.5?3.4:lerp(3.4,1.3,easeIn(segT(t,1.5,1.82)));setAtt(a,F,dist,dt);a.yaw=yawA;
     if(t<1.0)a.vel.multiplyScalar(.6);
     const kick=t>1.68&&t<2.15;a.pose={ar:[kick?.5:-.2,0,.2],al:[kick?.5:-.2,0,-.2],lr:kick?-1.55:undefined,ll:kick?.25:undefined};
@@ -3989,21 +3989,21 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     F.focus=t<1.8?new V3(a.pos.x+fa.x*.5,a.pos.y+1.3,a.pos.z+fa.z*.5):F.imp?F.imp.clone().add(new V3(0,1.2,0)):new V3(v.pos.x,v.pos.y+1.2,v.pos.z);}
   else if(fx==='Hot potato'){
     if(!F.pot){F.pot=potatoMesh();scene.add(F.pot.g);F.obj.push(F.pot.g);}
-    if(t<.35)v.downed=false;v.pos.copy(F.v0);
+    if(t<.35)v.downed=false;{const ch=2.6*easeIn(segT(t,.95,2.5)),nx=F.v0.x-fw.x*ch,nz=F.v0.z-fw.z*ch;v.vel.set((nx-v.pos.x)/Math.max(dt,1e-3),0,(nz-v.pos.z)/Math.max(dt,1e-3));v.pos.set(nx,F.v0.y,nz);v.grounded=true;}
     if(t<.8){setAtt(a,F,lerp(dA,1.15,easeIO(segT(t,.2,.6))),dt);a.yaw=yawA;}
     else{const u=easeIO(segT(t,.8,.95));a.yaw=yawA+Math.PI*u;const d=lerp(1.15,10.5,segT(t,.95,2.3));setAtt(a,F,d,dt);if(t>2.3)a.vel.set(0,0,0);}
     a.pose={ar:t>.3&&t<.78?[-1.4,0,0]:[-.15,0,0],al:[-.15,0,0]};
     let gp;if(t<.78)gp=handW(a,false);
     else{const ph=(t-.78)*3.4,i=Math.floor(ph),u=ph-i;const A=handW(v,i%2===0),Bh=handW(v,i%2!==0);gp=A.lerp(Bh,u);gp.y+=Math.sin(u*Math.PI)*.75;
       const s=Math.sin(ph*Math.PI*2);v.pose={ar:[-1.15+.35*s,0,.2],al:[-1.15-.35*s,0,-.2],head:.45,root:[0,v.yaw,Math.sin(t*11)*.05]};
-      v.pos.addScaledVector(side,Math.sin(t*7)*.12);}
+      v.pos.addScaledVector(side,Math.sin(t*7)*.12);if(t>1.0)v.pose.head=.25;}
     if(!F.done){const P=F.pot;P.g.position.copy(gp);P.g.rotation.y+=dt*5;const L=Math.max(.02,.34*(1-segT(t,.15,2.55)));P.fuse.scale.y=L;P.tip.position.y=P.top+L;
       const tip=P.tip.getWorldPosition(new V3());P.tip.scale.setScalar(.8+Math.random()*.6);emit(tip.x,tip.y,tip.z,{n:2,speed:2,up:2,size:.07,life:.25,grav:0,colors:['#ffd23f','#ff7a1f','#ffffff']});
       if(Math.random()<.3)emit(tip.x,tip.y+.05,tip.z,{n:1,speed:.3,up:1.5,size:.12,life:.5,grav:-1,colors:['#9aa0a8']});}
     if(t>=2.55&&!F.done){F.done=1;F.pot.g.visible=false;const c=gp.clone();flashBall(c,'#ffd27a',3.4);
       emit(c.x,c.y,c.z,{n:60,speed:11,size:.35,life:.7,grav:2,colors:['#ffb347','#ff7a1f','#ffe08a']});emit(c.x,c.y,c.z,{n:30,speed:3,up:3,size:.35,life:1.2,grav:-1.2,colors:['#4a4d55','#6b6f78','#8a8f99']});
-      decal(F.v0.x,F.v0.y,F.v0.z,1.6,'#1d1b1a');shatter(v,{power:14,up:7,from:c.clone().add(new V3(0,-.4,0))});S.shake=1;slowMo(.4,a,v);vig(.2);say(a,v,'Hot potato!','Hot potato','You held the hot potato',false);}
-    F.focus=new V3(F.v0.x*.65+a.pos.x*.35,F.v0.y+1.4,F.v0.z*.65+a.pos.z*.35);F.camD=10.5;}
+      decal(v.pos.x,F.v0.y,v.pos.z,1.6,'#1d1b1a');shatter(v,{power:14,up:7,from:c.clone().add(new V3(0,-.4,0))});S.shake=1;slowMo(.4,a,v);vig(.2);say(a,v,'Hot potato!','Hot potato','You held the hot potato',false);}
+    F.focus=new V3(v.pos.x*.65+a.pos.x*.35,F.v0.y+1.4,v.pos.z*.65+a.pos.z*.35);F.camD=10.5;}
   else if(fx==='Heartbreaker'){
     if(t<.35)v.downed=false;
     const back=t<1.25?lerp(dA,.95,easeIO(segT(t,.05,.45))):lerp(.95,1.55,easeIO(segT(t,1.25,1.6)));setAtt(a,F,back,dt);a.yaw=yawA;if(t>1.6)a.vel.set(0,0,0);
@@ -4023,9 +4023,9 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       if(alive&&b>.9&&!F.drip){F.drip=1;emit(h.x,h.y,h.z,{n:2,speed:.4,up:-1,size:.07,life:.6,grav:8,colors:['#7d0d17','#c8102e']});}else if(b<.5)F.drip=0;}
     // victim: stands, jolts when struck, then slumps and falls back to the ground
     if(t>=.35){const slump=easeIO(segT(t,1.5,2.5)),fall=easeIn(segT(t,2.45,3.05)),jolt=t>.78&&t<1.3?1:0;
-      v.pos.set(F.v0.x+rnd(-.03,.03)*jolt,F.v0.y,F.v0.z+rnd(-.03,.03)*jolt);v.cv=lerp(.55*slump,.15,fall);
-      v.pose={root:[-Math.PI/2*fall+rnd(-.04,.04)*jolt,v.yaw,rnd(-.06,.06)*jolt],ar:jolt?[-.9,0,.9]:[lerp(-.6,-.05,slump),0,lerp(.4,.15,slump)],al:jolt?[-.9,0,-.9]:[lerp(-.6,-.05,slump),0,lerp(-.4,-.15,slump)],head:jolt?-.3:.55*slump,ll:fall?.3:undefined,lr:fall?-.2:undefined};
-      if(fall>=1&&!F.landed){F.landed=1;S.shake=Math.max(S.shake,.35);const C=F.v0.clone().addScaledVector(fw,1.2*SC);for(let i=0;i<14;i++){const an=i/14*TAU;emit(C.x+Math.cos(an)*.7,C.y+.15,C.z+Math.sin(an)*.7,{n:1,speed:4,up:1,size:.3,life:.5,grav:0,colors:['#c9bfae','#9a8f80']});}}}
+      const stg=.95*easeOut(segT(t,1.3,2.1)),wob=t>1.3&&t<2.1?Math.sin(t*16)*.06:0;v.pos.set(F.v0.x+fw.x*stg+side.x*wob+rnd(-.03,.03)*jolt,F.v0.y,F.v0.z+fw.z*stg+side.z*wob+rnd(-.03,.03)*jolt);v.vel.set(t>1.3&&t<2.1?fw.x*1.5:0,0,t>1.3&&t<2.1?fw.z*1.5:0);v.grounded=true;v.cv=lerp(.55*slump,.15,fall);
+      v.pose={root:[-Math.PI/2*fall+rnd(-.04,.04)*jolt,v.yaw,rnd(-.06,.06)*jolt],ar:jolt?[-.9,0,.9]:t<2.1?[-1.25,0,-.35]:[lerp(-.6,-.05,slump),0,lerp(.4,.15,slump)],al:jolt?[-.9,0,-.9]:t<2.1?[-1.25,0,.35]:[lerp(-.6,-.05,slump),0,lerp(-.4,-.15,slump)],head:jolt?-.3:.55*slump,ll:fall?.3:undefined,lr:fall?-.2:undefined};
+      if(fall>=1&&!F.landed){F.landed=1;S.shake=Math.max(S.shake,.35);const C=v.pos.clone().addScaledVector(fw,1.2*SC);for(let i=0;i<14;i++){const an=i/14*TAU;emit(C.x+Math.cos(an)*.7,C.y+.15,C.z+Math.sin(an)*.7,{n:1,speed:4,up:1,size:.3,life:.5,grav:0,colors:['#c9bfae','#9a8f80']});}}}
     F.focus=new V3((a.pos.x+F.v0.x)/2,F.v0.y+(t>1.5&&t<2.6?2.3:1.7),(a.pos.z+F.v0.z)/2);F.camD=5.6;F.camSide=.8;F.camBack=-.6;}
   else if(fx==='Knockout'){
     const C=F.v0.clone().addScaledVector(fw,1.15*SC);
@@ -4071,16 +4071,20 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
         if(Math.random()<.6)emit(v.pos.x+rnd(-.4,.4),v.pos.y+rnd(.2,1.8)*SC,v.pos.z+rnd(-.4,.4),{n:1,speed:.4,up:2,size:.2,life:.4,grav:-2,colors:['#ff7a1f','#ffb347']});
         if(Math.random()<.25)emit(hp.x,hp.y+.5,hp.z,{n:1,speed:.3,up:1.5,size:.35,life:1,grav:-1,colors:['#4a4d55','#6b6f78']});}
       if(t<.75)v.pose=t>.45?{ar:[-1.4,0,.4],al:[-1.4,0,-.4],head:-.2}:undefined;
-      else if(t<2.35){// running round in a panic
-        const R=1.5;if(F.ang==null){F.ang=Math.atan2(-fw.z,-fw.x);F.cx=F.v0.x+fw.x*R;F.cz=F.v0.z+fw.z*R;}F.ang+=dt*3.4;
-        const nx=F.cx+Math.cos(F.ang)*R,nz=F.cz+Math.sin(F.ang)*R;v.vel.set((nx-v.pos.x)/Math.max(dt,1e-3),0,(nz-v.pos.z)/Math.max(dt,1e-3));v.pos.set(nx,F.v0.y,nz);v.grounded=true;v.yaw=Math.atan2(v.vel.x,v.vel.z);
+      else if(t<2.75){// flee away from Blaze in a panic, picking the clearest way out
+        if(F.fd==null){const away=Math.atan2(fw.x,fw.z),o=new V3(v.pos.x,v.pos.y+.9,v.pos.z);let best=null;
+          for(const da of [0,.35,-.35,.7,-.7,1.05,-1.05,1.4,-1.4]){const y=away+da,d=new V3(Math.sin(y),0,Math.cos(y)),h=rayBoxes(o,d,10),L=h?h.t-.9:10;if(!best||L>best.L+.4)best={y,L};}
+          F.fd=best.y;F.fL=Math.max(2.5,Math.min(8,best.L));F.fs=v.pos.clone();}
+        const u=segT(t,.75,2.75),d=F.fL*u,zig=Math.sin(u*14)*.55*Math.min(1,u*3),dir=new V3(Math.sin(F.fd),0,Math.cos(F.fd)),perp=new V3(dir.z,0,-dir.x);
+        const nx=F.fs.x+dir.x*d+perp.x*zig,nz=F.fs.z+dir.z*d+perp.z*zig,ny=groundAt(nx,nz,v.pos.y+.6);
+        v.vel.set((nx-v.pos.x)/Math.max(dt,1e-3),0,(nz-v.pos.z)/Math.max(dt,1e-3));v.pos.set(nx,Math.max(ny,F.v0.y-3),nz);v.grounded=true;v.yaw=Math.atan2(v.vel.x,v.vel.z);
         const k=S.t*14;v.pose={ar:[-2.8+Math.sin(k)*.5,0,.4],al:[-2.8-Math.sin(k)*.5,0,-.4],head:Math.sin(k*.7)*.2};}
-      else{v.vel.set(0,0,0);const u=easeIn(segT(t,2.45,2.75)),w=t<2.45?Math.sin(t*30)*.12:0;v.pose={root:[1.45*u,v.yaw,w],ar:[-.3,0,.3],al:[-.3,0,-.3],head:.4};
-        if(t>=2.8){F.done=1;F.gone=1;F.ash=v.pos.clone().addScaledVector(new V3(Math.sin(v.yaw),0,Math.cos(v.yaw)),1.1*SC);
-          shatter(v,{power:1.3,up:1.2,floor:F.v0.y,from:new V3(v.pos.x,v.pos.y+3,v.pos.z),size:.15});S.shake=Math.max(S.shake,.4);
-          emit(F.ash.x,F.v0.y+.3,F.ash.z,{n:30,speed:2,up:2,size:.35,life:1.2,grav:-1,colors:['#4a4d55','#6b6f78','#2b2d33']});say(a,v,'Roasted!','Roast','You got roasted',false);}}}
-    else if(Math.random()<.5)emit(F.ash.x+rnd(-.6,.6),F.v0.y+.2,F.ash.z+rnd(-.6,.6),{n:1,speed:.3,up:1.2,size:.3,life:1,grav:-1,colors:['#6b6f78','#4a4d55','#ff7a1f']});
-    F.focus=new V3((a.pos.x+v.pos.x)/2,F.v0.y+1.3,(a.pos.z+v.pos.z)/2);F.camD=8.5;}
+      else{v.vel.set(0,0,0);const u=easeIn(segT(t,2.85,3.15)),w=t<2.85?Math.sin(t*30)*.12:0;v.pose={root:[1.45*u,v.yaw,w],ar:[-.3,0,.3],al:[-.3,0,-.3],head:.4};
+        if(t>=3.2){F.done=1;F.gone=1;F.ash=v.pos.clone().addScaledVector(new V3(Math.sin(v.yaw),0,Math.cos(v.yaw)),1.1*SC);
+          shatter(v,{power:1.3,up:1.2,floor:v.pos.y,from:new V3(v.pos.x,v.pos.y+3,v.pos.z),size:.15});S.shake=Math.max(S.shake,.4);
+          emit(F.ash.x,v.pos.y+.3,F.ash.z,{n:30,speed:2,up:2,size:.35,life:1.2,grav:-1,colors:['#4a4d55','#6b6f78','#2b2d33']});say(a,v,'Roasted!','Roast','You got roasted',false);}}}
+    else if(Math.random()<.5)emit(F.ash.x+rnd(-.6,.6),v.pos.y+.2,F.ash.z+rnd(-.6,.6),{n:1,speed:.3,up:1.2,size:.3,life:1,grav:-1,colors:['#6b6f78','#4a4d55','#ff7a1f']});
+    F.focus=new V3((a.pos.x+v.pos.x)/2,F.v0.y+1.3,(a.pos.z+v.pos.z)/2);F.camD=8.5+Math.hypot(v.pos.x-F.v0.x,v.pos.z-F.v0.z)*.6;}
   else if(fx==='Sawn in half'){
     const top=.85,yv=Math.atan2(-side.x,-side.z),L=2.3*SC,Cc=new V3(F.v0.x,F.v0.y+top,F.v0.z),feet=Cc.clone().addScaledVector(side,-L/2);
     if(!F.box){renderer.localClippingEnabled=true;const g=new THREE.Group();g.position.copy(Cc);g.rotation.y=yawA;g.scale.setScalar(.01);scene.add(g);F.obj.push(g);F.box=g;
@@ -4225,7 +4229,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     const grab=t>.42&&!F.done;a.pose={ar:[grab?-1.5:-.3,0,grab?-.15:0],al:[grab?-1.5:-.3,0,grab?.15:0]};
     if(!F.done){const lift=easeOut(segT(t,.5,.8))*.15,j=t>.6?.06:0;v.pos.set(F.v0.x+rnd(-j,j),F.v0.y+lift+rnd(-j,j),F.v0.z+rnd(-j,j));
       const fl=t>.55?1:0;const ar=[-1.5+rnd(-.5,.5)*fl,0,1.25*fl+rnd(-.3,.3)*fl],al=[-1.5+rnd(-.5,.5)*fl,0,-1.25*fl+rnd(-.3,.3)*fl],ll=rnd(-.4,.4)*fl,lr=rnd(-.4,.4)*fl,head=rnd(-.3,.3)*fl;
-      const root=[rnd(-.07,.07)*fl,v.yaw,rnd(-.1,.1)*fl];v.pose={root,ar,al,ll,lr,head};
+      const root=[rnd(-.07,.07)*fl,v.yaw,rnd(-.1,.1)*fl];v.pose={root,ar,al,ll,lr,head};v.cv=.55*segT(t,1.3,1.9);
       if(t>.5){for(let k=0;k<3;k++){const h=handW(a,k===0);const p=new V3(v.pos.x+rnd(-.5,.5)*SC,v.pos.y+rnd(.4,2.5)*SC,v.pos.z+rnd(-.4,.4)*SC);let q=h;
           for(let s=1;s<=3;s++){const n=s===3?p:h.clone().lerp(p,s/3).add(new V3(rnd(-.25,.25),rnd(-.25,.25),rnd(-.25,.25)));tracer(q,n,Math.random()<.5?'#fff27a':'#7ff3ff',.09);q=n;}}
         if(Math.random()<.7)emit(v.pos.x+rnd(-.5,.5),v.pos.y+rnd(.4,2.4),v.pos.z+rnd(-.5,.5),{n:2,speed:4,size:.1,life:.25,grav:0,colors:['#fff27a','#7ff3ff','#ffffff']});}

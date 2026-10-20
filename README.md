@@ -40,7 +40,7 @@ Characters (12): Brute (a slate-skinned giant with rage veins; 130 HP, leaps and
 
 **Reviving** – stand over a downed teammate and they glow green and revive twice as fast (2 seconds instead of 4).
 
-**End of match** – the result, then "You caught the W!" or "Took the L this time :(", the score and four stats: Kills, Damage, Accuracy, Headshots. Rematch, View Clips (every replay from the match) and Home.
+**End of match** – "You caught the W!" or "Took the L this time :(" in big letters, the score and four stats: Kills, Damage, Accuracy, Headshots. Rematch, View Clips (every replay from the match) and Home.
 
 **Lethals** (what used to be called consumables; press G): Grenade, Stim, Stun Grenade and Sense Pack as before, plus:
 - **Flash Bang** (2 per round) – thrown like a grenade; anyone who can see the blast gets a near-white screen for 2 seconds (1 second if facing away). Bots lose track of you for as long.

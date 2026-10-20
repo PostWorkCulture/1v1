@@ -253,6 +253,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #d-big.win{color:var(--good)} #d-big.lose{color:var(--accent)} #d-big:empty{display:none}
 #d-sub{font:700 14px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#fff;background:#101114;padding:7px 12px;border-radius:var(--radius)}
 #d-sub:empty{display:none}
+#d-center.sm{top:15%;gap:6px}#d-big.sm{font-size:clamp(22px,3.2vw,36px);text-shadow:0 3px 0 #101114,2px 2px 0 #101114,-2px 2px 0 #101114,2px -2px 0 #101114,-2px -2px 0 #101114}#d-center.sm #d-sub{font-size:11px;padding:5px 9px}
 /* in-game XP is shown on the menu and end screen only */
 #duel-hud .d-xpbar{display:none}
 /* mini leaderboard */
@@ -3435,7 +3436,8 @@ const byDist=f=>(a,b)=>Math.hypot(a.pos.x-f.pos.x,a.pos.z-f.pos.z)-Math.hypot(b.
 function rayFoes(o,d,f){let best=null;for(const v of foesOf(f)){const h=rayFighter(o,d,v);if(h&&(!best||h.t<best.t)){best=h;best.who=v;}}return best;}
 const nm=f=>f===ME?'You':(f&&f.name)||'Bot';
 const tg=f=>`<span class="${f===ME||(S.players!=='ffa'&&f.team===ME.team)?'y':'o'}">${nm(f)}</span>`;
-function say(a,v,big,winSub,loseSub,toFeed=true){if(a===ME)center(big,winSub,'win');else if(v===ME)center(big,loseSub,'lose');else if(toFeed)feedMsg(`${tg(a)}<em>${big}</em>${tg(v)}`);}
+// finisher call-outs ('Roasted!' etc.): small, high up and gone after about a second so they don't block the view
+function say(a,v,big,winSub,loseSub,toFeed=true){const quick=()=>{clearTimeout(say.t);say.t=setTimeout(()=>{if($('d-big').textContent===big)center('','');},1100);};if(a===ME){center(big,winSub,'win sm');quick();}else if(v===ME){center(big,loseSub,'lose sm');quick();}else if(toFeed)feedMsg(`${tg(a)}<em>${big}</em>${tg(v)}`);}
 function finishable(a){return FS.find(v=>isFoe(a,v)&&canFinish(a,v));}
 function setupRoster(){const P=S.players,n=P==='ffa'?ffaN():0;if(n)ensureBots(n-1);FS=P==='2v2'?[ME,B2,BOT,B3]:P==='ffa'?[ME,...BOTS.slice(0,n-1)]:[ME,BOT];
   ME.team=0;if(P==='2v2'){B2.team=0;BOT.team=1;B3.team=1;}else BOTS.forEach((b,i)=>b.team=i+1);
@@ -4461,7 +4463,7 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
   // a teammate standing over you revives you twice as fast, and you glow green while they do
   {const help=f.downed&&f.alive&&!f.finishing&&FS.some(m=>m!==f&&m.alive&&!m.downed&&!m.finishing&&!isFoe(m,f)&&Math.hypot(m.pos.x-f.pos.x,m.pos.z-f.pos.z)<1.7&&Math.abs(m.pos.y-f.pos.y)<1.5);f.helped=help;glowLook(f,help);}
   if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/4*(f.helped?2:1);if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
-    if(f.revive>=1){f.downed=false;f.hp=Math.max(1,Math.round(f.hpMax*.1));f.revive=0;emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
+    if(f.revive>=1){f.downed=false;f.hp=Math.max(1,Math.round(f.hpMax*.1));f.lastHurt=S.t;f.revive=0; /* back up on 10% health, and regen waits the usual 5 s before it starts */emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
     else if(f.bleed<=0)kill(f,f.lastBy||f,false,'bleed');}}
 function smashLand(f){sfx('smash',f,{range:22});const near=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z)<14;S.shake=Math.max(S.shake,f===ME||near?.45:.15);
   for(let i=0;i<28;i++){const a=i/28*TAU;emit(f.pos.x+Math.cos(a)*.7,f.pos.y+.15,f.pos.z+Math.sin(a)*.7,{n:2,speed:9,up:3,size:.32,life:.6,colors:['#8a7466','#c9b8a4','#ff7a2a']});}
@@ -4753,7 +4755,7 @@ function feedMsg(html){const el=document.createElement('div');el.className='pane
 function feed(you,gun,head){const el=document.createElement('div');el.className='panel feed';
   el.innerHTML=you?`<span class="y">You</span><em>${gun}</em><span class="o">Bot</span>`:`<span class="o">Bot</span><em>${gun}</em><span class="y">You</span>`;
   if(head)el.innerHTML+='<span class="hs">HEADSHOT</span>';const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
-function center(big,sub,cls){const b=$('d-big');b.textContent=big||'';b.className=cls||'';$('d-sub').textContent=sub||'';}
+function center(big,sub,cls){const b=$('d-big');b.textContent=big||'';b.className=cls||'';$('d-sub').textContent=sub||'';$('d-center').classList.toggle('sm',/\bsm\b/.test(cls||''));}
 const proj=new V3();
 function toScreen(p){proj.copy(p).project(camera);if(proj.z>1)return null;return[(proj.x*.5+.5)*innerWidth,(-proj.y*.5+.5)*innerHeight];}
 function updTouchLabels(){if(!S.touch)return;const c=$('dt-c'),f=$('dt-f');const cl=ME.skySlam?'Sky':'Crouch';if(c.textContent!==cl)c.textContent=cl;

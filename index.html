@@ -2261,7 +2261,7 @@ function batchStatic(){const g=M.group;g.updateMatrixWorld(true);const groups=ne
 function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spawns)return;const hi=[],ins=[];
   const layerNear=(i,j,h)=>{const k=i+j*g.nx;for(let l=0;l<g.n[k];l++)if(Math.abs(g.h[k*NL+l]-h)<.3)return true;return false;};
   for(let j=3;j<g.nz-3;j+=2)for(let i=3;i<g.nx-3;i+=2){const k=i+j*g.nx;for(let l=0;l<g.n[k];l++){const h=g.h[k*NL+l],x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS;
-      if(M.shop&&Math.hypot(x-M.shop.x,z-M.shop.z)<5)continue;
+      if((M.shops||[]).some(s=>Math.hypot(x-s.x,z-s.z)<5))continue;
       let open=true;for(const [di,dj] of [[-2,0],[2,0],[0,-2],[0,2],[-2,-2],[2,2],[-2,2],[2,-2]])if(!layerNear(i+di,j+dj,h)){open=false;break;}if(!open)continue;
       if(M.reachSpawns&&!M.reachSpawns(k*NL+l))continue;
       if(h>=2.5&&h<=14)hi.push({x,z,y:h});
@@ -2772,17 +2772,20 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
 
 const MAPS={
  street:{modes:['duel'],name:'Maple Street',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
-  const X=44,Z=56;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  floor(-90,90,-120,120,'#5fb24b','grass',-.02,1);
+  // a square plot (104 x 104 m) instead of a long strip
+  const X=52,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  floor(-100,100,-110,110,'#5fb24b','grass',-.02,1);
   floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
-  for(let z=-Z+2;z<Z;z+=6)floor(-.15,.15,z,z+3,'#f4c22b',null,.02);
+  for(let z=-Z+2;z<Z;z+=6)floor(-.15,.15,z,z+3,'#ffffff',null,.02);
   const cols=['#f6d7a7','#bfe0f2','#f3b8b0','#cfe8c3','#e5d4f0','#f9eec2','#d6dbe2','#ffd8a8'],roofs=['#8a3b2a','#3a4a63','#5b4a3a','#7a2e3a'];
   const trims=['#ffffff','#f3efe6','#e9eaee','#fff6e0'];
-  // every house gets its own roof colour so each one is easy to call out: brown, red, purple, yellow, green, blue, orange, teal
-  const RC=['#7a4a26','#c8322b','#7b3fb5','#e8b81f','#2f8f3a','#2f63c8','#e8701f','#1f9a9a'];
+  // the four big houses are called out by roof colour: yellow, green, red, blue; the two flat-roofed houses have white and light grey decks.
+  // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
+  const RC=['#e8b81f','#f4f5f7','#2f8f3a',null,null,'#c8322b','#c9ced6','#2f63c8'];
   let k=0;for(const side of [-1,1])for(const z of [-38,-13,13,38]){const flip=side>0?1:-1,ci=side<0?[-38,-13,13,38].indexOf(z):[-38,-13,13,38].indexOf(-z),kind=['A','B','C','A'][ci];
     const big=ci===0||ci===2,hk=big?1.6:1,cx=side*(14+6*hk),hw=5.5*hk;
+    if(ci===3){k++;continue;}
     const rc=RC[k];if(kind==='B')houseB(cx,z,flip,cols[(ci*2+1)%cols.length],trims[(ci+1)%4],hk,rc);else houseA(cx,z,flip,cols[ci*2%cols.length],rc,trims[ci%4],kind==='C',hk,ci===0);k++;
     // one tree only at each end of the street, out of the way; mailboxes beside the path, not on it
     if(Math.abs(z)===38)tree(side*12,z+Math.sign(z)*(hw+3),.9);
@@ -2791,10 +2794,11 @@ const MAPS={
   fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
   for(const side of [-1,1])box(side*21,0,side*1.65,6,1.4,1,'#3f8f3a',{tx:'grass'});
   const cars=[car(3.4,-30,false,'#e8463a'),car(-3.4,-17,false,'#2f7fe0'),car(3.4,-4,false,'#f4c22b'),car(-3.4,9,false,'#ffffff'),car(3.4,22,false,'#3bb54a'),car(-3.4,33,false,'#a05ad6')];
-  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:40});
-  box(-4.2,0,-44,1,.9,1,'#3bb54a',{prop:'bush'});box(4.2,0,44,1,.9,1,'#3bb54a',{prop:'bush'});
-  for(const z of [-48,48])for(const x of [-3,3])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[0,52],[0,-52],[-38,48],[38,-48],[-38,-2],[38,2],[-7.6,-28],[7.6,28]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:34});
+  // a shop at each end of the road
+  M.shopAt=[{x:0,z:-43},{x:0,z:43}];
+  for(const z of [-49,49])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
+  M.spawns=[[-12,49],[12,-49],[-44,46],[44,-46],[-44,-2],[44,2],[-7.6,-28],[7.6,28],[-26,40],[26,-40]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  wreck:{modes:['duel'],name:'Wreck Cove',desc:'A galleon broken in two on a tropical beach',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=4.2,T=.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
@@ -2861,7 +2865,7 @@ const MAPS={
 };
 function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();buildGrid();addBuildingSpawns();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
-function placeShop(){M.shop=null;if(M.shopAt){const p=M.shopAt;buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
+function placeShop(){M.shop=null;M.shops=[];if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
   const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
@@ -2891,7 +2895,7 @@ function buildShop(x,z,gy){
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),glm);m.position.set(x+ox,y,z+oz);m.userData.dyn=1;M.group.add(m);
     const h=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.5,d+.5),hm);h.position.copy(m.position);h.userData.dyn=1;M.group.add(h);glow.push(h);}
   const pad=new THREE.Mesh(new THREE.RingGeometry(1.15,3,40),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);M.group.add(pad);
-  M.shop={x,z,y:gy,pad,sign,glowMat:hm};}
+  const sh={x,z,y:gy,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;}
 
 /* ================= nav grid ================= */
 const CS=.5,CLR=.47,NL=4,NAV_H=2.25; // CLR a touch more than the body radius, so a walkable cell is one a body really fits in
@@ -4426,7 +4430,7 @@ const SHOP_ITEMS=[
   {id:'speed',name:'Speed',desc:'+25% for 30s',col:'#f08a24',ic:'»',rumble:1,can:f=>(f.speedT||0)<45,buy:f=>{f.speedT=(f.speedT||0)+30;}}];
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.nadeT=0;f.speedT=0;}
-const nearShop=f=>!!M.shop&&Math.hypot(f.pos.x-M.shop.x,f.pos.z-M.shop.z)<3.1&&Math.abs(f.pos.y-M.shop.y)<1.6;
+const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.1&&Math.abs(f.pos.y-s.y)<1.6);
 const canShopNow=()=>ME.alive&&!ME.downed&&!ME.finishing&&!ME.carriedBy&&!ME.skySlam&&!ME.carrying&&(S.state==='fight'||S.state==='countdown');
 function openShop(){if(S.shopOpen)return;S.shopOpen=true;$('d-hint').classList.add('fade');$('d-shop').hidden=false;renderShop(true);}
 function closeShop(){if(!S.shopOpen)return;S.shopOpen=false;$('d-shop').hidden=true;}
@@ -4785,7 +4789,7 @@ function updMinimap(){{const now=performance.now();if(now-(updMinimap.t||0)<30)r
   g.setTransform(1,0,0,1,0,0);g.fillStyle='#c9d1bf';g.fillRect(0,0,W,W);
   g.setTransform(A/MM.k,Bq/MM.k,Cq/MM.k,Dq/MM.k,C-(A*px+Cq*pz)+(A*b.x0+Cq*b.z0),C-(Bq*px+Dq*pz)+(Bq*b.x0+Dq*b.z0));g.drawImage(mmLayer(),0,0);
   g.setTransform(1,0,0,1,0,0);
-  if(M.shop){const [x,y]=toS(M.shop.x,M.shop.z);g.fillStyle='#ffc61a';g.strokeStyle='#14161c';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12);}
+  for(const sh of M.shops||[]){const [x,y]=toS(sh.x,sh.z);g.fillStyle='#ffc61a';g.strokeStyle='#14161c';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12);}
   for(const f of FS){if(f===ME||!f.alive)continue;if(!isFoe(ME,f)){const [x,y]=toS(f.pos.x,f.pos.z);g.fillStyle='#2f7fe0';g.beginPath();g.arc(x,y,6,0,TAU);g.fill();continue;}
     const age=S.t-(f.shotT??-99);if(age>2.5||!f.shotP)continue;const [x,y]=toS(f.shotP.x,f.shotP.z);g.globalAlpha=Math.max(0,1-age/2.5);g.fillStyle='#ff2a2a';g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.globalAlpha=1;}
   for(const m of S.deathMarks||[]){const age=S.t-m.t;if(age>3)continue;const [x,y]=toS(m.x,m.z);g.globalAlpha=age>2.4?(3-age)/.6:1;g.strokeStyle='#14161c';g.lineWidth=5;g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x+5,y+5);g.moveTo(x+5,y-5);g.lineTo(x-5,y+5);g.stroke();g.strokeStyle='#ff3b3b';g.lineWidth=2.5;g.stroke();g.globalAlpha=1;}
@@ -5060,7 +5064,7 @@ function step(rdt){pfBudget=24000;
   for(const b of FS){if(b===ME)continue;
     if(b.carriedBy||b.skyHeld){}else if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?9.4:8.6)*stimMul(b),c.jumpPress);}
     else if(b.alive&&!(b.finishing&&b.finishing.move)&&!FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===b))physics(b,dt,0,0,false,0);}
-  updWalls(dt);updProps(dt);updCelebrate(dt);updLife(dt);if(M.shop){M.shop.pad.material.opacity=.22+.14*Math.sin(S.t*4);M.shop.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
+  updWalls(dt);updProps(dt);updCelebrate(dt);updLife(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');
   updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updScorch(dt);updParts(dt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);

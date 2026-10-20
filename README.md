@@ -44,9 +44,11 @@ Characters (12): Brute (a slate-skinned giant with rage veins; 130 HP, leaps and
 
 **Lethals** (what used to be called consumables; press G): Grenade, Stim, Stun Grenade and Sense Pack as before, plus:
 - **Flash Bang** (2 per round) – thrown like a grenade; anyone who can see the blast gets a near-white screen for 2 seconds (1 second if facing away). Bots lose track of you for as long.
-- **Proximity Mine** (2 per round) – laid on the floor in front of you, armed after a second (fast-blinking red light while arming), goes off when an enemy steps on it (60 damage). Other blasts set it off too.
+- **Proximity Mine** (2 per round) – laid on the floor in front of you, armed after a second (fast-blinking red light while arming), goes off when an enemy comes within about 1.7 m (60 damage); it's dark grey with a dim red blink, so it's easy to miss. Other blasts set it off too.
 - **Cluster Grenade** (2 per round) – a small burst that throws out five bomblets, each a smaller, weaker blast (24 damage) a moment later.
 - **Golden Armour** (always on) – you start every round or respawn with 50 armour, which rebuilds back to 50 at a quarter of the speed health regenerates.
+
+**Deaths and celebrations** – an ordinary kill drops the body flat on the ground with a few small red blocks round it (no explosion, no slow motion); only finishing moves blow people apart. Downing someone no longer slows the game either. If you finish a downed enemy while every one of their teammates is also down, the whole team is out. When a round or match is won, every winner still standing flexes, spins, jumps or blasts their gun at the sky under sweeping neon beams, rainbow rings and fireworks; on a match win the camera swings round the winners. The kill feed sits under the score at 65% opacity.
 
 **Cover** – bullets go through wood (fences, sheds, furniture, wooden floors and crates; each layer takes off 30% of the damage, up to three layers) but not through concrete, brick, walls, cars or built walls. Bodies can't pass through solid structures: throws and slams stop at walls, a Home run finisher stops at the first wall it hits, and anyone pushed into a wall is moved back out.
 

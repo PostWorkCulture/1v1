@@ -1987,16 +1987,17 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   window.SFX={play,stop,setVol,get vol(){return vol;},get ready(){return !!ctx;}};
   /* background music: dark trap tracks from Pixabay (Pixabay Content Licence) on the menu, between rounds and at match end */
   const TRACKS={menu:'music/menu.mp3',rounds:'music/rounds.mp3',matchend:'music/matchend.mp3'};
-  let mvol=.5,cur=null,unlocked=false;const el={};
+  let mvol=.5,cur=null,blocked=false;const el={};
   try{const v=JSON.parse(localStorage.getItem('blockrush:musvol')||'null');if(typeof v==='number')mvol=Math.max(0,Math.min(1,v));}catch(e){}
   function audio(k){if(!el[k]){const a=new Audio(TRACKS[k]);a.loop=true;a.preload='auto';a.volume=0;a._g=0;el[k]=a;}return el[k];}
   function want(){const D=window.__duel,B=window.__br;
     if(D&&D.active){const st=D.S.state;if(st==='menu')return 'menu';if(st==='done')return 'matchend';if(st==='roundEnd'||st==='countdown')return 'rounds';return null;}
     if(B&&B.G&&B.G.state==='menu')return 'menu';return null;}
-  setInterval(()=>{if(!unlocked)return;const w=mvol>0?want():null;
-    if(w!==cur){if(w==='matchend'&&el.matchend)el.matchend.currentTime=0;cur=w;if(w){const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{});}}
+  // try straight away on load; if the browser blocks autoplay, start on the first click, key or tap
+  setInterval(()=>{if(blocked)return;const w=mvol>0?want():null;
+    if(w!==cur){if(w==='matchend'&&el.matchend)el.matchend.currentTime=0;cur=w;if(w){const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{blocked=true;cur=null;});}}
     for(const k in el){const a=el[k],tgt=k===cur?mvol*.55:0;a._g+=(tgt-a._g)*(tgt>a._g?.12:.2);if(Math.abs(tgt-a._g)<.003)a._g=tgt;a.volume=Math.max(0,Math.min(1,a._g));if(a._g===0&&!a.paused&&k!==cur)a.pause();}},100);
-  const mu=()=>{unlocked=true;};['pointerdown','keydown','touchstart'].forEach(e=>window.addEventListener(e,mu,{capture:true,passive:true}));
+  const mu=()=>{if(!blocked)return;blocked=false;const w=mvol>0?want():null;if(w){cur=w;const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{});}};['pointerdown','keydown','touchstart'].forEach(e=>window.addEventListener(e,mu,{capture:true,passive:true}));
   function msync(){document.querySelectorAll('[data-mvol]').forEach(i=>{i.value=mvol;});document.querySelectorAll('[data-mvol-val]').forEach(b=>{b.textContent=Math.round(mvol*100)+'%';});}
   document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.mvol!=null){mvol=Math.max(0,Math.min(1,+e.target.value));try{localStorage.setItem('blockrush:musvol',JSON.stringify(mvol));}catch(err){}msync();}});
   document.addEventListener('DOMContentLoaded',msync);msync();

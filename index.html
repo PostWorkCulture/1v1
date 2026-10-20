@@ -3509,8 +3509,9 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 const DIFF={easy:{name:'Easy',react:1.15,err:5.5,head:.03,turn:3.2,strafe:.3,build:.2,settle:.8,sway:.9,flinch:6,recoil:2.2,lead:0,tol:.16,rof:1.35,burst:4,pause:[.6,1.2],hes:.3,miss:.5},
   normal:{name:'Normal',react:.6,err:2.7,head:.14,turn:6.5,strafe:.6,build:.4,settle:1.4,sway:.5,flinch:3,recoil:1,lead:.5,tol:.09,rof:1.25,burst:6,pause:[.3,.7],hes:.12,miss:.25},
   hard:{name:'Hard',react:.3,err:1.3,head:.34,turn:12,strafe:.95,build:.75,settle:2.2,sway:.25,flinch:1.2,recoil:.3,lead:1,tol:.06,rof:1.1,burst:0,pause:[0,0],hes:0,miss:.1}};
-const SHARED_MOVES=['Dog pile','Hot potato','Heartbreaker','Knockout'];
-const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Piledriver',ghost:'Shadow grab',patch:'Clear!',volt:'Overcharge',hook:'Gone fishing',zip:'Blur rush',thorn:'Overgrown'};
+// spare finishers, built but not assigned to anyone yet
+const SHARED_MOVES=['Gone fishing','Piledriver','Shadow grab','Overgrown'];
+const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Knockout',ghost:'Heartbreaker',patch:'Clear!',volt:'Overcharge',hook:'Hot potato',zip:'Blur rush',thorn:'Dog pile'};
 const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
@@ -3735,8 +3736,8 @@ function ownMats(f){f.ch.root.traverse(o=>{if(!o.isMesh||o.userData.ownMat)retur
 function tintLook(f,col,metal){ownMats(f);f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(!m||!m.color||m.side===THREE.BackSide||m.type==='MeshBasicMaterial')continue;if(!m.userData.c0){m.userData.c0=m.color.clone();m.userData.map0=m.map;m.userData.m0=m.metalness;m.userData.r0=m.roughness;}
   m.color.set(col);m.map=null;m.metalness=metal;m.roughness=.25;m.needsUpdate=true;}});}
 function untintLook(f){f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m&&m.userData.c0){m.color.copy(m.userData.c0);m.map=m.userData.map0;m.metalness=m.userData.m0;m.roughness=m.userData.r0;m.needsUpdate=true;delete m.userData.c0;}}});}
-// every character always uses its own signature finisher (the shared moves are parked for later variety)
-function moveFor(a,v){return SIG[a.char]||SHARED_MOVES[Math.floor(Math.random()*SHARED_MOVES.length)];}
+// every character always uses its own signature finisher
+function moveFor(a,v){return SIG[a.char]||'Dog pile';}
 function bat(){const g=new THREE.Group();const w=mat('#c98a4b',null,{roughness:.6});const h=new THREE.Mesh(new THREE.CylinderGeometry(.07,.05,.5,8),mat('#2b2b2b'));h.position.y=.25;g.add(h);
   const b=new THREE.Mesh(new THREE.CylinderGeometry(.13,.07,1.3,10),w);b.position.y=1.15;g.add(b);return g;}
 function axe(){const g=new THREE.Group();const h=new THREE.Mesh(new THREE.BoxGeometry(.1,1.6,.1),mat('#7a4a28'));h.position.y=.8;g.add(h);

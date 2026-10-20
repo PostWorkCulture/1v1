@@ -128,6 +128,9 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .card{width:min(420px,100%);padding:24px;display:flex;flex-direction:column;gap:16px;text-align:center}
 .card h2{margin:0;font:400 clamp(30px,6vw,44px)/1 var(--f-display);text-wrap:balance}
 .card .btns{display:flex;flex-direction:column;gap:10px}
+.dd-wl{font:700 17px/1.2 var(--f-body);margin-top:-6px}
+.btn:disabled{opacity:.45;cursor:default}
+.dd-rp[hidden]{display:none}
 .res{display:grid;grid-template-columns:1fr auto;gap:8px 16px;text-align:left;font:500 15px/1.2 var(--f-body)}
 .res span{color:var(--muted)} .res b{text-align:right;font-variant-numeric:tabular-nums}
 .res .tot{border-top:1.5px solid color-mix(in srgb,var(--panel-ink) 18%,transparent);padding-top:10px;font:400 22px/1 var(--f-display);color:var(--panel-ink)}
@@ -875,15 +878,16 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   </div></div>
   <div id="duel-done" class="screen" hidden>
     <div class="panel card">
-      <div class="eyebrow" id="dd-sub">Maple Street · Normal</div>
       <h2 id="dd-title">You win</h2>
+      <div class="dd-wl" id="dd-sub"></div>
       <div class="dd-score" id="dd-score">5 – 2</div>
       <div class="newbest" id="dd-unlock"></div>
       <div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div>
       <div class="res" id="dd-res"></div>
-      <div class="dd-rp" id="dd-rp"></div>
+      <div class="dd-rp" id="dd-rp" hidden></div>
       <div class="btns">
         <button class="btn primary" id="dd-again">Rematch</button>
+        <button class="btn" id="dd-clips">View Clips</button>
         <button class="btn" id="dd-menu">Home</button>
       </div>
     </div>
@@ -3054,6 +3058,7 @@ const GUNS={
   grenade:{name:'Grenades',sec:true,type:'proj',dmg:50,radius:4,rate:.9,mag:3,reload:0,noReload:true,speed:30,grav:18,fuse:2,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#3f6b3a',note:'3 per round, 50 damage'}
 };
 for(const k in GUNS)if(GUNS[k].reload)GUNS[k].reload*=.5; // reloads are 50% quicker
+for(const k in GUNS)if(GUNS[k].dmg&&GUNS[k].type!=='ability')GUNS[k].dmg=Math.round(GUNS[k].dmg*1.2); // every weapon hits 20% harder (shorter time to kill)
 const PRIMARIES=['sniper','scout','ar','gar','mg','m60'];
 function gunModel(id){const g=new THREE.Group();const sh=GUNS[id].base||id;const dark=mat('#2b2d33',null,{roughness:.45,metalness:.4}),mid=mat('#5a5f69',null,{roughness:.4,metalness:.5}),acc=mat(GUNS[id].color,null,{roughness:.5});
   const P=(w,h,d,x,y,z,m)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=true;g.add(me);return me;};let L=1;
@@ -3736,6 +3741,9 @@ function fxSetup(v){const F=v.finishing,fx=F.fx;
 function ownMats(f){f.ch.root.traverse(o=>{if(!o.isMesh||o.userData.ownMat)return;o.userData.ownMat=1;if(Array.isArray(o.material))o.material=o.material.map(m=>m&&m.side!==THREE.BackSide?m.clone():m);else if(o.material&&o.material.side!==THREE.BackSide)o.material=o.material.clone();});}
 function tintLook(f,col,metal){ownMats(f);f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(!m||!m.color||m.side===THREE.BackSide||m.type==='MeshBasicMaterial')continue;if(!m.userData.c0){m.userData.c0=m.color.clone();m.userData.map0=m.map;m.userData.m0=m.metalness;m.userData.r0=m.roughness;}
   m.color.set(col);m.map=null;m.metalness=metal;m.roughness=.25;m.needsUpdate=true;}});}
+function glowLook(f,on){if(!!f.glowOn===on){if(on&&f.glowMats){const k=.55+.25*Math.sin(S.t*8);for(const m of f.glowMats)m.emissiveIntensity=k;}return;}f.glowOn=on;
+  if(on){ownMats(f);f.glowMats=[];f.ch.root.traverse(o=>{if(!o.isMesh)return;for(const m of (Array.isArray(o.material)?o.material:[o.material])){if(!m||!m.emissive||m.side===THREE.BackSide)continue;if(m.userData.e0===undefined){m.userData.e0=m.emissive.clone();m.userData.ei0=m.emissiveIntensity;}m.emissive.set('#3bff6a');m.emissiveIntensity=.6;f.glowMats.push(m);}});}
+  else{for(const m of f.glowMats||[]){if(m.userData.e0){m.emissive.copy(m.userData.e0);m.emissiveIntensity=m.userData.ei0;delete m.userData.e0;}}f.glowMats=null;}}
 function untintLook(f){f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m&&m.userData.c0){m.color.copy(m.userData.c0);m.map=m.userData.map0;m.metalness=m.userData.m0;m.roughness=m.userData.r0;m.needsUpdate=true;delete m.userData.c0;}}});}
 // every character always uses its own signature finisher
 function moveFor(a,v){return SIG[a.char]||'Dog pile';}
@@ -4394,7 +4402,9 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
   setGhost(f,f.ghostT>0?(isFoe(ME,f)?.08:.35):1);if(f.ch.jet){f.jetOn=(f.jetOn||0)-dt;for(const fl of f.ch.jet.userData.flames)fl.visible=f.jetOn>0;}
   if(f.burnT>0&&f.alive){f.burnT-=dt;f.burnTick-=dt;if(Math.random()<.6)emit(f.pos.x+rnd(-.4,.4),f.pos.y+rnd(.4,2),f.pos.z+rnd(-.4,.4),{n:1,speed:.5,up:2,size:.25,life:.4,grav:-2,colors:['#ffb347','#ff7a1f']});
     if(f.burnTick<=0){f.burnTick=.5;damage(f,4,f.burnBy||f,false,'fireball');}}
-  if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/4;if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
+  // a teammate standing over you revives you twice as fast, and you glow green while they do
+  {const help=f.downed&&f.alive&&!f.finishing&&FS.some(m=>m!==f&&m.alive&&!m.downed&&!m.finishing&&!isFoe(m,f)&&Math.hypot(m.pos.x-f.pos.x,m.pos.z-f.pos.z)<1.7&&Math.abs(m.pos.y-f.pos.y)<1.5);f.helped=help;glowLook(f,help);}
+  if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/4*(f.helped?2:1);if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
     if(f.revive>=1){f.downed=false;f.hp=Math.max(1,Math.round(f.hpMax*.1));f.revive=0;emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
     else if(f.bleed<=0)kill(f,f.lastBy||f,false,'bleed');}}
 function smashLand(f){sfx('smash',f,{range:22});const near=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z)<14;S.shake=Math.max(S.shake,f===ME||near?.45:.15);
@@ -4906,13 +4916,13 @@ function endRound(winner,head){if(S.state!=='fight')return;S.state='roundEnd';S.
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?f.hp/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
-function matchEnd(){S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=(isDM()?DM_KILLS:5);
+function matchEnd(){S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.disabled=!RP.clips.length;b.textContent=RP.clips.length?`View Clips (${RP.clips.length})`:'No clips this game';}if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=(isDM()?DM_KILLS:5);
   const rk=S.players==='1v1'?S.diff:S.diff+':'+S.players;const r=S.record[rk]||[0,0];r[won?0:1]++;S.record[rk]=r;store.set('duel:record',S.record);
   const wt=S.score.findIndex(v=>v>=(isDM()?DM_KILLS:5)),ld=f=>`${CHARS[f.char].name} (${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
   $('dd-title').textContent=won?(S.players==='2v2'?'Your team wins':'You win'):teamName(wt)+(S.players==='1v1'?' wins':' wins');$('dd-score').textContent=scoreLine();
-  $('dd-sub').textContent=`${MAPS[S.map].name} · ${DIFF[S.diff].name} bots · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))} · ${[ME,...al].map(ld).join(' + ')} vs ${en.map(ld).join(S.players==='2v2'?' + ':', ')}`;
+  $('dd-sub').textContent=won?'You caught the W!':'Took the L this time :(';
   const st=S.stats,acc=st.shots?Math.round(st.hits/st.shots*100):0;
-  $('dd-res').innerHTML=[...(isDM()?[]:[['Rounds won',st.kills]]),...(S.players!=='1v1'?[['Eliminations',st.elims]]:[]),...(st.bought?[['Shop picks',st.bought]]:[]),['Accuracy',acc+'%'],['Headshot hits',st.heads],['Damage dealt',Math.round(st.dmg)],['Walls built',st.walls]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('dd-res').innerHTML=[['Kills',st.elims],['Damage',Math.round(st.dmg)],['Accuracy',acc+'%'],['Headshots',st.heads]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
   $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();}
 const nextUnlock=()=>FX_XP.find(x=>x>(S.xp||0));
@@ -5000,7 +5010,8 @@ function saveReplay(){if(!RV.clip||RV.rec||$('rv-save').textContent==='Recording
   rec.onstop=()=>{const blob=new Blob(parts,{type:rec.mimeType||'video/webm'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download=`imok-replay-${RV.clip?RV.clip.label.replace(/[^a-z0-9]+/gi,'-').toLowerCase():'clip'}.${(rec.mimeType||'').includes('mp4')?'mp4':'webm'}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);$('rv-save').textContent='Saved';setTimeout(()=>$('rv-save').textContent='Save video',1500);};
   RV.i=0;RV.acc=0;RV.play=false;rvDraw();$('rv-play').textContent='Pause';$('rv-save').textContent='Recording…';rec.start(200);setTimeout(()=>{RV.rec=rec;RV.i=0;RV.acc=0;RV.play=true;},250);}
-$('rv-close').addEventListener('click',closeReplay);$('rv-save').addEventListener('click',saveReplay);
+$('rv-close').addEventListener('click',closeReplay);
+$('dd-clips').addEventListener('click',()=>{const r=$('dd-rp');r.hidden=!r.hidden;$('dd-clips').textContent=r.hidden?`View Clips (${RP.clips.length})`:'Hide Clips';});$('rv-save').addEventListener('click',saveReplay);
 $('rv-play').addEventListener('click',()=>{RV.play=!RV.play;if(RV.play&&RV.i>=RV.imgs.length-1)RV.i=0;$('rv-play').textContent=RV.play?'Pause':'Play';});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b){e.preventDefault();openReplay(+b.dataset.rp);return;}if(e.target.closest('#rp-home')){$('d-rend').hidden=true;leave();}});
 

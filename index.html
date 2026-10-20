@@ -109,7 +109,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .lv{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:3px;align-items:center;text-align:left;cursor:pointer;
   padding:7px 10px;border-radius:calc(var(--radius) * .8);border:1.5px solid color-mix(in srgb,var(--panel-ink) 16%,transparent);background:transparent;min-width:0}
 .lv:hover{border-color:var(--panel-ink)}
-.lv[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.lv[aria-pressed="true"]{border-color:#2f9a3f;background:color-mix(in srgb,#3bb54a 14%,transparent)}
 .lv .n{grid-row:1/3;font:400 20px/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums;width:30px}
 .lv .t{font:600 14px/1.15 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .lv .b{font:500 11.5px/1 var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -168,7 +168,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .opt{display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;padding:8px 10px;min-width:0;
   border-radius:calc(var(--radius) * .8);border:1.5px solid color-mix(in srgb,var(--panel-ink) 16%,transparent);background:transparent}
 .opt:hover{border-color:var(--panel-ink)}
-.opt[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.opt[aria-pressed="true"]{border-color:#2f9a3f;background:color-mix(in srgb,#3bb54a 14%,transparent)}
 .opt .t{font:600 14px/1.15 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .opt .b{font:500 11.5px/1.25 var(--f-body);color:var(--muted)}
 .opt .sw{display:flex;gap:3px;height:6px;margin-bottom:3px}
@@ -3058,7 +3058,7 @@ const GUNS={
   grenade:{name:'Grenades',sec:true,type:'proj',dmg:50,radius:4,rate:.9,mag:3,reload:0,noReload:true,speed:30,grav:18,fuse:2,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#3f6b3a',note:'3 per round, 50 damage'}
 };
 for(const k in GUNS)if(GUNS[k].reload)GUNS[k].reload*=.5; // reloads are 50% quicker
-for(const k in GUNS)if(GUNS[k].dmg&&GUNS[k].type!=='ability')GUNS[k].dmg=Math.round(GUNS[k].dmg*1.2); // every weapon hits 20% harder (shorter time to kill)
+for(const k in GUNS)if(GUNS[k].dmg)GUNS[k].dmg=Math.round(GUNS[k].dmg*1.2); // every weapon and ability hits 20% harder (fireball included) // every weapon hits 20% harder (shorter time to kill)
 const PRIMARIES=['sniper','scout','ar','gar','mg','m60'];
 function gunModel(id){const g=new THREE.Group();const sh=GUNS[id].base||id;const dark=mat('#2b2d33',null,{roughness:.45,metalness:.4}),mid=mat('#5a5f69',null,{roughness:.4,metalness:.5}),acc=mat(GUNS[id].color,null,{roughness:.5});
   const P=(w,h,d,x,y,z,m)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=true;g.add(me);return me;};let L=1;
@@ -3105,11 +3105,11 @@ const CHARS={
   tank:{skin:'tank_mech',fx:['Gold statue','Shrink'],name:'Tank',desc:'150 HP and a shield bubble',abil:'Shield',cd:12,hp:150,speed:.9,look:{shirt:'#6b6f78',shirtSolid:'#3a3d45',hair:'#3a2a1a'},color:'#6b6f78'},
   ghost:{skin:'shroud',fx:['Freeze','Tornado'],name:'Ghost',desc:'Turns almost invisible',abil:'Vanish',cd:12,hp:100,look:{shirt:'#dfe9f2',shirtSolid:'#9fb3c8',hair:'#9fd3f0'},color:'#9fd3f0'},
   frost:{skin:'frost_mage',fx:['Freeze','Shrink'],name:'Frost',desc:'Frost nova chills and slows anyone close',abil:'Frost nova',cd:9,hp:100,look:{shirt:'#5fa8d8',shirtSolid:'#2f6f9f',hair:'#eaf6ff'},color:'#7fd3ff'},
-  patch:{skin:'patch_medic',fx:['Balloon','Spirit'],name:'Patch',desc:'Field medic who heals 40 HP',abil:'Med kit',cd:14,hp:100,look:{shirt:'#2fa59a',shirtSolid:'#1d7068',hair:'#3a2a1a'},color:'#3bb54a'},
-  volt:{skin:'volt_zapper',fx:['Lightning','Disco'],name:'Volt',desc:'Shoots a lightning bolt (30 dmg)',abil:'Zap',cd:5,hp:100,look:{shirt:'#ffd23f',shirtSolid:'#1b1d23',hair:'#fff27a'},color:'#ffd23f'},
+  patch:{skin:'patch_medic',fx:['Balloon','Spirit'],name:'Patch',desc:'Field medic who heals 48 HP',abil:'Med kit',cd:14,hp:100,look:{shirt:'#2fa59a',shirtSolid:'#1d7068',hair:'#3a2a1a'},color:'#3bb54a'},
+  volt:{skin:'volt_zapper',fx:['Lightning','Disco'],name:'Volt',desc:'Shoots a lightning bolt (36 dmg)',abil:'Zap',cd:5,hp:100,look:{shirt:'#ffd23f',shirtSolid:'#1b1d23',hair:'#fff27a'},color:'#ffd23f'},
   hook:{skin:'hook_climber',fx:['Tornado','Firework'],name:'Hook',desc:'Grapples to wherever you aim',abil:'Grapple',cd:5,hp:100,look:{shirt:'#c0261b',shirtSolid:'#8a1a12',hair:'#5b3a22'},color:'#e8463a'},
   zip:{skin:'zip_runner',fx:['Rainbow beam','Firework'],name:'Zip',desc:'Fastest runner; sprints even faster',abil:'Sprint',cd:9,hp:90,speed:1.1,look:{shirt:'#1fbfae',shirtSolid:'#14857a',hair:'#ff4fa3'},color:'#1fbfae'},
-  thorn:{skin:'thorn_warden',fx:['Gold statue','Black hole'],name:'Thorn',desc:'Thorn armour blocks 30% and reflects half',abil:'Thorns',cd:12,hp:100,look:{shirt:'#5b3a22',shirtSolid:'#3d2716',hair:'#2f6a1e'},color:'#7bd13a'}};
+  thorn:{skin:'thorn_warden',fx:['Gold statue','Black hole'],name:'Thorn',desc:'Thorn armour blocks 30% and reflects 60%',abil:'Thorns',cd:12,hp:100,look:{shirt:'#5b3a22',shirtSolid:'#3d2716',hair:'#2f6a1e'},color:'#7bd13a'}};
 const ABIL_KILL={smash:'Ground smash',frost:'Frost nova',zap:'Zap',thorns:'Thorns'};
 const CHAR_IDS=['blaze',...Object.keys(CHARS).filter(k=>k!=='blaze')]; // Blaze first: top-left of the character grid
 function accessory(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castShadow=true;(p||ch.torso).add(m);return m;};
@@ -3661,7 +3661,7 @@ function fire(f,origin,dir){f.shotT=S.t;f.shotP=f.pos.clone();
   if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(Math.random()-.5)*g.kick*.4;}
   f.bloom=Math.min(f.bloom+g.bloom,3);}
 function damage(f,dmg,src,head,gun){if(f.thornT>0&&!f.downed&&src&&src!==f&&gun!=='thorns'&&f.alive&&S.state==='fight'&&!f.finishing){dmg*=.7;const r=damage0(f,dmg,src,head,gun);
-    if(src.alive&&!src.finishing){emit(f.pos.x,f.pos.y+1.3,f.pos.z,{n:10,speed:5,size:.18,life:.4,grav:4,colors:['#b6ff3b','#4f9a2e','#e9e2c8']});damage0(src,Math.max(1,dmg*.5),f,false,'thorns');}return r;}
+    if(src.alive&&!src.finishing){emit(f.pos.x,f.pos.y+1.3,f.pos.z,{n:10,speed:5,size:.18,life:.4,grav:4,colors:['#b6ff3b','#4f9a2e','#e9e2c8']});damage0(src,Math.max(1,dmg*.6),f,false,'thorns');}return r;}
   return damage0(f,dmg,src,head,gun);}
 function damage0(f,dmg,src,head,gun){if(!f.alive||S.state!=='fight'||f.finishing)return false;if(f.finishT>0){const fv=FS.find(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===f);if(fv)cancelFinish(fv);}if(f.shieldT>0)dmg*=.35;dmg=Math.max(1,Math.round(dmg));f.lastHurt=S.t;if(f===ME&&(gun==='grenade'||gun==='rocket'))ME.blastT=1.1;if(src&&src!==f){f.lastBy=src;if(isFoe(src,f))(f.hitBy||(f.hitBy=new Map())).set(src,S.t);}
   if(f===ME){vig(.55);S.shake=Math.max(S.shake,.18);if(S.t-(S.hurtSnd||-9)>.09){S.hurtSnd=S.t;sfx('hurt',null,{vol:clamp(dmg/30,.45,1)});}}if(f.ghostT>0)f.ghostT=0;
@@ -4280,13 +4280,13 @@ function useAbility(f,aimDir){if(!f.alive||f.downed||f.finishing||f.abilT>0||S.s
   if(f.char==='brute'){f.vel.y=15;f.vel.x+=fw.x*9;f.vel.z+=fw.z*9;f.grounded=false;f.smashT=.01;S.shake=Math.max(S.shake,f===ME?.2:0);emit(f.pos.x,f.pos.y+.1,f.pos.z,{n:30,speed:7,size:.28,life:.45,grav:4,colors:['#8a7466','#c9b8a4',C.color]});}
   else if(f.char==='frost'){S.shake=Math.max(S.shake,f===ME?.15:0);
     for(let i=0;i<36;i++){const a=i/36*TAU;emit(f.pos.x+Math.cos(a)*1.2,f.pos.y+.4,f.pos.z+Math.sin(a)*1.2,{n:2,speed:10,up:1,size:.26,life:.55,grav:0,colors:['#ffffff','#bfeaff','#7fd3ff']});}
-    for(const foe of foesOf(f)){const d=Math.hypot(foe.pos.x-f.pos.x,foe.pos.z-f.pos.z);if(!foe.finishing&&d<9&&Math.abs(foe.pos.y-f.pos.y)<3){foe.slowT=3;damage(foe,10,f,false,'frost');}}}
-  else if(f.char==='patch'){f.hp=Math.min(f.hpMax,f.hp+40);emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:40,speed:3,up:3,size:.24,life:.8,grav:-2,colors:['#3bb54a','#b6ff3b','#ffffff']});}
+    for(const foe of foesOf(f)){const d=Math.hypot(foe.pos.x-f.pos.x,foe.pos.z-f.pos.z);if(!foe.finishing&&d<9&&Math.abs(foe.pos.y-f.pos.y)<3){foe.slowT=3;damage(foe,12,f,false,'frost');}}}
+  else if(f.char==='patch'){f.hp=Math.min(f.hpMax,f.hp+48);emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:40,speed:3,up:3,size:.24,life:.8,grav:-2,colors:['#3bb54a','#b6ff3b','#ffffff']});}
   else if(f.char==='volt'){const mz=eyeOf(f,new V3()).addScaledVector(fw,.8);const d=aimFrom(mz);const hb=rayBoxes(mz,d,45),hf=rayFoes(mz,d,f);
     let t=hb?hb.t:45;const hit=hf&&hf.t<t&&hf.t<45;if(hit)t=hf.t;const end=mz.clone().addScaledVector(d,t);
     let a=mz.clone();for(let k=1;k<=5;k++){const b=k===5?end.clone():mz.clone().addScaledVector(d,t*k/5).add(new V3(rnd(-.35,.35),rnd(-.35,.35),rnd(-.35,.35)));tracer(a,b,'#fff27a',.08);a=b;}
     emit(end.x,end.y,end.z,{n:18,speed:5,size:.18,life:.35,grav:0,colors:['#fff27a','#7ff3ff','#ffffff']});
-    if(hit){const hd=hf.part==='head';damage(hf.who,hd?40:30,f,hd,'zap');if(f===ME)S.stats.hits++;}f.swingT=.32;}
+    if(hit){const hd=hf.part==='head';damage(hf.who,hd?48:36,f,hd,'zap');if(f===ME)S.stats.hits++;}f.swingT=.32;}
   else if(f.char==='hook'){const e=eyeOf(f,new V3());const d=aimFrom(e);const hb=rayBoxes(e,d,32);const t=hb?Math.max(2,hb.t-.6):18;const tgt=e.clone().addScaledVector(d,t);
     const v=tgt.clone().sub(e);const L=v.length();v.normalize();const sp=Math.min(26,11+L*1.1);f.vel.set(v.x*sp,Math.max(v.y*sp+6,7),v.z*sp);f.grounded=false;f.hookT=.55;f.hookP=tgt;
     emit(tgt.x,tgt.y,tgt.z,{n:12,speed:3,size:.15,life:.35,grav:2,colors:['#d6dbe2','#e6c25a']});}
@@ -4305,7 +4305,7 @@ function useAbility(f,aimDir){if(!f.alive||f.downed||f.finishing||f.abilT>0||S.s
   f.abilT=C.cd;return true;}
 /* ================= consumables ================= */
 const CONS={
-  grenade:{name:'Grenade',short:'Grenade',desc:'Throw for 50 splash damage',uses:2,meta:'2 per round'},
+  grenade:{name:'Grenade',short:'Grenade',desc:'Throw for 60 splash damage',uses:2,meta:'2 per round'},
   stim:{name:'Stim',short:'Stim',desc:'+45% move speed for 5 seconds',cd:20,dur:5,meta:'20s cooldown'},
   stun:{name:'Stun Grenade',short:'Stun',desc:'Flash that stuns anyone in the blast',uses:2,meta:'2 per round'},
   sense:{name:'Sense Pack',short:'Sense',desc:'See the enemy through walls for 6s',cd:25,dur:6,meta:'25s cooldown'}};
@@ -4410,7 +4410,7 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
 function smashLand(f){sfx('smash',f,{range:22});const near=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z)<14;S.shake=Math.max(S.shake,f===ME||near?.45:.15);
   for(let i=0;i<28;i++){const a=i/28*TAU;emit(f.pos.x+Math.cos(a)*.7,f.pos.y+.15,f.pos.z+Math.sin(a)*.7,{n:2,speed:9,up:3,size:.32,life:.6,colors:['#8a7466','#c9b8a4','#ff7a2a']});}
   for(const foe of foesOf(f)){const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,d=Math.hypot(dx,dz);
-  if(!foe.finishing&&!foe.carriedBy&&d<6&&Math.abs(foe.pos.y-f.pos.y)<2.5){const l=d||1;damage(foe,Math.round(40-d*3.5),f,false,'smash');
+  if(!foe.finishing&&!foe.carriedBy&&d<6&&Math.abs(foe.pos.y-f.pos.y)<2.5){const l=d||1;damage(foe,Math.round((40-d*3.5)*1.2),f,false,'smash');
     if(foe.alive&&!foe.downed){foe.vel.x+=dx/l*12;foe.vel.z+=dz/l*12;foe.vel.y=Math.max(foe.vel.y,9);foe.grounded=false;foe.stunT=Math.max(foe.stunT||0,.6);}}}
   for(const w of M.walls.slice())for(const br of w.bricks.slice())if(br.alive){const b=br.b;if(Math.hypot((b.x0+b.x1)/2-f.pos.x,(b.z0+b.z1)/2-f.pos.z)<4&&b.y0<f.pos.y+3&&b.y1>f.pos.y-.5)damageBrick(br,60);}}
 let debris=[];

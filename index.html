@@ -77,6 +77,11 @@ button{font:inherit;color:inherit}
 .hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;
   padding:9px 14px;font:500 13px/1.3 var(--f-body);transition:opacity .6s;max-width:calc(100% - 32px);text-align:center}
 .hint.fade{opacity:0}
+/* match intro at the start of a game: title, mode, rules (no key list) */
+.hint.intro{flex-direction:column;align-items:center;gap:3px;padding:10px 18px 11px}
+.hint.intro b{font:400 17px/1.1 var(--f-display);letter-spacing:.02em}
+.hint.intro span{font:600 12.5px/1.3 var(--f-body)}
+.hint.intro #in-r{color:var(--muted);font-weight:500}
 kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;font:700 11px/1 var(--f-body);text-align:center;
   background:var(--panel);color:var(--panel-ink);box-shadow:inset 0 0 0 1.5px var(--panel-ink),0 2px 0 var(--panel-ink);margin-right:3px}
 
@@ -798,10 +803,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <div class="d-wname" id="d-wname">Sniper</div>
       <span class="d-rl"><i id="d-rl"></i></span>
     </div>
-    <div class="panel hint" id="d-hint">
-      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span><span><kbd>Shift</kbd> run</span><span><kbd>Space</kbd> jump</span><span>Click fire</span><span>Right-click aim</span><span><kbd>C</kbd> crouch</span>
-      <span><kbd>E</kbd> ability</span><span><kbd>G</kbd> consumable</span><span><kbd>F</kbd> finish a downed bot</span><span><kbd>Q</kbd> build wall</span><span><kbd>R</kbd> reload</span><span><kbd>1</kbd><kbd>2</kbd> switch</span><span><kbd>P</kbd> pause</span>
-    </div>
+    <div class="panel hint intro" id="d-hint"><b id="in-t">imok 1v1</b><span id="in-m"></span><span id="in-r"></span></div>
   </div>
 
   <div id="duel-pause" class="screen" hidden>
@@ -4192,7 +4194,7 @@ function updMinimap(){{const now=performance.now();if(now-(updMinimap.t||0)<30)r
     const age=S.t-(f.shotT??-99);if(age>2.5||!f.shotP)continue;const [x,y]=toS(f.shotP.x,f.shotP.z);g.globalAlpha=Math.max(0,1-age/2.5);g.fillStyle='#ff2a2a';g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.globalAlpha=1;}
   for(const m of S.deathMarks||[]){const age=S.t-m.t;if(age>3)continue;const [x,y]=toS(m.x,m.z);g.globalAlpha=age>2.4?(3-age)/.6:1;g.strokeStyle='#14161c';g.lineWidth=5;g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x+5,y+5);g.moveTo(x+5,y-5);g.lineTo(x-5,y+5);g.stroke();g.strokeStyle='#ff3b3b';g.lineWidth=2.5;g.stroke();g.globalAlpha=1;}
   g.fillStyle='#ffffff';g.strokeStyle='#14161c';g.lineWidth=2.5;g.beginPath();g.moveTo(C,C-11);g.lineTo(C+8,C+8);g.lineTo(C,C+4);g.lineTo(C-8,C+8);g.closePath();g.fill();g.stroke();}
-const HUD_PARTS=[['score','Score'],['lb','Leaderboard'],['mm','Minimap'],['feed','Kill feed'],['vitals','Health, armour & stamina'],['items','Items'],['weapon','Weapon & ammo'],['hint','Controls hint'],['tags','Name tags',1]];
+const HUD_PARTS=[['score','Score'],['lb','Leaderboard'],['mm','Minimap'],['feed','Kill feed'],['vitals','Health, armour & stamina'],['items','Items'],['weapon','Weapon & ammo'],['hint','Match intro'],['tags','Name tags',1]];
 S.hud=Object.assign({},store.get('duel:hud',{}));S.hudZ=Object.assign({},store.get('duel:hudz',{}));
 function applyHud(){const h=$('duel-hud');for(const [k] of HUD_PARTS){h.classList.toggle('no-'+k,S.hud[k]===false);h.style.setProperty('--z-'+k,String(S.hudZ[k]||1));}if(S.hudPos)applyHudPos();
   $('dp-hud').innerHTML=HUD_PARTS.map(([k,n,noZ])=>{const on=S.hud[k]!==false,z=S.hudZ[k]||1;return `<div class="hud-row"><span class="hn">${n}</span><button class="tg" data-hud="${k}" aria-pressed="${on}">${on?'On':'Off'}</button>${noZ?'<span class="hz"></span>':`<span class="hz"><button data-z="${k}" data-d="-1" aria-label="Smaller">−</button><b>${Math.round(z*100)}%</b><button data-z="${k}" data-d="1" aria-label="Bigger">+</button></span>`}</div>`;}).join('');}
@@ -4333,7 +4335,9 @@ function startMatch(){RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';i
     if(S.mode==='rumble')b.primary=b.secondary='fists';tagFor(b);}
   const P=S.players;if(P!=='1v1')txt('d-botname',P==='2v2'?'Enemy team':'Bots');document.querySelector('.d-side.you .eyebrow').textContent=P==='2v2'?'Your team':'You';
   $('d-feed').innerHTML='';if(M.id!==S.map)buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
-  const h=$('d-hint');h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),8000);if(S.touch)h.classList.add('fade');startRound();if(!S.touch)lock();}
+  const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':'Duels'} · ${PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':'')} · ${MAPS[S.map].name}`;
+  $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · first to 10 kills wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · fists only':'');
+  h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}
 // spawns: 1v1 two far-apart points; 2v2 two far-apart points with each teammate beside their partner; FFA four points spread as far apart as possible
 // extra spawn spots for big free-for-alls: random open places in the main walkable area of the map (facing the middle)
 function openSpots(){if(M.spots&&M.spots.id===M.id)return M.spots.list;const g=M.grid,list=[];if(!g||!g.comp)return list;const cnt=new Map();

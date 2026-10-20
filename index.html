@@ -2783,22 +2783,22 @@ const MAPS={
   // the four big houses are called out by roof colour: yellow, green, red, blue; the two flat-roofed houses have white and light grey decks.
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f8f3a',null,null,'#c8322b','#c9ced6','#2f63c8'];
-  let k=0;for(const side of [-1,1])for(const z of [-38,-13,13,38]){const flip=side>0?1:-1,ci=side<0?[-38,-13,13,38].indexOf(z):[-38,-13,13,38].indexOf(-z),kind=['A','B','C','A'][ci];
-    const big=ci===0||ci===2,hk=big?1.6:1,cx=side*(14+6*hk),hw=5.5*hk;
-    if(ci===3){k++;continue;}
-    const rc=RC[k];if(kind==='B')houseB(cx,z,flip,cols[(ci*2+1)%cols.length],trims[(ci+1)%4],hk,rc);else houseA(cx,z,flip,cols[ci*2%cols.length],rc,trims[ci%4],kind==='C',hk,ci===0);k++;
-    // one tree only at each end of the street, out of the way; mailboxes beside the path, not on it
-    if(Math.abs(z)===38)tree(side*12,z+Math.sign(z)*(hw+3),.9);
+  // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
+  const L=[[-1,-32,'A',RC[0],0],[-1,0,'B',RC[1],1],[-1,32,'C',RC[2],2],[1,-32,'C',RC[5],3],[1,0,'B',RC[6],4],[1,32,'A',RC[7],5]];
+  for(const [side,z,kind,rc,k] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?1.6:1,cx=side*(19+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
+    if(kind==='B')houseB(cx,z,flip,cols[(ci*2+1)%cols.length],trims[(ci+1)%4],hk,rc);else houseA(cx,z,flip,cols[(ci*2+k)%cols.length],rc,trims[ci%4],kind==='C',hk,kind==='A');
+    // one tree beside each end house, out of the way; mailboxes beside the path, not on it
+    if(Math.abs(z)===32)tree(side*13,z+Math.sign(z)*(hw+3),.9);
     box(side*10.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*10.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
-  for(const side of [-1,1])box(side*21,0,side*1.65,6,1.4,1,'#3f8f3a',{tx:'grass'});
+  for(const side of [-1,1])for(const z of [-16,16])box(side*26,0,z,6,1.4,1,'#3f8f3a',{tx:'grass'});
   const cars=[car(3.4,-30,false,'#e8463a'),car(-3.4,-17,false,'#2f7fe0'),car(3.4,-4,false,'#f4c22b'),car(-3.4,9,false,'#ffffff'),car(3.4,22,false,'#3bb54a'),car(-3.4,33,false,'#a05ad6')];
   townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:34});
   // a shop at each end of the road
   M.shopAt=[{x:0,z:-43},{x:0,z:43}];
   for(const z of [-49,49])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[-12,49],[12,-49],[-44,46],[44,-46],[-44,-2],[44,2],[-7.6,-28],[7.6,28],[-26,40],[26,-40]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  M.spawns=[[-12,48],[12,-48],[-46,46],[46,-46],[46,46],[-46,-46],[-46,-16],[46,16],[-7.6,-16],[7.6,16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  wreck:{modes:['duel'],name:'Wreck Cove',desc:'A galleon broken in two on a tropical beach',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=4.2,T=.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};

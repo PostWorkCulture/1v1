@@ -4466,7 +4466,7 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
   // a teammate standing over you revives you twice as fast, and you glow green while they do
   {const help=f.downed&&f.alive&&!f.finishing&&FS.some(m=>m!==f&&m.alive&&!m.downed&&!m.finishing&&!isFoe(m,f)&&Math.hypot(m.pos.x-f.pos.x,m.pos.z-f.pos.z)<1.7&&Math.abs(m.pos.y-f.pos.y)<1.5);f.helped=help;glowLook(f,help);}
   if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/4*(f.helped?2:1);if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
-    if(f.revive>=1){f.downed=false;f.hp=Math.max(1,Math.round(f.hpMax*.1));f.lastHurt=S.t;f.revive=0; /* back up on 10% health, and regen waits the usual 5 s before it starts */emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
+    if(f.revive>=1){f.downed=false;f.hp=Math.max(1,Math.round(f.dhp));f.lastHurt=S.t;f.revive=0; /* get back up with whatever downed health you had left (30, less any hits you took while down); regen waits the usual 5 s */emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
     else if(f.bleed<=0)kill(f,f.lastBy||f,false,'bleed');}}
 function smashLand(f){sfx('smash',f,{range:22});const near=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z)<14;S.shake=Math.max(S.shake,f===ME||near?.45:.15);
   for(let i=0;i<28;i++){const a=i/28*TAU;emit(f.pos.x+Math.cos(a)*.7,f.pos.y+.15,f.pos.z+Math.sin(a)*.7,{n:2,speed:9,up:3,size:.32,life:.6,colors:['#8a7466','#c9b8a4','#ff7a2a']});}

@@ -3449,7 +3449,7 @@ function setupRoster(){const P=S.players,n=P==='ffa'?ffaN():0;if(n)ensureBots(n-
 const gunOf=f=>f.slot===0?f.primary:(f.secondary||'smg');
 const SECONDARIES=['smg','hornet','duals','rocket','stars','sword'];
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;if(f.relSnd&&window.SFX){window.SFX.stop(f.relSnd,.06);f.relSnd=null;}if(S.state==='fight')sfx('swap',f,{range:6});f.slot=slot;f.reloadT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
-function resetFighter(f,sp){f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.skyHeld=false;f.dangle=false;f.tumble=false;f.jolt=0;f.skySlam=false;f.skyShot=0;f.skyVictim=null;f.noThrowKill=false;f.cHold=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.carrying=null;f.carriedBy=null;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.zipT=0;f.thornT=0;f.hookT=0;
+function resetFighter(f,sp){f.boostT=0;f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.skyHeld=false;f.dangle=false;f.tumble=false;f.jolt=0;f.skySlam=false;f.skyShot=0;f.skyVictim=null;f.noThrowKill=false;f.cHold=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.carrying=null;f.carriedBy=null;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.zipT=0;f.thornT=0;f.hookT=0;
   f.ch.root.rotation.x=0;f.ch.root.rotation.z=0;f.ch.bubble.visible=false;setGhost(f,1);
   f.pos.set(sp.x,0,sp.z);f.vel.set(0,0,0);f.yaw=sp.yaw;f.pitch=0;f.hp=f.hpMax;f.alive=true;f.grounded=true;f.ammo={};f.ammo[f.primary]=GUNS[f.primary].mag;f.secondary=f.secondary||'smg';f.ammo[f.secondary]=GUNS[f.secondary].mag;
   f.fireT=0;f.reloadT=0;f.bloom=0;f.walls=4;f.cv=0;f.crouching=false;f.swingT=0;f.pos.y=sp.y||0;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.scale=SC;f.ch.root.scale.setScalar(SC);
@@ -3487,6 +3487,7 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char
   if(!jump)f.jumpLock=false;
   if(C.jet&&jump&&!f.grounded&&f.fuel>0&&!f.downed){f.vel.y=Math.min(f.vel.y+58*dt,9);f.fuel-=dt;f.jetOn=.1;if(Math.random()<.8)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.9,f.pos.z-Math.cos(f.yaw)*.4,{n:2,speed:1.5,up:-4,size:.25,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#f4f4f4']});}
   if(f.grounded)f.fuel=Math.min(2.5,f.fuel+dt*1.1);
+  if(f.boostT>0){f.boostT-=dt;if(f.downed)f.boostT=0;else{f.vel.y=Math.max(f.vel.y,25);f.grounded=false;f.jetOn=.1;for(let k=0;k<2;k++)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.6,f.pos.z-Math.cos(f.yaw)*.4,{n:3,speed:2,up:-10,size:.32,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#ffffff']});}}
   const vy0=f.vel.y;if(!f.grounded)f.vel.y-=GRAV*dt*(f.vel.y<0?1.2:1);
   if(!moveAxis(f,f.vel.x*dt,0))f.vel.x=0;if(!moveAxis(f,0,f.vel.z*dt))f.vel.z=0;
   // average of start and end velocity = exact for constant gravity, so jump height is the same at any frame rate
@@ -4328,7 +4329,7 @@ function useAbility(f,aimDir){if(!f.alive||f.downed||f.finishing||f.abilT>0||S.s
     emit(tgt.x,tgt.y,tgt.z,{n:12,speed:3,size:.15,life:.35,grav:2,colors:['#d6dbe2','#e6c25a']});}
   else if(f.char==='zip'){f.zipT=3;emit(f.pos.x,f.pos.y+.5,f.pos.z,{n:30,speed:6,size:.22,life:.4,grav:0,colors:['#1fbfae','#ff4fa3','#ffffff']});}
   else if(f.char==='thorn'){f.thornT=5;emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:30,speed:4,size:.24,life:.6,grav:2,colors:['#4f9a2e','#7bd13a','#e9e2c8']});}
-  if(f.char==='jet'){f.vel.x+=fw.x*15;f.vel.z+=fw.z*15;f.vel.y=Math.max(f.vel.y,10);f.grounded=false;f.fuel=2.5;emit(f.pos.x,f.pos.y+1,f.pos.z,{n:30,speed:5,size:.3,life:.5,colors:['#ffb347','#ff7a1f','#ffffff']});}
+  if(f.char==='jet'){/* short, powerful vertical burst: high enough to land on the tallest roofs */f.boostT=.38;f.vel.x+=fw.x*5;f.vel.z+=fw.z*5;f.vel.y=Math.max(f.vel.y,25);f.grounded=false;f.fuel=2.5;S.shake=Math.max(S.shake,f===ME?.25:0);emit(f.pos.x,f.pos.y+1,f.pos.z,{n:30,speed:5,size:.3,life:.5,colors:['#ffb347','#ff7a1f','#ffffff']});}
   else if(f.char==='blaze'){const e=eyeOf(f,new V3());const mz=e.clone().addScaledVector(fw,.8);let d=aimDir;if(!d){d=new V3();camera.getWorldDirection(d);const cam=camera.position.clone();const hb=rayBoxes(cam,d,200),hf=rayFoes(cam,d,f);let t=150;if(hb)t=Math.min(t,hb.t);if(hf)t=Math.min(t,hf.t);d=cam.addScaledVector(d,t).sub(mz).normalize();}
     spawnProj(f,'fireball',mz,d);f.swingT=.32;}
   else if(f.char==='blink'){const c=new V3(f.pos.x,f.pos.y+1.2*SC,f.pos.z);const hb=rayBoxes(c,fw,9.5);const dist=hb?Math.max(0,hb.t-.8):9;emit(c.x,c.y,c.z,{n:30,speed:3,size:.2,life:.5,grav:0,colors:['#36f3ff','#a05ad6','#ffffff']});

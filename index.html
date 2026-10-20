@@ -822,7 +822,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
               <button role="radio" data-t="0" aria-checked="true">Off</button>
             </div></div>
           <label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0.2" max="3" step="0.05"><b data-sens-val="cam">1.50×</b></label>
-          <label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.2" max="2" step="0.05"><b data-sens-val="ads">1.00×</b></label>
+          <label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.1" max="1" step="0.05"><b data-sens-val="ads">1.00×</b></label>
           <label class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.05"><b data-vol-val>100%</b></label><label class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.05"><b data-mvol-val>50%</b></label>
         </div>
         <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
@@ -1954,7 +1954,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 })();
 </script>
 <script>
-(function(){let S={cam:1.5,ads:1};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);}catch(e){}
+(function(){let S={cam:1.5,ads:.3};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);if(!S.v2){S.ads=.3;S.v2=1;localStorage.setItem('blockrush:sens',JSON.stringify(S));}}catch(e){}S.ads=Math.min(1,Math.max(.1,+S.ads||.3)); // aim/scope sensitivity: 0.1-1, default 0.30
   window.SENS=S;const sync=()=>{document.querySelectorAll('[data-sens]').forEach(i=>{i.value=S[i.dataset.sens];});document.querySelectorAll('[data-sens-val]').forEach(b=>{b.textContent=(+S[b.dataset.sensVal]).toFixed(2)+'×';});};
   document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.sens;if(!k)return;S[k]=+e.target.value;try{localStorage.setItem('blockrush:sens',JSON.stringify(S));}catch(err){}sync();});
   sync();})();
@@ -4917,7 +4917,7 @@ function updCamera(dt){
       F.side=clear(camOff(pr))>=Dd*.9||clear(camOff(pr))>=clear(camOff(ot))?pr:ot;}
     const off=camOff(F.side),cl=clear(off),want=fc.clone().addScaledVector(off,Math.max(1.5,Math.min(cl,off.length()))/off.length());
     camera.position.lerp(want,1-Math.exp(-(F.camK||3.5)*dt));camera.lookAt(fc);camera.fov=damp(camera.fov,55,6,dt);camera.updateProjectionMatrix();if(a===ME)ME.ch.root.visible=true;return;}}
-  if(S.cel&&S.cel.big&&S.state!=='fight'){const C=S.cel,c=new V3();for(const w of C.who)c.add(w.pos);c.divideScalar(C.who.length);const a=C.t*.45+(C.a0??(C.a0=ME.yaw+Math.PI)),r=6.5+C.who.length*.8;
+  if(S.cel&&S.cel.big&&S.state!=='fight'){const C=S.cel,c=new V3();for(const w of C.who)c.add(w.pos);c.divideScalar(C.who.length);const a=(C.a0??(C.a0=C.who[0].yaw))+Math.sin(C.t*.35)*.3,r=6.5+C.who.length*.8;
     const want=new V3(c.x+Math.sin(a)*r,c.y+2.6+Math.sin(C.t*.7)*.6,c.z+Math.cos(a)*r);const h=rayBoxes(new V3(c.x,c.y+1.6,c.z),want.clone().sub(new V3(c.x,c.y+1.6,c.z)).normalize(),want.distanceTo(new V3(c.x,c.y+1.6,c.z)));
     if(h)want.copy(new V3(c.x,c.y+1.6,c.z)).addScaledVector(want.clone().sub(new V3(c.x,c.y+1.6,c.z)).normalize(),Math.max(1.5,h.t-.4));camera.position.lerp(want,1-Math.exp(-4*dt));camera.lookAt(c.x,c.y+1.3+(C.kind==='rise'?1.6:0),c.z);for(const w of C.who)w.ch.root.visible=true;camera.fov=damp(camera.fov,62,4,dt);camera.updateProjectionMatrix();return;}
   const f=ME;const id=gunOf(f);const holo=holoOn(f);const scoped=(f.ads&&(id==='sniper'||id==='scout')&&f.alive)||holo;
@@ -4990,13 +4990,15 @@ function dmTick(dt){if(!isDM()||S.state!=='fight')return;for(const f of FS)if(!f
 function dmWin(w){if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;S.lastWin=w?w.team:-1;setTimeout(()=>sfx(won?'win':'lose'),450);
   if(won){S.stats.kills++;addXP(20);}else addXP(5);center(won?'Victory':`${nm(w)} wins`,`${w?w.k:0} kills`,won?'win':'lose');showRoundEndBar();
   if(w)celebrate([w],true);}
-/* victory celebrations: four kinds, picked at random (never the same twice running):
-   rave   - neon beams sweeping round the winners, rainbow rings at their feet, fireworks, everyone doing their own move
-   salute - the winners blast synchronised volleys at the sky; golden tracers, starbursts and a shockwave ring on every volley
-   dance  - a flashing disco floor under the winners and everyone dancing to the beat, with a jump every fourth beat
-   rise   - the winners float up on pillars of light, flexing, while lightning cracks down round them
-   on a match win the camera swings round the winners */
-const CEL_COLS=['#ff2a6d','#ffe600','#00f0ff','#39ff14','#ff6a00','#b04bff','#ffffff','#ff3fd2'],CEL_KINDS=['rave','salute','dance','rise'];
+/* victory celebrations: everyone stays on the ground doing silly dances (no jumping or floating), each in a different light show,
+   picked at random and never the same twice running:
+   rave      - neon beams sweeping round the winners and rainbow rings pulsing at their feet
+   disco     - a flashing disco floor with circling spotlights
+   spotlight - a coloured spotlight on each dancer that changes colour on every beat
+   neon      - a ring of tall neon light columns round the group, flickering in time
+   glowing fireworks go off overhead; on a match win the camera swings round the winners */
+const CEL_COLS=['#ff2a6d','#ffe600','#00f0ff','#39ff14','#ff6a00','#b04bff','#ffffff','#ff3fd2'],CEL_KINDS=['rave','disco','spotlight','neon'],
+  DANCES=['chicken','robot','sprinkler','twist','disco','floss','wave'];
 const celCol=()=>CEL_COLS[Math.floor(Math.random()*CEL_COLS.length)];
 const CEL_BALL=new THREE.SphereGeometry(1,18,12);
 function celBurst(x,y,z,col,size,rays){const m=new THREE.Mesh(CEL_BALL,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}));m.position.set(x,y,z);m.scale.setScalar(.2);scene.add(m);
@@ -5006,51 +5008,44 @@ function celebrate(who,big){who=who.filter(f=>f&&f.alive);if(!who.length)return;
   let kind=CEL_KINDS[Math.floor(Math.random()*CEL_KINDS.length)];if(kind===celebrate.last)kind=CEL_KINDS[(CEL_KINDS.indexOf(kind)+1)%CEL_KINDS.length];celebrate.last=kind;
   const C={who,t:0,big,kind,obj:[],next:0,beat:-1};const ctr=new V3();for(const f of who)ctr.add(f.pos);ctr.divideScalar(who.length);C.ctr=ctr;
   const add=(geo,col,op)=>{const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,side:THREE.DoubleSide}));scene.add(m);C.obj.push(m);return m;};
-  who.forEach((f,i)=>{f.celK=Math.random()*6;f.celLift=0;
-    if(kind==='rave'){f.celMove=['flex','fire','jump','spin'][(i+(f===ME?0:1))%4];
-      for(let k=0;k<3;k++){const b=add(new THREE.CylinderGeometry(.35,.9,26,12,1,true),CEL_COLS[(i*3+k)%CEL_COLS.length],.28);b.userData={f,k,beam:1};}
+  const d0=Math.floor(Math.random()*DANCES.length);
+  who.forEach((f,i)=>{f.celK=Math.random()*6;f.celMove=DANCES[(d0+i)%DANCES.length];f.vel.set(0,Math.min(0,f.vel.y),0);
+    if(kind==='rave'){for(let k=0;k<3;k++){const b=add(new THREE.CylinderGeometry(.35,.9,26,12,1,true),CEL_COLS[(i*3+k)%CEL_COLS.length],.28);b.userData={f,k,beam:1};}
       const halo=add(new THREE.TorusGeometry(1.1,.07,8,48),CEL_COLS[(i*2+1)%CEL_COLS.length],.85);halo.rotation.x=Math.PI/2;halo.userData={f,halo:1};}
-    else if(kind==='salute'){f.celMove='fire';f.yaw=who[0].yaw;const r=add(new THREE.TorusGeometry(1,.09,8,48),'#ffd23f',0);r.rotation.x=Math.PI/2;r.userData={f,shock:1};}
-    else if(kind==='dance'){f.celMove='dance';}
-    else if(kind==='rise'){f.celMove='flex';const p=add(new THREE.CylinderGeometry(.75,.95,1,20,1,true),CEL_COLS[(i*2+2)%CEL_COLS.length],.35);p.userData={f,pillar:1};
-      for(let k=0;k<3;k++){const r=add(new THREE.TorusGeometry(.9,.05,8,40),'#ffffff',.7);r.rotation.x=Math.PI/2;r.userData={f,riser:1,k};}}});
-  if(kind==='dance'){const n=7,sz=1.4,tiles=[];for(let a=0;a<n;a++)for(let b=0;b<n;b++){const t=add(new THREE.PlaneGeometry(sz*.92,sz*.92),celCol(),.5);t.rotation.x=-Math.PI/2;t.position.set(ctr.x+(a-(n-1)/2)*sz,ctr.y+.04,ctr.z+(b-(n-1)/2)*sz);t.userData={tile:1};tiles.push(t);}C.tiles=tiles;
+    else if(kind==='spotlight'){const c=add(new THREE.CylinderGeometry(.15,1.3,9,20,1,true),CEL_COLS[(i*2)%CEL_COLS.length],.3);c.userData={f,cone:1,i};
+      const pool=add(new THREE.CircleGeometry(1.35,32),CEL_COLS[(i*2)%CEL_COLS.length],.45);pool.rotation.x=-Math.PI/2;pool.userData={f,pool:1,i,mate:c};}});
+  if(kind==='disco'){const n=7,sz=1.4;for(let a=0;a<n;a++)for(let b=0;b<n;b++){const t=add(new THREE.PlaneGeometry(sz*.92,sz*.92),celCol(),.5);t.rotation.x=-Math.PI/2;t.position.set(ctr.x+(a-(n-1)/2)*sz,ctr.y+.04,ctr.z+(b-(n-1)/2)*sz);t.userData={tile:1};}
     for(let k=0;k<4;k++){const b=add(new THREE.CylinderGeometry(.25,1.4,14,12,1,true),CEL_COLS[k*2],.2);b.userData={spot:1,k};}}
-  S.cel=C;if(big)S.shake=Math.max(S.shake,.25);}
-function clearCelebrate(){const C=S.cel;if(!C)return;for(const o of C.obj){scene.remove(o);o.geometry.dispose();o.material.dispose();}for(const f of C.who){f.celMove=null;f.pose=null;f.celLift=0;f.celMax=null;}S.cel=null;}
-function celShot(f,col,spread){const e=eyeOf(f,new V3()).add(new V3(Math.sin(f.yaw)*.5,.3,Math.cos(f.yaw)*.5));const end=e.clone().add(new V3(rnd(-spread,spread),rnd(16,24),rnd(-spread,spread)));
-  tracer(e,end,col,.07);f.kick=1;return end;}
+  if(kind==='neon'){const n=10,r=3.2+who.length*.6;for(let k=0;k<n;k++){const c=add(new THREE.CylinderGeometry(.12,.12,7,10,1,true),CEL_COLS[k%CEL_COLS.length],.6);const a=k/n*TAU;c.position.set(ctr.x+Math.cos(a)*r,ctr.y+3.5,ctr.z+Math.sin(a)*r);c.userData={col:1,k};}
+    const ring=add(new THREE.TorusGeometry(r,.08,8,64),'#ffffff',.6);ring.rotation.x=Math.PI/2;ring.position.set(ctr.x,ctr.y+.08,ctr.z);ring.userData={nring:1};}
+  S.cel=C;if(big)S.shake=Math.max(S.shake,.2);}
+function clearCelebrate(){const C=S.cel;if(!C)return;for(const o of C.obj){scene.remove(o);o.geometry.dispose();o.material.dispose();}for(const f of C.who){f.celMove=null;f.pose=null;f.celLift=0;}S.cel=null;}
+// silly dances: arms, legs, head and hips only; feet stay on the floor
+function danceFor(f,t,beat){f.celSway=0;const b=t/.42,ph=b*Math.PI,s=Math.sin(ph),c=Math.cos(ph),on=beat%2;
+  switch(f.celMove){
+    case 'chicken':f.celSway=Math.sin(ph*.5)*.25;return{ar:[-.6,0,1.2+s*.6],al:[-.6,0,-1.2-s*.6],head:.25+s*.25,ll:s*.35,lr:-s*.35};
+    case 'robot':{const k=Math.floor(b)%4;return[{ar:[-1.57,0,0],al:[0,0,0],head:.3},{ar:[-1.57,0,1.57],al:[-1.57,0,0],head:-.3},{ar:[0,0,0],al:[-1.57,0,-1.57],head:.3},{ar:[-3.1,0,0],al:[-3.1,0,0],head:0}][k];}
+    case 'sprinkler':f.celSway=-.7+((b*2)%4)*.35;return{ar:[-1.57,0,.2],al:[-.9,0,-1.9],head:-.2,ll:.2,lr:-.2};
+    case 'twist':f.celSway=s*.45;return{ar:[-1.2,0,.6+s*.4],al:[-1.2,0,-.6+s*.4],ll:.3+s*.3,lr:-.3+s*.3,head:s*.2};
+    case 'disco':return on?{ar:[-2.9,0,.5],al:[-.3,0,-.3],head:-.25}:{ar:[-.3,0,.3],al:[-2.9,0,-.5],head:.25};
+    case 'floss':return{ar:[-.3,0,s*1.1],al:[-.3,0,s*1.1],ll:-s*.35,lr:-s*.35,head:c*.15};
+    default:return{ar:[-2.6+s*.5,0,.8],al:[-2.6-s*.5,0,-.8],head:s*.3,ll:s*.25,lr:-s*.25};}}
 function updCelebrate(dt){const C=S.cel;if(!C)return;if(S.state==='fight'||S.state==='countdown'||S.state==='menu'){clearCelebrate();return;}C.t+=dt;const t=C.t,K=C.kind;
   const beat=Math.floor(t/.42),onBeat=beat!==C.beat;C.beat=beat;
-  for(const f of C.who){if(!f.alive)continue;const k=t*9+f.celK,melee=GUNS[gunOf(f)]&&GUNS[gunOf(f)].type==='melee';
-    if(f.celMove==='flex'){const p=Math.sin(k)*.25;f.pose={ar:[-2.7+p,0,1.1],al:[-2.7-p,0,-1.1],head:-.25};f.yaw+=dt*.6;}
-    else if(f.celMove==='spin'){f.yaw+=dt*9;f.pose={ar:[-3.0,0,.4+Math.sin(k)*.3],al:[-3.0,0,-.4-Math.sin(k)*.3]};}
-    else if(f.celMove==='jump'){if(f.grounded&&Math.sin(k*.5)>.6){f.vel.y=9;f.grounded=false;}f.pose={ar:[-2.9,0,.7],al:[-2.9,0,-.7],ll:Math.sin(k)*.6,lr:-Math.sin(k)*.6};}
-    else if(f.celMove==='dance'){const b=beat%4,sw=Math.sin(t*Math.PI/.42);f.yaw+=dt*(b<2?2.5:-2.5);
-      f.pose=b===0?{ar:[-3,0,.3],al:[-.4,0,-.3],ll:sw*.5,lr:-sw*.5}:b===1?{ar:[-.4,0,.3],al:[-3,0,-.3],ll:-sw*.5,lr:sw*.5}:b===2?{ar:[-1.6,0,1.4],al:[-1.6,0,-1.4],head:sw*.3}:{ar:[-3,0,.6],al:[-3,0,-.6],ll:.6,lr:-.6};
-      if(onBeat&&b===3&&f.grounded){f.vel.y=8;f.grounded=false;}}
-    else if(f.celMove==='fire'){f.pitch=-1.1;f.celShot=(f.celShot||0)-dt;
-      if(melee){f.pose={ar:[-2.8+Math.sin(k*1.4)*.5,0,.5],al:[-2.8-Math.sin(k*1.4)*.5,0,-.5]};}
-      else if(K==='salute'){if(onBeat&&beat%2===0){for(let q=0;q<2;q++)setTimeout(()=>{if(S.cel===C){const e=celShot(f,q?'#ffffff':'#ffd23f',1.2);if(q)celBurst(e.x,e.y,e.z,'#ffd23f',1.4,6);}},q*90);if(Math.random()<.6)sfx('rifle',f,{vol:.45,range:30});}}
-      else{f.yaw+=dt*1.5;if(f.celShot<=0){f.celShot=.09;celShot(f,celCol(),3);if(Math.random()<.5)sfx('rifle',f,{vol:.35,range:30});}}}
-    // rise: float up, but never into a ceiling indoors
-    if(K==='rise'){if(f.celMax==null){const h=rayBoxes(new V3(f.pos.x,f.pos.y+2.2,f.pos.z),new V3(0,1,0),3);f.celMax=h?Math.max(0,h.t-.3):2.2;}f.celLift=Math.min(f.celMax,f.celLift+dt*1.1);}}
+  // everyone turns to face the camera (no spinning round) and dances with a little sway
+  for(const f of C.who){if(!f.alive)continue;f.pose=danceFor(f,t+f.celK*.07,beat);f.pitch=0;if(f.vel.y>0)f.vel.y=0;const face=Math.atan2(camera.position.x-f.pos.x,camera.position.z-f.pos.z)+(f.celSway||0);{let d=face-f.yaw;d=((d+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=d*(1-Math.exp(-6*dt));}}
   for(const o of C.obj){const u=o.userData,f=u.f;
     if(u.beam){const a=t*(1.4+u.k*.5)+u.k*2.1;o.position.set(f.pos.x+Math.cos(a)*1.2,f.pos.y+13,f.pos.z+Math.sin(a)*1.2);o.rotation.set(Math.sin(a*1.3)*.35,0,Math.cos(a*1.1)*.35);o.material.opacity=.18+.14*Math.sin(t*7+u.k);}
     else if(u.halo){const s=1+(t*1.6%1)*2.2;o.scale.setScalar(s);o.position.set(f.pos.x,f.pos.y+.15,f.pos.z);o.material.opacity=.9*(1-(t*1.6%1));o.material.color.set(CEL_COLS[Math.floor(t*1.6)%CEL_COLS.length]);}
-    else if(u.shock){const ph=(t%.84)/.84;o.scale.setScalar(1+ph*5);o.position.set(f.pos.x,f.pos.y+.1,f.pos.z);o.material.opacity=.9*(1-ph);}
     else if(u.tile){if(onBeat){o.material.color.set(celCol());o.material.opacity=Math.random()<.5?.75:.25;}}
     else if(u.spot){const a=t*1.2+u.k*Math.PI/2;o.position.set(C.ctr.x+Math.cos(a)*4,C.ctr.y+7,C.ctr.z+Math.sin(a)*4);o.rotation.set(Math.sin(a)*.5,0,Math.cos(a)*.5);if(onBeat)o.material.color.set(celCol());}
-    else if(u.pillar){const h=.3+f.celLift;o.scale.set(1,h,1);o.position.set(f.pos.x,f.pos.y+h/2,f.pos.z);o.material.opacity=.3+.15*Math.sin(t*8);}
-    else if(u.riser){const ph=((t*.8+u.k/3)%1);o.position.set(f.pos.x,f.pos.y+ph*(f.celLift+2.4),f.pos.z);o.scale.setScalar(1.2-ph*.5);o.material.opacity=.8*(1-ph);}}
-  // sky effects per kind
-  C.next-=dt;if(C.next<=0){
-    if(K==='rave'||K==='dance'){C.next=K==='rave'?(C.big?.16:.3):.45;const f=C.who[Math.floor(Math.random()*C.who.length)],x=f.pos.x+rnd(-6,6),y=f.pos.y+rnd(7,13),z=f.pos.z+rnd(-6,6),c1=celCol(),c2=celCol();
-      celBurst(x,y,z,c1,C.big?2.6:1.8,C.big?10:6);if(Math.random()<.5)sfx('explode',{x,y,z},{vol:.25,range:40,rate:1.6});}
-    else if(K==='rise'){C.next=.35;const f=C.who[Math.floor(Math.random()*C.who.length)],a=Math.random()*TAU,r=rnd(2.5,5),x=f.pos.x+Math.cos(a)*r,z=f.pos.z+Math.sin(a)*r,gy=groundAt(x,z,f.pos.y);
-      let p=new V3(x,gy+22,z);for(let s=1;s<=6;s++){const q=s===6?new V3(x,gy,z):new V3(x+rnd(-.8,.8),gy+22-s*3.6,z+rnd(-.8,.8));tracer(p,q,s%2?'#bfe9ff':'#ffffff',.12);p=q;}
-      celBurst(x,gy+.3,z,'#bfe9ff',1.6,5);S.shake=Math.max(S.shake,.12);if(Math.random()<.5)sfx('volt',{x,y:gy,z},{vol:.4,range:40});}
-    else{C.next=.84;const c=C.ctr;celBurst(c.x,c.y+16,c.z,'#ffd23f',C.big?3.2:2.4,12);}}}
+    else if(u.cone){o.position.set(f.pos.x,f.pos.y+4.5,f.pos.z);if(onBeat)o.material.color.set(CEL_COLS[(beat+u.i*3)%CEL_COLS.length]);o.material.opacity=.22+.1*Math.sin(t*9);}
+    else if(u.pool){o.position.set(f.pos.x,f.pos.y+.06,f.pos.z);o.material.color.copy(u.mate.material.color);}
+    else if(u.col){o.material.opacity=((beat+u.k)%3===0)?.85:.25;if(onBeat&&u.k%2===beat%2)o.material.color.set(celCol());}
+    else if(u.nring){if(onBeat)o.material.color.set(celCol());o.material.opacity=.4+.3*Math.sin(t*10);}}
+  // glowing fireworks overhead
+  C.next-=dt;if(C.next<=0){C.next=C.big?.22:.4;const f=C.who[Math.floor(Math.random()*C.who.length)],x=f.pos.x+rnd(-6,6),y=f.pos.y+rnd(8,14),z=f.pos.z+rnd(-6,6);
+    celBurst(x,y,z,celCol(),C.big?2.6:1.8,C.big?10:6);if(Math.random()<.4)sfx('explode',{x,y,z},{vol:.22,range:40,rate:1.6});}}
 function endRound(winner,head){if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;S.lastWin=winner;const won=winner===ME.team;for(const f of FS)if(f.team!==winner){f.armor=0;f.nades=0;f.speedT=0;f.scopeKit=false;}if(won){S.stats.kills++;addXP(10);}else addXP(5);
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
@@ -5115,23 +5110,27 @@ function render(){if(!isFinite(camera.position.x+camera.position.y+camera.positi
 function frame(rdt){step(rdt);render();capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip
-const RP={seq:0,fps:10,keep:6.5,w:384,h:216,ring:[],acc:0,cv:null,clips:[],round:[]};
+/* kill replays: a rolling few seconds of what you see; a kill involving you turns them into a clip.
+   Quality trade-off: every frame kept costs memory and a little GPU/CPU time. Frames are now cropped to 16:9 (no stretching),
+   captured at 640x360 and 15 fps and compressed to JPEG straight away in a background worker, so the rolling buffer stays small
+   (a few MB) and the game thread never encodes anything. Bigger or smoother clips mean more memory per clip, hence the 20-clip cap. */
+const RP={seq:0,fps:15,keep:6.5,w:640,h:360,q:.85,ring:[],acc:0,clips:[],round:[],busy:0,maxClips:20};
 function capFrame(rdt){if(!(S.state==='fight'||S.state==='roundEnd')||S.paused||S.replayOpen)return;RP.acc+=rdt;if(RP.acc<1/RP.fps)return;RP.acc=0;
-  // async, GPU-side scaled snapshot of the frame just drawn (no 2D-canvas copy, which would stall the GPU every capture)
-  if(!window.createImageBitmap||RP.busy)return;const src=renderer.domElement,t=S.t;RP.busy=1;
-  createImageBitmap(src,{resizeWidth:RP.w,resizeHeight:RP.h,resizeQuality:'low'}).then(b=>{RP.busy=0;RP.ring.push({t,b});while(RP.ring.length>RP.fps*RP.keep){const o=RP.ring.shift();if(!o.kept)o.b.close&&o.b.close();}}).catch(()=>{RP.busy=0;});}
+  if(!window.createImageBitmap||RP.busy>1)return;const src=renderer.domElement,t=S.t,W=rpWorker();
+  // crop the middle of the screen to 16:9 so wide or tall windows don't come out stretched
+  const ar=src.width/src.height,tw=RP.w/RP.h;let sw=src.width,sh=src.height,sx=0,sy=0;if(ar>tw){sw=Math.round(sh*tw);sx=Math.round((src.width-sw)/2);}else{sh=Math.round(sw/tw);sy=Math.round((src.height-sh)/2);}
+  RP.busy++;createImageBitmap(src,sx,sy,sw,sh,{resizeWidth:RP.w,resizeHeight:RP.h,resizeQuality:'medium'}).then(b=>{
+    if(W){W.postMessage({t,b,q:RP.q},[b]);}else{RP.busy--;RP.ring.push({t,b});trimRing();}}).catch(()=>{RP.busy--;});}
+function trimRing(){while(RP.ring.length&&RP.ring[RP.ring.length-1].t-RP.ring[0].t>RP.keep){const o=RP.ring.shift();if(o.b&&!o.kept)o.b.close&&o.b.close();}}
 function clipKill(v,by){if(!(by===ME||v===ME||(v.hitBy&&v.hitBy.has&&v.hitBy.has(ME))))return;const frames=RP.ring.slice();if(frames.length<6)return;
-  const how=v.finishing&&v.finishing.fx?v.finishing.fx:'';const label=by&&by!==v?`${nm(by)} ▸ ${nm(v)}`:`${nm(v)} out`;
-  const clip={label,sub:`Round ${S.round}${how?' · '+how:''}`,jpgs:[],n:frames.length,ready:false};RP.clips.push(clip);RP.round.push(clip);if(RP.clips.length>30)RP.clips.shift();
-  frames.forEach(f=>f.kept=true);
-  // compress to JPEG in a background worker so the game never hitches; fall back to keeping the frames as they are
-  clip.id=++RP.seq;clip.got=0;const W=rpWorker();
-  frames.forEach((f,i)=>createImageBitmap(f.b).then(cb=>{f.kept=false;if(!RP.ring.includes(f))f.b.close&&f.b.close();
-      if(W){W.postMessage({id:clip.id,i,b:cb},[cb]);}else{clip.jpgs[i]=cb;if(++clip.got>=clip.n)clip.ready=true;}}).catch(()=>{if(++clip.got>=clip.n)clip.ready=true;}));}
+  const how=v.finishing&&v.finishing.fx&&v.finishing.fx!=='Fall'?v.finishing.fx:'';const label=by&&by!==v?`${nm(by)} ▸ ${nm(v)}`:`${nm(v)} out`;
+  const clip={label,sub:`Round ${S.round}${how?' · '+how:''}`,jpgs:[],n:frames.length,ready:false,id:++RP.seq};RP.clips.push(clip);RP.round.push(clip);if(RP.clips.length>RP.maxClips)RP.clips.shift();
+  // frames are already JPEG blobs (or bitmaps without the worker), so the clip is ready straight away
+  clip.jpgs=frames.map(f=>f.bl||f.b);if(!frames[0].bl)frames.forEach(f=>f.kept=true);clip.ready=true;}
 function rpWorker(){if(RP.w0!==undefined)return RP.w0;try{if(!window.OffscreenCanvas||!window.Worker)throw 0;
-    const src="let c,g;onmessage=async e=>{const d=e.data;try{if(!c){c=new OffscreenCanvas(d.b.width,d.b.height);g=c.getContext('2d');}g.drawImage(d.b,0,0);d.b.close();postMessage({id:d.id,i:d.i,bl:await c.convertToBlob({type:'image/jpeg',quality:.72})});}catch(err){postMessage({id:d.id,i:d.i,bl:null});}};";
+    const src="let c,g;onmessage=async e=>{const d=e.data;try{if(!c||c.width!==d.b.width){c=new OffscreenCanvas(d.b.width,d.b.height);g=c.getContext('2d');}g.drawImage(d.b,0,0);d.b.close();postMessage({t:d.t,bl:await c.convertToBlob({type:'image/jpeg',quality:d.q})});}catch(err){postMessage({t:d.t,bl:null});}};";
     const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
-    w.onmessage=e=>{const {id,i,bl}=e.data;const c=RP.clips.find(x=>x.id===id);if(!c)return;if(bl)c.jpgs[i]=bl;if(++c.got>=c.n){c.jpgs=c.jpgs.filter(Boolean);c.ready=true;}};RP.w0=w;}catch(e){RP.w0=null;}return RP.w0;}
+    w.onmessage=e=>{RP.busy=Math.max(0,RP.busy-1);const {t,bl}=e.data;if(!bl)return;RP.ring.push({t,bl});RP.ring.sort((a,b)=>a.t-b.t);trimRing();};RP.w0=w;}catch(e){RP.w0=null;}return RP.w0;}
 D.__RP=RP;D.__projs=()=>projs;D.__RV=()=>RV;
 const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4a3d" stroke="#14161c" stroke-width="1.8"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg>';
 const HOME_SVG='<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="#fff"/></svg>';
@@ -5150,7 +5149,7 @@ function rvTick(now){if(!S.replayOpen||!RV.clip){RV.looping=false;return;}const 
 function closeReplay(){if(RV.rec){try{RV.rec.stop();}catch(e){}RV.rec=null;}S.replayOpen=false;$('d-replay').hidden=true;if(!S.touch&&D.active&&S.state!=='done'&&S.state!=='menu'&&!S.paused)lock();for(const b of RV.imgs)if(!(RV.clip&&RV.clip.jpgs.includes(b)))b.close&&b.close();RV.imgs=[];RV.clip=null;}
 function saveReplay(){if(!RV.clip||RV.rec||$('rv-save').textContent==='Recording…')return;const cv=$('rv-cv');if(!cv.captureStream||!window.MediaRecorder){alert('Saving video isn’t supported in this browser.');return;}
   const types=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];const type=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
-  const rec=new MediaRecorder(cv.captureStream(RP.fps),type?{mimeType:type,videoBitsPerSecond:2500000}:undefined);const parts=[];
+  const rec=new MediaRecorder(cv.captureStream(RP.fps),type?{mimeType:type,videoBitsPerSecond:6000000}:undefined);const parts=[];
   rec.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data);};
   rec.onstop=()=>{const blob=new Blob(parts,{type:rec.mimeType||'video/webm'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download=`imok-replay-${RV.clip?RV.clip.label.replace(/[^a-z0-9]+/gi,'-').toLowerCase():'clip'}.${(rec.mimeType||'').includes('mp4')?'mp4':'webm'}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);$('rv-save').textContent='Saved';setTimeout(()=>$('rv-save').textContent='Save video',1500);};

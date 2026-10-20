@@ -843,7 +843,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <span>2v2</span><em>If your teammate is out while you're down, you're out too</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">Finishing a downed opponent</div><div class="pause-keys">
-          <span><kbd>F</kbd></span><em>Finishing move (random); firing or getting shot cancels it</em>
+          <span><kbd>F</kbd></span><em>Finishing move (your character's signature); firing or getting shot cancels it</em>
           <span><kbd>C</kbd></span><em>Pick up, then click to throw or <kbd>F</kbd> to slam</em>
           <span><kbd>C</kbd> hold</span><em>Sky slam</em>
         </div></div>
@@ -3095,8 +3095,8 @@ function ownMats(f){f.ch.root.traverse(o=>{if(!o.isMesh||o.userData.ownMat)retur
 function tintLook(f,col,metal){ownMats(f);f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(!m||!m.color||m.side===THREE.BackSide||m.type==='MeshBasicMaterial')continue;if(!m.userData.c0){m.userData.c0=m.color.clone();m.userData.map0=m.map;m.userData.m0=m.metalness;m.userData.r0=m.roughness;}
   m.color.set(col);m.map=null;m.metalness=metal;m.roughness=.25;m.needsUpdate=true;}});}
 function untintLook(f){f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m&&m.userData.c0){m.color.copy(m.userData.c0);m.map=m.userData.map0;m.metalness=m.userData.m0;m.roughness=m.userData.r0;m.needsUpdate=true;delete m.userData.c0;}}});}
-// half the time your character's own signature finisher, otherwise one from the shared pool; never the same twice in a row for that player
-function moveFor(a,v){const sig=SIG[a.char],pool=SHARED_MOVES.filter(m=>m!==a.lastMove);const m=sig&&sig!==a.lastMove&&Math.random()<.5?sig:pool[Math.floor(Math.random()*pool.length)];a.lastMove=m;return m;}
+// every character always uses its own signature finisher (the shared moves are parked for later variety)
+function moveFor(a,v){return SIG[a.char]||SHARED_MOVES[Math.floor(Math.random()*SHARED_MOVES.length)];}
 function bat(){const g=new THREE.Group();const w=mat('#c98a4b',null,{roughness:.6});const h=new THREE.Mesh(new THREE.CylinderGeometry(.07,.05,.5,8),mat('#2b2b2b'));h.position.y=.25;g.add(h);
   const b=new THREE.Mesh(new THREE.CylinderGeometry(.13,.07,1.3,10),w);b.position.y=1.15;g.add(b);return g;}
 function axe(){const g=new THREE.Group();const h=new THREE.Mesh(new THREE.BoxGeometry(.1,1.6,.1),mat('#7a4a28'));h.position.y=.8;g.add(h);

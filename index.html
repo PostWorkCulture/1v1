@@ -2081,7 +2081,9 @@ function box(x,y,z,w,h,d,color,o={}){
   const geo=B.boxGeo(w,h,d);const m=new THREE.Mesh(geo,o.mat||mat(color,o.tx,o.extra));m.position.set(x,y+h/2,z);
   m.castShadow=o.shadow!==false;m.receiveShadow=true;if(o.edges!==false)m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),EDGE));M.group.add(m);
   if(o.solid===false)return m;const b={x0:x-w/2,x1:x+w/2,y0:y,y1:y+h,z0:z-d/2,z1:z+d/2,mesh:m,wood:o.wood??woodish(color,o.tx)};M.boxes.push(b);
-  if(o.prop){m.userData.dyn=1;b.prop=o.prop;b.color=color;b.alive=true;(M.props||(M.props=[])).push(b);}return b;}
+  if(o.prop){m.userData.dyn=1;b.prop=o.prop;b.color=color;b.alive=true;if(b.wood)b.hp=b.hp0=o.hp||80;(M.props||(M.props=[])).push(b);}
+  else if(b.wood&&o.chip!==false&&h>=.45&&h<=1.45&&Math.max(w,d)<=4.6){b.chip=true;b.h0=h;b.chipHP=b.hp0=70;b.color=color;m.userData.dyn=1;(M.chips||(M.chips=[])).push(b);}
+  return b;}
 // wood (bullets go through): anything with the wood texture, or a brown/tan colour; walls, concrete, brick, metal and glass stop bullets
 function woodish(color,tx){if(tx==='wood')return true;if(tx)return false;if(typeof color!=='string'||!/^#[0-9a-f]{6}$/i.test(color))return false;
   const r=parseInt(color.slice(1,3),16)/255,g=parseInt(color.slice(3,5),16)/255,bl=parseInt(color.slice(5,7),16)/255,mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),l=(mx+mn)/2,d=mx-mn;if(d<1e-6)return false;
@@ -2100,7 +2102,7 @@ function tree(x,z,s=1){box(x,0,z,.7*s,2.6*s,.7*s,'#7a4c2a');const lm=mat('#3a9a3
 function car(x,z,rot,color){const along=rot?'x':'z';const L=4.4,W=2.0;const w=along==='x'?L:W,d=along==='x'?W:L;
   const b1=box(x,.35,z,w,1.05,d,color,{extra:{roughness:.35,metalness:.25}});
   const cw=along==='x'?2.4:1.8,cd=along==='x'?1.8:2.4;const b2=box(x,1.4,z,cw,.85,cd,'#cfe6f3',{extra:{roughness:.15,metalness:.4}});
-  const C={boxes:[b1,b2],parts:[b1.mesh,b2.mesh],wheels:[],x,z};
+  const C={boxes:[b1,b2],parts:[b1.mesh,b2.mesh],wheels:[],x,z,color};
   // wheels: axle across the car; a two-tone hubcap with spokes and a tread mark turn with the tyre so the spin reads clearly,
   // and a faint blur disc fades in with speed
   const wm=mat('#1c1d22'),hm=mat('#d9dde3',null,{roughness:.3,metalness:.6}),sm=mat('#5b6070'),tm=mat('#f4c22b');
@@ -2119,13 +2121,15 @@ function car(x,z,rot,color){const along=rot?'x':'z';const L=4.4,W=2.0;const w=al
 function updLife(dt){if(!M.life||!M.life.length)return;M.lifeT=(M.lifeT||0)+dt;for(const f of M.life)f(M.lifeT,dt);}
 function townLife(cars,o){const R=Math.random;
   // cars: park for a while, then drive at their own speed to a new spot along their lane, stop, repeat (either direction)
-  for(const c of cars){c.boxes.forEach(b=>{b.mover=true;(M.movers||(M.movers=[])).push(b);});c.state='park';c.wait=2+R()*10;c.v=0;c.target=c.z;c.vmax=0;}
+  for(const c of cars){c.boxes.forEach(b=>{b.mover=true;(M.movers||(M.movers=[])).push(b);});c.state='park';c.wait=2+R()*10;c.v=0;c.target=c.z;c.vmax=0;c.home=c.z;c.alive=true;(M.cars||(M.cars=[])).push(c);}
   const hitsFighter=(c,dz)=>{const b=c.boxes[0];for(const f of FS){if(!f.alive&&!f.downed)continue;const p=f.pos,r=.75;
       if(p.x>b.x0-r&&p.x<b.x1+r&&p.z>b.z0+dz-r&&p.z<b.z1+dz+r&&p.y<b.y1+1.6&&p.y>-1)return true;}return false;};
   const hitsBox=(c,dz)=>{const b=c.boxes[0],m=.4;for(const x of allBoxes()){if(c.boxes.includes(x)||x.y1<.4||x.y0>b.y1+1)continue;
       if(x.x1>b.x0&&x.x0<b.x1&&x.z1>b.z0+dz-m&&x.z0<b.z1+dz+m)return true;}return false;};
   const move=(c,dz)=>{for(const b of c.boxes){b.z0+=dz;b.z1+=dz;}for(const m of c.parts)m.position.z+=dz;c.z+=dz;for(const w of c.wheels)w.rotation.x+=dz/.42;};
+  for(const c of cars)c.restore=()=>{move(c,c.home-c.z);for(const b of c.boxes){M.boxes.push(b);M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
   M.life.push((t,dt)=>{for(const c of cars){
+    if(!c.alive){c.backT-=dt;if(c.backT<=0){const b=c.boxes[0],h=c.home-c.z;if(FS.some(f=>f.alive&&f.pos.x>b.x0-1&&f.pos.x<b.x1+1&&f.pos.z>b.z0+h-1&&f.pos.z<b.z1+h+1&&f.pos.y<3))c.backT=2;else c.restore();}continue;}
     if(c.state==='park'){c.wait-=dt;if(c.wait<=0){let tz;for(let k=0;k<6;k++){tz=(R()*2-1)*o.zLim;if(Math.abs(tz-c.z)>10)break;}c.target=tz;c.vmax=4+R()*9;c.state='drive';}continue;}
     const dir=Math.sign(c.target-c.z),left=Math.abs(c.target-c.z);
     const want=Math.min(c.vmax,Math.sqrt(2*5*left));c.v+= (want>c.v?7:-12)*dt;c.v=clamp(c.v,0,c.vmax);
@@ -2181,8 +2185,8 @@ function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
       if(x1-x0<.02||z1-z0<.02||y1-y0<.02)return null;return box((x0+x1)/2,y0,(z0+z1)/2,x1-x0,y1-y0,z1-z0,color,o);},
     floor(u0,u1,v0,v1,y,color,tx){const a=X(u0),b=X(u1),c=Z(v0),e=Z(v1);return floor(Math.min(a,b),Math.max(a,b),Math.min(c,e),Math.max(c,e),color,tx,y,2);},
     // wall at constant u (spanning v) or constant v (spanning u); openings [{c,w,y0,y1}] along the span
-    wall(axis,at,a0,a1,y0,y1,ops,color,t=.3){ops=(ops||[]).slice().sort((p,q)=>p.c-q.c);let cur=a0;
-      const seg=(s0,s1,h0,h1)=>{if(s1-s0<.02||h1-h0<.02)return;axis==='u'?S.box(at-t/2,at+t/2,s0,s1,h0,h1,color):S.box(s0,s1,at-t/2,at+t/2,h0,h1,color);};
+    wall(axis,at,a0,a1,y0,y1,ops,color,t=.3,wo){ops=(ops||[]).slice().sort((p,q)=>p.c-q.c);let cur=a0;
+      const seg=(s0,s1,h0,h1)=>{if(s1-s0<.02||h1-h0<.02)return;axis==='u'?S.box(at-t/2,at+t/2,s0,s1,h0,h1,color,wo):S.box(s0,s1,at-t/2,at+t/2,h0,h1,color,wo);};
       for(const o of ops){const s0=o.c-o.w/2,s1=o.c+o.w/2;seg(cur,s0,y0,y1);seg(s0,s1,y0,Math.max(y0,o.y0));seg(s0,s1,Math.min(y1,o.y1),y1);cur=s1;}seg(cur,a1,y0,y1);},
     slab(u0,u1,v0,v1,y0,y1,color,hole,tx){if(!hole)return S.box(u0,u1,v0,v1,y0,y1,color,{tx});const h=hole;
       S.box(u0,u1,v0,h.v0,y0,y1,color,{tx});S.box(u0,u1,h.v1,v1,y0,y1,color,{tx});S.box(u0,h.u0,h.v0,h.v1,y0,y1,color,{tx});S.box(h.u1,u1,h.v0,h.v1,y0,y1,color,{tx});},
@@ -2202,7 +2206,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop){const S=St(cx,cz,flip,k)
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(1.6,4.2),WIN(-3.6)],wall);
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,0,H,[WIN(-2.5,1.6),WIN(3.2,1.6)],wall);
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
-  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],inner,.25);
+  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],'#d9b48a',.25,{tx:'wood',wood:true,chip:false});
   S.wall('u',-6,-5.65,5.65,H,F,[],trim);S.wall('u',6,-5.65,5.65,H,F,[],trim);
   S.slab(-5.85,5.85,-5.35,5.35,H,F,'#b9895a',{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},'wood');
   // stairs end on a landing in front of the back wall (not against it); the rail only guards the deep end of the stairwell, so the whole top of the flight opens onto the floor
@@ -2242,6 +2246,9 @@ function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F
   const P=F+1.3,slit=c=>({c,w:1.6,y0:F+.75,y1:F+1.15});
   S.wall('u',-6,-5.65,5.65,F,P,[slit(-3),slit(0),slit(3)],trim,.3);S.wall('u',6,-5.65,5.65,F,P,[slit(0)],trim,.3);
   S.wall('v',-5.5,-5.85,5.85,F,P,[slit(-2.5),slit(2.5)],trim,.3);S.wall('v',5.5,-5.85,5.85,F,P,[{c:1.1,w:3.2,y0:F,y1:P},slit(-3.5)],trim,.3);
+  {const wd={tx:'wood',prop:'fence',hp:60},cr={tx:'wood',prop:'crate',hp:80};
+    S.box(-4.6,-2.2,-1.2,-1.05,F,F+1.2,'#b07a4a',wd);S.box(-.1,.05,-4.9,-2.5,F,F+1.2,'#b07a4a',wd);S.box(2.4,4.8,1.6,1.75,F,F+1.2,'#b07a4a',wd);S.box(-3.6,-3.45,2.2,4.6,F,F+1.2,'#b07a4a',wd);
+    S.box(3.4,4.6,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(3.4,4.6,-4.6,-3.4,F+1.2,F+2.4,'#b9895a',cr);S.box(2.2,3.4,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(-5.2,-4,3.6,4.8,F,F+1.2,'#c99a5b',cr);}
   S.stairs(5.8,-1,5.65,8.45,0,9,F/9,.5,'#9aa0a8');S.box(-.2,1.3,5.65,8.45,F-.3,F,'#9aa0a8');S.box(-.2,1.3,8.3,8.45,F,F+1,'#ffffff');S.box(-.35,-.2,5.65,8.45,F,F+1,'#ffffff');S.box(-.3,.1,7.9,8.4,0,F-.3,'#9aa0a8');
   S.box(-5.6,-4.6,2.8,5.2,0,.9,'#3bb54a');S.box(-3.4,-2.2,3.8,5.2,0,.75,'#7a4c2a');S.box(.5,4,-5.3,-4.3,0,1.05,'#ffffff');S.box(3,5.6,3,5.2,0,.7,'#ff8fab');}
 function fence(x0,z0,x1,z1,h,color,gap){const L=Math.hypot(x1-x0,z1-z0),alongX=Math.abs(x1-x0)>Math.abs(z1-z0);
@@ -2276,7 +2283,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.mmPaint=null;M.shopAt=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;}
 
 // Ringfenced next Duels maps: shown in the menu as Coming Soon, not playable yet.
 const SOON=[
@@ -2773,7 +2780,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   // only offer extra spawns you can walk to from the beach (no perches on top of the cliffs)
   M.reachSpawns=id=>{const g=M.grid,k=(id/NL)|0,i=k%g.nx,x=g.x0+(i+.5)*CS,z=g.z0+((k-i)/g.nx+.5)*CS;if(x>wcShore(z)-2)return false;if(!g.comp)return true;
     const sp=M.spawns[0],s0=nearestNode(sp.x,sp.y||0,sp.z);return s0<0||g.comp[id]===g.comp[s0];};
-  M.shopAt={x:-21,z:-15,y:G};
+  M.shopOK=(x,z)=>x<wcShore(z)-4&&x>-34;
   M.mmPaint=(g,k,b)=>{g.fillStyle='#efe0b5';g.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);g.fillStyle='#8fd6e4';for(let z=b.z0;z<b.z1;z+=1){const xs=wcShore(z+.5);g.fillRect((xs-b.x0)*k,(z-b.z0)*k,(b.x1-xs)*k,k+1);}};
   M.spawns=[[-24,-54,G],[6,54,G],[-32,-12,G],[30,-36,0],[-12,50,G],[12,-54,G],[30,32,0],[-32,2,G]].map(([x,z,y])=>({x,z,y,yaw:Math.atan2(-x,-z)}));}
 
@@ -2876,13 +2883,15 @@ function placeShop(){M.shop=null;M.shops=[];if(M.shopAt){for(const p of [].conca
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
   const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
-  let best=null,bs=1e9;
-  for(const [lim,need] of [[half*.4,3.4],[half*.7,2.8],[half,2.2]]){
-    for(let x=Math.ceil((c.x-lim)*2)/2;x<=c.x+lim;x+=.5)for(let z=Math.ceil((c.z-lim)*2)/2;z<=c.z+lim;z+=.5){const d=Math.hypot(x-c.x,z-c.z);if(d>lim||d*.8>=bs)continue;
-      if(x-need<b.x0||x+need>b.x1||z-need<b.z0||z+need>b.z1)continue;if(sp.some(s=>Math.hypot(s.x-x,s.z-z)<3))continue;
-      const r=openR(x,z);if(r<need)continue;const sc=d-.35*Math.min(r,6);if(sc<bs){bs=sc;best={x,z,r};}}
-    if(best)break;}
-  if(!best)return;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy);}
+  const alongX=b.x1-b.x0>b.z1-b.z0,ext=(alongX?b.x1-b.x0:b.z1-b.z0)/2;
+  const spot=(tx,tz,avoid)=>{let best=null,bs=1e9;
+    for(const [lim,need] of [[half*.4,3.4],[half*.7,2.8],[half,2.2]]){
+      for(let x=Math.ceil((tx-lim)*2)/2;x<=tx+lim;x+=.5)for(let z=Math.ceil((tz-lim)*2)/2;z<=tz+lim;z+=.5){const d=Math.hypot(x-tx,z-tz);if(d>lim||d*.8>=bs)continue;
+        if(x-need<b.x0||x+need>b.x1||z-need<b.z0||z+need>b.z1)continue;if(M.shopOK&&!M.shopOK(x,z))continue;if(sp.some(s=>Math.hypot(s.x-x,s.z-z)<3))continue;if(avoid&&Math.hypot(avoid.x-x,avoid.z-z)<ext)continue;
+        const r=openR(x,z);if(r<need)continue;const sc=d-.35*Math.min(r,6);if(sc<bs){bs=sc;best={x,z,r};}}
+      if(best)break;}return best;};
+  const k=ext*.72,A=spot(alongX?c.x-k:c.x,alongX?c.z:c.z-k),Bs=spot(alongX?c.x+k:c.x,alongX?c.z:c.z+k,A);
+  for(const best of [A,Bs]){if(!best)continue;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy);}}
 function buildShop(x,z,gy){
   box(x,gy,z,1.5,1.05,1.5,'#f4efe6');box(x,gy+.62,z,1.56,.34,1.56,'#ffc61a',{solid:false});
   const goods=['#3bb54a','#2f7fe0','#a05ad6','#3f6b3a'];goods.forEach((g,i)=>box(x+(i%2?.35:-.35),gy+1.05,z+(i<2?.35:-.35),.34,.34,.34,g,{solid:false}));
@@ -3593,7 +3602,7 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
     else if(p.id==='fireball')explode(p.f,at,hit&&hit.b?hit.b.n:null,{dmg:g.dmg,radius:g.radius,wall:90,gun:'fireball',burn:true,colors:['#ffd23f','#ff7a1f','#ff3b1f','#ffb347']});
     else if(hit&&hit.f){const head=hit.f.part==='head',dm=Math.round(g.dmg*(head?g.head:1));if(p.f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(dm,100);hitMarker(head);dmgNumber(foe,dm,head);}
       emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,'stars');}
-    else{if(hit&&hit.b)damageBrick(brickOf(hit.b.box),60);emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:['#ffffff','#c9ced8']});}
+    else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),60);damageWood(hit.b.box,40,at);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:['#ffffff','#c9ced8']});}
     continue;}
   if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));}}
   p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));if(Math.random()<.8)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:2,speed:.8,size:.22,life:.5,grav:-1,colors:['#ffb347','#f4f4f4','#9aa0a8']});}
@@ -3649,16 +3658,38 @@ function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P
   if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<1.1&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=30;P.grp.visible=false;
     emit(P.x,P.y+.9,P.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#2f7fe0','#bfe3ff','#ffffff']});sfx('buy',f,{range:10});if(f===ME)feedMsg('<span class="y">You</span><em>picked up armour</em>');break;}}}}
 function resetPlates(){for(const P of M.plates||[]){P.back=0;P.grp.visible=true;}}
-function blastProps(at,Rr){for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
+function blastProps(at,Rr){for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
+  for(const b of M.chips||[]){const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
+  for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
   if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
 function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}propPatch(b,true);}
 function updProps(dt){for(const b of M.props||[]){if(b.alive){if(b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}continue;}
   b.backT-=dt;if(b.backT>0)continue;
   // don't pop back in on top of someone
   if(FS.some(f=>f.alive&&f.pos.x+R>b.x0&&f.pos.x-R<b.x1&&f.pos.z+R>b.z0&&f.pos.z-R<b.z1&&f.pos.y<b.y1&&f.pos.y+HH>b.y0)){b.backT=2;continue;}
-  if(b.y0>.05&&!(M.props.some(o=>o.alive&&Math.abs(o.y1-b.y0)<.05&&o.x0<b.x1&&o.x1>b.x0)))continue; // a stacked crate waits for the one under it
+  if(b.y0>.05&&M.props.some(o=>!o.alive&&o!==b&&Math.abs(o.y1-b.y0)<.05&&o.x0<b.x1&&o.x1>b.x0&&o.z0<b.z1&&o.z1>b.z0))continue; // a stacked crate waits for the one under it
   restoreProp(b);}}
-function resetProps(){for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
+// bullets and blasts through wood: crates and fences break apart; short furniture loses chunks (down to 60% of its height) but stays as cover
+function woodChips(at,col,n){emit(at.x,at.y,at.z,{n:n||4,speed:3,up:1.5,size:.1,life:.45,colors:[col||'#c99a5b','#e9d3a8','#8a5a34']});}
+function damageWood(b,dmg,at){if(!b||!b.wood)return;
+  if(b.prop){if(!b.alive||b.hp==null)return;b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else woodChips(at,b.color,3);return;}
+  if(!b.chip)return;b.chipHP=Math.max(0,b.chipHP-dmg);const step=Math.ceil((1-b.chipHP/b.hp0)*4)/4,nh=b.h0*(1-.4*step);
+  if(nh<b.y1-b.y0-.01){b.y1=b.y0+nh;if(b.mesh){b.mesh.scale.y=nh/b.h0;b.mesh.position.y=b.y0+nh/2;}dirtyGrid(b,.05);MM.layer=null;
+    const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;emit(cx,b.y1,cz,{n:12,speed:3.5,up:3,size:.14,life:.7,grav:12,colors:[b.color||'#c99a5b','#e9d3a8','#8a5a34']});sfx('wood',{x:cx,y:b.y1,z:cz},{range:10});}
+  else woodChips(at,b.color,3);}
+function resetChips(){for(const b of M.chips||[]){if(b.y1-b.y0<b.h0-.01){b.y1=b.y0+b.h0;if(b.mesh){b.mesh.scale.y=1;b.mesh.position.y=b.y0+b.h0/2;}dirtyGrid(b,.05);}b.chipHP=b.hp0;}MM.layer=null;}
+// cars: a rocket, grenade or fireball blows one up; the burnt-out car is cleared and a new one is parked back in its spot later
+function wreckCar(c,at){if(!c.alive)return;c.alive=false;c.backT=PROP_BACK;c.state='dead';c.v=0;
+  for(const b of c.boxes){const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);const j=M.movers.indexOf(b);if(j>=0)M.movers.splice(j,1);dirtyGrid(b,.05);}
+  for(const m of c.parts)m.visible=false;MM.layer=null;const b=c.boxes[0],cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,cp=new V3(cx,1.2,cz);
+  boomFX(cp,3.4);sfx('explode',cp,{range:26});if(ME.alive&&ME.pos.distanceTo(cp)<16)S.shake=Math.max(S.shake,.5);
+  const cols=[c.color,c.color,'#cfe6f3','#1c1d22','#3a3d45'];
+  for(let i=0;i<16;i++){const sz=rnd(.25,.7),m=new THREE.Mesh(new THREE.BoxGeometry(sz,sz*.5,sz*rnd(.6,1.4)),mat(cols[i%cols.length]));m.position.set(cx+rnd(-1,1),rnd(.5,1.8),cz+rnd(-2,2));m.castShadow=true;scene.add(m);
+    const v=new V3(rnd(-5,5),rnd(6,13),rnd(-5,5)),fy=sz*.25;
+    debris.push({o:m,v,w:new V3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),t:0,ttl:4,fx:(q,dt)=>{q.v.y-=26*dt;q.o.position.addScaledVector(q.v,dt);q.o.rotation.x+=q.w.x*dt;q.o.rotation.z+=q.w.z*dt;
+      if(q.o.position.y<fy&&q.v.y<0){q.o.position.y=fy;q.v.y*=-.25;q.v.x*=.5;q.v.z*=.5;q.w.multiplyScalar(.4);}if(q.t>q.ttl-.6)q.o.scale.setScalar(Math.max(.01,(q.ttl-q.t)/.6));}});}
+  for(let i=0;i<5;i++)emit(cx+rnd(-1,1),1+i*.4,cz+rnd(-1.5,1.5),{n:8,speed:1.2,up:3+i,size:.45,life:1.6,grav:-1.5,colors:['#3a3d45','#55585f','#ff7a1f','#ffb000']});}
+function resetProps(){resetChips();for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
 function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&cfg.gun==='fireball'?1.1:1});cfg=cfg||{dmg:GUNS.rocket.dmg,radius:GUNS.rocket.radius,wall:300,gun:'rocket',colors:['#ffd23f','#ff7a1f','#ff3b1f','#3a3d45','#ffffff']};if(n)at.addScaledVector(n,.2);const g=cfg,Rr=cfg.radius;
   blastMarks(at,n,Rr,hitBox);
   if(cfg.gun==='grenade'||cfg.gun==='rocket')boomFX(at,Rr);else emit(at.x,at.y+.2,at.z,{n:Math.round(70*Rr/4.5),speed:12*Rr/4.5,up:3,size:.38,life:.8,grav:4,colors:cfg.colors});
@@ -3700,7 +3731,7 @@ function fire(f,origin,dir){f.shotT=S.t;f.shotP=f.pos.clone();
       if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
     {const et=origin.distanceTo(end);let wsnd=p>0;if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
-    for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
+    for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){for(const [foe,hr] of hits){const total=Math.round(hr.t);if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(total,100);dmgNumber(foe,total,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}

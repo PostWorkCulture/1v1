@@ -220,7 +220,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .d-cross.ring i{display:none}
 .d-cross.ring b{left:calc(-1 * var(--g));top:calc(-1 * var(--g));width:calc(2 * var(--g));height:calc(2 * var(--g));background:transparent;border:2px solid var(--cc,#fff);box-shadow:0 0 0 1.5px rgba(10,10,14,.6),inset 0 0 0 1.5px rgba(10,10,14,.6)}
 .d-cross.dot i{display:none}
-.d-cross.reddot i{display:none}.d-cross.reddot b{left:-3px;top:-3px;width:6px;height:6px;background:#ff2a2a;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 6px 1px rgba(255,40,40,.7)}
+.d-cross.reddot i{display:none}.d-cross.reddot b{left:-3px;top:-3px;width:6px;height:6px;background:var(--cc,#fff);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 6px 1px color-mix(in srgb,var(--cc,#fff) 70%,transparent)}
 .d-hit{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}
 .d-hit i{position:absolute;left:-9px;top:-1.5px;width:18px;height:3px;background:#fff;box-shadow:0 0 0 1px #111}
 .d-hit i:first-child{transform:rotate(45deg) translateX(13px)} .d-hit i:last-child{transform:rotate(-45deg) translateX(13px)}
@@ -3269,7 +3269,7 @@ const GUNS={
   fists:{name:'Fists',type:'melee',dmg:15,head:1,rate:.42,mag:Infinity,reload:0,reach:2.7,arc:1.15,lunge:3,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#e0ac69',note:'Punch'},
   sword:{name:'Sword',sec:true,type:'melee',dmg:25,head:1,rate:.55,mag:Infinity,reload:0,reach:3.1,arc:1.0,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#ffc61a',note:'Melee, four hits, lunges forward'},
   fireball:{name:'Fireball',type:'ability',dmg:45,radius:2.7,speed:30,grav:2,spread:0,adsSpread:0,mag:1,rate:0,zoom:60,color:'#ff6a1a'},
-  duals:{name:'Dual Pistols',base:'pistol',sec:true,dmg:20,head:1.8,rate:.13,mag:24,reload:2.0,spread:1.6,adsSpread:.9,ads:.12,pellets:1,fall:[10,28],zoom:52,auto:false,kick:.015,bloom:.18,color:'#e9edf5',note:'Two pistols, alternate fire, 24 rounds'},
+  duals:{name:'Dual Pistols',base:'pistol',sec:true,dmg:20,head:1.8,rate:.13,mag:24,reload:2.0,spread:1.6,adsSpread:.9,ads:.12,pellets:1,fall:[10,28],zoom:70,auto:false,kick:.015,bloom:.18,color:'#e9edf5',note:'Two pistols, alternate fire, 24 rounds'},
   pistol:{name:'Pistol',sec:true,dmg:24,head:1.8,rate:.24,mag:8,reload:1.3,spread:1.4,adsSpread:.6,pellets:1,fall:[20,50],zoom:50,auto:false,kick:.02,bloom:.25,color:'#2f7fe0',note:'8 rounds, quick'},
   revolver:{name:'Revolver',sec:true,dmg:45,head:2,rate:.55,mag:6,reload:2.2,spread:1.1,adsSpread:.3,pellets:1,fall:[25,60],zoom:45,auto:false,kick:.05,bloom:.4,color:'#8a5a34',note:'6 heavy rounds'},
   stun:{name:'Stun Grenade',type:'proj',dmg:0,radius:6.5,rate:1,mag:2,reload:0,noReload:true,speed:21,grav:20,fuse:1.3,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#3a7bff',note:'Stuns everyone caught in the flash'},
@@ -3655,6 +3655,9 @@ const TEAMC=['#2f7fe0','#e8463a','#3bb54a','#f0a020','#a05ad6','#1fb5b0','#ff6fa
 const isFoe=(a,b)=>a!==b&&a.team!==b.team;
 const foesOf=f=>FS.filter(o=>o.alive&&isFoe(f,o));
 const byDist=f=>(a,b)=>Math.hypot(a.pos.x-f.pos.x,a.pos.z-f.pos.z)-Math.hypot(b.pos.x-f.pos.x,b.pos.z-f.pos.z);
+/* crosshair goes red when an enemy is under it, in clear view and within the weapon's reach */
+function weaponReach(id){const g=GUNS[id]||{};if(g.type==='melee')return(g.reach||2.5)+.6;if(id==='rocket')return 60;if(id==='stars')return 34;if(g.type==='proj')return 30;if(g.fall)return g.fall[1];return 160;}
+function onTarget(f,id){const c=camera.position,d=new V3();camera.getWorldDirection(d);const hf=rayFoes(c,d,f);if(!hf)return false;const dist=hf.who.pos.distanceTo(f.pos);if(dist>weaponReach(id))return false;const hb=rayBoxes(c,d,hf.t);return!hb;}
 function rayFoes(o,d,f){let best=null;for(const v of foesOf(f)){const h=rayFighter(o,d,v);if(h&&(!best||h.t<best.t)){best=h;best.who=v;}}return best;}
 const nm=f=>f===ME?'You':(f&&f.name)||'Bot';
 const tg=f=>`<span class="${f===ME||(S.players!=='ffa'&&f.team===ME.team)?'y':'o'}">${nm(f)}</span>`;
@@ -5279,7 +5282,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn');if(hb.hidden)hb.hidden=fals
   const holo=holoOn(ME);{const ho=$('d-holo');if(ho.hidden===holo)ho.hidden=!holo;if(holo&&ho.dataset.g!==id){ho.dataset.g=id;ho.style.setProperty('--sc',XHAIR[id]);}}
   const scoped=ME.ads&&(id==='sniper'||id==='scout')&&ME.alive;{const sc=$('d-scope');if(sc.hidden===scoped)sc.hidden=!scoped;if(scoped){const c=id==='sniper'?'hdr':'kar';if(sc.className!==c){sc.className=c;sc.style.setProperty('--sc',XHAIR[id]);}}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:clamp(1-VM.raise*1.6,0,1);cr.style.setProperty('--cc',XHAIR[id]||'#fff');
+  cr.style.setProperty('--g',(id==='shotgun'?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:id==='duals'?1:clamp(1-VM.raise*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id);if(cr.dataset.on!==String(on)){cr.dataset.on=String(on);cr.style.setProperty('--cc',on?'#ff2a2a':'#ffffff');}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*(flashA>.6?.55:1.1));$('d-flash').style.opacity=flashA.toFixed(3);{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -5858,7 +5861,7 @@ function heroModel(id,RB,vm){
       box(.1,.04,.12,0,-.36,-.17,gd,.012);box(.098,.18,.02,0,-.2,-.12,gd,.005);
       box(.102,.025,.4,0,.035,.1,gd,.006);rivets([[-.15,-.14,.05],[-.25,-.17,.05]],gd);
       return g.children.slice(st);};
-    const a=pistol();const two=new THREE.Group();for(const c of a){two.add(c.clone());}if(vm){two.position.set(.48,-.26,.2);two.rotation.set(0,-.05,-.1);vmSights({y:.16,rz:-.15,rr:.04,fz:.36,fr:0,base:.115,m:frame,dot:XHAIR.duals,muz:.5,hands:{r:[0,-.2,-.13],l:[.48,-.46,.07],twin:1}});}else{two.position.set(-.05,-.32,-.28);two.rotation.set(.18,0,0);}g.add(two);
+    const a=pistol();const two=new THREE.Group();for(const c of a){two.add(c.clone());}if(vm){two.position.set(.62,0,0);g.userData.sightY=.38;g.userData.rearZ=-.1;g.userData.muzZ=.5;g.userData.dx=.31;g.userData.hands={r:[0,-.2,-.13],l:[.62,-.2,-.13],twin:1};}else{two.position.set(-.05,-.32,-.28);two.rotation.set(.18,0,0);}g.add(two);
   }
   else if(id==='stars'){ // chrome shuriken
     const s=new THREE.Shape();const N=4,R=.42,r=.11;for(let i=0;i<N*2;i++){const a=i/(N*2)*Math.PI*2+Math.PI/4,rr=i%2?r:R;const x=Math.cos(a)*rr,y=Math.sin(a)*rr;i?s.lineTo(x,y):s.moveTo(x,y);}
@@ -5938,7 +5941,7 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
   else{blk(.08,.17,.22,hand,lx,ly,lz);blk(.17,.1,.22,hand,lx-.08,ly-.08,lz);blk(.2,.2,.7,sleeve,lx+.06,ly-.36,lz-.22,.85);} // left hand wraps the handguard
   blk(.05,.06,.14,hand,rx-.085,ry+.26,rz+.03); // right thumb
   heroOutline(g,.0025);
-  const wrap=new THREE.Group();g.rotation.y=Math.PI;wrap.add(g);wrap.userData={sightY,rearZ};
+  const wrap=new THREE.Group();g.rotation.y=Math.PI;wrap.add(g);wrap.userData={sightY,rearZ,dx:g.userData.dx||0};
   const fm=()=>new THREE.Mesh(new THREE.PlaneGeometry(.22,.22),flashMat());
   const fl=fm(),fl2=fm();fl2.visible=false;const fg=new THREE.Group();fg.add(fl,fl2);fg.position.set(0,id==='mg'||id==='m60'?.14:id==='duals'?.06:.03,g.userData.muzZ||1.48);fg.visible=id!=='rocket';g.add(fg);wrap.userData.flash=[fl,fl2];
   VM.models[key]=wrap;return wrap;}
@@ -5950,7 +5953,7 @@ function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.pa
   const sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8);const swx=Math.sin(VM.t*1.3)*.004+Math.sin(VM.t*9)*.006*bob,swy=Math.sin(VM.t*1.9)*.003+Math.abs(Math.cos(VM.t*9))*.006*bob;
   const relo=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI):0;
   // aimed: sight line on the screen centre; lowered: down and to the right
-  const ax=0,ay=-ud.sightY*sc,az=-.3+ud.rearZ*sc,lx=.2,ly=-.42,lz=-.38;
+  const ax=(ud.dx||0)*sc,ay=-ud.sightY*sc,az=-.3+ud.rearZ*sc,lx=.2,ly=-.42,lz=-.38;
   m.position.set(lerp(lx,ax,e)+swx,lerp(ly,ay,e)+swy-relo*.12,lerp(lz,az,e)+VM.kick*.035);
   m.rotation.set(lerp(-.25,0,e)+VM.kick*.05+relo*.5,lerp(.18,0,e),lerp(.25,0,e)-relo*.3);m.scale.setScalar(sc);
   {const on=f.flashT>.02;for(const fl of ud.flash){fl.material.opacity=on?.55:0;fl.rotation.z=Math.random()*3;fl.scale.setScalar(.7+Math.random()*.5);}}}

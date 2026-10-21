@@ -3580,7 +3580,7 @@ function updTracers(dt){for(const t of tracers){if(!t.m.visible)continue;t.t-=dt
 /* ================= characters ================= */
 const CHARS={
   brute:{skin:'brute_smash',fx:['Brick burst','Lightning'],name:'Brute',desc:'130 HP giant who leaps and smashes the ground',abil:'Ground smash',cd:7,hp:130,speed:.95,look:{shirt:'#2b2d33',shirtSolid:'#1b1d23',hair:'#1b1d23'},color:'#ff7a2a'},
-  jet:{skin:'jet_pilot',fx:['Balloon','Rainbow beam'],name:'Jet',desc:'Jump, then press jump again in mid-air to rocket boost onto the rooftops',abil:'Rocket boost',cd:15,hp:100,look:{shirt:'#2f7fe0',shirtSolid:'#1d4f9a',hair:'#f4c22b'},color:'#2f7fe0'},
+  jet:{skin:'jet_pilot',fx:['Balloon','Rainbow beam'],name:'Jet',desc:'Jump fires a rocket boost onto the rooftops when it\'s ready',abil:'Rocket boost',cd:15,hp:100,look:{shirt:'#2f7fe0',shirtSolid:'#1d4f9a',hair:'#f4c22b'},color:'#2f7fe0'},
   blaze:{skin:'blaze_brawler',fx:['Brick burst','Black hole'],name:'Blaze',desc:'Throws fireballs that burn',abil:'Fireball',cd:3.5,hp:100,look:{shirt:'#ff6a1a',shirtSolid:'#a83a0a',hair:'#c0261b'},color:'#ff6a1a'},
   blink:{skin:'blink_magician',fx:['Disco','Spirit'],name:'Blink',desc:'Teleports a short distance',abil:'Blink',cd:4,hp:100,look:{shirt:'#a05ad6',shirtSolid:'#5e2f86',hair:'#f3efe6'},color:'#a05ad6'},
   tank:{skin:'tank_mech',fx:['Gold statue','Shrink'],name:'Tank',desc:'150 HP and a shield bubble',abil:'Shield',cd:12,hp:150,speed:.9,look:{shirt:'#6b6f78',shirtSolid:'#3a3d45',hair:'#3a2a1a'},color:'#6b6f78'},
@@ -3958,9 +3958,10 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
   if(f.grounded)f.airJ=1;
-  if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=1;f.jumpLock=true;f._jt=S.t;}
+  // Jet: jump fires the rocket boost whenever it's ready (from the ground or mid-air), otherwise it's a normal jump
+  if(f.char==='jet'&&f.abilT<=0&&(jumpPress||(jump&&f.grounded&&!f.jumpLock))&&useAbility(f)){f.jumpLock=true;}
+  else if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=1;f.jumpLock=true;f._jt=S.t;}
   // double jump: one extra jump in mid-air, only with more than half stamina, and it costs some
-  else if(jumpPress&&!f.grounded&&f.char==='jet'&&f.abilT<=0&&useAbility(f)){}
   else if(jumpPress&&!f.grounded&&f.airJ>0&&!f.carrying&&(f.stam??STAM_MAX)>STAM_MAX*.5){f.vel.y=Math.max(f.vel.y,jv*1.05);f.airJ--;f.stam-=DJ_COST;f.stamRest=0;if(f===ME)sfx('swing',null,{vol:.5});emit(f.pos.x,f.pos.y+.2,f.pos.z,{n:16,speed:4,size:.18,life:.35,grav:0,colors:['#ffffff',C.color]});}
   if(!jump)f.jumpLock=false;
   if(f.boostT>0){f.boostT-=dt;if(f.downed)f.boostT=0;else{f.vel.y=Math.max(f.vel.y,30);f.grounded=false;f.jetOn=.1;for(let k=0;k<2;k++)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.6,f.pos.z-Math.cos(f.yaw)*.4,{n:3,speed:2,up:-10,size:.32,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#ffffff']});}}

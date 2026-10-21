@@ -75,6 +75,6 @@ It's a single static `index.html` (three.js and fonts load from CDNs), served by
 ## Audio credits
 - Sound effects: generated with ElevenLabs Sound Effects (`sfx/`).
 - Music (`music/`), via Pixabay under the Pixabay Content Licence:
-  - Menu: "Dark Trap" by MondaMusic
+  - Menu: "Dramatic background hip hop music. This day" by White_Records
   - Between rounds: "Dark Trap Beat Atmosphere" by echoes_of_lumen
   - Match end: "Dark - Dark Trap Beat" by vaitsez

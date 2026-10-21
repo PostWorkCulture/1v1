@@ -3293,14 +3293,17 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcWall('x',z0,x0,x1,0,H,[{c:-24,w:4,y0:0,y1:4}],col,{tx:'brick'},.4);wcWall('x',z1,x0,x1,0,H,[{c:-27,w:3.6,y0:0,y1:3.4},{c:-22,w:3,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
     floor(x0,x1,z0,z1,'#9d978b','asphalt',.02,2);
     // roof with a hatch over the mezzanine stairs, parapet round the edge
-    const hz0=-7,hz1=-1.6;wcBox(x0-.2,x1+.2,H,H+.35,z0-.2,hz0,'#5b6070');wcBox(x0-.2,x1+.2,H,H+.35,hz1,z1+.2,'#5b6070');wcBox(x0-.2,-29.2,H,H+.35,hz0,hz1,'#5b6070');wcBox(-27.6,x1+.2,H,H+.35,hz0,hz1,'#5b6070');
-    floor(x0,x1,z0,z1,'#6e737c',null,H+.36,2);
+    const hz0=-7,hz1=-1.6,hx0=-31.2,hx1=-27.2;wcBox(x0-.2,x1+.2,H,H+.35,z0-.2,hz0,'#5b6070');wcBox(x0-.2,x1+.2,H,H+.35,hz1,z1+.2,'#5b6070');wcBox(x0-.2,hx0,H,H+.35,hz0,hz1,'#5b6070');wcBox(hx1,x1+.2,H,H+.35,hz0,hz1,'#5b6070');
+    for(const [a,b,c,d] of [[x0,x1,z0,hz0],[x0,x1,hz1,z1],[x0,hx0,hz0,hz1],[hx1,x1,hz0,hz1]])floor(a,b,c,d,'#6e737c',null,H+.36,2);
+    // the hatch: a yellow-edged opening with rails on three sides, open where the stairs come out
+    for(const [a,b,c,d] of [[hx0-.12,hx0,hz0,hz1],[hx1,hx1+.12,hz0,hz1],[hx0-.12,hx1+.12,hz1,hz1+.12]])wcBox(a,b,H+.35,H+1.35,c,d,'#f4c22b');
+    for(const [a,b,c,d] of [[hx0,hx1,hz0-.02,hz0+.12]])wcBox(a,b,H+.35,H+.45,c,d,'#f4c22b');
     for(const [a,b,c,d] of [[x0-.2,x1+.2,z0-.2,z0+.1],[x0-.2,x1+.2,z1-.1,z1+.2],[x0-.2,x0+.1,z0-.2,z1+.2],[x1-.1,x1+.2,z0-.2,z1+.2]])wcBox(a,b,H+.35,H+1.3,c,d,'#8a6a55',{tx:'brick'});
     for(const [z,w] of [[2,3],[10,3]])wcBox(-25.5-w/2,-25.5+w/2,H+.35,H+1.0,z-1.2,z+1.2,'#bfe6ff',{extra:{roughness:.1,metalness:.3}});
     // mezzanine along the back wall, stairs up to it and a second flight up through the roof hatch
     wcBox(x0+.2,-27,3.3,3.6,z0+.2,z1-.2,'#8a8f99');for(let z=z0+.5;z<z1;z+=3.2){const za=z,zb=Math.min(z1-.3,z+2.6);if(zb>7.4&&za<13)continue;wcBox(-27.15,-26.95,3.6,4.6,za,zb,'#f4c22b');}
     wcStairs(12.5,-1,-26.9,-25.6,0,3.6,10,.45,'#9aa0a8',true);
-    wcStairs(-2.2,-1,-29.1,-27.7,3.6,H+.35,10,.45,'#9aa0a8',true);
+    wcStairs(-2.2,-1,-30.9,-27.5,3.6,H+.35,10,.45,'#9aa0a8',true);
     // inside: crate stacks, pallets, a forklift, drums
     for(const [x,z,n] of [[-22,-6,2],[-22,-3.6,1],[-23.3,13,3],[-21,13,1],[-29.6,8,2],[-29.6,-1,1]])for(let i=0;i<n;i++)rlCrate(x,i*1.2,z);
     rlPallet(-24,4);rlPallet(-24,5.3);rlDrum(-30.8,0,-8.6,'#2f63c8',false);rlDrum(-30.1,0,-8.8,'#3bb54a',false);
@@ -3325,10 +3328,14 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   rlCabin(-41,-10,0,'#2f7fe0');rlCabin(39,18,0,'#e8b81f');
   // container rows: some climbable with a crate step chain, one open to walk into
   const CC=['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#f08a24','#a05ad6','#1f9a9a','#c8322b'];let ci=0;const nc=()=>CC[(ci++)%CC.length];
-  rlContainer(-40,0,6,'z',nc());rlContainer(-40,2.6,6,'z',nc());rlCrate(-37.6,0,1.4);rlCrate(-37.6,0,2.6);rlCrate(-37.6,1.2,2.6);rlCrate(-37.6,0,3.8);rlCrate(-37.6,1.2,3.8);rlCrate(-37.6,2.4,3.8);
-  rlContainer(-40,0,32,'z',nc(),{open:1});rlContainer(-26,0,30,'x',nc());rlContainer(-28,2.6,30,'x',nc());rlContainer(-30,5.2,30,'x',nc());
-  for(const [x,y,z,h] of [[-19.4,0,32.9,1.2],[-19.4,0,30.5,1.2],[-19.4,1.2,30.5,1.2],[-21.2,2.6,30,1.1],[-23.2,5.2,30,1.1]])box(x,y,z,h,h,h*2,h>1.15?'#c99a5b':'#b9895a',{tx:'wood',prop:'crate',hp:120});
-  rlContainer(-44.6,0,-36,'z',nc());rlContainer(-30,0,-24,'x',nc(),{open:-1});rlContainer(-30,2.6,-24,'x',nc());rlCrate(-23.4,0,-20.7);rlCrate(-23.4,0,-21.9);rlCrate(-23.4,1.2,-21.9);rlCrate(-23.4,0,-23.1);rlCrate(-23.4,1.2,-23.1);rlCrate(-23.4,2.4,-23.1);
+  // container stacks are two containers wide (5 m) so you can stand on them, and each one you climb has proper steel steps
+  const st='#9aa0a8';
+  rlContainer(-40,0,6,'z',nc());rlContainer(-37.5,0,6,'z',nc());rlContainer(-40,2.6,6,'z',nc());rlContainer(-37.5,2.6,6,'z',nc());wcStairs(-6.75,1,-40.8,-36.7,0,5.2,15,.45,st,true);
+  rlContainer(-40,0,32,'z',nc(),{open:1});
+  for(const [x,y] of [[-26,0],[-29,2.6],[-32,5.2]]){rlContainer(x,y,28.75,'x',nc());rlContainer(x,y,31.25,'x',nc());}
+  wcStairs(-15.6,-1,27.7,32.3,0,2.6,8,.55,st);wcStairs(-20.1,-1,27.7,32.3,2.6,5.2,8,.36,st);wcStairs(-23.1,-1,27.7,32.3,5.2,7.8,8,.36,st);
+  rlContainer(-44.6,0,-36,'z',nc());rlContainer(-30,0,-24,'x',nc(),{open:-1});rlContainer(-30,0,-26.5,'x',nc());rlContainer(-30,2.6,-24,'x',nc());rlContainer(-30,2.6,-26.5,'x',nc());
+  wcStairs(-17.7,-1,-27.5,-23,0,5.2,15,.42,st);
   // ---------- east: engine shed, gantry crane, water tower ----------
   {const x0=20,x1=34,z0=-8,z1=14,H=7,col='#6e737c';
     wcWall('x',z0,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);wcWall('x',z1,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);
@@ -3358,15 +3365,16 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     box(4,7,z,.06,8.6,.06,'#3a3d45',{solid:false,edges:false});box(4,6.5,z,1.2,.5,.3,'#f4c22b',{solid:false});
     {const W3=3.9,ax0=16.4,ax1=ax0+W3,bx0=ax1+.2,bx1=bx0+W3,za=-24.6,zb=-12.1,mid=y/2,c='#9aa0a8';
       wcStairs(za,1,ax0,ax1,0,mid,25,.5,c,true);wcBox(ax0,bx1,mid-.25,mid,zb,zb+2.2,c);wcStairs(zb,-1,bx0,bx1,mid,y,25,.5,c,true);wcBox(15.2,bx1,y-.25,y,z-2,za,c);
-      for(const [x,y0,y1,z0,z1] of [[ax0-.05,0,mid,za,zb],[bx1+.05,mid,y,za,zb]])for(let k=0;k<5;k++){const za2=z0+(z1-z0)*k/5,zb2=z0+(z1-z0)*(k+1)/5,yy=y0+(y1-y0)*(x<20?(k+1)/5:(5-k)/5);box(x,yy+.9,(za2+zb2)/2,.08,.08,zb2-za2,'#f4c22b',{solid:false,edges:false});}
       wcBox(bx1,bx1+.12,y,y+1.1,z-2,za,'#e8b020');wcBox(15.2,ax1,y,y+1.1,za-.12,za,'#e8b020');wcBox(15.2,bx1+.12,y,y+1.1,z-2.12,z-2,'#e8b020');}}
-  {const x=38,z=31,top=11;for(const a of [-2.6,2.6])for(const b of [-2.6,2.6])wcBox(x+a-.2,x+a+.2,0,top-.25,z+b-.2,z+b+.2,'#3a3d45');
+  {const x=38,z=31,top=11,r=ruinBegin();for(const a of [-2.6,2.6])for(const b of [-2.6,2.6])wcBox(x+a-.2,x+a+.2,0,top-.25,z+b-.2,z+b+.2,'#3a3d45');
     for(const a of [-2.6,2.6]){box(x+a,4,z,.12,.12,5.2,'#3a3d45',{solid:false,edges:false});box(x,4,z+a,5.2,.12,.12,'#3a3d45',{solid:false,edges:false});}
     wcBox(x-3.5,x+3.5,top-.3,top,z-3.5,z+3.5,'#5b6070');for(const [a,b,c,d] of [[x-3.5,x+3.5,z-3.5,z-3.4],[x-3.5,x+3.5,z+3.4,z+3.5],[x-3.5,x-3.4,z-3.5,z+3.5]])wcBox(a,b,top,top+1.1,c,d,'#e9ecef');
     wcBox(x+3.4,x+3.5,top,top+1.1,z+1,z+3.5,'#e9ecef');
-    collider(x-1.6,x+1.6,top,top+4.4,z-1.6,z+1.6);deco(new THREE.CylinderGeometry(2.1,2.1,4.4,20),mat('#7a4c2a','wood'),x,top+2.2,z);deco(new THREE.ConeGeometry(2.4,1.4,20),mat('#5b3a22'),x,top+5.1,z);
-    for(const yy of [top+.9,top+2.4,top+3.9])deco(new THREE.CylinderGeometry(2.14,2.14,.12,20),mat('#3a3d45'),x,yy,z);
-    zigStairs(41.6,z+.4,z+4.4,top,4,'#9aa0a8',1.2);wcBox(41.45,41.65,top-.25,top,z-1,z+.4,'#9aa0a8');}
+    collider(x-1.6,x+1.6,top,top+4.4,z-1.6,z+1.6);const tank=[deco(new THREE.CylinderGeometry(2.1,2.1,4.4,20),mat('#7a4c2a','wood'),x,top+2.2,z),deco(new THREE.ConeGeometry(2.4,1.4,20),mat('#5b3a22'),x,top+5.1,z)];
+    for(const yy of [top+.9,top+2.4,top+3.9])tank.push(deco(new THREE.CylinderGeometry(2.14,2.14,.12,20),mat('#3a3d45'),x,yy,z));
+    ruinEnd(r,x,z,1,1,'#7a4c2a','#3a3d45',top,{noCracks:1,hide1:tank,splash:1});
+    // one wide, straight flight up the east side to a landing beside the deck
+    wcStairs(z+16.5,-1,42.3,45.3,0,top,33,.5,'#9aa0a8',true);wcBox(41.5,45.3,top-.25,top,z-3,z);}
   // footbridge over all four tracks
   {const z=22,y=7.6;wcBox(-14,14,y-.3,y,z-1.5,z+1.5,'#5b6070');for(const s of [-1,1])wcBox(-14,14,y,y+1.2,z+s*1.45-.05,z+s*1.45+.05,'#9aa0a8');
     for(const s of [-1,1])box(0,y+1.1,z+s*1.45,28,.1,.14,'#f4c22b',{solid:false,edges:false});
@@ -3400,7 +3408,7 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   for(const [x,z] of [[22,-42],[25,-30],[30,-46],[-44,-6],[44,-30],[24,30]])rlPallet(x,z);
   rlSleepers(-35,-30,'x');rlSleepers(-35,-30+1.4,'x');rlSleepers(18,-50,'z');rlSleepers(43,0,'z');rlSleepers(43,0,'z');
   for(const [x,z] of [[-34,-8],[-33.3,-8.2],[22.5,-46],[23.2,-46.3],[42,-24],[-17,42],[-16.3,42.4]])rlDrum(x,0,z);
-  rlReel(-44,24);rlReel(30,40,'#8a5a34');rlReel(-17.5,-26);
+  rlReel(-44,24);rlReel(30,40,'#8a5a34');rlReel(-16,-32);
   for(const [x,z] of [[-14.3,-20],[14.3,-20],[-14.3,40],[14.3,40],[-14.3,10],[14.3,-10]]){box(x,0,z,.28,6.4,.28,'#3a3d45');box(x+(x<0?.5:-.5),6.2,z,1.2,.12,.3,'#3a3d45',{solid:false});const l=new THREE.Mesh(B.boxGeo(.5,.12,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(x+(x<0?.9:-.9),6.1,z);M.group.add(l);}
   // signals beside the live lines: red while a train is in the section, green when it's clear
   const sig=[];for(const [x,z,ln] of [[-6.6,-40,0],[6.6,40,1],[-6.6,12,0],[6.6,-12,1]]){box(x,0,z,.2,4.2,.2,'#2b2d33',{edges:false});box(x,4.2,z,.5,1.1,.4,'#1c1d22',{solid:false,edges:false});
@@ -3430,7 +3438,7 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   const t2=railTrain(3.5,-1,[['loco','#2f63c8'],['hopper','#3a3d45'],['box','#3bb54a'],['flat'],['box','#e8463a'],['tank','#16171c']],{speed:10,gap:22,ph:21});
   railTrainInit(t1);railTrainInit(t2);
   M.shopAt=[{x:-33,z:-49},{x:33,z:49}];
-  M.spawns=[[-44,-50],[44,50],[-44,48],[44,-50],[-45,-14],[45,14],[-24,-26],[24,26],[-36,16],[36,-16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+  M.spawns=[[-44,-50],[44,50],[-44,48],[44,-50],[-45,-14],[45,14],[-24,-31],[24,26],[-36,16],[36,-16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 const MAPS={
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
@@ -4332,7 +4340,7 @@ function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P
     emit(P.x,P.y+.9,P.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#2f7fe0','#bfe3ff','#ffffff']});sfx('plate',f,{range:10});if(f===ME)feedMsg('<span class="y">You</span><em>picked up armour</em>');break;}}}}
 function resetPlates(){for(const P of M.plates||[]){P.back=0;P.grp.visible=true;}}
 function blastProps(at,Rr){knockBlast(at,Rr);ruinBlast(at,Rr);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
-  for(const b of M.chips||[]){const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
+  for(const b of M.chips||[]){if(b.broken)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(b.wood&&dd<Rr*.75)breakChip(b,at);else if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
   for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
   if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
 function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}propPatch(b,true);}
@@ -4346,7 +4354,11 @@ function damageWood(b,dmg,at){if(!b||!(b.prop||b.chip))return;
   if(nh<b.y1-b.y0-.01){const top=b.y1;b.y1=b.y0+nh;if(b.mesh){b.mesh.scale.y=nh/b.h0;b.mesh.position.y=b.y0+nh/2;}dirtyGrid(b,.05);MM.layer=null;knockOn(b,top);
     const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;emit(cx,b.y1,cz,{n:12,speed:3.5,up:3,size:.14,life:.7,grav:12,colors:b.wood?[b.color||'#c99a5b','#e9d3a8','#8a5a34']:[b.color||'#9aa0a8','#d8dbe2','#55585f']});sfx(b.wood?'wood':'bin',{x:cx,y:b.y1,z:cz},{range:10});}
   else itemChips(b,at);}
-function resetChips(){for(const b of M.chips||[]){if(b.y1-b.y0<b.h0-.01){b.y1=b.y0+b.h0;if(b.mesh){b.mesh.scale.y=1;b.mesh.position.y=b.y0+b.h0/2;}dirtyGrid(b,.05);}b.chipHP=b.hp0;}MM.layer=null;}
+function breakChip(b,at){b.broken=true;knockOn(b,b.y1);const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);if(b.mesh)b.mesh.visible=false;dirtyGrid(b,.05);MM.layer=null;
+  const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,cz=(b.z0+b.z1)/2;sfx('crate',{x:cx,y:cy,z:cz},{range:18});emit(cx,cy,cz,{n:30,speed:7,up:4,size:.2,life:.8,grav:8,colors:[b.color||'#c99a5b','#e8d2a6','#8a5a34']});
+  for(let k=0;k<8;k++){const sz=rnd(.12,.3),m=new THREE.Mesh(new THREE.BoxGeometry(rnd(.3,.8),sz*.5,sz),mat(k%2?b.color||'#c99a5b':'#8a5a34'));m.position.set(cx+rnd(-.5,.5),cy,cz+rnd(-.5,.5));m.castShadow=true;scene.add(m);const v=new V3(cx-at.x,0,cz-at.z).normalize().multiplyScalar(rnd(3,7)).add(new V3(rnd(-2,2),rnd(4,8),rnd(-2,2))),fy=b.y0+sz/2;
+    debris.push({o:m,v,w:new V3(rnd(-8,8),rnd(-8,8),rnd(-8,8)),t:0,ttl:3,fx:(q,dt)=>{q.v.y-=26*dt;q.o.position.addScaledVector(q.v,dt);q.o.rotation.x+=q.w.x*dt;q.o.rotation.z+=q.w.z*dt;if(q.o.position.y<fy&&q.v.y<0){q.o.position.y=fy;q.v.y*=-.3;q.v.x*=.6;q.v.z*=.6;}if(q.t>q.ttl-.6)q.o.scale.setScalar(Math.max(.01,(q.ttl-q.t)/.6));}});}}
+function resetChips(){for(const b of M.chips||[]){if(b.broken){b.broken=false;if(!M.boxes.includes(b))M.boxes.push(b);if(b.mesh)b.mesh.visible=true;dirtyGrid(b,.05);}if(b.y1-b.y0<b.h0-.01){b.y1=b.y0+b.h0;if(b.mesh){b.mesh.scale.y=1;b.mesh.position.y=b.y0+b.h0/2;}dirtyGrid(b,.05);}b.chipHP=b.hp0;}MM.layer=null;}
 // cars: a rocket, grenade or fireball blows one up; the burnt-out car is cleared and a new one is parked back in its spot later
 function burnCar(c,on){const [b1,b2]=c.boxes;if(on){if(c.burnt)return;c.burnt=true;c.mat0=[b1.mesh.material,b2.mesh.material];c.y0=c.boxes.map(b=>[b.y0,b.y1]);
     b1.mesh.material=mat('#2b2522',null,{roughness:.95});b2.mesh.material=mat('#141518',null,{roughness:.9});for(const b of c.boxes){b.y0-=.3;b.y1-=.3;if(b.mesh)b.mesh.position.y-=.3;}
@@ -4369,12 +4381,12 @@ function wreckCar(c,at){if(!c.alive)return;c.alive=false;c.state='dead';c.v=0;if
    house lurches, cracks open, smoke pours out); a second blast brings it down: it slowly sinks and folds into a pile of big
    blocks you can climb over. Everything is rebuilt at the start of the next round. */
 function ruinBegin(){return{c0:M.group.children.length,b0:M.boxes.length};}
-function ruinEnd(r,cx,cz,flip,k,wall,trim,F){const kids=M.group.children.slice(r.c0),boxes=M.boxes.slice(r.b0),grp=new THREE.Group();grp.userData.dyn=1;grp.matrixAutoUpdate=false;
+function ruinEnd(r,cx,cz,flip,k,wall,trim,F,o={}){const kids=M.group.children.slice(r.c0),boxes=M.boxes.slice(r.b0),grp=new THREE.Group();grp.userData.dyn=1;grp.matrixAutoUpdate=false;
   for(const o of kids){M.group.remove(o);grp.add(o);}M.group.add(grp);
   let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,top=0;for(const b of boxes){x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);z0=Math.min(z0,b.z0);z1=Math.max(z1,b.z1);top=Math.max(top,b.y1);b.ruin=1;}
   // the roof wall and everything up there stays separate so the first blast can knock it off
   const roofBits=boxes.filter(b=>b.y0>=F-.01&&!b.prop);for(const b of roofBits)if(b.mesh)b.mesh.userData.dyn=1;
-  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip)};
+  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip),hide1:o.hide1||[],splash:o.splash};for(const m of B.hide1)m.userData.dyn=1;if(o.noCracks){(M.blds||(M.blds=[])).push(B);return B;}
   // cracks on every outside wall, hidden until the house is hit
   const ct=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(28,29,34,.9)';g.lineCap='round';
     for(let n=0;n<5;n++){let x=40+Math.random()*176,y=10+Math.random()*60;g.lineWidth=5;g.beginPath();g.moveTo(x,y);for(let s=0;s<9;s++){x+=(Math.random()-.5)*50;y+=14+Math.random()*16;g.lineTo(x,y);g.lineWidth=Math.max(1.5,5-s*.4);}g.stroke();}});
@@ -4393,7 +4405,7 @@ function ruinHit(B,at){B.stage=1;const c=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),d
   for(const b of B.roofBits){if(Math.random()<.3&&b.x1-b.x0>.4&&b.z1-b.z0>.4)continue;if(b.mesh)b.mesh.visible=false;ruinOut(B,b);const mx=(b.x0+b.x1)/2,my=(b.y0+b.y1)/2,mz=(b.z0+b.z1)/2;
     for(let i=0;i<2;i++)ruinChunk(B,mx+rnd(-.5,.5),my,mz+rnd(-.5,.5),rnd(.35,.8),B.cols[1],new V3(mx-at.x,0,mz-at.z).normalize().multiplyScalar(rnd(3,8)).add(new V3(0,rnd(5,10),0)));}
   for(const b of B.props)if(b.alive&&b.y0>=B.F-.05)breakProp(b,at);
-  for(const m of B.cracks)m.visible=true;ruinMat(B,.035,dir.z,-dir.x,.18);
+  for(const m of B.cracks)m.visible=true;for(const m of B.hide1)m.visible=false;if(B.splash){const t=new V3(c.x,B.F+2,c.z);for(let i=0;i<6;i++)emit(t.x,t.y+i*.4,t.z,{n:14,speed:6,up:4,size:.3,life:1.2,grav:12,colors:['#bfe6ff','#ffffff','#8fd6e4']});for(let i=0;i<10;i++)ruinChunk(B,t.x+rnd(-1.5,1.5),t.y,t.z+rnd(-1.5,1.5),rnd(.4,.9),'#7a4c2a',new V3(rnd(-6,6),rnd(4,9),rnd(-6,6)));}ruinMat(B,B.splash?.02:.035,dir.z,-dir.x,B.splash?.05:.18);
   sfx('wall',c,{range:40});sfx('brick',c,{range:40});if(ME.alive&&Math.hypot(ME.pos.x-c.x,ME.pos.z-c.z)<22)S.shake=Math.max(S.shake,.7);
   for(let i=0;i<10;i++){const a=i/10*TAU;emit(c.x+Math.cos(a)*(B.x1-B.x0)*.55,.4,c.z+Math.sin(a)*(B.z1-B.z0)*.55,{n:6,speed:3,up:1.5,size:.8,life:1.6,grav:-.3,colors:['#d8d4cc','#bfb8aa','#e9e4d8']});}
   for(let i=0;i<8;i++)ruinChunk(B,rnd(B.x0,B.x1),rnd(1,B.F),i%2?B.x0:B.z0,rnd(.3,.6),B.cols[0],new V3(rnd(-3,3),rnd(2,5),rnd(-3,3)),1);
@@ -4438,7 +4450,7 @@ function resetRuins(){for(const B of M.blds||[]){if(B.stage===0)continue;B.stage
   for(const r of B.rubble){if(r.b){const i=M.boxes.indexOf(r.b);if(i>=0)M.boxes.splice(i,1);dirtyGrid(r.b,.05);}M.group.remove(r.m);r.m.geometry.dispose();}B.rubble=[];
   for(const b of B.gone){if(!M.boxes.includes(b))M.boxes.push(b);if(b.mesh)b.mesh.visible=true;dirtyGrid(b,.05);}B.gone=[];
   for(const b of B.props)if(!M.props.includes(b))M.props.push(b);for(const b of B.chips)if(!M.chips.includes(b))M.chips.push(b);
-  for(const m of B.cracks)m.visible=false;B.grp.visible=true;B.grp.matrix.identity();B.grp.matrixWorldNeedsUpdate=true;
+  for(const m of B.cracks)m.visible=false;for(const m of B.hide1)m.visible=true;B.grp.visible=true;B.grp.matrix.identity();B.grp.matrixWorldNeedsUpdate=true;
   for(const P of M.plates||[])if(P.back>1e8){P.back=0;P.grp.visible=true;}}MM.layer=null;}
 function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
 /* loose items (cans, bottles, cones, tools, drips, chairs...): not solid, so they never block anyone; bullets, blasts and people

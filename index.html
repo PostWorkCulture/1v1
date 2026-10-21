@@ -6,6 +6,14 @@
 <meta name="description" content="imok 1v1: a blocky 1v1 Duels shooter (plus a parkour mode), built with three.js.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>imok 1v1</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#16171c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="imok 1v1">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -471,6 +479,18 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .pv{display:flex;flex-direction:column;gap:16px}.pv[hidden]{display:none}
 .pm-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.pm-btns .btn{width:100%}
 .gfx-row .seg{flex:0 1 260px}.gfx-row .seg button{flex:1}.gfx-note{margin:-4px 0 0;font:500 12px/1.35 var(--f-body);color:var(--muted);text-align:left}.gfx-set{margin:12px 0 4px}
+
+#rotate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#16171c;color:#fff;text-align:center;font:500 15px/1.4 var(--f-body)}
+#rotate[hidden]{display:none}
+#rotate>div{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px}
+#rotate b{font:400 22px/1.15 var(--f-display)}
+#rotate span{color:#b9bcc6}
+#rotate .ph{transform-origin:32px 30px;animation:rot-tip 2.4s ease-in-out infinite}
+@keyframes rot-tip{0%,30%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+#a2hs{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;font:500 13px/1.3 var(--f-body);max-width:calc(100% - 24px)}
+#a2hs[hidden]{display:none}
+#a2hs svg{vertical-align:-3px}
+#a2hs button{border:0;background:transparent;font:700 14px/1 var(--f-body);padding:6px 8px;cursor:pointer;color:inherit}
 .pm-set{display:flex;flex-direction:column;gap:12px;padding:14px 16px;border-radius:10px;background:color-mix(in srgb,var(--panel-ink) 5%,transparent)}
 .pm-row{display:flex;align-items:center;justify-content:space-between;gap:16px;font:600 14px/1.2 var(--f-body);text-align:left}
 .pm-set .sens{grid-template-columns:1fr minmax(0,220px) 52px}
@@ -619,6 +639,12 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 @media (max-width:560px){.mfull .gun-opt .t{flex-direction:column;align-items:flex-start;gap:1px;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.mfull .gun-opt{min-width:0}}
 .mstart{background:#d8322b !important;font-size:22px;padding:14px}
 .mstart.ready{background:#2fa84f !important}
+/* phones: the menu scrolls, so Start / Play float in the corner instead of sitting at the very bottom */
+@media (pointer:coarse) and (max-height:520px){
+  #menu #d-start,#menu #play{position:fixed;right:calc(max(14px,env(safe-area-inset-right,0px)) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:30;width:auto;min-width:150px;padding:12px 26px;font-size:20px;box-shadow:0 5px 0 rgba(0,0,0,.35),0 0 0 2px #14161c}
+  #menu .mfoot{padding-bottom:64px}
+}
+
 .mneed{font:600 12.5px/1.3 var(--f-body);color:var(--accent);min-height:16px;text-align:center}
 .mneed.ok{color:var(--good)}
 .mfull .keys{justify-content:center;font-size:12px}
@@ -965,6 +991,29 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
   </div>
 </div>
 
+<div id="rotate" hidden><div><svg viewBox="0 0 64 64" width="72" height="72" aria-hidden="true"><g class="ph"><rect x="20" y="8" width="24" height="44" rx="5" fill="#ff4a3d" stroke="#fff" stroke-width="3.5"/><circle cx="32" cy="45" r="2.4" fill="#fff"/></g></svg><b>Turn your phone sideways</b><span>imok 1v1 plays in landscape</span></div></div>
+<div id="a2hs" class="panel" hidden><span><b>Play full screen:</b> tap <svg viewBox="0 0 24 24" width="16" height="16" aria-label="Share"><path d="M12 3v12M7 8l5-5 5 5M5 12v8h14v-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> then <b>Add to Home Screen</b></span><button id="a2hs-x" aria-label="Dismiss">✕</button></div>
+<script>
+/* phone shell: rotate prompt, full screen + landscape lock when a game starts (Android), add-to-home-screen tip (iPhone), offline cache */
+(function(){
+  const touch=matchMedia('(pointer:coarse)').matches,standalone=matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches||navigator.standalone===true;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform));
+  const portrait=matchMedia('(orientation: portrait)');
+  function rot(){const show=touch&&portrait.matches;const el=document.getElementById('rotate');if(el.hidden===!show)return;el.hidden=!show;
+    if(show){const D=window.__duel;if(D&&D.active&&D.S.state!=='menu'&&D.S.state!=='done'&&!D.S.paused)document.getElementById('dt-pause')&&document.getElementById('dt-pause').dispatchEvent(new PointerEvent('pointerdown'));}}
+  portrait.addEventListener?portrait.addEventListener('change',rot):portrait.addListener(rot);window.addEventListener('resize',rot);rot();
+  // called from the Start buttons (needs the tap): no-op on iPhone, which has no page full screen
+  window.goFull=function(){if(!touch||standalone)return;const de=document.documentElement,rf=de.requestFullscreen||de.webkitRequestFullscreen;
+    if(!rf||document.fullscreenElement||document.webkitFullscreenElement)return;
+    try{const p=rf.call(de,{navigationUI:'hide'});const lock=()=>{try{const q=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');if(q&&q.catch)q.catch(()=>{});}catch(e){}};
+      if(p&&p.then)p.then(lock).catch(()=>{});else lock();}catch(e){}};
+  // iPhone Safari keeps its toolbars unless the game is opened from the home screen
+  let seen=false;try{seen=localStorage.getItem('blockrush:a2hs')==='1';}catch(e){}
+  if(ios&&touch&&!standalone&&!seen){const t=document.getElementById('a2hs');t.hidden=false;document.getElementById('a2hs-x').addEventListener('click',()=>{t.hidden=true;try{localStorage.setItem('blockrush:a2hs','1');}catch(e){}});
+    setTimeout(()=>{t.hidden=true;},20000);}
+  if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 <script>
 (function(){
@@ -2031,7 +2080,7 @@ function renderLevelList(){
 function showMenu(){G.state='menu';$('menu').hidden=false;$('hud').hidden=true;$('pause').hidden=true;$('done').hidden=true;$('touch').hidden=true;
   if(G.chaos)endChaos();for(const d of debris)scene.remove(d.o);debris=[];
   if(W.idx!==G.selected)loadLevel(G.selected);else loadLevel(W.idx);resetPlayer();P.yaw=0;renderLevelList();}
-function startLevel(i){
+function startLevel(i){window.goFull&&goFull();
   G.selected=i;store.set('lastLevel',i);loadLevel(i);resetPlayer();for(const d of debris)scene.remove(d.o);debris=[];
   Object.assign(G,{state:'play',level:i,score:0,shownScore:0,coins:0,deaths:0,time:0,combo:0,comboT:0,chaos:null,nextChaos:16+Math.random()*8,slowT:0,timeScale:1});
   hemi.color.set(STYLE.hemi[0]);
@@ -2118,6 +2167,8 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   let mvol=.5,cur=null,blocked=false;const el={};
   try{const v=JSON.parse(localStorage.getItem('blockrush:musvol')||'null');if(typeof v==='number')mvol=Math.max(0,Math.min(1,v));}catch(e){}
   function audio(k){if(!el[k]){const a=new Audio(TRACKS[k]);a.loop=true;a.preload='auto';a.volume=0;a._g=0;el[k]=a;}return el[k];}
+  function level(a,v){if(a._gn===undefined&&ctx&&ctx.state==='running'&&ctx.createMediaElementSource){try{const src=ctx.createMediaElementSource(a),g=ctx.createGain();src.connect(g);g.connect(ctx.destination);a._gn=g;a.volume=1;}catch(e){a._gn=null;}}
+    if(a._gn)a._gn.gain.value=v;else a.volume=v;}
   function want(){const D=window.__duel,B=window.__br;
     if(D&&D.active){const st=D.S.state;if(st==='menu')return 'menu';if(st==='done')return 'matchend';if(st==='roundEnd'||st==='countdown')return 'rounds';return null;}
     if(B&&B.G&&B.G.state==='menu')return 'menu';return null;}
@@ -2127,7 +2178,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   document.addEventListener('visibilitychange',()=>{if(document.hidden)for(const k in el){el[k]._g=0;el[k].volume=0;el[k].pause();}else cur=null;});
   setInterval(()=>{if(blocked||document.hidden)return;const w=mvol>0?want():null;
     if(w!==cur){if(w==='matchend'&&el.matchend)el.matchend.currentTime=0;cur=w;if(w){const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{blocked=true;cur=null;});}}
-    for(const k in el){const a=el[k],tgt=k===cur?mvol*.55:0;a._g+=(tgt-a._g)*(tgt>a._g?.12:.2);if(Math.abs(tgt-a._g)<.003)a._g=tgt;a.volume=Math.max(0,Math.min(1,a._g));if(a._g===0&&!a.paused&&k!==cur)a.pause();}},100);
+    for(const k in el){const a=el[k],tgt=k===cur?mvol*.55:0;a._g+=(tgt-a._g)*(tgt>a._g?.12:.2);if(Math.abs(tgt-a._g)<.003)a._g=tgt;level(a,Math.max(0,Math.min(1,a._g)));if(a._g===0&&!a.paused&&k!==cur)a.pause();}},100);
   const mu=()=>{if(!blocked)return;blocked=false;const w=mvol>0?want():null;if(w){cur=w;const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{});}};['pointerdown','keydown','touchstart'].forEach(e=>window.addEventListener(e,mu,{capture:true,passive:true}));
   function msync(){document.querySelectorAll('[data-mvol]').forEach(i=>{i.value=mvol;});document.querySelectorAll('[data-mvol-val]').forEach(b=>{b.textContent=Math.round(mvol*100)+'%';});}
   document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.mvol!=null){mvol=Math.max(0,Math.min(1,+e.target.value));try{localStorage.setItem('blockrush:musvol',JSON.stringify(mvol));}catch(err){}msync();}});
@@ -5746,7 +5797,7 @@ function updCamera(dt){
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'grenade');if(S.mode==='rumble')ME.primary=ME.secondary='fists';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];

@@ -844,7 +844,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <div class="pk-groups">
         <div class="pk-g"><div class="eyebrow">Move</div><div class="pause-keys">
           <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Move</em>
-          <span><kbd>Space</kbd></span><em>Jump</em>
+          <span><kbd>Space</kbd></span><em>Jump (press again in mid-air to double jump, needs over half stamina)</em>
           <span><kbd>C</kbd></span><em>Crouch (press again to stand)</em>
           <span><kbd>Shift</kbd> hold</span><em>Run (uses stamina; getting shot drains it too)</em>
           <span>Mouse</span><em>Look (click the game to lock)</em>
@@ -3950,8 +3950,10 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char
   const acc=f.thrownT>0?0:f.stunT>0?8:f.hookT>0?5:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
-  if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=C.dbl?1:0;f.jumpLock=true;}
-  else if(jumpPress&&!f.grounded&&f.airJ>0){f.vel.y=jv*1.08;f.airJ--;emit(f.pos.x,f.pos.y+.2,f.pos.z,{n:16,speed:4,size:.18,life:.35,grav:0,colors:['#ffffff',C.color]});}
+  if(f.grounded)f.airJ=1;
+  if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=1;f.jumpLock=true;f._jt=S.t;}
+  // double jump: one extra jump in mid-air, only with more than half stamina, and it costs some
+  else if(jumpPress&&!f.grounded&&f.airJ>0&&!f.carrying&&(f.stam??STAM_MAX)>STAM_MAX*.5){f.vel.y=Math.max(f.vel.y,jv*1.05);f.airJ--;f.stam-=DJ_COST;f.stamRest=0;if(f===ME)sfx('swing',null,{vol:.5});emit(f.pos.x,f.pos.y+.2,f.pos.z,{n:16,speed:4,size:.18,life:.35,grav:0,colors:['#ffffff',C.color]});}
   if(!jump)f.jumpLock=false;
   if(C.jet&&jump&&!f.grounded&&f.fuel>0&&!f.downed){f.vel.y=Math.min(f.vel.y+58*dt,9);f.fuel-=dt;f.jetOn=.1;if(Math.random()<.8)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.9,f.pos.z-Math.cos(f.yaw)*.4,{n:2,speed:1.5,up:-4,size:.25,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#f4f4f4']});}
   if(f.grounded)f.fuel=Math.min(2.5,f.fuel+dt*1.1);
@@ -5052,7 +5054,7 @@ function stunBlast(src,at){blastMarks(at,null,GUNS.stun.radius*.45);sfx('stun',a
 function tickCons(f,dt){f.consT-=dt;tickStam(f,dt);if(f.shopCD>0)f.shopCD=Math.max(0,f.shopCD-dt);f.nadeT=(f.nadeT||0)-dt;if(f.speedT>0){f.speedT=Math.max(0,f.speedT-dt);if(Math.hypot(f.vel.x,f.vel.z)>4&&Math.random()<.4)emit(f.pos.x,f.pos.y+.15,f.pos.z,{n:1,speed:.3,size:.14,life:.3,grav:0,colors:['#f08a24','#ffd23f']});}if(f.stimT>0){f.stimT-=dt;if(Math.hypot(f.vel.x,f.vel.z)>3&&Math.random()<.7)emit(f.pos.x+rnd(-.3,.3),f.pos.y+rnd(.3,1.8),f.pos.z+rnd(-.3,.3),{n:1,speed:.2,size:.12,life:.35,grav:0,colors:['#b6ff3b','#3bff8a']});}
   if(f.senseT>0)f.senseT-=dt;if(f.blindT>0)f.blindT-=dt;}
 /* stamina and health regen */
-const AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=16,STAM_DELAY=1,STAM_MIN=25,SPRINT_MUL=1.4,REGEN_DELAY=5,REGEN_RATE=3;
+const DJ_COST=15,AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=16,STAM_DELAY=1,STAM_MIN=25,SPRINT_MUL=1.4,REGEN_DELAY=5,REGEN_RATE=3;
 function tickStam(f,dt){if(f===ME&&S.state==='fight'&&f.alive&&!f.downed&&f.hp<f.hpMax*.3){f.heartT=(f.heartT||0)-dt;if(f.heartT<=0){f.heartT=f.hp<f.hpMax*.15?.75:1.05;sfx('heart',null,{jitter:0});}}else if(f===ME)f.heartT=0;// running drains stamina, and so does aiming down sights (a bit slower); at 0 you move 25% slower until it's back to a quarter
   if(f.sprinting||(f.ads&&f.alive&&!f.downed&&S.state==='fight')){f.stam=Math.max(0,f.stam-STAM_DRAIN*(f.sprinting?1:.6)*dt);f.stamRest=0;if(f.stam<=0)f.stamLock=true;}
   else{f.stamRest=(f.stamRest||0)+dt;if(f.stamRest>STAM_DELAY)f.stam=Math.min(STAM_MAX,f.stam+STAM_REGEN*dt);if(f.stam>=STAM_MIN)f.stamLock=false;}
@@ -5366,7 +5368,9 @@ function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.
   if(f.char==='jet'&&!f.grounded&&T.pos.y>f.pos.y+1)jump=true;
   if(S.mode==='rumble'&&f.grounded&&see&&dist>2.2&&dist<4.6&&Math.abs(T.pos.y-f.pos.y)<1&&Math.random()<dt*1.5)jump=true;
   if(S.mode==='rumble'&&!f.grounded&&f.vel.y<-1&&see&&dist<3.1&&f.fireT<=0){f.yaw=Math.atan2(T.pos.x-f.pos.x,T.pos.z-f.pos.z);f.fireT=GUNS.fists.rate;f.kick=1;melee(f);}
-  return{wx,wz,jump,jumpPress:false};}
+  // bots double jump now and then near the top of a jump (to get unstuck, reach high ground or juke)
+  const jp=!f.grounded&&f.airJ>0&&S.t-(f._jt||-9)<1.2&&f.vel.y<2.5&&f.vel.y>-5&&f.char!=='jet'&&Math.random()<dt*(a.stuckT>.5||T.pos.y>f.pos.y+1.5?10:3);
+  return{wx,wz,jump,jumpPress:jp};}
 
 /* ================= input ================= */
 const keys={};let mouseL=false,mouseR=false;

@@ -56,7 +56,7 @@ Menu descriptions are short: Grenade "BOOM!", Stim "45% Speed 6s", Stun "Stunned
 
 **Bots under fire** – when a bot gets shot it picks a reaction instead of always walling up: dodging side to side with hops, ducking into cover, backing off, relocating round your side, walling up (less often) or just fighting on. Rushers and breachers mostly fight on.
 
-**Armour plates** – a few glowing blue armour plates sit on the hardest places to get to on each map (high roofs on Maple Street, the upstairs of The House, the shed roof in the Backyard). Grab one for +50 armour (up to 100); it comes back 30 seconds later and at every round start.
+**Armour plates** – a few glowing blue armour plates sit on the hardest places to get to on each map (high roofs on Maple Street, the upstairs of The House, the shed roof in the Backyard). Grab one for +50 armour (up to 100); it comes back 30 seconds later and at every round start. Armour doesn't carry over: everyone starts each round with none.
 
 **Cover** – bullets go through wood (fences, sheds, furniture, wooden floors and crates; each layer takes off 30% of the damage, up to three layers) but not through concrete, brick, walls, cars or built walls. Bodies can't pass through solid structures: throws and slams stop at walls, a Home run finisher stops at the first wall it hits, and anyone pushed into a wall is moved back out.
 

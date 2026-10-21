@@ -2339,7 +2339,7 @@ function roofGable(x,z,w,d,y,color,alongX,tx,endC){const h=2.6,slope=Math.atan2(
   const tg=new THREE.ShapeGeometry(tri);for(const s of [-1,1]){const t=new THREE.Mesh(tg,mat(endC||'#f3efe6',null,{side:THREE.DoubleSide}));
     if(alongX){t.position.set(x+s*w/2,y,z);t.rotation.y=Math.PI/2;}else t.position.set(x,y,z+s*d/2);M.group.add(t);}
   // walkable: nested stepped colliders follow both slopes up to the ridge (also acts as the ceiling below)
-  const n=6,hw2=hw+.3,ext=(alongX?w:d)/2+.4;for(let i=0;i<n;i++){const r=hw2-i*hw2/n,top=y+(i+.5)*h/n+.17;
+  const n=12,hw2=hw+.3,ext=(alongX?w:d)/2+.4;for(let i=0;i<n;i++){const r=hw2-i*hw2/n,top=y+(i+.5)*h/n+.17;
     if(alongX)collider(x-ext,x+ext,y,top,z-r,z+r);else collider(x-r,x+r,y,top,z-ext,z+ext);}}
 function house(x,z,w,d,face,wall,roof){ // face: +1 = facade looks toward -x (street at x<), -1 toward +x
   box(x,0,z,w,5.2,d,wall,{tx:'siding'});roofGable(x,z,w,d,5.2,roof,true);
@@ -2661,14 +2661,14 @@ function wcWall(axis,at,a0,a1,y0,y1,ops,c,o,t=.5){ops=(ops||[]).slice().sort((p,
 function wcStairs(start,dir,b0,b1,y0,y1,n,run,c,alongZ){St(0,0,1).stairs(start,dir,b0,b1,y0,n,(y1-y0)/n,run,c,alongZ);}
 function wcRock(x,z,w,d,h,y0=WC.G,c='#8f877d'){const b=box(x,y0,z,w,h,d,c,{tx:'rock',edges:false});
   const r=mat('#9a9288','rock');let s=Math.abs(Math.floor(x*13+z*7))+3;const rn=()=>{s=(s*16807)%2147483647;return s/2147483647;};
-  for(let i=0;i<3;i++){const g=new THREE.IcosahedronGeometry(Math.min(w,d)*(.32+rn()*.12),0);const m=deco(g,r,x+(rn()-.5)*w*.6,y0+h*(.75+rn()*.2),z+(rn()-.5)*d*.6);m.rotation.set(rn()*3,rn()*3,0);}
+  for(let i=0;i<3;i++){const rr=Math.min(w,d)*(.32+rn()*.12),g=new THREE.IcosahedronGeometry(rr,0);const ox=(rn()-.5)*Math.max(0,w-2*rr),oz=(rn()-.5)*Math.max(0,d-2*rr);const m=deco(g,r,x+ox,y0+h-rr*(1+rn()*.25),z+oz);m.rotation.set(rn()*3,rn()*3,0);}
   return b;}
 function wcCrate(x,y,z,s=1.2,c='#b8894f'){const b=box(x,y,z,s,s,s,c,{tx:'wood'});box(x,y+s*.42,z,s+.04,s*.12,s+.04,'#7a5232',{solid:false,edges:false});return b;}
 function wcBarrel(x,y,z,h=1.1,c='#8a5a34'){collider(x-.45,x+.45,y,y+h,z-.45,z+.45);const m=deco(new THREE.CylinderGeometry(.45,.45,h,14),mat(c,'wood'),x,y+h/2,z);
   for(const k of [.2,.8])deco(new THREE.CylinderGeometry(.47,.47,.07,14),mat('#3a3d45'),x,y+h*k,z);return m;}
-function wcPalm(x,z,ang,lean=1,y0=WC.G,solid=true){const n=8,dx=Math.cos(ang),dz=Math.sin(ang);if(solid)collider(x-.35,x+.35,y0,y0+3,z-.35,z+.35);
+function wcPalm(x,z,ang,lean=1,y0=WC.G,solid=true){const n=8,dx=Math.cos(ang),dz=Math.sin(ang);
   const tm=mat('#8a6a45'),tm2=mat('#7a5a38');let px=x,py=y0,pz=z;
-  for(let i=0;i<n;i++){const off=lean*i*i*.045;const m=deco(B.boxGeo(.62-i*.025,1.05,.62-i*.025),i%2?tm:tm2,x+dx*off,y0+.55+i*1.02,z+dz*off);m.rotation.y=i*.4;px=x+dx*off;py=y0+.55+i*1.02;pz=z+dz*off;}
+  for(let i=0;i<n;i++){const off=lean*i*i*.045;const m=deco(B.boxGeo(.62-i*.025,1.05,.62-i*.025),i%2?tm:tm2,x+dx*off,y0+.55+i*1.02,z+dz*off);m.rotation.y=i*.4;if(solid){const hw=(.62-i*.025)*.42,sx=x+dx*off,sz=z+dz*off;collider(sx-hw,sx+hw,y0+i*1.02,y0+(i+1)*1.02+.05,sz-hw,sz+hw);}px=x+dx*off;py=y0+.55+i*1.02;pz=z+dz*off;}
   const top=new THREE.Group();top.position.set(px,py+.5,pz);M.group.add(top);const lm=mat('#3f9a3c'),lm2=mat('#4fb24a');
   for(let k=0;k<8;k++){const p=new THREE.Group();p.rotation.y=k*Math.PI*2/8+ang;top.add(p);const lf=new THREE.Mesh(B.boxGeo(3.4,.12,.9),k%2?lm:lm2);lf.position.x=1.7;lf.rotation.z=-.42;lf.castShadow=true;p.add(lf);
     const tip=new THREE.Mesh(B.boxGeo(1.2,.1,.6),k%2?lm2:lm);tip.position.set(3.6,-.95,0);tip.rotation.z=-.85;tip.castShadow=true;p.add(tip);}
@@ -2677,7 +2677,7 @@ function wcPalm(x,z,ang,lean=1,y0=WC.G,solid=true){const n=8,dx=Math.cos(ang),dz
 function wcUmbrella(x,z,c1,c2,towel,ry=0){const G=WC.G;box(x,G,z,.14,2.6,.14,'#f4efe6',{edges:false});
   for(let i=0;i<8;i++){const g=new THREE.ConeGeometry(1.9,.7,8,1,true,i*Math.PI/4,Math.PI/4);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:i%2?c1:c2,side:THREE.DoubleSide,roughness:.8}));m.position.set(x,G+2.85,z);m.castShadow=true;M.group.add(m);}
   floor(x+.8*Math.cos(ry)-.9,x+.8*Math.cos(ry)+.9,z+.8*Math.sin(ry)-1.1,z+.8*Math.sin(ry)+1.1,towel,null,G+.02,1);
-  const cx=x-1.6*Math.cos(ry),cz=z-1.6*Math.sin(ry);box(cx,G,cz,.8,.4,1.6,'#f4efe6',{edges:false});const back=box(cx,G+.4,cz-.6,.8,.9,.12,c1,{solid:false,edges:false});back.rotation.x=-.5;}
+  const cx=x-1.6*Math.cos(ry),cz=z-1.6*Math.sin(ry);box(cx,G,cz,.8,.4,1.6,'#f4efe6',{edges:false});const back=box(cx,G+.4,cz-.6,.8,.9,.12,c1,{solid:false,edges:false});back.rotation.x=-.5;collider(cx-.4,cx+.4,G+.4,G+1.15,cz-.95,cz-.45);}
 function wcBirds(col,o={}){const R=Math.random,bm=new THREE.MeshLambertMaterial({color:col}),wm=new THREE.MeshLambertMaterial({color:o.wing||col}),flocks=[];let next=3+R()*6;(M.flockLists=M.flockLists||[]).push(flocks);
   const bird=()=>{const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.6),bm));
     const wing=s=>{const p=new THREE.Group();const w=new THREE.Mesh(new THREE.BoxGeometry(.7,.05,.32),wm);w.position.x=s*.35;p.add(w);p.position.x=s*.1;g.add(p);return p;};g.userData.w=[wing(-1),wing(1)];return g;};
@@ -2910,7 +2910,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   for(const [x,h] of [[HX0+.25,3.6],[HX1-.25,2.4]])for(let i=0;i<4;i++)wcBox(x-.25,x+.25,G,G+h-i*.7,4.2-i*.6,5,hullD,{tx:'wood',wood:false});
   // prow and bowsprit
   wcBox(-7.2,-.8,G,F2+1.1,27,28.6,hull,HULL);wcBox(-5.6,-2.4,G,F2+1.1,28.6,30,hull,HULL);
-  {const bs=new THREE.Mesh(new THREE.CylinderGeometry(.22,.35,11,10),mat('#5b3a22','wood'));bs.position.set(-4,F2+2.2,33);bs.rotation.x=Math.PI/2-.35;M.group.add(bs);
+  {const bs=new THREE.Mesh(new THREE.CylinderGeometry(.22,.35,11,10),mat('#5b3a22','wood'));bs.position.set(-4,F2+2.2,33);bs.rotation.x=Math.PI/2-.35;M.group.add(bs);for(let t=-5;t<=5;t++){const cy=F2+2.2+.343*t,cz=33+.939*t,r=.3-.012*t;collider(-4-r,-4+r,cy-.4,cy+r*.95,cz-.5,cz+.5);}
     const fh=new THREE.Mesh(B.boxGeo(.8,1.6,.8),mat(trim,null,{metalness:.5,roughness:.35}));fh.position.set(-4,F2-.4,30.5);M.group.add(fh);}
   const hb={x0:-5.7,x1:-3.3,z0:9.4,z1:14.2};
   wcBox(HX0+.5,hb.x0,D2-.3,D2,6.6,21,deck,deckO);wcBox(hb.x1,HX1-.5,D2-.3,D2,5.9,21,deck,deckO);wcBox(hb.x0,hb.x1,D2-.3,D2,6.4,hb.z0,deck,deckO);wcBox(hb.x0,hb.x1,D2-.3,D2,hb.z1,21,deck,deckO);
@@ -2940,9 +2940,9 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   // spilled cargo in the gap
   wcCrate(-7.6,G,-2.6);wcCrate(-7.6,G,-1.3,1.1);wcCrate(-7.5,G+1.2,-2.2,1);wcBarrel(-1.6,G,2.8);wcBarrel(-.4,G,3.3);wcCrate(.4,G,-3.2);
   {const cx=-6.4,cz=1.6;wcBox(cx-.7,cx+.7,G,G+.7,cz-.45,cz+.45,'#7a4c2a',{tx:'wood'});wcBox(cx-.72,cx+.72,G+.7,G+.85,cz-.47,cz+.47,trim);
-    const gold=new THREE.Mesh(B.boxGeo(1.1,.3,.6),new THREE.MeshStandardMaterial({color:'#ffd23f',emissive:'#ffb000',emissiveIntensity:.6,metalness:.8,roughness:.3}));gold.position.set(cx,G+.95,cz);M.group.add(gold);
+    const gold=new THREE.Mesh(B.boxGeo(1.1,.3,.6),new THREE.MeshStandardMaterial({color:'#ffd23f',emissive:'#ffb000',emissiveIntensity:.6,metalness:.8,roughness:.3}));gold.position.set(cx,G+.95,cz);M.group.add(gold);collider(cx-.55,cx+.55,G+.85,G+1.1,cz-.3,cz+.3);
     for(let i=0;i<7;i++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.04,10),gold.material);c.position.set(cx+1+R()*1.6,G+.03,cz-1+R()*2);M.group.add(c);}}
-  {const an=new THREE.Group();an.position.set(-2,G+.15,-1.5);an.rotation.set(Math.PI/2,0,.6);M.group.add(an);const am=mat('#3a3d45',null,{metalness:.6,roughness:.5});
+  {const an=new THREE.Group();an.position.set(-2,G+.15,-1.5);an.rotation.set(Math.PI/2,0,.6);M.group.add(an);collider(-3,-1,G,G+.3,-2.9,-.1);const am=mat('#3a3d45',null,{metalness:.6,roughness:.5});
     const sh=new THREE.Mesh(B.boxGeo(.3,3.2,.3),am);an.add(sh);const ar=new THREE.Mesh(new THREE.TorusGeometry(1.1,.14,6,12,Math.PI),am);ar.rotation.z=Math.PI;ar.position.y=-1.2;an.add(ar);const rg=new THREE.Mesh(new THREE.TorusGeometry(.35,.08,6,10),am);rg.position.y=1.8;an.add(rg);}
 
   /* ---------- Tiki Bar (north, beach side) ---------- */
@@ -2952,7 +2952,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcBox(-30,-22,y,y+1.1,37,38,'#8a5a34',{tx:'wood'});wcBox(-30.2,-21.8,y+1.1,y+1.22,36.8,38.2,'#c99a5b',{tx:'wood'});wcBox(-31,-30,y,y+1.1,33.6,38,'#8a5a34',{tx:'wood'});
     wcBox(-31,-21,y,y+2.2,40.8,41.4,'#6b4a2c',{tx:'wood'});
     for(let i=0;i<12;i++){const b=new THREE.Mesh(B.boxGeo(.18,.5,.18),mat(['#3bb54a','#2f7fe0','#e8463a','#f4c22b','#ffffff'][i%5],null,{roughness:.2,metalness:.2}));b.position.set(-30.4+i*.8,y+2.45,41);M.group.add(b);}
-    for(let i=0;i<5;i++)box(-29+i*1.6,y,36.2,.55,.75,.55,'#e8463a',{solid:false,edges:false});
+    for(let i=0;i<5;i++)box(-29+i*1.6,y,36.2,.55,.75,.55,'#e8463a',{edges:false});
     for(const [x,z] of [[-30.5,32.2],[-22,32.4]]){wcBox(x-.6,x+.6,y,y+.95,z-.6,z+.6,'#7a4c2a',{tx:'wood'});box(x,y+.95,z,.08,1.4,.08,'#f4efe6',{solid:false,edges:false});
       const um=new THREE.Mesh(new THREE.ConeGeometry(1.3,.5,8),mat('#f4c22b','thatch'));um.position.set(x,y+2.5,z);M.group.add(um);}
     // fairy lights round the eaves
@@ -2963,7 +2963,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       const s2=s.clone();s2.position.z=29.5;s2.rotation.y=0;s2.position.z=29.45;}
     // climb onto the thatch: keg, crate, crates
     wcBarrel(-35.6,G,37.8);wcCrate(-35.7,G,39.3,1.2);wcCrate(-35.7,G+1.2,39.3,1.1);wcCrate(-35.6,G,40.8,1.2);wcCrate(-35.6,G+1.2,40.8,1.2);wcCrate(-35.6,G+2.4,40.9,1.1);
-    for(const [x,z,c] of [[-17.4,33,'#2f7fe0'],[-17.4,34.2,'#f4c22b'],[-17.4,35.4,'#e8463a']]){const sb=box(x,G,z,.25,2.6,.75,c,{solid:false});sb.rotation.z=.12;}}
+    for(const [x,z,c] of [[-17.4,33,'#2f7fe0'],[-17.4,34.2,'#f4c22b'],[-17.4,35.4,'#e8463a']]){const sb=box(x,G,z,.25,2.6,.75,c,{solid:false});sb.rotation.z=.12;collider(x-.3,x+.3,G,G+2.6,z-.375,z+.375);}}
 
   /* ---------- lifeguard tower (south, near the water) ---------- */
   {const cx=10,cz=-40,PL=G+4,red='#e8463a',w='#ffffff';
@@ -2973,11 +2973,11 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcWall('x',-42.25,7.9,12.4,PL,PL+2.6,[{c:10.3,w:2.6,y0:PL+1.1,y1:PL+2.3}],w,{},.3);wcWall('x',-37.75,7.9,12.4,PL,PL+2.6,[{c:10.3,w:2.6,y0:PL+1.1,y1:PL+2.3}],w,{},.3);
     wcBox(12.1,12.4,PL,PL+1.1,-42.1,-37.9,red);wcBox(7.3,12.8,PL+2.6,PL+2.85,-42.8,-37.2,red);
     wcStairs(1.6,1,-39.5,-37.75,G,PL,10,.6,'#d9dde3');
-    for(const z of [-39.4,-37.85])for(let i=0;i<3;i++)wcBox(2+i*2,2.15+i*2,G,G+i*1.3+1.2,z-.07,z+.07,'#d9dde3',{solid:false});
-    box(12.6,PL+2.85,-37.4,.1,3.4,.1,'#3a3d45',{solid:false});{const fl=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.9),new THREE.MeshStandardMaterial({color:red,side:THREE.DoubleSide}));fl.position.set(12.6,PL+5.7,-38.1);fl.rotation.y=Math.PI/2;fl.userData.dyn=1;M.group.add(fl);
+    for(const z of [-39.4,-37.85])for(let i=0;i<3;i++)wcBox(2+i*2,2.15+i*2,G,G+i*1.3+1.2,z-.07,z+.07,'#d9dde3');
+    box(12.6,PL+2.85,-37.4,.1,3.4,.1,'#3a3d45');{const fl=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.9),new THREE.MeshStandardMaterial({color:red,side:THREE.DoubleSide}));fl.position.set(12.6,PL+5.7,-38.1);fl.rotation.y=Math.PI/2;fl.userData.dyn=1;M.group.add(fl);
       M.life.push(t=>{fl.rotation.y=Math.PI/2+Math.sin(t*3)*.15;});}
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.42,.13,8,16),mat('#ff7a1f'));ring.position.set(12.42,PL+1.8,-40);ring.rotation.y=Math.PI/2;M.group.add(ring);
-    const rb=box(13,G,-35.6,.5,2.6,.7,'#ffd23f',{solid:false});rb.rotation.z=-.2;}
+    const rb=box(13,G,-35.6,.5,2.6,.7,'#ffd23f',{solid:false});rb.rotation.z=-.2;collider(12.7,13.5,G,G+2.5,-35.95,-35.25);}
 
   /* ---------- jetty with a moored fishing boat (north, in the water) ---------- */
   {const J=2.9,wd='#a8794c';wcStairs(10.4,1,45.5,48.5,G,J,6,.6,'#8a5a34');
@@ -2985,16 +2985,16 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     for(let x=16;x<=40;x+=4)for(const z of [45.6,48.4])wcBox(x-.15,x+.15,0,J-.25,z-.15,z+.15,'#5b3a22',{tx:'wood'});
     for(const [x,z] of [[36.2,43.2],[41.8,43.2],[36.2,52.8],[41.8,52.8]])wcBox(x-.15,x+.15,0,J-.25,z-.15,z+.15,'#5b3a22',{tx:'wood'});
     for(const [x,z] of [[20,45.8],[30,48.2],[38,43.3],[41.6,50]]){wcBox(x-.22,x+.22,J,J+.55,z-.22,z+.22,'#3a3d45');}
-    for(const x of [22,34]){box(x,J,48.35,.12,3.2,.12,'#3a3d45',{solid:false});const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(x,J+3.4,48.35);M.group.add(l);}
+    for(const x of [22,34]){box(x,J,48.35,.12,3.2,.12,'#3a3d45');const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(x,J+3.4,48.35);M.group.add(l);}
     wcCrate(27,J,46.3,1.2);wcCrate(27,J+1.2,46.3,1.1);wcCrate(39.5,J,51.6,1.2);wcCrate(40.8,J,51.6,1.2);
-    for(const [x,z] of [[37.2,51.4],[37.2,52.4]]){const p=wcBox(x-.4,x+.4,J,J+.7,z-.4,z+.4,'#c84a2a',{solid:false});}
+    for(const [x,z] of [[37.2,51.4],[37.2,52.4]]){const p=wcBox(x-.4,x+.4,J,J+.7,z-.4,z+.4,'#c84a2a');}
     // the boat: wide and roomy now. Board it from the jetty (drop through the gate), up the swim platform at the stern, or climb crates onto the wheelhouse roof
     const BD=1.3,bz0=31.5,bz1=42.5,bx0=29,bx1=43,wh='#f4f5f7',bl='#2f63c8';
     wcBox(bx0+.3,bx1-.3,0,BD,bz0+.3,bz1-.3,'#b8894f',{tx:'wood'});
     wcWall('x',bz0+.15,bx0,bx1,0,BD+1,[],wh,{},.3);wcWall('x',bz1-.15,bx0,bx1,0,BD+1,[{c:39,w:2.6,y0:BD,y1:9}],wh,{},.3);
     wcWall('z',bx0+.15,bz0,bz1,0,BD+1,[{c:37,w:3.6,y0:BD,y1:9}],wh,{},.3);wcWall('z',bx1-.15,bz0,bz1,0,BD+1,[],wh,{},.3);
     for(const z of [bz0+.15,bz1-.15])box((bx0+bx1)/2,.35,z,bx1-bx0+.04,.3,.34,bl,{solid:false,edges:false});
-    {const pr=new THREE.Mesh(new THREE.ConeGeometry(2.75,3,4),mat(wh));pr.rotation.z=-Math.PI/2;pr.rotation.x=Math.PI/4;pr.scale.set(1,1,.84*2);pr.position.set(bx1+1.4,.8,(bz0+bz1)/2);pr.castShadow=true;M.group.add(pr);}
+    {const pr=new THREE.Mesh(new THREE.ConeGeometry(2.75,3,4),mat(wh));pr.rotation.z=-Math.PI/2;pr.rotation.x=Math.PI/4;pr.scale.set(1,1,.84*2);pr.position.set(bx1+1.4,.8,(bz0+bz1)/2);pr.castShadow=true;M.group.add(pr);const cz=(bz0+bz1)/2;collider(bx1,bx1+1.2,0,BD+.6,cz-3.6,cz+3.6);collider(bx1+1.2,bx1+2.4,0,BD,cz-1.8,cz+1.8);}
     // swim platform and steps across the back
     wcBox(bx0-1.6,bx0,0,.45,35,39,'#9aa0a8');wcBox(bx0-.8,bx0,0,.9,35,39,'#9aa0a8');
     // wheelhouse: 5 m square with a wide doorway at the back, doors both sides and big windows to shoot from
@@ -3003,11 +3003,11 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcWall('x',wz0+.15,wx0,wx1,BD,WT,[{c:35.4,w:1.6,y0:BD,y1:BD+2.6},{c:37.8,w:1.6,y0:BD+1.1,y1:BD+2.5}],wh,{},.3);wcWall('x',wz1-.15,wx0,wx1,BD,WT,[{c:35.4,w:1.6,y0:BD,y1:BD+2.6},{c:37.8,w:1.6,y0:BD+1.1,y1:BD+2.5}],wh,{},.3);
     wcBox(wx0-.2,wx1+.2,WT,WT+.2,wz0-.2,wz1+.2,bl);
     for(const [a,b,c,d] of [[wx0-.2,wx1+.2,wz0-.2,wz0-.1],[wx0-.2,wx1+.2,wz1+.1,wz1+.2],[wx1+.1,wx1+.2,wz0-.2,wz1+.2]])wcBox(a,b,WT+.2,WT+1,c,d,'#d9dde3');
-    box(37.5,WT+.2,37,.12,3.6,.12,'#d9dde3',{solid:false});
+    box(37.5,WT+.2,37,.12,3.6,.12,'#d9dde3');
     wcBox(38.1,38.9,BD,BD+1.05,36.4,37.6,'#3a3d45');deco(new THREE.TorusGeometry(.32,.05,6,16),mat('#8a5a34'),38.3,BD+1.4,37).rotation.y=Math.PI/2;
     // crates against the back of the wheelhouse step up onto its roof (clear of the doorway)
     wcCrate(33.4,BD,33.4,1);wcCrate(33.4,BD,34.5,1);wcCrate(33.45,BD+1,34.5,.9);
-    wcCrate(31,BD,40.8,1);box(41.4,BD,40.3,1.4,.6,.9,'#3a3d45',{solid:false,edges:false});box(41.2,BD,33,1.6,.5,1.6,'#e8b81f',{solid:false,edges:false});
+    wcCrate(31,BD,40.8,1);box(41.4,BD,40.3,1.4,.6,.9,'#3a3d45',{edges:false});box(41.2,BD,33,1.6,.5,1.6,'#e8b81f',{edges:false});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.11,8,16),mat('#ff7a1f'));ring.position.set(33,BD+.7,bz1+.02);M.group.add(ring);
     const nm=document.createElement('canvas');nm.width=256;nm.height=64;const ng=nm.getContext('2d');ng.fillStyle='#ffffff';ng.fillRect(0,0,256,64);ng.fillStyle='#2f63c8';ng.font='bold 44px Bungee, Impact, sans-serif';ng.textAlign='center';ng.textBaseline='middle';ng.fillText('SALTY',128,34);
     const nt=new THREE.CanvasTexture(nm);if(THREE.SRGBColorSpace)nt.colorSpace=THREE.SRGBColorSpace;const ns=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:nt}));ns.position.set(38.5,BD+.55,bz0-.02);ns.rotation.y=Math.PI;M.group.add(ns);}
@@ -3017,7 +3017,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcWall('x',z0+.15,x0,x1,0,BD+1.1,[],hull,{},.3);wcWall('x',z1-.15,x0,x1,0,BD+1.1,[],hull,{},.3);
     wcWall('z',x0+.15,z0,z1,0,BD+1.1,[{c:-23,w:2.4,y0:BD,y1:9}],hull,{},.3);wcWall('z',x1-.15,z0,z1,0,BD+1.1,[],hull,{},.3);
     for(const z of [z0+.15,z1-.15])box((x0+x1)/2,BD+.75,z,x1-x0+.04,.35,.34,wh,{solid:false,edges:false});
-    {const pr=new THREE.Mesh(new THREE.ConeGeometry(2.75,3,4),mat(hull));pr.rotation.z=-Math.PI/2;pr.rotation.x=Math.PI/4;pr.scale.set(1,1,1.22);pr.position.set(x1+1.4,.9,(z0+z1)/2);pr.castShadow=true;M.group.add(pr);}
+    {const pr=new THREE.Mesh(new THREE.ConeGeometry(2.75,3,4),mat(hull));pr.rotation.z=-Math.PI/2;pr.rotation.x=Math.PI/4;pr.scale.set(1,1,1.22);pr.position.set(x1+1.4,.9,(z0+z1)/2);pr.castShadow=true;M.group.add(pr);const cz=(z0+z1)/2;collider(x1,x1+1.2,0,BD+.6,cz-2.6,cz+2.6);collider(x1+1.2,x1+2.4,0,BD,cz-1.3,cz+1.3);}
     wcBox(x0-1.6,x0,0,.45,-24.4,-21.6,'#9aa0a8');wcBox(x0-.8,x0,0,.9,-24.4,-21.6,'#9aa0a8');
     // wheelhouse with a flying bridge on top: armoured sides with shooting slots, and a gap where the stairs come up
     const wx0=34,wx1=39,wz0=-25.5,wz1=-20.5,WT=BD+3,RT=WT+.25;
@@ -3032,13 +3032,13 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     // crow's nest on the mast, up a steep ladder from the bridge: waist-high walls with slots all round
     collider(39.6,39.95,RT,RT+4.0,-23.2,-22.8);deco(new THREE.CylinderGeometry(.14,.14,7.5,8),mat('#d9dde3'),39.8,RT+3.6,-23);
     wcStairs(35.6,1,-23.5,-22.6,RT,RT+4.2,11,.3,'#d9dde3');
-    const NY=RT+4.2;wcBox(38.9,41.2,NY-.2,NY,-24.2,-21.8,'#5b6070');const ns=c=>({c,w:.6,y0:NY+.65,y1:NY+.95});
+    const NY=RT+4.2;wcBox(38.9,41.2,NY-.2,NY,-24.2,-21.8,'#5b6070');collider(39.65,39.95,NY,NY+3.2,-23.15,-22.85);const ns=c=>({c,w:.6,y0:NY+.65,y1:NY+.95});
     wcWall('x',-24.15,38.9,41.2,NY,NY+1.15,[ns(40.1)],rd,{},.15);wcWall('x',-21.85,38.9,41.2,NY,NY+1.15,[ns(40.1)],rd,{},.15);wcWall('z',41.15,-24.2,-21.8,NY,NY+1.15,[ns(-23)],rd,{},.15);
     wcWall('z',38.95,-24.2,-21.8,NY,NY+1.15,[{c:-23.05,w:1.1,y0:NY,y1:NY+2}],rd,{},.15);
     // aft deck: fish crates, a winch and a pile of nets
     for(const [x,z,y] of [[32.6,-26.1,BD],[32.6,-26.1,BD+.8],[33.5,-26.1,BD],[31.2,-21.3,BD]])wcBox(x-.45,x+.45,y,y+.8,z-.4,z+.4,'#c99a5b',{tx:'wood'});
-    wcBox(30.2,31.4,BD,BD+1.2,-26.6,-25.2,'#3a3d45');deco(new THREE.CylinderGeometry(.5,.5,1.3,12).rotateX(Math.PI/2),mat('#e8463a'),30.8,BD+1.2,-25.9);
-    box(40.6,BD,-23,1.8,.55,2.6,'#6b8a5a',{solid:false,edges:false});box(41,BD,-25.6,1,.9,1,'#e8b81f',{solid:false});
+    wcBox(30.2,31.4,BD,BD+1.2,-26.6,-25.2,'#3a3d45');deco(new THREE.CylinderGeometry(.5,.5,1.3,12).rotateX(Math.PI/2),mat('#e8463a'),30.8,BD+1.2,-25.9);collider(30.15,31.45,BD+1.2,BD+1.7,-26.45,-25.35);
+    box(40.6,BD,-23,1.8,.55,2.6,'#6b8a5a',{edges:false});box(41,BD,-25.6,1,.9,1,'#e8b81f');
     for(const z of [-26.6,-19.4]){const f=new THREE.Mesh(new THREE.SphereGeometry(.28,10,8),mat('#ff7a1f'));f.position.set(36,BD-.2,z+(z<-23?-.35:.35));M.group.add(f);}
     const t=canvasTex(256,64,(g,w,h)=>{g.fillStyle=hull;g.fillRect(0,0,w,h);g.fillStyle='#ffffff';g.font='bold 44px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('MAKO',128,34);});
     for(const [z,ry] of [[z0-.02,Math.PI],[z1+.02,0]]){const m=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:t}));m.position.set(40,.75,z);m.rotation.y=ry;M.group.add(m);}}
@@ -3051,7 +3051,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       floor(-38.7,-36.15,cz-1.4,cz+1.4,'#c99a5b','wood',G+.02,1);});
     // barrel and crates beside the last hut (clear of its door): a hop-up onto the hut roofs
     wcBarrel(-35.2,G,-21.6);wcCrate(-37.5,G,-23.4,1.1);wcCrate(-37.5,G+1.1,-23.4,1);
-    for(let i=0;i<3;i++){const k=box(-34.2,G+.3*i,-49.4+i*.05,.9,.28,3.6,['#ff7a1f','#3bb54a','#ffd23f'][i],{solid:false,edges:false});}wcBox(-34.8,-33.6,G,G+1,-51.4,-47.4,'#8a5a34',{tx:'wood',solid:false});}
+    for(let i=0;i<3;i++){const k=box(-34.2,G+.3*i,-49.4+i*.05,.9,.28,3.6,['#ff7a1f','#3bb54a','#ffd23f'][i],{solid:false,edges:false});}wcBox(-34.8,-33.6,G,G+1,-51.4,-47.4,'#8a5a34',{tx:'wood',solid:false});collider(-34.8,-33.6,G,G+1.32,-51.4,-47.2);}
 
   /* ---------- cliffs and the lookout ledge (west) ---------- */
   {const sa=['#b39a7c','#a48b6e','#bfa585'],bush=mat('#3f8a3a'),bush2=mat('#56a546'),bm=mat('#9c8a74','rock');
@@ -3059,7 +3059,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       box(-41.6,G+h*.45,z+2,1.9,.5,4.25,sa[(i+1)%3],{tx:'rock',edges:false,solid:false});
       const th=h+1+Math.sin(z*.7)*2;box(-50,0,z+2,12,th,4.2,sa[(i+2)%3],{tx:'rock',edges:false,solid:false});box(-50,th,z+2,12,.7,4.2,'#4f9a42',{tx:'grass',edges:false,solid:false});
       for(let k=0;k<2;k++){const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.9+((i*7+k*3)%5)*.25,0),k?bush:bush2);b.position.set(-43.2-k*1.8,th+.5,z+1+k*2);b.castShadow=true;M.group.add(b);}
-      const bo=new THREE.Mesh(new THREE.IcosahedronGeometry(.8+((i*5)%4)*.3,0),bm);bo.position.set(-41.6,G+.3,z+((i*3)%4));bo.rotation.set(i,i*.7,0);bo.castShadow=true;M.group.add(bo);}
+      const bo=new THREE.Mesh(new THREE.IcosahedronGeometry(.8+((i*5)%4)*.3,0),bm);bo.position.set(-41.6,G+.3,z+((i*3)%4));bo.rotation.set(i,i*.7,0);bo.castShadow=true;M.group.add(bo);{const rr=(.8+((i*5)%4)*.3)*.78;collider(-41.6-rr,-41.6+rr,0,G+.3+rr*.95,z+((i*3)%4)-rr,z+((i*3)%4)+rr);}}
     for(const z of [-50,-30,-12,14,34,52])wcPalm(-49,z,-.2+Math.sin(z),.7,9,false);
     // rock steps up both sides to a flat lookout over the wreck
     const L=G+5.6,sc='#a8927a';wcBox(-41,-35.8,G,L,-6,6,sc,{tx:'rock',edges:false});box(-35.7,L-.2,0,.3,.3,12.2,'#4f9a42',{tx:'grass',solid:false,edges:false});
@@ -3075,30 +3075,29 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   {for(const [x0,x1,z0,z1] of [[-28,-16,-8,-7.9],[-28,-16,7.9,8],[-28,-27.9,-8,8],[-16.1,-16,-8,8]])floor(x0,x1,z0,z1,'#2f7fe0',null,G+.02,1);
     for(const x of [-28.6,-15.4])wcBox(x-.12,x+.12,G,G+2.6,-.12,.12,'#d9dde3');
     const net=new THREE.Mesh(new THREE.PlaneGeometry(13,.9,26,2),new THREE.MeshBasicMaterial({color:'#ffffff',wireframe:true,transparent:true,opacity:.75}));net.position.set(-22,G+2.1,0);M.group.add(net);
-    box(-22,G+2.52,0,13.2,.08,.05,'#ffffff',{solid:false,edges:false});const ball=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),mat('#ffd23f'));ball.position.set(-19,G+.22,4);M.group.add(ball);
+    box(-22,G+2.52,0,13.2,.08,.05,'#ffffff',{solid:false,edges:false});collider(-28.5,-15.5,G,G+2.56,-.06,.06);knock(-19,G,4,.44,.44,.44,'#ffd23f',{geo:new THREE.SphereGeometry(.22,12,8)});
     wcBox(-25,-19,G,G+.5,-11.2,-10.6,'#8a5a34',{tx:'wood'});}
   // referee chair by the court: a step and a seat for a look over the net
   {wcBox(-15.2,-14,G,G+1.8,-.6,.6,'#ffffff');wcBox(-15.2,-14,G+1.8,G+2.9,.45,.6,'#2f7fe0');wcBox(-16.3,-15.2,G,G+.9,-.5,.5,'#d9dde3');}
   // ice-cream cart and a picnic table
-  {const x=-12,z=38;wcBox(x-.8,x+.8,G+.3,G+1.4,z-.55,z+.55,'#ffffff');box(x,G+1.4,z,1.66,.12,1.16,'#ff8fab',{solid:false,edges:false});
+  {const x=-12,z=38;wcBox(x-.8,x+.8,G+.3,G+1.4,z-.55,z+.55,'#ffffff');box(x,G+1.4,z,1.66,.12,1.16,'#ff8fab',{edges:false});
     for(const a of [-.6,.6]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.12,12),mat('#2b2d33'));w.rotation.x=Math.PI/2;w.position.set(x+a,G+.3,z+.6);M.group.add(w);}
     box(x,G+1.4,z,.08,1.4,.08,'#f4efe6',{solid:false,edges:false});for(let i=0;i<8;i++){const g=new THREE.ConeGeometry(1.3,.45,8,1,true,i*Math.PI/4,Math.PI/4);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:i%2?'#ff8fab':'#ffffff',side:THREE.DoubleSide}));m.position.set(x,G+3,z);M.group.add(m);}
-    for(const [c,o] of [['#ffd23f',-.4],['#ff8fab',0],['#8ecae6',.4]]){const sc=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),mat(c));sc.position.set(x+o,G+1.6,z);M.group.add(sc);}}
+    for(const [c,o] of [['#ffd23f',-.4],['#ff8fab',0],['#8ecae6',.4]])knock(x+o,G+1.52,z,.32,.32,.32,c,{geo:new THREE.SphereGeometry(.16,8,6)});}
   {const x=-29,z=-36;wcBox(x-1.3,x+1.3,G+.7,G+.85,z-.5,z+.5,'#b88a5a',{tx:'wood'});for(const a of [-1,1])wcBox(x-.08+a*1.1,x+.08+a*1.1,G,G+.7,z-.4,z+.4,'#7a5232',{tx:'wood'});
-    for(const b of [-1,1])box(x,G,z+b*.95,2.6,.45,.35,'#b88a5a',{tx:'wood',solid:false});}
+    for(const b of [-1,1])box(x,G,z+b*.95,2.6,.45,.35,'#b88a5a',{tx:'wood'});}
   // sunbathers between the wreck and the sea
   wcUmbrella(7,-22,'#e8463a','#ffffff','#2f7fe0',0);wcUmbrella(10.5,-15,'#2f7fe0','#ffffff','#ff8fab',.4);wcUmbrella(6.5,-7,'#f4c22b','#ffffff','#3bb54a',-.3);wcUmbrella(13,-1.5,'#3bb54a','#ffffff','#f4c22b',.2);
   wcUmbrella(-15,-28,'#a05ad6','#ffffff','#e8463a',2.8);wcUmbrella(-20,28,'#ff7a1f','#ffffff','#2f7fe0',3);
-  box(9.4,G,-21,.8,.6,.55,'#2f7fe0',{edges:false});box(9.4,G+.6,-21,.85,.1,.6,'#ffffff',{solid:false,edges:false});box(15,G,-1,.8,.6,.55,'#e8463a',{edges:false});
-  {const bb=new THREE.Mesh(new THREE.SphereGeometry(.4,12,8),new THREE.MeshStandardMaterial({color:'#ffffff'}));bb.position.set(8.5,G+.4,-11.5);M.group.add(bb);
-    const bs=new THREE.Mesh(new THREE.SphereGeometry(.405,12,8,0,Math.PI/2),mat('#e8463a'));bs.position.copy(bb.position);M.group.add(bs);const bs2=bs.clone();bs2.material=mat('#2f7fe0');bs2.rotation.y=Math.PI;M.group.add(bs2);}
+  box(9.4,G,-21,.8,.6,.55,'#2f7fe0',{edges:false});box(9.4,G+.6,-21,.85,.1,.6,'#ffffff',{edges:false});box(15,G,-1,.8,.6,.55,'#e8463a',{edges:false});
+  knock(8.5,G,-11.5,.8,.8,.8,'#ffffff',{geo:new THREE.SphereGeometry(.4,12,8),parts:[[new THREE.SphereGeometry(.405,12,8,0,Math.PI/2),'#e8463a',0,0,0],[new THREE.SphereGeometry(.405,12,8,Math.PI,Math.PI/2),'#2f7fe0',0,0,0]],heavy:.7});
   // sandcastle
   {const sc='#e2c48a',x=10.5,z=-8.5;wcBox(x-1,x+1,G,G+.5,z-1,z+1,sc,{tx:'sand'});for(const [a,b] of [[-.7,-.7],[.7,-.7],[-.7,.7],[.7,.7]])wcBox(x+a-.25,x+a+.25,G+.5,G+1,z+b-.25,z+b+.25,sc,{tx:'sand'});wcBox(x-.35,x+.35,G+.5,G+1.3,z-.35,z+.35,sc,{tx:'sand'});
     box(x,G+1.3,z,.04,.6,.04,'#3a3d45',{solid:false,edges:false});box(x+.18,G+1.7,z,.32,.2,.02,'#e8463a',{solid:false,edges:false});}
   // bonfire with log benches
   {const x=8,z=22;for(let a=0;a<3;a++){const ang=a*Math.PI*2/3+.3,bx=x+Math.cos(ang)*3,bz=z+Math.sin(ang)*3;const lg=box(bx,G,bz,2.4,.5,.55,'#7a5232',{tx:'wood'});lg.mesh.rotation.y=-ang+Math.PI/2;
       const r=Math.abs(Math.cos(ang))>Math.abs(Math.sin(ang));lg.x0=bx-(r?.3:1.2);lg.x1=bx+(r?.3:1.2);lg.z0=bz-(r?1.2:.3);lg.z1=bz+(r?1.2:.3);}
-    for(let i=0;i<9;i++){const s=new THREE.Mesh(new THREE.DodecahedronGeometry(.28,0),mat('#6f6a64'));s.position.set(x+Math.cos(i*.7)*1,G+.12,z+Math.sin(i*.7)*1);M.group.add(s);}
+    for(let i=0;i<9;i++){const s=new THREE.Mesh(new THREE.DodecahedronGeometry(.28,0),mat('#6f6a64'));s.position.set(x+Math.cos(i*.7)*1,G+.12,z+Math.sin(i*.7)*1);M.group.add(s);}collider(x-1.15,x+1.15,G,G+.4,z-1.15,z+1.15);
     for(let i=0;i<4;i++){const l=new THREE.Mesh(B.boxGeo(1.4,.18,.18),mat('#4a2f1c'));l.position.set(x,G+.2,z);l.rotation.y=i*Math.PI/4;M.group.add(l);}
     const fm=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9}),fm2=new THREE.MeshBasicMaterial({color:'#ff6a1f',transparent:true,opacity:.85}),fl=[];
     for(let i=0;i<4;i++){const f=new THREE.Mesh(new THREE.ConeGeometry(.35-i*.05,1.1,6),i%2?fm:fm2);f.position.set(x+(i-1.5)*.2,G+.75,z+(i%2-.5)*.25);f.userData.dyn=1;M.group.add(f);fl.push(f);}
@@ -3106,11 +3105,11 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     M.life.push((t,dt)=>{fl.forEach((f,i)=>{const s=.8+.35*Math.abs(Math.sin(t*7+i*2.1))+.15*Math.sin(t*13+i);f.scale.set(1,s,1);f.position.y=G+.25+.55*s;});glow.intensity=5+Math.sin(t*9)*1.2+Math.sin(t*23)*.6;
       if(Math.random()<dt*6)emit(x+(Math.random()-.5)*.5,G+1.2,z+(Math.random()-.5)*.5,{n:1,speed:.4,up:2.2,size:.08,life:1.1,grav:-.4,colors:['#ffd27a','#ff8a3d']});});}
   // surf rack, beached rowboat and kayaks
-  {wcBox(14,15.6,G,G+1.7,9,12.6,'#8a5a34',{tx:'wood'});for(let i=0;i<4;i++){const s=box(14.9,G+1.7,9.4+i*.95,.2,2.1,.6,['#ff7a1f','#2f7fe0','#ffffff','#3bb54a'][i],{solid:false});s.rotation.x=.1;}}
+  {wcBox(14,15.6,G,G+1.7,9,12.6,'#8a5a34',{tx:'wood'});for(let i=0;i<4;i++){const s=box(14.9,G+1.7,9.4+i*.95,.2,2.1,.6,['#ff7a1f','#2f7fe0','#ffffff','#3bb54a'][i],{solid:false});s.rotation.x=.1;}collider(14.75,15.05,G+1.7,G+3.8,9.05,12.4);}
   {const g=new THREE.Group();g.position.set(18,G-.05,-29);g.rotation.set(0,.4,.12);M.group.add(g);const wm=mat('#2f8f3a','wood'),im=mat('#c99a5b','wood');
     const add=(w,h,d,x,y,z,m)=>{const o=new THREE.Mesh(B.boxGeo(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;g.add(o);};add(1.8,.2,4.2,0,.1,0,wm);add(.2,.8,4.2,-.9,.5,0,wm);add(.2,.8,4.2,.9,.5,0,wm);add(1.8,.8,.2,0,.5,-2.1,wm);add(1.6,.12,.4,0,.6,0,im);
     const oar=new THREE.Mesh(B.boxGeo(.1,.06,3),im);oar.position.set(1.4,.05,.6);oar.rotation.y=.3;g.add(oar);collider(16.6,19.4,G,G+.9,-31.3,-26.7);}
-  for(const [z,c] of [[30,'#ff7a1f'],[31.4,'#3bb54a']]){const k=new THREE.Mesh(B.boxGeo(.7,.35,4),mat(c));k.position.set(14.6,G+.18,z);k.rotation.y=.08;M.group.add(k);}
+  for(const [z,c] of [[30,'#ff7a1f'],[31.4,'#3bb54a']]){const k=new THREE.Mesh(B.boxGeo(.7,.35,4),mat(c));k.position.set(14.6,G+.18,z);k.rotation.y=.08;M.group.add(k);collider(14.15,15.05,G,G+.36,z-2,z+2);}
   // striped windbreaks: waist-to-chest high cover along the open waterline lane
   {const wb=(x,z,L,ry,c1,c2)=>{const g=new THREE.Group();g.position.set(x,G,z);g.rotation.y=ry;M.group.add(g);const n=Math.round(L/.6);
       for(let i=0;i<n;i++){const p=new THREE.Mesh(B.boxGeo(.6,1.45,.06),mat(i%2?c1:c2));p.position.set(-L/2+.3+i*.6,.85,0);p.castShadow=true;p.receiveShadow=true;g.add(p);}
@@ -3124,11 +3123,11 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   wcRock(32,4,4.2,3.2,1.8,0,'#857d72');wcRock(33.6,6.2,2.6,2,2.9,0,'#857d72');wcBox(30.2,31.4,0,1.0,5.2,6.4,'#857d72',{tx:'rock',edges:false});
   wcRock(28,-17,2.2,2,1.3,0,'#857d72');wcRock(39,-31,2.6,2.4,2,0,'#857d72');
   // swim raft
-  {wcBox(34,38,0,.75,-9,-5,'#c99a5b',{tx:'wood'});wcBox(33.4,34,0,.4,-7.6,-6.4,'#9aa0a8');box(37.6,.75,-8.6,.1,1.6,.1,'#d9dde3',{solid:false});}
+  {wcBox(34,38,0,.75,-9,-5,'#c99a5b',{tx:'wood'});wcBox(33.4,34,0,.4,-7.6,-6.4,'#9aa0a8');box(37.6,.75,-8.6,.1,1.6,.1,'#d9dde3');}
   // swan pedalo
   {const g=new THREE.Group(),w=mat('#ffffff');const b=new THREE.Mesh(B.boxGeo(2.2,1,3),w);b.position.y=.5;g.add(b);const n1=new THREE.Mesh(B.boxGeo(.4,1.8,.4),w);n1.position.set(0,1.6,1.4);n1.rotation.x=-.15;g.add(n1);
     const hd=new THREE.Mesh(B.boxGeo(.45,.4,.8),w);hd.position.set(0,2.5,1.7);g.add(hd);const bk=new THREE.Mesh(B.boxGeo(.25,.2,.4),mat('#ff7a1f'));bk.position.set(0,2.45,2.2);g.add(bk);
-    const st=new THREE.Mesh(B.boxGeo(1.8,.4,1.2),mat('#e8463a'));st.position.set(0,1.1,-.4);g.add(st);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});wcFloat(g,30,24,{sink:-.3,roll:.03});collider(28.9,31.1,0,1.2,22.5,25.5);}
+    const st=new THREE.Mesh(B.boxGeo(1.8,.4,1.2),mat('#e8463a'));st.position.set(0,1.1,-.4);g.add(st);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});wcFloat(g,30,24,{sink:-.3,roll:.03});collider(28.9,31.1,0,1.2,22.5,25.5);collider(29.75,30.25,1.2,2.75,24.9,26);}
   // buoy line marks the edge of the swimming area
   {const fm=[mat('#e8463a'),mat('#ffffff')];for(let z=-56,i=0;z<=56;z+=3,i++){const b=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),fm[i%2]);b.castShadow=true;wcFloat(b,43.6,z,{sink:0,roll:.2,pitch:.2});}
     const rp=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,112),mat('#f4efe6'));rp.position.set(43.6,.3,0);M.group.add(rp);}
@@ -4144,7 +4143,7 @@ function depen(f){const H=hhOf(f);for(let it=0;it<4;it++){let moved=false;
 function physics(f,dt,wx,wz,jump,speed,jumpPress){if(f.stamLock&&!f.downed)speed*=.75;if(f.dazeT>0)speed*=.25;const v=Math.max(Math.hypot(f.vel.x,f.vel.z),(speed||0)*1.25*((CHARS[f.char]||{}).speed||1)*(f.zipT>0?1.6:1))+Math.abs(f.vel.y)*.5;
   const n=Math.min(5,Math.max(1,Math.ceil(dt*60-.05),Math.ceil(v*dt/.45)));if(n===1){physics1(f,dt,wx,wz,jump,speed,jumpPress);}else for(let i=0;i<n;i++)physics1(f,dt/n,wx,wz,jump,speed,i===0&&jumpPress);
   const bd=M.bounds;if(bd){f.pos.x=clamp(f.pos.x,bd.x0+R,bd.x1-R);f.pos.z=clamp(f.pos.z,bd.z0+R,bd.z1-R);}}
-function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1),range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
+function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
   const acc=f.thrownT>0?0:f.stunT>0?8:f.hookT>0?5:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
@@ -5866,7 +5865,7 @@ function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1
     const rest=sp.filter(q=>!used.includes(q)).sort((p,q)=>(d(p,s)-.5*d(p,other))-(d(q,s)-.5*d(q,other)));const m=rest[0]||s;used.push(m);return m;};
   return[a,mate(a,c),c,mate(c,a)];}
 function clearFx(){for(const f of allFighters()){if(f.finishing){for(const o of f.finishing.obj)scene.remove(o);f.finishing=null;}}hemi.color.set('#ffffff');}
-function startRound(){resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
+function startRound(){resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS)f.armor=0;FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
   for(const n of nums)n.el.remove();nums.length=0;center('3','Round '+S.round);}
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}if(by&&by!==v&&isFoe(by,v))by.k=(by.k||0)+1;v.d=(v.d||0)+1;if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==by&&src!==v&&isFoe(src,v)&&S.t-t<15)src.as=(src.as||0)+1;v.hitBy=null;lbDirty=1;

@@ -2298,9 +2298,9 @@ function townLife(cars,o){const R=Math.random;
   const hitsBox=(c,dz)=>{const b=c.boxes[0],m=.4;for(const x of allBoxes()){if(c.boxes.includes(x)||x.y1<.4||x.y0>b.y1+1)continue;
       if(x.x1>b.x0&&x.x0<b.x1&&x.z1>b.z0+dz-m&&x.z0<b.z1+dz+m)return true;}return false;};
   const move=(c,dz)=>{for(const b of c.boxes){b.z0+=dz;b.z1+=dz;}for(const m of c.parts)m.position.z+=dz;c.z+=dz;for(const w of c.wheels)w.rotation.x+=dz/.42;};
-  for(const c of cars)c.restore=()=>{move(c,c.home-c.z);for(const b of c.boxes){M.boxes.push(b);M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
+  for(const c of cars)c.restore=()=>{burnCar(c,false);move(c,c.home-c.z);for(const b of c.boxes){b.mover=true;if(!M.boxes.includes(b))M.boxes.push(b);if(!M.movers.includes(b))M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
   M.life.push((t,dt)=>{for(const c of cars){
-    if(!c.alive){c.backT-=dt;if(c.backT<=0){const b=c.boxes[0],h=c.home-c.z;if(FS.some(f=>f.alive&&f.pos.x>b.x0-1&&f.pos.x<b.x1+1&&f.pos.z>b.z0+h-1&&f.pos.z<b.z1+h+1&&f.pos.y<3))c.backT=2;else c.restore();}continue;}
+    if(!c.alive)continue;
     if(c.state==='park'){c.wait-=dt;if(c.wait<=0){let tz;for(let k=0;k<6;k++){tz=(R()*2-1)*o.zLim;if(Math.abs(tz-c.z)>10)break;}c.target=tz;c.vmax=4+R()*9;c.state='drive';}continue;}
     const dir=Math.sign(c.target-c.z),left=Math.abs(c.target-c.z);
     const want=Math.min(c.vmax,Math.sqrt(2*5*left));c.v+= (want>c.v?7:-12)*dt;c.v=clamp(c.v,0,c.vmax);
@@ -2380,8 +2380,7 @@ function signTex(text,bg,fg,o={}){return canvasTex(1024,128,(g,w,h)=>{g.fillStyl
   g.fillStyle=fg;g.font='bold 84px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,x,h/2+4);});}
 // parked vehicles that are part of the scenery: bullets wear them down, a blast (or enough bullets) blows them up, and they come back later
 function parkVehicle(c){c.alive=true;c.home=c.z;c.state='park';for(const b of c.boxes)b.car=c;(M.cars||(M.cars=[])).push(c);
-  c.restore=()=>{for(const b of c.boxes){if(!M.boxes.includes(b))M.boxes.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';MM.layer=null;};
-  M.life.push((t,dt)=>{if(c.alive)return;c.backT-=dt;if(c.backT>0)return;const b=c.boxes[0];if(FS.some(f=>f.alive&&f.pos.x>b.x0-1&&f.pos.x<b.x1+1&&f.pos.z>b.z0-1&&f.pos.z<b.z1+1&&f.pos.y<3))c.backT=2;else c.restore();});return c;}
+  c.restore=()=>{burnCar(c,false);for(const b of c.boxes){if(!M.boxes.includes(b))M.boxes.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';MM.layer=null;};return c;}
 function hitCar(c,dmg,at){if(!c.alive)return;c.hp=(c.hp??450)-dmg;emit(at.x,at.y,at.z,{n:4,speed:4,up:1.5,size:.08,life:.3,colors:['#ffd23f','#ffffff',c.color]});
   if(c.hp<180){const b=c.boxes[0];emit((b.x0+b.x1)/2,b.y1+.1,(b.z0+b.z1)/2,{n:2,speed:.6,up:2.5,size:.5,life:1.4,grav:-1.2,colors:['#3a3d45','#55585f','#6e665c']});}
   if(c.hp<=0)wreckCar(c,at);}
@@ -2639,7 +2638,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.flockLists=null;M.gulls=null;M.boats=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.flockLists=null;M.gulls=null;M.boats=null;}
 
 // Ringfenced next Duels maps: shown in the menu as Coming Soon, not playable yet.
 const SOON=[
@@ -3263,7 +3262,7 @@ function rlReel(x,z,c='#b07a4a'){const b=box(x,0,z,1.6,1.4,.9,c,{tx:'wood',chip:
 // site office: a flat-roofed cabin with a roof deck; it cracks under a blast and collapses under a second
 function rlCabin(cx,cz,rot,col){const r=ruinBegin(),S=St(cx,cz,1,1),H=2.9,ax=!rot;
   const W=(...a)=>ax?S.wall(...a):null;
-  if(ax){S.wall('v',-1.9,-4.2,4.2,0,H,[DOOR(1.8,1.6),WIN(-2,1.6)],col,.25);S.wall('v',1.9,-4.2,4.2,0,H,[WIN(-2,1.6),WIN(2,1.6)],col,.25);S.wall('u',-4.05,-1.9,1.9,0,H,[WIN(0,1.4)],col,.25);S.wall('u',4.05,-1.9,1.9,0,H,[],col,.25);
+  if(ax){S.wall('v',-1.9,-4.2,4.2,0,H,[DOOR(1.9,2.4),WIN(-2,1.6)],col,.25);S.wall('v',1.9,-4.2,4.2,0,H,[WIN(-2,1.6),WIN(2,1.6)],col,.25);S.wall('u',-4.05,-1.9,1.9,0,H,[WIN(0,1.4)],col,.25);S.wall('u',4.05,-1.9,1.9,0,H,[],col,.25);
     S.box(-4.2,4.2,-2.05,2.05,H,H+.25,'#d9dde3');S.floor(-4,4,-1.8,1.8,.03,'#c9ced6','tile');
     for(const [u0,u1,v0,v1] of [[-4.2,4.2,-2.05,-1.9],[-4.2,4.2,1.9,2.05],[-4.2,-4.05,-2.05,2.05],[4.05,4.2,-.6,2.05]])S.box(u0,u1,v0,v1,H+.25,H+1.1,'#f4f5f7');
     wcStairs(cx+8.3,-1,cz-1.8,cz-.8,0,H+.25,8,.5,'#9aa0a8');S.box(-3.6,-1.8,-1.8,-1.1,0,.78,'#8a5a34');S.box(2.6,3.9,1.2,1.8,0,1.9,'#9aa0a8',{chip:true,hp:150});
@@ -3275,7 +3274,9 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   // ballast bed under the four tracks runs off both ends of the yard
   floor(-13.5,13.5,-Z-90,Z+90,'#8f877b','rock',.012,1.5);
   const rails=mat('#b8bec6',null,{roughness:.3,metalness:.7});
-  for(const x of [...RL.lines,...RL.sid]){for(const s of [-.75,.75]){const m=new THREE.Mesh(B.boxGeo(.12,.16,2*Z+180),rails);m.position.set(x+s,.11,0);m.receiveShadow=true;M.group.add(m);}
+  const glow=[];for(const x of [...RL.lines,...RL.sid]){const live=RL.lines.indexOf(x);const rm=live>=0?new THREE.MeshStandardMaterial({color:'#b8bec6',roughness:.3,metalness:.7,emissive:'#ff1a0a',emissiveIntensity:0}):rails;
+    for(const s of [-.75,.75]){const m=new THREE.Mesh(B.boxGeo(.12,.16,2*Z+180),rm);m.position.set(x+s,.11,0);m.receiveShadow=true;if(live>=0)m.userData.dyn=1;M.group.add(m);}
+    if(live>=0){const pm=new THREE.MeshBasicMaterial({color:'#ff2a10',transparent:true,opacity:0,depthWrite:false});const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.1,2*Z+180),pm);pl.rotation.x=-Math.PI/2;pl.position.set(x,.2,0);pl.renderOrder=3;pl.userData.dyn=1;M.group.add(pl);glow.push({x,rm,pm,ln:live,k:0});}
     const slp=[];for(let z=-Z-88;z<Z+88;z+=1.3)slp.push(z);const g=B.boxGeo(3.1,.1,.42),sm=mat('#5b4a3a','wood');const im=new THREE.InstancedMesh(g,sm,slp.length);const mx=new THREE.Matrix4();slp.forEach((z,i)=>{mx.makeTranslation(x,.05,z);im.setMatrixAt(i,mx);});im.receiveShadow=true;M.group.add(im);}
   // perimeter fence with gaps for the line; tunnel portals beyond each end swallow the trains
   fence(-X,-Z,-X,Z,2.8,'#6e737c');fence(X,-Z,X,Z,2.8,'#6e737c');fence(-X,-Z,X,-Z,2.8,'#6e737c',[-13.5,13.5]);fence(-X,Z,X,Z,2.8,'#6e737c',[-13.5,13.5]);
@@ -3288,18 +3289,18 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   for(const [x,z] of [[-14.6,-9],[-14.6,6]])rlCrate(x,1.25,z);rlPallet(-15.4,-4,1.25);rlPallet(-15.4,10.5,1.25);
   {const x0=-32,x1=-19,z0=-10,z1=16,H=6.6,col='#a5543a',S2=St(0,0,1);
     wcWall('z',x1,z0,z1,0,H,[{c:-4,w:4,y0:0,y1:4},{c:10,w:4,y0:0,y1:4},{c:3,w:5,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
-    wcWall('z',x0,z0,z1,0,H,[{c:3,w:2.6,y0:0,y1:3},{c:-6,w:4,y0:4.4,y1:5.6},{c:12,w:4,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
-    wcWall('x',z0,x0,x1,0,H,[{c:-24,w:4,y0:0,y1:4}],col,{tx:'brick'},.4);wcWall('x',z1,x0,x1,0,H,[{c:-27,w:3.2,y0:0,y1:3.2},{c:-22,w:3,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
+    wcWall('z',x0,z0,z1,0,H,[{c:3,w:3.6,y0:0,y1:3.4},{c:-6,w:4,y0:4.4,y1:5.6},{c:12,w:4,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
+    wcWall('x',z0,x0,x1,0,H,[{c:-24,w:4,y0:0,y1:4}],col,{tx:'brick'},.4);wcWall('x',z1,x0,x1,0,H,[{c:-27,w:3.6,y0:0,y1:3.4},{c:-22,w:3,y0:4.4,y1:5.6}],col,{tx:'brick'},.4);
     floor(x0,x1,z0,z1,'#9d978b','asphalt',.02,2);
     // roof with a hatch over the mezzanine stairs, parapet round the edge
-    const hz0=-7,hz1=-3.2;wcBox(x0-.2,x1+.2,H,H+.35,z0-.2,hz0,'#5b6070');wcBox(x0-.2,x1+.2,H,H+.35,hz1,z1+.2,'#5b6070');wcBox(x0-.2,-29.2,H,H+.35,hz0,hz1,'#5b6070');wcBox(-27.6,x1+.2,H,H+.35,hz0,hz1,'#5b6070');
+    const hz0=-7,hz1=-1.6;wcBox(x0-.2,x1+.2,H,H+.35,z0-.2,hz0,'#5b6070');wcBox(x0-.2,x1+.2,H,H+.35,hz1,z1+.2,'#5b6070');wcBox(x0-.2,-29.2,H,H+.35,hz0,hz1,'#5b6070');wcBox(-27.6,x1+.2,H,H+.35,hz0,hz1,'#5b6070');
     floor(x0,x1,z0,z1,'#6e737c',null,H+.36,2);
     for(const [a,b,c,d] of [[x0-.2,x1+.2,z0-.2,z0+.1],[x0-.2,x1+.2,z1-.1,z1+.2],[x0-.2,x0+.1,z0-.2,z1+.2],[x1-.1,x1+.2,z0-.2,z1+.2]])wcBox(a,b,H+.35,H+1.3,c,d,'#8a6a55',{tx:'brick'});
     for(const [z,w] of [[2,3],[10,3]])wcBox(-25.5-w/2,-25.5+w/2,H+.35,H+1.0,z-1.2,z+1.2,'#bfe6ff',{extra:{roughness:.1,metalness:.3}});
     // mezzanine along the back wall, stairs up to it and a second flight up through the roof hatch
     wcBox(x0+.2,-27,3.3,3.6,z0+.2,z1-.2,'#8a8f99');for(let z=z0+.5;z<z1;z+=3.2){const za=z,zb=Math.min(z1-.3,z+2.6);if(zb>7.4&&za<13)continue;wcBox(-27.15,-26.95,3.6,4.6,za,zb,'#f4c22b');}
     wcStairs(12.5,-1,-26.9,-25.6,0,3.6,10,.45,'#9aa0a8',true);
-    wcStairs(-4.4,-1,-29.1,-27.7,3.6,H+.35,8,.3,'#9aa0a8',true);
+    wcStairs(-2.2,-1,-29.1,-27.7,3.6,H+.35,10,.45,'#9aa0a8',true);
     // inside: crate stacks, pallets, a forklift, drums
     for(const [x,z,n] of [[-22,-6,2],[-22,-3.6,1],[-23.3,13,3],[-21,13,1],[-29.6,8,2],[-29.6,-1,1]])for(let i=0;i<n;i++)rlCrate(x,i*1.2,z);
     rlPallet(-24,4);rlPallet(-24,5.3);rlDrum(-30.8,0,-8.6,'#2f63c8',false);rlDrum(-30.1,0,-8.8,'#3bb54a',false);
@@ -3309,30 +3310,30 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     const sg=new THREE.Mesh(new THREE.PlaneGeometry(10,1),new THREE.MeshLambertMaterial({map:signTex('GOODS SHED','#1c1d22','#f4f5f7',{stripe:'#f4c22b'})}));sg.position.set(x1+.22,5.0,3);sg.rotation.y=Math.PI/2;M.group.add(sg);}
   // ---------- signal box (south-west), cabin, containers ----------
   {const cx=-21,cz=-38,S2=St(cx,cz,1,1);const br='#a5543a';
-    S2.wall('u',-3,-2.5,2.5,0,3.4,[WIN(0,2)],br,.3);S2.wall('u',3,-2.5,2.5,0,3.4,[DOOR(-1,1.6)],br,.3);S2.wall('v',-2.5,-3.15,3.15,0,3.4,[WIN(0,1.6)],br,.3);S2.wall('v',2.5,-3.15,3.15,0,3.4,[],br,.3);
+    S2.wall('u',-3,-2.5,2.5,0,3.4,[WIN(0,2)],br,.3);S2.wall('u',3,-2.5,2.5,0,3.4,[DOOR(1.2,2.4)],br,.3);S2.wall('v',-2.5,-3.15,3.15,0,3.4,[WIN(0,1.6)],br,.3);S2.wall('v',2.5,-3.15,3.15,0,3.4,[],br,.3);
     S2.slab(-3.3,3.3,-2.8,2.8,3.4,3.7,'#e9ecef',{u0:-.4,u1:2.85,v0:-2.35,v1:-.8});S2.floor(-2.85,2.85,-2.35,2.35,.02,'#8a8f99',null);
     const gw=[{c:0,w:4.4,y0:4.6,y1:6.1}];S2.wall('u',-3,-2.5,2.5,3.7,6.4,gw,'#e9ecef',.25);S2.wall('u',3,-2.5,2.5,3.7,6.4,[{c:0,w:4.4,y0:4.6,y1:6.1}],'#e9ecef',.25);
-    S2.wall('v',-2.5,-3.15,3.15,3.7,6.4,[{c:.6,w:3.8,y0:4.6,y1:6.1},{c:-2.0,w:1.2,y0:3.7,y1:5.9}],'#e9ecef',.25);S2.wall('v',2.5,-3.15,3.15,3.7,6.4,[{c:0,w:5.2,y0:4.6,y1:6.1}],'#e9ecef',.25);
+    S2.wall('v',-2.5,-3.15,3.15,3.7,6.4,[{c:.6,w:3.8,y0:4.6,y1:6.1},{c:-1.9,w:2.0,y0:3.7,y1:6.0}],'#e9ecef',.25);S2.wall('v',2.5,-3.15,3.15,3.7,6.4,[{c:0,w:5.2,y0:4.6,y1:6.1}],'#e9ecef',.25);
     S2.box(-3.5,3.5,-3,3,6.4,6.8,'#3a3d45');S2.floor(-2.85,2.85,-2.35,2.35,3.72,'#8a5a34','wood');
     // inside stairs from the ground floor (and outside steps to the upper door)
-    S2.stairs(-.2,1,-2.3,-1.0,0,10,.37,.3,'#9aa0a8');wcStairs(cz-2.62-3.63,1,cx-2.6,cx-1.4,0,3.7,11,.33,'#9aa0a8',true);
+    S2.stairs(-.2,1,-2.3,-1.0,0,10,.37,.3,'#9aa0a8');wcStairs(cz-2.62-3.63,1,cx-2.9,cx-.9,0,3.7,11,.33,'#9aa0a8',true);
     // lever frame and a desk upstairs
     S2.box(-2.6,-1.6,-1.2,2.2,3.7,4.6,'#5b6070',{chip:true,hp:150});const lv=['#e8463a','#e8463a','#2f7fe0','#f4c22b','#1c1d22','#e8463a','#2f7fe0'];
     for(let i=0;i<7;i++)box(S2.X(-2.1),4.6,S2.Z(-1+i*.45),.08,.9,.08,lv[i],{solid:false,edges:false});
     S2.box(1.5,2.3,.6,2.2,3.7,4.5,'#8a5a34');knock(S2.X(1.9),4.5,S2.Z(1.6),.1,.11,.1,'#ffffff',{cyl:1});knock(S2.X(1.9),4.5,S2.Z(1),.3,.45,.3,'#e9d3a8',{cyl:1,top:.4});
     const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,.6),new THREE.MeshLambertMaterial({map:signTex('MAPLE YARD','#f4f5f7','#1c1d22')}));sg.position.set(cx+3.16,3.95,cz);sg.rotation.y=Math.PI/2;M.group.add(sg);}
-  rlCabin(-39,-20,0,'#2f7fe0');rlCabin(39,18,0,'#e8b81f');
+  rlCabin(-41,-10,0,'#2f7fe0');rlCabin(39,18,0,'#e8b81f');
   // container rows: some climbable with a crate step chain, one open to walk into
   const CC=['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#f08a24','#a05ad6','#1f9a9a','#c8322b'];let ci=0;const nc=()=>CC[(ci++)%CC.length];
   rlContainer(-40,0,6,'z',nc());rlContainer(-40,2.6,6,'z',nc());rlCrate(-37.6,0,1.4);rlCrate(-37.6,0,2.6);rlCrate(-37.6,1.2,2.6);rlCrate(-37.6,0,3.8);rlCrate(-37.6,1.2,3.8);rlCrate(-37.6,2.4,3.8);
   rlContainer(-40,0,32,'z',nc(),{open:1});rlContainer(-26,0,30,'x',nc());rlContainer(-28,2.6,30,'x',nc());rlContainer(-30,5.2,30,'x',nc());
-  for(const [x,y,z] of [[-19.4,0,31.9],[-19.4,0,30.7],[-19.4,1.2,30.7],[-21.2,2.6,30.4],[-23.2,5.2,29.6]])rlCrate(x,y,z,y>=2.6?1.1:1.2);
+  for(const [x,y,z,h] of [[-19.4,0,32.9,1.2],[-19.4,0,30.5,1.2],[-19.4,1.2,30.5,1.2],[-21.2,2.6,30,1.1],[-23.2,5.2,30,1.1]])box(x,y,z,h,h,h*2,h>1.15?'#c99a5b':'#b9895a',{tx:'wood',prop:'crate',hp:120});
   rlContainer(-44.6,0,-36,'z',nc());rlContainer(-30,0,-24,'x',nc(),{open:-1});rlContainer(-30,2.6,-24,'x',nc());rlCrate(-23.4,0,-20.7);rlCrate(-23.4,0,-21.9);rlCrate(-23.4,1.2,-21.9);rlCrate(-23.4,0,-23.1);rlCrate(-23.4,1.2,-23.1);rlCrate(-23.4,2.4,-23.1);
   // ---------- east: engine shed, gantry crane, water tower ----------
   {const x0=20,x1=34,z0=-8,z1=14,H=7,col='#6e737c';
     wcWall('x',z0,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);wcWall('x',z1,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);
-    wcWall('z',x0,z0,z1,0,H,[{c:-2,w:3,y0:0,y1:3},{c:9,w:3,y0:0,y1:3},{c:3,w:5,y0:4.6,y1:6},{c:-5,w:2.4,y0:1.2,y1:2.6}],col,{tx:'ribs'},.35);
-    wcWall('z',x1,z0,z1,0,H,[{c:7,w:2.6,y0:0,y1:3},{c:10,w:4,y0:4.6,y1:6}],col,{tx:'ribs'},.35);
+    wcWall('z',x0,z0,z1,0,H,[{c:-2,w:4,y0:0,y1:3.4},{c:9,w:4,y0:0,y1:3.4},{c:3,w:5,y0:4.6,y1:6},{c:-5.6,w:2,y0:1.2,y1:2.6}],col,{tx:'ribs'},.35);
+    wcWall('z',x1,z0,z1,0,H,[{c:7,w:3.6,y0:0,y1:3.4},{c:11.2,w:3,y0:4.6,y1:6}],col,{tx:'ribs'},.35);
     wcBox(x0-.3,x1+.3,H,H+.35,z0-.3,z1+.3,'#3a3d45');floor(x0,x1,z0,z1,'#5b6070',null,H+.36,2);
     for(const [a,b,c,d] of [[x0-.3,x1+.3,z0-.3,z0],[x0-.3,x1+.3,z1,z1+.3],[x0-.3,x0,z0-.3,z1+.3],[x1,x1+.3,z0-.3,1.5],[x1,x1+.3,3.4,z1+.3]])wcBox(a,b,H+.35,H+1.25,c,d,'#9aa0a8');
     floor(x0,x1,z0,z1,'#7d776c','asphalt',.02,2);
@@ -3355,7 +3356,10 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     // operator cab hanging off the trolley
     box(-5,12.4,z,3,3.1,3,'#e8463a',{solid:false});box(-5,13.6,z-1.51,2.4,1.2,.04,'#9fd3f0',{solid:false,edges:false});box(-5,15.5,z,.15,1,.15,'#3a3d45',{solid:false,edges:false});
     box(4,7,z,.06,8.6,.06,'#3a3d45',{solid:false,edges:false});box(4,6.5,z,1.2,.5,.3,'#f4c22b',{solid:false});
-    zigStairs(17,z-1.6,z+2.4,y,6,'#9aa0a8');wcBox(15.2,17.05,y-.25,y,z-3,z-1.6,'#9aa0a8');}
+    {const W3=3.9,ax0=16.4,ax1=ax0+W3,bx0=ax1+.2,bx1=bx0+W3,za=-24.6,zb=-12.1,mid=y/2,c='#9aa0a8';
+      wcStairs(za,1,ax0,ax1,0,mid,25,.5,c,true);wcBox(ax0,bx1,mid-.25,mid,zb,zb+2.2,c);wcStairs(zb,-1,bx0,bx1,mid,y,25,.5,c,true);wcBox(15.2,bx1,y-.25,y,z-2,za,c);
+      for(const [x,y0,y1,z0,z1] of [[ax0-.05,0,mid,za,zb],[bx1+.05,mid,y,za,zb]])for(let k=0;k<5;k++){const za2=z0+(z1-z0)*k/5,zb2=z0+(z1-z0)*(k+1)/5,yy=y0+(y1-y0)*(x<20?(k+1)/5:(5-k)/5);box(x,yy+.9,(za2+zb2)/2,.08,.08,zb2-za2,'#f4c22b',{solid:false,edges:false});}
+      wcBox(bx1,bx1+.12,y,y+1.1,z-2,za,'#e8b020');wcBox(15.2,ax1,y,y+1.1,za-.12,za,'#e8b020');wcBox(15.2,bx1+.12,y,y+1.1,z-2.12,z-2,'#e8b020');}}
   {const x=38,z=31,top=11;for(const a of [-2.6,2.6])for(const b of [-2.6,2.6])wcBox(x+a-.2,x+a+.2,0,top-.25,z+b-.2,z+b+.2,'#3a3d45');
     for(const a of [-2.6,2.6]){box(x+a,4,z,.12,.12,5.2,'#3a3d45',{solid:false,edges:false});box(x,4,z+a,5.2,.12,.12,'#3a3d45',{solid:false,edges:false});}
     wcBox(x-3.5,x+3.5,top-.3,top,z-3.5,z+3.5,'#5b6070');for(const [a,b,c,d] of [[x-3.5,x+3.5,z-3.5,z-3.4],[x-3.5,x+3.5,z+3.4,z+3.5],[x-3.5,x-3.4,z-3.5,z+3.5]])wcBox(a,b,top,top+1.1,c,d,'#e9ecef');
@@ -3416,6 +3420,10 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       const m=new THREE.Mesh(wg,wm);m.position.set(x,.2,z);m.scale.setScalar(.6+R()*.9);m.rotation.y=R()*3;M.group.add(m);}}
   // strip lights under the shed roofs
   {const lm=new THREE.MeshBasicMaterial({color:'#fff2c4'});for(const [x,z0,z1,y] of [[-25.5,-8,14,6.5],[27,-6,12,6.9],[23,-6,12,6.9],[31,-6,12,6.9]])for(let z=z0;z<=z1;z+=5.5){const m=new THREE.Mesh(B.boxGeo(.3,.08,1.6),lm);m.position.set(x,y,z);M.group.add(m);}}
+  M.life.push((t,dt)=>{for(const G of glow){const T=(M.trains||[])[G.ln];const hot=T&&(T.z>-9000||railPos(T,t+4)!=null);G.k=clamp(G.k+(hot?dt*2.5:-dt*1.5),0,1);G.hot=G.k>.5;
+      const p=.75+.25*Math.sin(t*10);G.rm.emissiveIntensity=G.k*1.6*p;G.pm.opacity=G.k*.3*p;}
+    if(S.state!=='fight')return;for(const f of FS){if(!f.alive||f.pos.y>.45||Math.abs(f.pos.z)>Z)continue;for(const G of glow){if(!G.hot)continue;const d=Math.abs(f.pos.x-G.x);if(Math.abs(d-.75)>R*.7+.08)continue;
+      if(S.t-(f.railT||-9)<.45)break;f.railT=S.t;emit(f.pos.x,.25,f.pos.z,{n:10,speed:4,up:3,size:.1,life:.3,grav:6,colors:['#ffffff','#ff3b2f','#ffd23f']});sfx('volt',f,{vol:.45,range:10});damage(f,4,null,false,'rail');if(f===ME)vig(.3);break;}}});
   townLife([],{x0:-X,x1:X,z0:-Z,z1:Z,zLim:0});
   // ---------- trains ----------
   const t1=railTrain(-3.5,1,[['loco','#f4c22b'],['box','#a63a2a'],['flat',null,'box'],['tank','#e9ecef'],['hopper','#6b5a3a'],['box','#2f7fe0'],['flat']],{speed:11,gap:16,ph:0});
@@ -3781,7 +3789,7 @@ const CHARS={
   hook:{skin:'hook_climber',fx:['Tornado','Firework'],name:'Hook',desc:'Grapples to wherever you aim',abil:'Grapple',cd:5,hp:100,look:{shirt:'#c0261b',shirtSolid:'#8a1a12',hair:'#5b3a22'},color:'#e8463a'},
   zip:{skin:'zip_runner',fx:['Rainbow beam','Firework'],name:'Zip',desc:'Fastest runner; sprints even faster',abil:'Sprint',cd:9,hp:90,speed:1.1,look:{shirt:'#1fbfae',shirtSolid:'#14857a',hair:'#ff4fa3'},color:'#1fbfae'},
   thorn:{skin:'thorn_warden',fx:['Gold statue','Black hole'],name:'Thorn',desc:'Thorn armour blocks 30% and reflects 60%',abil:'Thorns',cd:12,hp:100,look:{shirt:'#5b3a22',shirtSolid:'#3d2716',hair:'#2f6a1e'},color:'#7bd13a'}};
-const ABIL_KILL={train:'hit by a train',barrel:'Fuel drum',smash:'Ground smash',frost:'Frost nova',zap:'Zap',thorns:'Thorns'};
+const ABIL_KILL={rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',smash:'Ground smash',frost:'Frost nova',zap:'Zap',thorns:'Thorns'};
 const CHAR_IDS=['blaze',...Object.keys(CHARS).filter(k=>k!=='blaze')]; // Blaze first: top-left of the character grid
 function accessory(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castShadow=true;(p||ch.torso).add(m);return m;};
   {const sk=ch.forceSkin||CHARS[id].skin;if(sk&&SKINS[sk]){SKINS[sk](ch);return;}}
@@ -4315,12 +4323,7 @@ function blastProps(at,Rr){knockBlast(at,Rr);ruinBlast(at,Rr);for(const c of M.c
   for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
   if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
 function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}propPatch(b,true);}
-function updProps(dt){updKnocks(dt);updRuins(dt);for(const b of M.props||[]){if(b.alive){if(b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}continue;}
-  b.backT-=dt;if(b.backT>0)continue;
-  // don't pop back in on top of someone
-  if(FS.some(f=>f.alive&&f.pos.x+R>b.x0&&f.pos.x-R<b.x1&&f.pos.z+R>b.z0&&f.pos.z-R<b.z1&&f.pos.y<b.y1&&f.pos.y+HH>b.y0)){b.backT=2;continue;}
-  if(b.y0>.05&&M.props.some(o=>!o.alive&&o!==b&&Math.abs(o.y1-b.y0)<.05&&o.x0<b.x1&&o.x1>b.x0&&o.z0<b.z1&&o.z1>b.z0))continue; // a stacked crate waits for the one under it
-  restoreProp(b);}}
+function updProps(dt){updKnocks(dt);updRuins(dt);updFires(dt);for(const b of M.props||[]){if(b.alive&&b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}}}
 // bullets and blasts through wood: crates and fences break apart; short furniture loses chunks (down to 60% of its height) but stays as cover
 function woodChips(at,col,n){emit(at.x,at.y,at.z,{n:n||4,speed:3,up:1.5,size:.1,life:.45,colors:[col||'#c99a5b','#e9d3a8','#8a5a34']});}
 function itemChips(b,at){if(b.wood)woodChips(at,b.color,3);else emit(at.x,at.y,at.z,{n:3,speed:3,up:1.5,size:.08,life:.4,colors:[b.color||'#9aa0a8','#d8dbe2','#55585f']});}
@@ -4332,9 +4335,16 @@ function damageWood(b,dmg,at){if(!b||!(b.prop||b.chip))return;
   else itemChips(b,at);}
 function resetChips(){for(const b of M.chips||[]){if(b.y1-b.y0<b.h0-.01){b.y1=b.y0+b.h0;if(b.mesh){b.mesh.scale.y=1;b.mesh.position.y=b.y0+b.h0/2;}dirtyGrid(b,.05);}b.chipHP=b.hp0;}MM.layer=null;}
 // cars: a rocket, grenade or fireball blows one up; the burnt-out car is cleared and a new one is parked back in its spot later
-function wreckCar(c,at){if(!c.alive)return;c.alive=false;c.backT=PROP_BACK;c.state='dead';c.v=0;
-  for(const b of c.boxes){const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);const j=M.movers.indexOf(b);if(j>=0)M.movers.splice(j,1);dirtyGrid(b,.05);}
-  for(const m of c.parts)m.visible=false;MM.layer=null;const b=c.boxes[0],cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,cp=new V3(cx,1.2,cz);
+function burnCar(c,on){const [b1,b2]=c.boxes;if(on){if(c.burnt)return;c.burnt=true;c.mat0=[b1.mesh.material,b2.mesh.material];c.y0=c.boxes.map(b=>[b.y0,b.y1]);
+    b1.mesh.material=mat('#2b2522',null,{roughness:.95});b2.mesh.material=mat('#141518',null,{roughness:.9});for(const b of c.boxes){b.y0-=.3;b.y1-=.3;if(b.mesh)b.mesh.position.y-=.3;}
+    for(const m of c.parts)if(m!==b1.mesh&&m!==b2.mesh)m.visible=false;}
+  else{if(!c.burnt)return;c.burnt=false;b1.mesh.material=c.mat0[0];b2.mesh.material=c.mat0[1];c.boxes.forEach((b,i)=>{b.y0=c.y0[i][0];b.y1=c.y0[i][1];if(b.mesh)b.mesh.position.y+=.3;});for(const m of c.parts)m.visible=true;}}
+function updFires(dt){for(const F of M.fires||[]){F.t+=dt;if(F.t>F.ttl)continue;const k=F.t<12?1:.25;
+  if(Math.random()<dt*14*k)emit(F.x+rnd(-.9,.9),F.y,F.z+rnd(-1.6,1.6),{n:1,speed:.6,up:2.2,size:.32,life:.55,grav:-2,colors:['#ffb000','#ff7a1f','#ff3b1f']});
+  if(Math.random()<dt*6)emit(F.x+rnd(-.6,.6),F.y+.6,F.z+rnd(-1,1),{n:1,speed:.4,up:2.6,size:.9,life:2.6,grav:-1.1,colors:['#2b2d33','#3a3d45','#55585f']});}}
+function wreckCar(c,at){if(!c.alive)return;c.alive=false;c.state='dead';c.v=0;if(c.blur)c.blur.opacity=0;
+  for(const b of c.boxes){const j=M.movers.indexOf(b);if(j>=0)M.movers.splice(j,1);b.mover=false;if(!M.boxes.includes(b))M.boxes.push(b);dirtyGrid(b,.05);}
+  burnCar(c,true);MM.layer=null;{const b=c.boxes[0];(M.fires||(M.fires=[])).push({x:(b.x0+b.x1)/2,y:b.y1,z:(b.z0+b.z1)/2,t:0,ttl:40,c});}const b=c.boxes[0],cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,cp=new V3(cx,1.2,cz);
   boomFX(cp,3.4);sfx('explode',cp,{range:26});if(ME.alive&&ME.pos.distanceTo(cp)<16)S.shake=Math.max(S.shake,.5);
   const cols=[c.color,c.color,'#cfe6f3','#1c1d22','#3a3d45'];
   for(let i=0;i<16;i++){const sz=rnd(.25,.7),m=new THREE.Mesh(new THREE.BoxGeometry(sz,sz*.5,sz*rnd(.6,1.4)),mat(cols[i%cols.length]));m.position.set(cx+rnd(-1,1),rnd(.5,1.8),cz+rnd(-2,2));m.castShadow=true;scene.add(m);
@@ -4357,7 +4367,7 @@ function ruinEnd(r,cx,cz,flip,k,wall,trim,F){const kids=M.group.children.slice(r
     for(let n=0;n<5;n++){let x=40+Math.random()*176,y=10+Math.random()*60;g.lineWidth=5;g.beginPath();g.moveTo(x,y);for(let s=0;s<9;s++){x+=(Math.random()-.5)*50;y+=14+Math.random()*16;g.lineTo(x,y);g.lineWidth=Math.max(1.5,5-s*.4);}g.stroke();}});
   const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
   for(const [px,pz,ry,w] of [[x0-.02,(z0+z1)/2,-Math.PI/2,z1-z0],[x1+.02,(z0+z1)/2,Math.PI/2,z1-z0],[(x0+x1)/2,z0-.02,Math.PI,x1-x0],[(x0+x1)/2,z1+.02,0,x1-x0]])
-    for(const s of [-.25,.25]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w*.42,F*.9),cm);const a=ry;m.position.set(px+Math.sin(a)*0+(Math.abs(Math.sin(a))<.5?s*w:0),F*.5,pz+(Math.abs(Math.sin(a))>.5?s*w:0));m.rotation.y=ry;m.visible=false;grp.add(m);B.cracks.push(m);}
+    for(const s of [-.25,.25]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w*.42,F*.9),cm);const a=ry;m.position.set(px+Math.sin(a)*0+(Math.abs(Math.sin(a))<.5?s*w:0),F*.5,pz+(Math.abs(Math.sin(a))>.5?s*w:0));m.rotation.y=ry;m.visible=false;m.userData.dyn=1;grp.add(m);B.cracks.push(m);}
   (M.blds||(M.blds=[])).push(B);return B;}
 function ruinBatch(){for(const B of M.blds||[])batchStatic(B.grp);}
 function ruinMat(B,ang,ax,az,sink){const p=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),q=new THREE.Quaternion().setFromAxisAngle(new V3(ax,0,az).normalize(),ang);
@@ -4417,7 +4427,7 @@ function resetRuins(){for(const B of M.blds||[]){if(B.stage===0)continue;B.stage
   for(const b of B.props)if(!M.props.includes(b))M.props.push(b);for(const b of B.chips)if(!M.chips.includes(b))M.chips.push(b);
   for(const m of B.cracks)m.visible=false;B.grp.visible=true;B.grp.matrix.identity();B.grp.matrixWorldNeedsUpdate=true;
   for(const P of M.plates||[])if(P.back>1e8){P.back=0;P.grp.visible=true;}}MM.layer=null;}
-function resetProps(){resetRuins();resetChips();resetKnocks();for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
+function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
 /* loose items (cans, bottles, cones, tools, drips, chairs...): not solid, so they never block anyone; bullets, blasts and people
    walking into them knock them over. They tumble, land on whatever is under them, and stay down until the next round */
 function knock(x,y,z,w,h,d,color,o={}){const g=o.geo||(o.cyl?new THREE.CylinderGeometry(w/2*(o.top??1),w/2,h,o.seg||10):B.boxGeo(w,h,d));

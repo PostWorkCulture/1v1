@@ -5843,7 +5843,7 @@ function ffaN(){return FFA_NS.includes(+S.ffaN)?+S.ffaN:4;}
 function dmSpawn(f){let best=null,bv=-1;const cand=(FS.length>4?M.spawns.concat(openSpots()):M.spawns).filter(spotFree);for(const sp of (cand.length?cand:M.spawns)){let m=1e9;for(const o of FS)if(o!==f&&o.alive)m=Math.min(m,Math.hypot(o.pos.x-sp.x,o.pos.z-sp.z));if(m>bv){bv=m;best=sp;}}return best||M.spawns[0];}
 function dmRespawn(f){setTimeout(()=>sfx('respawn',f,{range:20}),0);f.respawnT=0;if(f.finishing){for(const o of f.finishing.obj||[])scene.remove(o);if(f.finishing.fx==='Disco')hemi.color.set('#ffffff');f.finishing=null;}f.ch.root.rotation.set(0,0,0);if(f!==ME)applyStyle(f);resetFighter(f,dmSpawn(f));f.lastHurt=S.t;emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:30,speed:4,up:3,size:.2,life:.6,grav:-1,colors:['#ffffff','#7fd3ff']});if(f===ME)center('','');lbDirty=1;}
 function dmTick(dt){if(!isDM()||S.state!=='fight')return;for(const f of FS)if(!f.alive&&f.respawnT>0&&(!f.finishing||f.finishing.t>3)){f.respawnT-=dt;if(f.respawnT<=0)dmRespawn(f);}}
-function dmWin(w){if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;if(won)markWinningClip(true);S.lastWin=w?w.team:-1;setTimeout(()=>sfx(won?'win':'lose'),450);
+function dmWin(w){if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;if(won)markWinningClip(true);S.lastWin=w?w.team:-1;if(!won)setTimeout(()=>sfx('lose'),450);
   if(won){S.stats.kills++;addXP(20);}else addXP(5);center(won?'Victory':`${nm(w)} wins`,`${w?w.k:0} kills`,won?'win top':'lose top');showRoundEndBar();
   if(w)celebrate([w],true);}
 /* victory celebrations: everyone stays on the ground doing silly dances (no jumping or floating), each in a different light show,
@@ -5912,11 +5912,11 @@ function updCelebrate(dt){const C=S.cel;if(!C)return;if(S.state==='fight'||S.sta
     else if(u.nring){if(onBeat)o.material.color.set(celCol());o.material.opacity=.4+.3*Math.sin(t*10);}}
   // glowing fireworks overhead
   C.next-=dt;if(C.next<=0){C.next=C.big?.22:.4;const f=C.who[Math.floor(Math.random()*C.who.length)],x=f.pos.x+rnd(-6,6),y=f.pos.y+rnd(8,14),z=f.pos.z+rnd(-6,6);
-    celBurst(x,y,z,celCol(),C.big?2.6:1.8,C.big?10:6);if(Math.random()<.6)sfx('firework',{x,y,z},{range:40});}}
+    celBurst(x,y,z,celCol(),C.big?2.6:1.8,C.big?10:6);}}
 function endRound(winner,head){if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;S.lastWin=winner;const won=winner===ME.team;for(const f of FS)if(f.team!==winner){f.armor=0;f.nades=0;f.speedT=0;f.scopeKit=false;}if(won){S.stats.kills++;addXP(10);}else addXP(5);
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
-  setTimeout(()=>sfx(won?'win':winner>=0?'lose':'tick'),450);
+  if(!won&&winner>=0)setTimeout(()=>sfx('lose'),450);
   if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
   S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;showRoundEndBar();if(winner>=0)celebrate(FS.filter(f=>f.team===winner&&f.alive),done);}

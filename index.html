@@ -2025,7 +2025,9 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
     if(B&&B.G&&B.G.state==='menu')return 'menu';return null;}
   // try straight away on load; if the browser blocks autoplay, start on the first click, key or tap
   setInterval(()=>{const D=window.__duel;if(!(D&&D.active&&D.S.state!=='menu'&&!D.S.paused))for(const n in loops)bed(n,0,0);},250);
-  setInterval(()=>{if(blocked)return;const w=mvol>0?want():null;
+  // no music while the game's tab is hidden or minimised
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)for(const k in el){el[k]._g=0;el[k].volume=0;el[k].pause();}else cur=null;});
+  setInterval(()=>{if(blocked||document.hidden)return;const w=mvol>0?want():null;
     if(w!==cur){if(w==='matchend'&&el.matchend)el.matchend.currentTime=0;cur=w;if(w){const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{blocked=true;cur=null;});}}
     for(const k in el){const a=el[k],tgt=k===cur?mvol*.55:0;a._g+=(tgt-a._g)*(tgt>a._g?.12:.2);if(Math.abs(tgt-a._g)<.003)a._g=tgt;a.volume=Math.max(0,Math.min(1,a._g));if(a._g===0&&!a.paused&&k!==cur)a.pause();}},100);
   const mu=()=>{if(!blocked)return;blocked=false;const w=mvol>0?want():null;if(w){cur=w;const a=audio(w);const p=a.play();if(p&&p.catch)p.catch(()=>{});}};['pointerdown','keydown','touchstart'].forEach(e=>window.addEventListener(e,mu,{capture:true,passive:true}));

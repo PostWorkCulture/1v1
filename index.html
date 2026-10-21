@@ -352,7 +352,9 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .d-rend[hidden]{display:none}
 .rp-b{display:flex;align-items:center;gap:7px;padding:7px 11px 7px 8px;border:2px solid #14161c;border-radius:9px;background:#fff;color:#14161c;font:700 12.5px/1 var(--f-body);cursor:pointer;white-space:nowrap}
 .rp-b:hover{background:#fff7d6}.rp-b svg{width:18px;height:18px}
-.rp-home{background:#14161c;color:#fff}.rp-home:hover{background:#2b2d33}
+/* home: a small icon button that's always there in a game, just under the minimap */
+#d-homebtn{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 158px);width:40px;height:40px;padding:0;display:grid;place-items:center;cursor:pointer;z-index:12;pointer-events:auto}
+#d-homebtn[hidden]{display:none}#d-homebtn svg{width:22px;height:22px}#d-homebtn:hover{background:#fff7d6}
 .dd-rp{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.dd-rp:empty{display:none}
 /* replay viewer */
 #d-replay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,10,14,.72);z-index:20;pointer-events:auto}
@@ -895,11 +897,12 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <div class="btns">
         <button class="btn primary" id="dd-again">Rematch</button>
         <button class="btn" id="dd-clips">View Clips</button>
-        <button class="btn" id="dd-menu">Home</button>
       </div>
       <div class="dd-rp" id="dd-rp" hidden></div>
     </div>
   </div>
+
+  <button class="panel" id="d-homebtn" hidden title="Home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="#14161c"/></svg></button>
 
   <div id="touch" hidden>
     <div id="stick"><i></i></div>
@@ -3838,8 +3841,23 @@ function bat(){const g=new THREE.Group();const w=mat('#c98a4b',null,{roughness:.
   const b=new THREE.Mesh(new THREE.CylinderGeometry(.13,.07,1.3,10),w);b.position.y=1.15;g.add(b);return g;}
 function axe(){const g=new THREE.Group();const h=new THREE.Mesh(new THREE.BoxGeometry(.1,1.6,.1),mat('#7a4a28'));h.position.y=.8;g.add(h);
   const bl=new THREE.Mesh(new THREE.BoxGeometry(.06,.55,.7),mat('#cfd4dc',null,{metalness:.85,roughness:.25}));bl.position.set(0,1.42,.3);g.add(bl);return g;}
-function finish(a,v,force){const fx=force||moveFor(a,v);release(a);const dur=MOVE_DUR[fx]||2.5;v.finishing={fx,t:0,by:a,obj:[],finisher:true,move:true,dur,cine:!!MOVE_DUR[fx],a0:a.pos.clone(),v0:v.pos.clone()};a.finishT=dur;a.ads=false;
-  a.yaw=Math.atan2(v.pos.x-a.pos.x,v.pos.z-a.pos.z);v.yaw=a.yaw+Math.PI;{const F=v.finishing;F.yaw0=a.yaw;F.fwd=new V3(Math.sin(a.yaw),0,Math.cos(a.yaw));}
+// nearest spot (same floor) with room all round, reachable in a straight line: finishers and celebrations shuffle over to it first
+// so arms, bodies and props never swing through a wall or post
+function roomAt(x,z,h,need){for(const r of [.9,1.6,2.3,3.0]){if(r>need+.01)break;for(let k=0;k<8;k++){const a=k/8*TAU;if(!bodyFits(x+Math.cos(a)*r,z+Math.sin(a)*r,h))return r-.7;}}return need;}
+function clearSpot(x,y,z,need,maxR,taken){const g=M.grid;if(!g||!g.sb)return{x,y,z};const free=p=>!(taken||[]).some(q=>Math.hypot(q.x-p.x,q.z-p.z)<1.8);
+  {const l0=layerAt(cellK(...cellOf(x,z)),y),h0=l0>=0?g.h[cellK(...cellOf(x,z))*NL+l0]:y;if(Math.abs(h0-y)<.6&&roomAt(x,z,h0,need)>=need&&free({x,z}))return{x,y,z};}
+  const [ci,cj]=cellOf(x,z),R=Math.ceil(maxR/CS);let best=null,bs=1e9,bestRoom=null,br=-1,anyB=null,ad=1e9;
+  for(let dj=-R;dj<=R;dj++)for(let di=-R;di<=R;di++){const i=ci+di,j=cj+dj;if(i<1||j<1||i>=g.nx-1||j>=g.nz-1)continue;const d=Math.hypot(di,dj)*CS;if(d>maxR)continue;const k=i+j*g.nx;
+    for(let l=0;l<g.n[k];l++){const h=g.h[k*NL+l];if(Math.abs(h-y)>.6)continue;const cx=g.x0+(i+.5)*CS,cz=g.z0+(j+.5)*CS;if(!free({x:cx,z:cz}))continue;if(d>=bs)continue;
+      const room=roomAt(cx,cz,h,need);if(room>=need&&d<ad){ad=d;anyB={x:cx,y:h,z:cz};}if(room<need&&room<=br)continue;if(!flatLine(x,z,cx,cz,h))continue;
+      if(room>=need){if(d<bs){bs=d;best={x:cx,y:h,z:cz};}}else if(room>br){br=room;bestRoom={x:cx,y:h,z:cz};}}}
+  return best||bestRoom||anyB||{x,y,z};}
+function finish(a,v,force){const fx=force||moveFor(a,v);release(a);const dur=MOVE_DUR[fx]||2.5;
+  const fwd0=new V3(v.pos.x-a.pos.x,0,v.pos.z-a.pos.z);const dA0=fwd0.length()||1;fwd0.divideScalar(dA0);const sp=clearSpot(v.pos.x,v.pos.y,v.pos.z,2.6,5);
+  const v0=new V3(sp.x,sp.y,sp.z),dA=clamp(dA0,1.2,2);let a0=v0.clone().addScaledVector(fwd0,-dA);a0.y=v0.y;if(!bodyFits(a0.x,a0.z,a0.y)){a0=v0.clone().addScaledVector(fwd0,-1.2);a0.y=v0.y;}
+  const moved=v0.distanceTo(v.pos)>.25||a0.distanceTo(a.pos)>.25;
+  v.finishing={fx,t:0,by:a,obj:[],finisher:true,move:true,dur,cine:!!MOVE_DUR[fx],a0:moved?a0:a.pos.clone(),v0:moved?v0:v.pos.clone(),pre:moved?{t:0,av:a.pos.clone(),vv:v.pos.clone()}:null};a.finishT=dur+(moved?.45:0);a.ads=false;
+  a.yaw=Math.atan2(v.finishing.v0.x-v.finishing.a0.x,v.finishing.v0.z-v.finishing.a0.z);v.yaw=a.yaw+Math.PI;{const F=v.finishing;F.yaw0=a.yaw;F.fwd=new V3(Math.sin(a.yaw),0,Math.cos(a.yaw));}
   if(fx==='Home run'){const b=bat();scene.add(b);v.finishing.obj.push(b);}
   if(fx==='Axe drop'){const x=axe();scene.add(x);v.finishing.obj.push(x);}
   if(a===ME)S.fxUsed=fx;say(a,v,fx,'You finished '+nm(v),nm(a)+' finished you',false);slowMo(.2,a,v);}
@@ -4355,7 +4373,9 @@ function bloodBits(v){const n=7,im=new THREE.InstancedMesh(SHG,BLOOD_MAT,n),m4=n
     q.setFromEuler(e.set(0,rnd(0,3),0));m4.compose(new V3(x,y,z),q,new V3(s,s,s));im.setMatrixAt(i,m4);}
   im.castShadow=false;im.receiveShadow=true;scene.add(im);debris.push({o:im,t:0,ttl:30,fx:()=>{}});}
 function burst(v,cols,n){shatter(v,{power:9,up:6});emit(v.pos.x,v.pos.y+1.2,v.pos.z,{n:Math.round((n||60)*.3),speed:9,up:3,size:.2,life:.8,colors:cols});}
-function updFinish(dt){for(const v of FS){const F=v.finishing;if(!F)continue;F.t+=dt;const t=F.t,r=v.ch.root;
+function updFinish(dt){for(const v of FS){const F=v.finishing;if(!F)continue;
+  if(F.pre){const P=F.pre,a=F.by;P.t+=dt;const u=Math.min(1,P.t/.45),e=u*u*(3-2*u);v.pos.lerpVectors(P.vv,F.v0,e);v.vel.set(0,0,0);if(a){a.pos.lerpVectors(P.av,F.a0,e);a.vel.set(0,0,0);a.yaw=Math.atan2(v.pos.x-a.pos.x,v.pos.z-a.pos.z);}if(u<1)continue;F.pre=null;}
+  F.t+=dt;const t=F.t,r=v.ch.root;
   if(F.move)updMove(v,F,dt);
   else if(F.fx==='Firework'){if(t<1.1){r.rotation.y+=dt*(6+t*14);emit(v.pos.x,v.pos.y+.3,v.pos.z,{n:3,speed:1.5,up:11,size:.2,life:.55,grav:4,colors:['#ffb347','#ffd23f','#ffffff']});}
     else if(!F.done){F.done=1;shatter(v,{power:12,up:3});for(let i=0;i<1;i++)emit(v.pos.x,v.pos.y+1,v.pos.z,{n:40,speed:14,up:2,size:.35,life:1.6,grav:5,colors:['#ff4a3d','#ffc61a','#2f7fe0','#3bb54a','#ff3fd2','#ffffff']});S.shake=.4;}}
@@ -4934,7 +4954,7 @@ function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
   $('d-items').innerHTML=L.map(([ic,k,n,dim])=>`<span class="it${dim?' dim':''}">${ICON[ic]}${k?`<kbd>${k}</kbd>`:''}<b>${n}</b></span>`).join('');}
 // who you're watching while you're out: a teammate if one's up, otherwise whoever is still playing (in deathmatch, whoever got you)
 function specOf(){if(ME.alive||!D.active)return null;if(isDM()&&ME.lastBy&&ME.lastBy.alive)return ME.lastBy;return FS.find(x=>x!==ME&&x.alive&&!isFoe(ME,x))||FS.find(x=>x!==ME&&x.alive)||null;}
-function updHUD(dt){updLB();{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st)e.className='d-edge on '+st;else if(e.classList.contains('on'))e.classList.remove('on');}if(S.hud.mm!==false)updMinimap();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
+function updHUD(dt){updLB();{const hb=$('d-homebtn');if(hb.hidden)hb.hidden=false;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st)e.className='d-edge on '+st;else if(e.classList.contains('on'))e.classList.remove('on');}if(S.hud.mm!==false)updMinimap();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
   {const my=S.score[ME.team]||0;let ot=0,oi=-1;S.score.forEach((v,i)=>{if(i!==ME.team&&v>=ot&&v!=null){ot=v;oi=i;}});txt('d-s1',String(my));txt('d-s2',String(ot));if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
   {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);
@@ -5095,6 +5115,7 @@ function celBurst(x,y,z,col,size,rays){const m=new THREE.Mesh(CEL_BALL,new THREE
   debris.push({o:m,t:0,ttl:.55,fx:(d)=>{const u=Math.min(1,d.t/.55);m.scale.setScalar(.2+size*(1-Math.pow(1-u,3)));m.material.opacity=.9*(1-u);if(u>=1)m.material.dispose();}});
   const o=new V3(x,y,z);for(let k=0;k<rays;k++){const a=Math.random()*TAU,b=rnd(-.9,.9),L=size*rnd(1.4,2.2);tracer(o,new V3(x+Math.cos(a)*Math.cos(b)*L,y+Math.sin(b)*L,z+Math.sin(a)*Math.cos(b)*L),k%2?col:'#ffffff',.06);}}
 function celebrate(who,big){who=who.filter(f=>f&&f.alive);if(!who.length)return;clearCelebrate();
+  {const taken=[];for(const f of who){const sp=clearSpot(f.pos.x,f.pos.y,f.pos.z,big?1.6:1.1,4,taken);taken.push(sp);f.celFrom=f.pos.clone();f.celTo=new V3(sp.x,sp.y,sp.z);}}
   // winning a round: a quick fist pump, high five or little jig and that's it; the light show and dances are saved for the final win
   if(!big){const C={who,t:0,big:false,kind:'gesture',obj:[],next:1e9,beat:-1,ctr:who[0].pos.clone()};const g=['punch','jig','punch2'];
     who.forEach((f,i)=>{f.celK=Math.random()*6;f.celMove=who.length>1&&i<2?'highfive':g[Math.floor(Math.random()*g.length)];});if(who.length>1){who[0].celMate=who[1];who[1].celMate=who[0];who[0].celHand='r';who[1].celHand='l';}S.cel=C;return;}
@@ -5124,6 +5145,8 @@ function danceFor(f,t,beat){f.celSway=0;const b=t/.42,ph=b*Math.PI,s=Math.sin(ph
     case 'floss':return{ar:[-.3,0,s*1.1],al:[-.3,0,s*1.1],ll:-s*.35,lr:-s*.35,head:c*.15};
     default:return{ar:[-2.6+s*.5,0,.8],al:[-2.6-s*.5,0,-.8],head:s*.3,ll:s*.25,lr:-s*.25};}}
 function updCelebrate(dt){const C=S.cel;if(!C)return;if(S.state==='fight'||S.state==='countdown'||S.state==='menu'){clearCelebrate();return;}C.t+=dt;const t=C.t,K=C.kind;
+  // shuffle into clear space first (half a second)
+  if(t<.5){const u=t/.5,e=u*u*(3-2*u);for(const f of C.who)if(f.alive&&f.celTo){f.pos.lerpVectors(f.celFrom,f.celTo,e);f.vel.set(0,0,0);}if(C.ctr){C.ctr.set(0,0,0);for(const f of C.who)C.ctr.add(f.celTo||f.pos);C.ctr.divideScalar(C.who.length);}}
   if(K==='gesture'){for(const f of C.who){if(!f.alive)continue;if(t>2.4){f.pose=null;continue;}const s=Math.sin(t*12+f.celK);f.pitch=0;
       if(f.celMove==='highfive'&&f.celMate){const m=f.celMate;f.yaw=Math.atan2(m.pos.x-f.pos.x,m.pos.z-f.pos.z);const up=t>.5&&t<1.4?-2.7:-1.7;f.pose=f.celHand==='r'?{ar:[up,0,.2],al:[-.3,0,-.2]}:{al:[up,0,-.2],ar:[-.3,0,.2]};}
       else if(f.celMove==='punch'){f.pose={ar:[-2.9+s*.35,0,.25],al:[-.4,0,-.3],head:-.2};}
@@ -5246,7 +5269,7 @@ const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f
 const HOME_SVG='<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="#fff"/></svg>';
 function rpButtons(list,keys){return list.map((c,i)=>`<button class="rp-b" data-rp="${RP.clips.indexOf(c)}">${keys&&i<9?`<kbd>${i+1}</kbd>`:''}${PLAY_SVG}${c.label}</button>`).join('');}
 // the round-end bar never releases the mouse (that used to leave mouse-look dead in the next round): use 1-9 for replays and H for home, or click if the cursor is free
-function showRoundEndBar(){const el=$('d-rend');RP.bar=RP.round.filter(c=>RP.clips.includes(c));el.innerHTML=rpButtons(RP.bar,!S.touch)+`<button class="rp-b rp-home" id="rp-home">${S.touch?'':'<kbd>H</kbd>'}${HOME_SVG}Home</button>`;el.hidden=false;}
+function showRoundEndBar(){const el=$('d-rend');RP.bar=RP.round.filter(c=>RP.clips.includes(c));el.innerHTML=rpButtons(RP.bar,!S.touch);el.hidden=!RP.bar.length;}
 const RV={clip:null,imgs:[],i:0,acc:0,play:true,rec:null};
 async function openReplay(i){const c=RP.clips[i];if(!c)return;S.replayOpen=true;mouseL=mouseR=false;if(document.pointerLockElement)document.exitPointerLock();
   $('d-replay').hidden=false;$('rv-title').textContent=c.label;
@@ -5271,11 +5294,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b
 
 /* ================= menu integration ================= */
 function renderRecord(){let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}$('d-record').textContent=`${w}–${l}`;}
-function enterMenu(){clearFx();makePreviews();if(!Object.keys(MAPS).every(k=>thumbs[k])){for(const k of Object.keys(MAPS))makeThumb(k);}renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
+function enterMenu(){clearFx();$('d-homebtn').hidden=true;makePreviews();if(!Object.keys(MAPS).every(k=>thumbs[k])){for(const k of Object.keys(MAPS))makeThumb(k);}renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'sniper');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();}
-function leave(){clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
+function leave(){$('d-homebtn').hidden=true;clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 function setMode(m){document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
   const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;store.set('mode',m);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
@@ -5689,7 +5712,7 @@ $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');i
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}
 $('duel-pause').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)showPV(g.dataset.go);});
 $('dp-resume').addEventListener('click',resume);$('dp-leave').addEventListener('click',leave);
-$('dd-again').addEventListener('click',startMatch);$('dd-menu').addEventListener('click',leave);
+$('dd-again').addEventListener('click',startMatch);$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
 renderDuelMenu();renderRecord();
 {const sm=store.get('mode','duels');if(sm==='duels'||sm==='rumble'){const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode(sm);else setTimeout(w,100);};setTimeout(w,100);}}
 })();

@@ -504,6 +504,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .pv-head{display:grid;grid-template-columns:110px 1fr 110px;align-items:center}.pv-head h3{margin:0;text-align:center;font:400 26px/1 var(--f-display)}.pv-head .btn:last-child{justify-self:end}
 .btn.sm{padding:7px 12px;font-size:13px}
 .hud-list{display:flex;flex-direction:column;gap:4px;text-align:left}
+.hud-sub{margin:10px 2px 2px;font:800 11px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .hud-row{display:grid;grid-template-columns:1fr 64px 128px;align-items:center;gap:12px;padding:7px 10px;border-radius:8px;background:color-mix(in srgb,var(--panel-ink) 5%,transparent);font:600 14px/1 var(--f-body)}
 .hud-row .tg{padding:6px 0;border-radius:99px;border:2px solid #14161c;background:#2bd44f;color:#14161c;font:800 12px/1 var(--f-body);cursor:pointer}.hud-row .tg[aria-pressed="false"]{background:#eef0f3;color:var(--muted);border-color:#c9ced8}
 .hz{display:flex;align-items:center;justify-content:flex-end;gap:6px}.hz b{min-width:42px;text-align:center;font:800 13px/1 var(--f-body);font-variant-numeric:tabular-nums}
@@ -915,6 +916,11 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
               <button role="radio" data-aa="on" aria-checked="true">On</button>
               <button role="radio" data-aa="strong" aria-checked="false">Strong</button>
             </div></div>
+          <div class="pm-row t-only"><span>Aim when firing <small>holding Fire also aims down sights</small></span>
+            <div class="seg" role="radiogroup" aria-label="Aim when firing" id="dp-autoads">
+              <button role="radio" data-v="1" aria-checked="false">On</button>
+              <button role="radio" data-v="0" aria-checked="true">Off</button>
+            </div></div>
           <div class="pm-row t-only"><span>Gyro aim <small>tilt the phone to fine-tune</small></span>
             <div class="seg" role="radiogroup" aria-label="Gyro aim" id="dp-gyro">
               <button role="radio" data-g="1" aria-checked="false">On</button>
@@ -965,7 +971,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       </div>
       <div class="pv" data-pv="hud" hidden>
         <div class="pv-head"><button class="btn sm" data-go="main">‹ Back</button><h3>HUD layout</h3><button class="btn sm" id="dp-hud-reset">Reset</button></div>
-        <div class="hud-move"><button class="btn primary sm" id="dp-hud-move">Move panels</button><span>Drag any panel to where you want it on screen</span></div>
+        <div class="hud-move"><button class="btn primary sm" id="dp-hud-move">Move panels</button><span id="dp-hud-tip">Drag any panel to where you want it on screen</span></div>
         <div class="hud-list" id="dp-hud"></div>
       </div>
     </div>
@@ -5645,9 +5651,11 @@ function applyTouch(){loadHudProf();$('dtouch').hidden=!S.touch||(S.paused&&!S.h
 $('dp-touch').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.touch=b.dataset.t==='1';store.set('duel:touch',S.touch);if(!S.touch)S.lockOK=true;applyTouch();});
 /* touch aiming: a gentle acceleration curve on fast swipes, aim assist (slowdown over a target, a light pull while aiming or firing,
    a small snap when you press Aim), and optional gyro aim. All touch-only: mouse play is untouched. */
-const AA={fric:1,adsWas:false,lvl:store.get('duel:aa','on'),gyro:!!store.get('duel:gyro',false)};
+const AA={fric:1,adsWas:false,lvl:store.get('duel:aa','on'),gyro:!!store.get('duel:gyro',false),autoAds:!!store.get('duel:autoads',false),autoR:false};
 function syncAimOpts(){document.querySelectorAll('#dp-aa [data-aa]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.aa===AA.lvl)));
-  document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));}
+  document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));
+  document.querySelectorAll('#dp-autoads [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===AA.autoAds)));}
+$('dp-autoads').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;AA.autoAds=b.dataset.v==='1';store.set('duel:autoads',AA.autoAds);syncAimOpts();});
 $('dp-aa').addEventListener('click',e=>{const b=e.target.closest('[data-aa]');if(!b)return;AA.lvl=b.dataset.aa;store.set('duel:aa',AA.lvl);syncAimOpts();});
 $('dp-gyro').addEventListener('click',async e=>{const b=e.target.closest('[data-g]');if(!b)return;let on=b.dataset.g==='1';
   if(on){const DM=window.DeviceMotionEvent;if(!DM){on=false;}else if(typeof DM.requestPermission==='function'){try{on=(await DM.requestPermission())==='granted';}catch(_){on=false;}}}
@@ -5683,9 +5691,9 @@ const endLook=e=>{if(e.pointerId===lookId)lookId=null;};window.addEventListener(
 const key=(code,down)=>window.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code,bubbles:true}));
 document.querySelectorAll('#dtouch .dt-b').forEach(b=>{const k=b.dataset.k;let fx=0,fy=0;
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}b._pid=e.pointerId;if(!playing())return;
-    if(k==='fire'){mouseL=true;fx=e.clientX;fy=e.clientY;}else if(k==='aim'){mouseR=!mouseR;b.classList.toggle('on',mouseR);}else if(k==='swap')equip(ME,ME.slot?0:1);else key(k,true);});
+    if(k==='fire'){mouseL=true;fx=e.clientX;fy=e.clientY;if(AA.autoAds&&S.mode!=='rumble'&&!mouseR){mouseR=true;AA.autoR=true;}}else if(k==='aim'){AA.autoR=false;mouseR=!mouseR;b.classList.toggle('on',mouseR);}else if(k==='swap')equip(ME,ME.slot?0:1);else key(k,true);});
   b.addEventListener('pointermove',e=>{if(k==='fire'&&mouseL&&e.pointerId===b._pid){lookBy(e.clientX-fx,e.clientY-fy);fx=e.clientX;fy=e.clientY;}});
-  const up=e=>{if(k==='fire')mouseL=false;else if(k!=='aim'&&k!=='swap')key(k,false);};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
+  const up=e=>{if(k==='fire'){mouseL=false;if(AA.autoR){AA.autoR=false;mouseR=false;}}else if(k!=='aim'&&k!=='swap')key(k,false);};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
 $('sh-items').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-buy]');if(b){e.preventDefault();e.stopPropagation();buyShop(+b.dataset.buy);}});
 $('dt-pause').addEventListener('pointerdown',e=>{e.preventDefault();if(D.active&&S.state!=='menu')S.paused?resume():pause();});
 
@@ -5740,10 +5748,14 @@ S.hud=Object.assign({},store.get('duel:hud',{}));S.hudZ=Object.assign({},store.g
 var TB={score:.72,vitals:.55,items:.55,weapon:.5,lb:.7};
 // phone-only controls: the stick, pause and every button (keys b-<key>)
 var TOUCH_EL={stick:'#dt-stick',pausebtn:'#dt-pause'};
+var TOUCH_ROWS=[['b-all','All buttons'],['stick','Move stick'],['b-fire','Fire'],['b-aim','Aim'],['b-Space','Jump'],['b-KeyC','Crouch'],['b-KeyR','Reload'],['b-swap','Swap'],['b-KeyE','Ability'],['b-KeyQ','Wall'],['b-KeyG','Item'],['b-KeyT','Nade'],['b-KeyF','Finish'],['pausebtn','Pause']];
 var hudProf=null;function loadHudProf(){const p=S.touch?':t':'';if(p===hudProf)return;hudProf=p;S.hudPos=Object.assign({},store.get('duel:hudpos'+p,{}));S.hudZ=Object.assign({},store.get('duel:hudz'+p,{}));if(typeof applyHud==='function'&&$('dp-hud'))applyHud();}
 const saveHud=()=>{store.set('duel:hudpos'+(hudProf||''),S.hudPos);store.set('duel:hudz'+(hudProf||''),S.hudZ);};
 function applyHud(){if(hudProf===null)loadHudProf();const h=$('duel-hud');for(const [k] of HUD_PARTS){h.classList.toggle('no-'+k,S.hud[k]===false);h.style.setProperty('--z-'+k,String(S.hudZ[k]||1));}h.style.setProperty('--z-stick',String(S.hudZ.stick||1));h.style.setProperty('--z-pausebtn',String(S.hudZ.pausebtn||1));if(S.hudPos)applyHudPos();
-  $('dp-hud').innerHTML=HUD_PARTS.map(([k,n,noZ])=>{const on=S.hud[k]!==false,z=S.hudZ[k]||1;return `<div class="hud-row"><span class="hn">${n}</span><button class="tg" data-hud="${k}" aria-pressed="${on}">${on?'On':'Off'}</button>${noZ?'<span class="hz"></span>':`<span class="hz"><button data-z="${k}" data-d="-1" aria-label="Smaller">−</button><b>${Math.round(z*100)}%</b><button data-z="${k}" data-d="1" aria-label="Bigger">+</button></span>`}</div>`;}).join('');}
+  const zr=(k,z)=>`<span class="hz"><button data-z="${k}" data-d="-1" aria-label="Smaller">−</button><b>${Math.round(z*100)}%</b><button data-z="${k}" data-d="1" aria-label="Bigger">+</button></span>`;
+  $('dp-hud').innerHTML=(S.touch?`<div class="hud-sub">Touch controls</div>`+TOUCH_ROWS.map(([k,n])=>`<div class="hud-row"><span class="hn">${n}</span><span></span>${zr(k,S.hudZ[k]||1)}</div>`).join('')+`<div class="hud-sub">Panels</div>`:'')+
+    HUD_PARTS.map(([k,n,noZ])=>{const on=S.hud[k]!==false,z=S.hudZ[k]||1;return `<div class="hud-row"><span class="hn">${n}</span><button class="tg" data-hud="${k}" aria-pressed="${on}">${on?'On':'Off'}</button>${noZ?'<span class="hz"></span>':`<span class="hz"><button data-z="${k}" data-d="-1" aria-label="Smaller">−</button><b>${Math.round(z*100)}%</b><button data-z="${k}" data-d="1" aria-label="Bigger">+</button></span>`}</div>`;}).join('');
+  $('dp-hud-move').textContent=S.touch?'Move & resize':'Move panels';$('dp-hud-tip').textContent=S.touch?'Drag anything to move it. While moving, tap a control to resize it, or use the sizes here.':'Drag any panel to where you want it on screen';}
 $('dp-hud').addEventListener('click',e=>{const t=e.target.closest('[data-hud]');if(t){const k=t.dataset.hud;S.hud[k]=S.hud[k]===false;store.set('duel:hud',S.hud);applyHud();return;}
   const z=e.target.closest('[data-z]');if(z){const k=z.dataset.z;S.hudZ[k]=clamp(Math.round(((S.hudZ[k]||1)+(+z.dataset.d)*.1)*10)/10,.6,1.6);saveHud();applyHud();}});
 $('dp-hud-reset').addEventListener('click',()=>{S.hud={};S.hudZ={};S.hudPos={};store.set('duel:hud',S.hud);saveHud();applyHud();});
@@ -5762,7 +5774,7 @@ function applyHudPos(){for(const k in HUD_EL){const el=document.querySelector(HU
   const box=document.querySelector('#dtouch .dt-btns');if(!box)return;const a=box.getBoundingClientRect(),m=getComputedStyle(box).transform,sc=m&&m!=='none'?new DOMMatrix(m).a||1:1;
   box.querySelectorAll('.dt-b').forEach(b=>{const k=hudKeyOf(b);b.dataset.hudk=k;const p=S.touch&&S.hudPos[k];
     if(p&&a.width===0&&box.offsetParent){b.style.setProperty('--x',((a.left-p.x*innerWidth)/sc)+'px');b.style.setProperty('--y',((a.top-p.y*innerHeight)/sc)+'px');}else if(!p){b.style.removeProperty('--x');b.style.removeProperty('--y');}
-    if(S.touch&&S.hudZ[k])b.style.setProperty('--bz',String(S.hudZ[k]));else b.style.removeProperty('--bz');});}
+    const bz=S.touch?(S.hudZ[k]||1)*(S.hudZ['b-all']||1):1;if(bz!==1)b.style.setProperty('--bz',String(bz));else b.style.removeProperty('--bz');});}
 addEventListener('resize',applyHudPos);
 let hudDrag=null;
 let hudSel=null;

@@ -141,7 +141,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #duel-done .ddh .dd-head{display:flex;align-items:baseline;gap:14px}#duel-done .ddh .dd-wl{font-size:clamp(22px,2.6vw,32px)}#duel-done .ddh .dd-score{font-size:clamp(24px,2.6vw,32px)}
 #duel-done .ddh .res{grid-auto-flow:column;grid-template-rows:auto auto;grid-template-columns:none;gap:2px 18px;text-align:center;font-size:13px}#duel-done .ddh .res b{text-align:center;font-size:17px}
 #duel-done .ddh .dd-side{display:flex;flex-direction:column;gap:4px;min-width:200px}#duel-done .ddh .dd-side .newbest:empty{display:none}
-#duel-done .ddh .btns{flex-direction:row;gap:8px;flex-basis:100%;justify-content:center}#duel-done .ddh .btns .btn{padding:9px 16px;width:auto;font-size:15px}
+#duel-done .ddh .btns{flex-direction:row;gap:8px;flex-basis:100%;justify-content:center;align-items:center;position:relative}
+#duel-done .dd-auto{position:absolute;right:0;font:600 12px/1 var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}#duel-done .ddh .btns .btn{padding:9px 16px;width:auto;font-size:15px}
 #duel-done .ddh .dd-rp{flex-basis:100%;justify-content:flex-start}
 #duel-hud.rend #d-feed{opacity:0!important}
 .card{width:min(420px,100%);padding:24px;display:flex;flex-direction:column;gap:16px;text-align:center}
@@ -976,7 +977,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div></div>
       <div class="btns">
         <button class="btn primary" id="dd-again">Rematch</button>
-        <button class="btn" id="dd-clips">View Clips</button>
+        <button class="btn" id="dd-clips">View Clips</button><span class="dd-auto" id="dd-auto"></span>
       </div>
       <div class="dd-rp" id="dd-rp" hidden></div>
     </div>
@@ -5931,7 +5932,12 @@ function matchEnd(){S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=
   const st=S.stats,acc=st.shots?Math.round(st.hits/st.shots*100):0;
   $('dd-res').innerHTML=[['Kills',st.elims],['Damage',Math.round(st.dmg)],['Accuracy',acc+'%'],['Headshots',st.heads]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
-  $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();}
+  $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();startAutoHome();}
+// no choice on the end-of-match bar within 10 s: back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
+const AUTO_HOME=10;let autoHomeT=null;
+function stopAutoHome(){if(autoHomeT){clearInterval(autoHomeT);autoHomeT=null;}const e=$('dd-auto');if(e)e.textContent='';}
+function startAutoHome(){stopAutoHome();const end=performance.now()+AUTO_HOME*1000;const tick=()=>{const left=Math.ceil((end-performance.now())/1000);if($('duel-done').hidden||S.state!=='done'||S.replayOpen){stopAutoHome();return;}if(left<=0){stopAutoHome();leave();return;}$('dd-auto').textContent=`Home in ${left}s`;};tick();autoHomeT=setInterval(tick,250);}
+$('duel-done').addEventListener('pointerdown',stopAutoHome);$('duel-done').addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'||e.code==='Tab')stopAutoHome();});
 const nextUnlock=()=>FX_XP.find(x=>x>(S.xp||0));
 const lvlOf=x=>Math.floor(x/100)+1;
 function xpBar(prefix){const x=S.xp||0,nu=nextUnlock(),i=FX_XP.indexOf(nu);$(prefix+'-lvl').textContent='Level '+lvlOf(x);$(prefix+'-bar').style.transform=`scaleX(${(x%100)/100})`;

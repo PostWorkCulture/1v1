@@ -944,7 +944,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Move</em>
           <span><kbd>Space</kbd></span><em>Jump (press again in mid-air to double jump, needs over half stamina)</em>
           <span><kbd>C</kbd></span><em>Crouch (press again to stand)</em>
-          <span><kbd>Shift</kbd> hold</span><em>Run (uses stamina; getting shot drains it too)</em>
+          <span><kbd>Space</kbd> in the air</span><em>Double jump (uses some stamina; walking, aiming and getting shot drain it, standing still refills it)</em>
           <span>Mouse</span><em>Look (click the game to lock)</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">Fight</div><div class="pause-keys">
@@ -4187,8 +4187,8 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){depen(f);const C=CHARS[f.char
   // Jet: jump fires the rocket boost whenever it's ready (from the ground or mid-air), otherwise it's a normal jump
   if(f.char==='jet'&&f.abilT<=0&&(jumpPress||(jump&&f.grounded&&!f.jumpLock))&&useAbility(f)){f.jumpLock=true;}
   else if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=1;f.jumpLock=true;f._jt=S.t;}
-  // double jump: one extra jump in mid-air, only with more than half stamina, and it costs some
-  else if(jumpPress&&!f.grounded&&f.airJ>0&&!f.carrying&&(f.stam??STAM_MAX)>STAM_MAX*.5){f.vel.y=Math.max(f.vel.y,jv*1.05);f.airJ--;f.stam-=DJ_COST;f.stamRest=0;if(f===ME)sfx('swing',null,{vol:.5});emit(f.pos.x,f.pos.y+.2,f.pos.z,{n:16,speed:4,size:.18,life:.35,grav:0,colors:['#ffffff',C.color]});}
+  // double jump: one extra jump in mid-air, as long as you have the stamina to pay for it
+  else if(jumpPress&&!f.grounded&&f.airJ>0&&!f.carrying&&(f.stam??STAM_MAX)>=DJ_COST){f.vel.y=Math.max(f.vel.y,jv*1.05);f.airJ--;f.stam-=DJ_COST;f.stamRest=0;if(f===ME)sfx('swing',null,{vol:.5});emit(f.pos.x,f.pos.y+.2,f.pos.z,{n:16,speed:4,size:.18,life:.35,grav:0,colors:['#ffffff',C.color]});}
   if(!jump)f.jumpLock=false;
   if(f.boostT>0){f.boostT-=dt;if(f.downed)f.boostT=0;else{f.vel.y=Math.max(f.vel.y,30);f.grounded=false;f.jetOn=.1;for(let k=0;k<2;k++)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.6,f.pos.z-Math.cos(f.yaw)*.4,{n:3,speed:2,up:-10,size:.32,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#ffffff']});}}
   const vy0=f.vel.y;if(!f.grounded)f.vel.y-=GRAV*dt*(f.vel.y<0?1.2:1);
@@ -5308,7 +5308,9 @@ function tickCons(f,dt){f.consT-=dt;tickStam(f,dt);if(f.shopCD>0)f.shopCD=Math.m
 /* stamina and health regen */
 const DJ_COST=15,AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=16,STAM_DELAY=1,STAM_MIN=25,SPRINT_MUL=1.4,REGEN_DELAY=5,REGEN_RATE=3;
 function tickStam(f,dt){if(f===ME&&S.state==='fight'&&f.alive&&!f.downed&&f.hp<f.hpMax*.3){f.heartT=(f.heartT||0)-dt;if(f.heartT<=0){f.heartT=f.hp<f.hpMax*.15?.75:1.05;sfx('heart',null,{jitter:0});}}else if(f===ME)f.heartT=0;// running drains stamina, and so does aiming down sights (a bit slower); at 0 you move 25% slower until it's back to a quarter
-  if(f.sprinting||(f.ads&&f.alive&&!f.downed&&S.state==='fight')){f.stam=Math.max(0,f.stam-STAM_DRAIN*(f.sprinting?1:.6)*dt);f.stamRest=0;if(f.stam<=0)f.stamLock=true;}
+  // no sprinting any more: walking drains a little, aiming a bit more; standing still lets it recover
+  const walking=f.alive&&!f.downed&&S.state==='fight'&&Math.hypot(f.vel.x,f.vel.z)>1.5;
+  if(walking||(f.ads&&f.alive&&!f.downed&&S.state==='fight')){f.stam=Math.max(0,f.stam-STAM_DRAIN*(f.ads?.6:.075)*dt);f.stamRest=0;if(f.stam<=0)f.stamLock=true;}
   else{f.stamRest=(f.stamRest||0)+dt;if(f.stamRest>STAM_DELAY)f.stam=Math.min(STAM_MAX,f.stam+STAM_REGEN*dt);if(f.stam>=STAM_MIN)f.stamLock=false;}
   // slow health regen once you've been out of fire for a while
   // golden armour rebuilds to 50 at a quarter of the speed health regenerates
@@ -5825,7 +5827,7 @@ function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
   $('d-items').innerHTML=L.map(([ic,k,n,dim])=>`<span class="it${dim?' dim':k?' glow':''}">${ICON[ic]}${k?`<kbd>${k}</kbd>`:''}<b>${n}</b></span>`).join('');}
 // who you're watching while you're out: a teammate if one's up, otherwise whoever is still playing (in deathmatch, whoever got you)
 function specOf(){if(ME.alive||!D.active)return null;if(isDM()&&ME.lastBy&&ME.lastBy.alive)return ME.lastBy;return FS.find(x=>x!==ME&&x.alive&&!isFoe(ME,x))||FS.find(x=>x!==ME&&x.alive)||null;}
-function updHUD(dt){updLB();{const hb=$('d-homebtn');if(hb.hidden!==!!S.touch)hb.hidden=!!S.touch;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0||ME.dazeT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st)e.className='d-edge on '+st;else if(e.classList.contains('on'))e.classList.remove('on');}if(S.hud.mm!==false)updMinimap();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
+function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='done'&&S.state!=='roundEnd';if(hb.hidden!==hide)hb.hidden=hide;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0||ME.dazeT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st)e.className='d-edge on '+st;else if(e.classList.contains('on'))e.classList.remove('on');}if(S.hud.mm!==false)updMinimap();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
   {const my=S.score[ME.team]||0;let ot=0,oi=-1;S.score.forEach((v,i)=>{if(i!==ME.team&&v>=ot&&v!=null){ot=v;oi=i;}});txt('d-s1',String(my));txt('d-s2',String(ot));if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
   {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);
@@ -6099,7 +6101,7 @@ function step(rdt){pfBudget=24000;
     const fi=clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si=clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1);
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
-    f.ads=mouseR&&live&&!f.downed;f.reviving=f.downed&&!!keys.KeyE;if(f.carrying||!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=live&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!f.carrying&&!(f.stunT>0)&&!f.stamLock&&f.stam>0&&Math.hypot(wx,wz)>.5&&fi>=0;
+    f.ads=mouseR&&live&&!f.downed;f.reviving=f.downed&&!!keys.KeyE;if(f.carrying||!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=false&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!f.carrying&&!(f.stunT>0)&&!f.stamLock&&f.stam>0&&Math.hypot(wx,wz)>.5&&fi>=0;
     const spd=(f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):9)*stimMul(f)*(f.sprinting?SPRINT_MUL:1);
     if(f.carriedBy||f.skyHeld){}else if(f.thrownT>0||f.stunT>0)physics(f,dt,0,0,false,0,false);else if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&keys.Space,spd,live&&f.jumpPress);f.jumpPress=false;
     if(live&&f.downed&&!f.carriedBy&&!f.skyHeld&&!(f.thrownT>0)&&mouseL&&!f.triggerWas)tagShot(f);

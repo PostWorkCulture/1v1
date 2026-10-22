@@ -5306,7 +5306,7 @@ function stunBlast(src,at){blastMarks(at,null,GUNS.stun.radius*.45);sfx('stun',a
 function tickCons(f,dt){f.consT-=dt;tickStam(f,dt);if(f.shopCD>0)f.shopCD=Math.max(0,f.shopCD-dt);f.nadeT=(f.nadeT||0)-dt;if(f.speedT>0){f.speedT=Math.max(0,f.speedT-dt);if(Math.hypot(f.vel.x,f.vel.z)>4&&Math.random()<.4)emit(f.pos.x,f.pos.y+.15,f.pos.z,{n:1,speed:.3,size:.14,life:.3,grav:0,colors:['#f08a24','#ffd23f']});}if(f.stimT>0){f.stimT-=dt;if(Math.hypot(f.vel.x,f.vel.z)>3&&Math.random()<.7)emit(f.pos.x+rnd(-.3,.3),f.pos.y+rnd(.3,1.8),f.pos.z+rnd(-.3,.3),{n:1,speed:.2,size:.12,life:.35,grav:0,colors:['#b6ff3b','#3bff8a']});}
   if(f.senseT>0)f.senseT-=dt;if(f.blindT>0)f.blindT-=dt;}
 /* stamina and health regen */
-const DJ_COST=15,AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=16,STAM_DELAY=1,STAM_MIN=25,SPRINT_MUL=1.4,REGEN_DELAY=5,REGEN_RATE=3;
+const DJ_COST=15,AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=40,STAM_DELAY=.5,STAM_MIN=25,SPRINT_MUL=1.4,REGEN_DELAY=5,REGEN_RATE=3;
 function tickStam(f,dt){if(f===ME&&S.state==='fight'&&f.alive&&!f.downed&&f.hp<f.hpMax*.3){f.heartT=(f.heartT||0)-dt;if(f.heartT<=0){f.heartT=f.hp<f.hpMax*.15?.75:1.05;sfx('heart',null,{jitter:0});}}else if(f===ME)f.heartT=0;// running drains stamina, and so does aiming down sights (a bit slower); at 0 you move 25% slower until it's back to a quarter
   // no sprinting any more: walking drains a little, aiming a bit more; standing still lets it recover
   const walking=f.alive&&!f.downed&&S.state==='fight'&&Math.hypot(f.vel.x,f.vel.z)>1.5;
@@ -6102,7 +6102,7 @@ function step(rdt){pfBudget=24000;
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
     f.ads=mouseR&&live&&!f.downed;f.reviving=f.downed&&!!keys.KeyE;if(f.carrying||!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=false&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!f.carrying&&!(f.stunT>0)&&!f.stamLock&&f.stam>0&&Math.hypot(wx,wz)>.5&&fi>=0;
-    const spd=(f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):9)*stimMul(f)*(f.sprinting?SPRINT_MUL:1);
+    const spd=(f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):11.25)*stimMul(f)*(f.sprinting?SPRINT_MUL:1);
     if(f.carriedBy||f.skyHeld){}else if(f.thrownT>0||f.stunT>0)physics(f,dt,0,0,false,0,false);else if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&keys.Space,spd,live&&f.jumpPress);f.jumpPress=false;
     if(live&&f.downed&&!f.carriedBy&&!f.skyHeld&&!(f.thrownT>0)&&mouseL&&!f.triggerWas)tagShot(f);
     else if(live&&!f.downed&&!f.carrying&&!f.skySlam&&!(f.stunT>0)&&mouseL&&canFire(f)&&(GUNS[id].auto||!f.triggerWas)){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);
@@ -6116,7 +6116,7 @@ function step(rdt){pfBudget=24000;
   // a finisher's scripted moves mustn't leave the attacker standing inside a wall or post
   for(const x of FS)if(x.alive&&(x.finishT>0||FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===x)))depen(x);
   for(const b of FS){if(b===ME)continue;
-    if(b.carriedBy||b.skyHeld){}else if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?9.4:8.6)*stimMul(b),c.jumpPress);}
+    if(b.carriedBy||b.skyHeld){}else if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?11.75:10.75)*stimMul(b),c.jumpPress);}
     else if(b.alive&&!(b.finishing&&b.finishing.move)&&!FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===b))physics(b,dt,0,0,false,0);}
   updWalls(dt);updProps(dt);updPlates(dt);updCelebrate(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}

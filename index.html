@@ -1095,7 +1095,7 @@ const GFX=(()=>{
   const mobile=(matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches)||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform));
   const LV=['low','med','high'],NAME={low:'Low',med:'Medium',high:'High'};
   const Q={high:{dpr:1.5,shadow:2048,soft:true,every:1,lights:true,replay:{fps:30,w:1280}},
-           med:{dpr:1.25,shadow:1024,soft:false,every:2,lights:false,replay:{fps:20,w:640}},
+           med:{dpr:1.25,shadow:1024,soft:false,every:2,lights:false,replay:mobile?{fps:12,w:480}:{fps:20,w:640}},
            low:{dpr:1,shadow:0,soft:false,every:1,lights:false,replay:null}};
   let pick=store.get('gfx','auto');if(pick!=='auto'&&!LV.includes(pick))pick='auto';
   let autoLv=store.get('gfx:autolv',mobile?'med':'high');if(!LV.includes(autoLv))autoLv=mobile?'med':'high';
@@ -1119,7 +1119,8 @@ const GFX=(()=>{
     set(p){pick=p;store.set('gfx',p);res=1;W.n=W.t=W.good=0;W.cool=2;apply();},
     setFps(f){fps=f;store.set('gfx:fps',f);W.n=W.t=W.good=0;G2.ui();},
     // true when this animation frame should be drawn (frame-rate cap)
-    gate(now){if(!fps){lastT=now;return true;}const iv=1000/fps,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
+    idle:false,
+    gate(now){const cap=G2.idle?(fps?Math.min(fps,20):20):fps;if(!cap){lastT=now;return true;}const iv=1000/cap,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
     // called once per drawn frame
     tick(dt,live){fno++;const c=q();if(c.every>1&&fno%c.every===0)for(const s of suns)s.shadow.needsUpdate=true;
       if(pick!=='auto'||!live||document.hidden||dt>.25){W.n=W.t=0;return;}
@@ -2062,7 +2063,7 @@ function updateHUD(rdt){
 let last=performance.now(),frozen=false;
 function frame(now){
   requestAnimationFrame(frame);if(frozen)return;if(!GFX.gate(now))return;
-  const real=(now-last)/1000,rdt=Math.min(.05,real);last=now;const D=window.__duel;GFX.tick(real,D&&D.active?D.live:G.state==='play');if(D&&D.active){D.frame(rdt);return;}step(rdt);renderer.render(scene,camera);
+  const real=(now-last)/1000,rdt=Math.min(.05,real);last=now;const D=window.__duel;GFX.idle=D&&D.active?!['fight','countdown'].includes(D.S.state)||D.S.paused||D.S.replayOpen:G.state!=='play';GFX.tick(real,D&&D.active?D.live:G.state==='play');if(D&&D.active){D.frame(rdt);return;}step(rdt);renderer.render(scene,camera);
 }
 function step(rdt){
   if(G.slowT>0){G.slowT-=rdt;G.timeScale=damp(G.timeScale,.25,20,rdt);}else G.timeScale=damp(G.timeScale,1,5,rdt);

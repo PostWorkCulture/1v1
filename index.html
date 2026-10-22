@@ -3951,10 +3951,13 @@ Object.assign(SKINS,{
   suit(ch,{torso:hood,arms:null,legs:dark,shoes:mat('#ff6a1a'),hands:null});const b=ch.body,h=ch.headG;
   piece(b,new THREE.BoxGeometry(1.1,.36,.6),orange,0,1.12,0,{outline:false});piece(b,new THREE.BoxGeometry(1.1,.18,.6),mat('#ffb347'),0,1.36,0,{outline:false});
   for(const a of [ch.aL,ch.aR]){piece(a.p,RBX(.54,.4,.54,.08),hood,0,-.12,0);piece(a.p,RBX(.5,.62,.5,.08),skinTone(),0,-.6,0);piece(a.p,RBX(.52,.3,.52,.08),wrap,0,-.82,0);piece(a.p,new THREE.BoxGeometry(.54,.06,.54),GLOW('#ffb347'),0,-.7,0,{outline:false});}
-  const fh=new THREE.Group();fh.position.set(0,.62,0);h.add(fh);const fc=['#ff3b1f','#ff7a1f','#ffb347','#ffe08a'];
-  for(let i=0;i<9;i++){const x=-.24+(i%3)*.24,z=.18-Math.floor(i/3)*.2;const c=new THREE.Mesh(new THREE.ConeGeometry(.13,.42+((i*7)%3)*.12,5),GLOW(fc[i%4]));c.position.set(x,.2,z);c.rotation.set(-.3-Math.floor(i/3)*.2,0,-x*.8);fh.add(c);}
+  // flame hair: a fitted cap hugging the top and back of the head, with a tidy crest of short flames growing out of it (they flicker from the base, so nothing pokes into the face)
+  const hr=mat('#c0261b',null,{roughness:.6});piece(h,RBX(.72,.16,.68,.07),hr,0,.69,-.01);piece(h,RBX(.72,.4,.14,.06),hr,0,.5,-.29);
+  const fh=new THREE.Group();fh.position.set(0,.75,0);h.add(fh);const fc=['#ff3b1f','#ff7a1f','#ffb347','#ffd36a'];
+  [[-.2,.14,.24,2],[0,.16,.3,3],[.2,.14,.24,2],[-.24,-.06,.3,1],[-.08,-.04,.36,2],[.08,-.04,.36,2],[.24,-.06,.3,1],[-.14,-.22,.3,0],[.14,-.22,.3,0]].forEach(([x,z,ht,ci],i)=>{
+    const g=new THREE.ConeGeometry(.11,ht,5);g.translate(0,ht/2,0);const c=new THREE.Mesh(g,GLOW(fc[ci]));c.position.set(x,0,z);c.rotation.set(-.28,0,-x*.45);fh.add(c);});
   for(const sx of [-1,1])piece(h,new THREE.BoxGeometry(.14,.05,.02),GLOW('#ffb347'),sx*.14,.44,.31,{outline:false,rot:[0,0,sx*.2]});
-  ch.anim=(dt,t)=>{fh.children.forEach((c,i)=>{c.scale.y=1+Math.sin(t*10+i*1.7)*.22;});};},
+  ch.anim=(dt,t)=>{fh.children.forEach((c,i)=>{c.scale.y=1+Math.sin(t*10+i*1.7)*.15;});};},
  blaze_monk(ch){const robe=mat('#e8742a',null,{roughness:.85}),sash=mat('#8a1f1f',null,{roughness:.8}),bead=mat('#3a2a1e',null,{roughness:.5}),skin=skinTone();
   suit(ch,{torso:robe,arms:robe,legs:robe,shoes:mat('#5b3a22'),hands:skin,tw:1.12});const b=ch.body,h=ch.headG;
   const sk=new THREE.CylinderGeometry(.55,.68,.8,4,1);sk.rotateY(Math.PI/4);piece(b,sk,robe,0,.62,0,{ol:1.04});
@@ -5660,6 +5663,7 @@ window.addEventListener('keydown',e=>{if(!D.active||S.state==='menu'||S.state===
   if(e.code==='KeyP'||(e.code==='Escape'&&!S.locked)){S.paused?resume():pause();return;}
   if(S.paused)return;
   if(S.shopOpen&&/^Digit[1-9]$/.test(e.code)){buyShop(+e.code.slice(5)-1);return;}
+  if(CR.run&&S.state==='roundEnd'&&(e.code==='Space'||e.code==='Enter')){S.t0=Math.min(S.t0,.05);return;}
   if(S.state==='roundEnd'&&!$('d-rend').hidden){if(/^Digit[1-9]$/.test(e.code)&&RP.bar){const c=RP.bar[+e.code.slice(5)-1];if(c){openReplay(RP.clips.indexOf(c));return;}}if(e.code==='KeyH'){$('d-rend').hidden=true;leave();return;}}
   if(e.code==='KeyT')throwNade(ME);
   if(e.code==='Digit1')equip(ME,0);if(e.code==='Digit2')equip(ME,1);if(e.code==='KeyR')startReload(ME);if(e.code==='KeyQ')buildWall(ME);if(e.code==='KeyE'&&!ME.downed)useAbility(ME);if(e.code==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}if(e.code==='KeyF'&&!ME.carrying){const v=finishable(ME);if(v)finish(ME,v);}if(e.code==='KeyC'&&!e.repeat){if(!ME.carrying&&!ME.downed)ME.crouchOn=!ME.crouchOn;}
@@ -5999,7 +6003,7 @@ function dmRespawn(f){setTimeout(()=>sfx('respawn',f,{range:20}),0);f.respawnT=0
 function dmTick(dt){if(!isDM()||S.state!=='fight')return;for(const f of FS)if(!f.alive&&f.respawnT>0&&(!f.finishing||f.finishing.t>3)){f.respawnT-=dt;if(f.respawnT<=0)dmRespawn(f);}}
 function dmWin(w){if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;if(won)markWinningClip(true);S.lastWin=w?w.team:-1;for(const x of FS)if(x!==w)x.stamBoost=false;if(!won)setTimeout(()=>sfx('lose'),450);
   if(won){S.stats.kills++;addXP(20);}else addXP(5);center(won?'Victory':`${nm(w)} wins`,`${w?w.k:0} kills`,won?'win top':'lose top');showRoundEndBar();
-  if(w)celebrate([w],true);}
+  if(w){startCrown([w]);if(CR.run)S.t0=Math.max(S.t0,crownDur(1));}}
 /* victory celebrations: everyone stays on the ground doing silly dances (no jumping or floating), each in a different light show,
    picked at random and never the same twice running:
    rave      - neon beams sweeping round the winners and rainbow rings pulsing at their feet
@@ -6086,13 +6090,117 @@ function updCelebrate(dt){const C=S.cel;if(!C)return;if(S.state==='fight'||S.sta
   // glowing fireworks overhead
   C.next-=dt;if(C.next<=0){C.next=C.big?.22:.4;const f=C.who[Math.floor(Math.random()*C.who.length)],x=f.pos.x+rnd(-6,6),y=f.pos.y+rnd(8,14),z=f.pos.z+rnd(-6,6);
     celBurst(x,y,z,celCol(),C.big?2.6:1.8,C.big?10:6);}}
+/* match win: cut away from the map to a black throne room. The winners sit on gold-and-velvet thrones, two ring girls walk in
+   carrying crowns and place them on their heads, then the camera cuts to a close-up of each winner turning to the lens with a smirk.
+   It's drawn as its own little scene (no map, no coloured lights) and stays behind the results screen. */
+const CR={scene:null,cam:new THREE.PerspectiveCamera(38,1,.05,200),run:null};
+function crBox(p,w,h,d,m,x,y,z,o){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);if(o&&o.rot)b.rotation.set(...o.rot);b.castShadow=b.receiveShadow=true;p.add(b);return b;}
+function crStage(){if(CR.scene)return CR.scene;const T=THREE,sc=new T.Scene();sc.background=new T.Color('#000');CR.scene=sc;
+  const M=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o||{}));
+  CR.gold=M('#e2b33c',{metalness:.85,roughness:.28});CR.velvet=M('#7a0f1c',{roughness:.85});
+  const fl=new T.Mesh(new T.PlaneGeometry(80,80),M('#000000',{roughness:.95}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;sc.add(fl);
+  crBox(sc,9.4,.3,3.6,M('#0b0b0c',{roughness:.4}),0,.15,-.2);crBox(sc,9.44,.05,.05,CR.gold,0,.29,1.6);crBox(sc,9.44,.05,.05,CR.gold,0,.02,1.6);
+  sc.add(new T.AmbientLight('#ffffff',.1));const rim=new T.DirectionalLight('#ffd9a0',.9);rim.position.set(0,6,-8);sc.add(rim);const key=new T.DirectionalLight('#ffffff',.4);key.position.set(2,4,9);sc.add(key);
+  CR.spots=[0,1].map(()=>{const s=new T.SpotLight('#fff1d6',260,20,.42,.55,1.2);s.castShadow=true;s.shadow.mapSize.set(1024,1024);sc.add(s,s.target);return s;});
+  CR.thrones=[0,1].map(()=>{const t=new T.Group(),g=CR.gold,v=CR.velvet;sc.add(t);
+    crBox(t,1.7,.45,1.3,v,0,.55,0);crBox(t,1.8,.12,1.4,g,0,.3,0);for(const sx of[-1,1])for(const sz of[-1,1])crBox(t,.16,.3,.16,g,sx*.78,.15,sz*.55);
+    crBox(t,1.7,2.9,.3,v,0,1.9,-.62);crBox(t,1.86,.14,.36,g,0,3.38,-.62);crBox(t,.14,2.9,.36,g,-.88,1.9,-.62);crBox(t,.14,2.9,.36,g,.88,1.9,-.62);
+    for(const sx of[-1,1]){crBox(t,.26,.5,1.25,v,sx*.98,1.0,0);crBox(t,.3,.1,1.3,g,sx*.98,1.28,0);}
+    for(const sx of[-1,0,1]){const c=new T.Mesh(new T.ConeGeometry(.14,.5,4),g);c.position.set(sx*.6,sx?3.6:3.8,-.62);t.add(c);const gm=new T.Mesh(new T.OctahedronGeometry(.08),M('#c8102e',{metalness:.3,roughness:.2,emissive:'#3a0008'}));gm.position.set(sx*.6,3.55,-.45);t.add(gm);}
+    return t;});
+  CR.crowns=[0,1].map(()=>{const c=new T.Group(),r=.4,g=CR.gold;
+    const band=new T.Mesh(new T.CylinderGeometry(r,r*.95,.24,8,1,true),new T.MeshStandardMaterial({color:'#e8b93a',metalness:.9,roughness:.25,side:T.DoubleSide}));band.castShadow=true;c.add(band);
+    for(let i=0;i<8;i++){const a=i/8*TAU+Math.PI/8,x=Math.cos(a)*r*.97,z=Math.sin(a)*r*.97;const p=new T.Mesh(new T.ConeGeometry(.08,.3,4),g);p.position.set(x,.25,z);c.add(p);
+      const b=new T.Mesh(new T.SphereGeometry(.035,8,6),g);b.position.set(x,.42,z);c.add(b);
+      const gm=new T.Mesh(new T.BoxGeometry(.07,.07,.03),M(i%2?'#1f6fe0':'#c8102e',{metalness:.2,roughness:.15,emissive:i%2?'#04102a':'#2a0006'}));gm.position.set(Math.cos(a)*(r+.005),0,Math.sin(a)*(r+.005));gm.lookAt(gm.position.clone().multiplyScalar(2));c.add(gm);}
+    const cap=new T.Mesh(new T.SphereGeometry(r*.92,12,8,0,TAU,0,Math.PI/2),CR.velvet);cap.position.y=.02;cap.scale.y=.5;c.add(cap);sc.add(c);return c;});
+  CR.girls=[0,1].map(()=>crGirl(sc));return sc;}
+// ring girl: long legs, heels, black satin one-piece with a gold belt, long blonde hair
+function crGirl(sc){const T=THREE,r=new T.Group();sc.add(r);const M=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.55},o||{}));
+  const skin=M('#f2c9a8'),suitM=M('#0e0e10',{roughness:.25,metalness:.4}),hair=M('#f3d36b',{roughness:.45}),heel=M('#0a0a0a',{roughness:.2,metalness:.3});
+  const legH=1.55,hip=.12+legH,legs=[];for(const sx of[-1,1]){const p=new T.Group();p.position.set(sx*.13,hip,0);r.add(p);crBox(p,.21,legH,.24,skin,0,-legH/2+.06,0);crBox(p,.23,.12,.36,heel,0,-legH+.0,.05);crBox(p,.06,.14,.06,heel,0,-legH+.01,-.1);legs.push(p);}
+  crBox(r,.52,.3,.3,suitM,0,hip+.05,0);crBox(r,.5,.6,.28,suitM,0,hip+.45,0);crBox(r,.54,.06,.31,CR.gold,0,hip+.2,0);crBox(r,.18,.16,.18,skin,0,hip+.82,0);
+  const head=new T.Group();head.position.set(0,hip+.9,0);r.add(head);
+  const cv=document.createElement('canvas');cv.width=cv.height=128;const g=cv.getContext('2d');g.fillStyle='#f2c9a8';g.fillRect(0,0,128,128);
+  g.fillStyle='rgba(239,159,149,.5)';g.beginPath();g.arc(30,82,10,0,7);g.arc(98,82,10,0,7);g.fill();
+  for(const ex of[42,86]){g.fillStyle='#fff';g.beginPath();g.ellipse(ex,62,11,8,0,0,7);g.fill();g.fillStyle='#2f7fe0';g.beginPath();g.arc(ex,63,6,0,7);g.fill();g.fillStyle='#111';g.beginPath();g.arc(ex,63,3,0,7);g.fill();
+    g.strokeStyle='#111';g.lineWidth=3;g.beginPath();g.ellipse(ex,62,11,8,0,Math.PI,TAU);g.stroke();for(const k of[-8,0,8]){g.beginPath();g.moveTo(ex+k,55);g.lineTo(ex+k*1.3,49);g.stroke();}
+    g.strokeStyle='#a07a3a';g.beginPath();g.moveTo(ex-11,44);g.quadraticCurveTo(ex,38,ex+11,44);g.stroke();}
+  g.fillStyle='#d01f3c';g.beginPath();g.moveTo(50,98);g.quadraticCurveTo(64,90,78,98);g.quadraticCurveTo(64,110,50,98);g.fill();
+  const ft=new T.CanvasTexture(cv);ft.colorSpace=T.SRGBColorSpace;const fm=M('#ffffff',{map:ft});
+  const hb=new T.Mesh(new T.BoxGeometry(.44,.46,.4),[skin,skin,skin,skin,fm,skin]);hb.position.y=.23;hb.castShadow=true;head.add(hb);
+  crBox(head,.5,.14,.46,hair,0,.49,-.01);crBox(head,.5,.85,.12,hair,0,.12,-.24);crBox(head,.08,.7,.3,hair,-.25,.15,-.06);crBox(head,.08,.7,.3,hair,.25,.15,-.06);crBox(head,.46,.12,.06,hair,.04,.39,.2,{rot:[0,0,-.15]});
+  const arms=[-1,1].map(sx=>{const p=new T.Group();p.position.set(sx*.33,hip+.68,0);r.add(p);crBox(p,.14,.85,.14,skin,0,-.42,0);crBox(p,.13,.12,.14,skin,0,-.88,0);return p;});
+  r.userData={legs,arms,head,hip};r.scale.setScalar(.9);return r;}
+// the winner's own face with a raised eyebrow, a heavy eyelid and a one-sided smirk
+function crSmirk(f){const hd=f.ch.head;if(!hd||!Array.isArray(hd.material))return;const m=hd.material[4];if(!m||!m.map||!m.map.image)return;
+  const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.drawImage(m.map.image,0,0,256,256);
+  const bg=g.getImageData(128,30,1,1).data,bc=`rgb(${bg[0]},${bg[1]},${bg[2]})`;g.fillStyle=bc;g.fillRect(40,50,180,170);
+  g.strokeStyle='#121318';g.lineCap='round';g.lineWidth=10;g.beginPath();g.moveTo(62,96);g.quadraticCurveTo(90,92,116,98);g.stroke();g.beginPath();g.moveTo(144,84);g.quadraticCurveTo(172,58,198,70);g.stroke();
+  g.fillStyle='#121318';g.beginPath();g.ellipse(92,124,13,11,0,0,TAU);g.fill();g.beginPath();g.ellipse(166,118,13,15,0,0,TAU);g.fill();g.fillStyle=bc;g.fillRect(74,104,38,10);
+  g.fillStyle='#fff';g.beginPath();g.arc(97,122,4,0,TAU);g.fill();g.beginPath();g.arc(171,113,4,0,TAU);g.fill();
+  g.lineWidth=7;g.beginPath();g.moveTo(100,180);g.quadraticCurveTo(150,186,186,160);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(181,151);g.quadraticCurveTo(194,158,191,171);g.stroke();
+  const hide=[];for(const c of f.ch.headG.children){if(!c.isMesh||c===hd||!c.visible||c.position.z<.28)continue;c.geometry.computeBoundingBox();const bb=c.geometry.boundingBox;if(bb.max.z-bb.min.z<.08){c.visible=false;hide.push(c);}}
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;f.crFace={m,map:m.map,hide};m.map=t;m.needsUpdate=true;}
+function crTop(f){const hg=f.ch.headG;hg.updateMatrixWorld(true);const ms=[],shown=o=>{for(let p=o;p&&p!==hg;p=p.parent)if(!p.visible)return false;return true;};
+  hg.traverse(o=>{if(!o.isMesh||!shown(o))return;const m=Array.isArray(o.material)?o.material[0]:o.material;if(!m||m.type==='MeshBasicMaterial'||m.side===THREE.BackSide)return;ms.push(o);});
+  const rc=new THREE.Raycaster(),ys=[];for(const [x,z] of [[-.22,.16],[.22,.16],[-.22,-.18],[.22,-.18],[0,0]]){const o=hg.localToWorld(new V3(x,2.5,z)),d=hg.localToWorld(new V3(x,0,z)).sub(o).normalize();rc.set(o,d);const h=rc.intersectObjects(ms,false)[0];if(h)ys.push(hg.worldToLocal(h.point.clone()).y);}
+  ys.sort((a,b)=>a-b);return ys.length?Math.min(1.1,ys[Math.floor(ys.length/2)]):.63;}
+function crownDur(n){return n>1?8.8:7;}
+function startCrown(team){clearCrown();clearCelebrate();const who=team.filter(Boolean).sort((a,b)=>(b===ME)-(a===ME)).slice(0,2);if(!who.length)return;crStage();
+  const n=who.length,R={who,t:0,n,seats:[]};
+  const ks=who.map(f=>f.ch.root.scale.x/SC),xs=n>1?[-(1.15*ks[0]+.15),1.15*ks[1]+.15]:[0];
+  {const L=xs[0]-1.1*ks[0]-1.0,Rt=xs[n-1]+1.1*ks[n-1]+1.0,sh=-(L+Rt)/2;for(let i=0;i<n;i++)xs[i]+=sh;R.half=(Rt-L)/2+.2;}
+  who.forEach((f,i)=>{const s=f.ch.root.scale.x,k=s/SC,x=xs[i];const th=CR.thrones[i];th.visible=true;th.position.set(x,.3,-.3);th.scale.setScalar(k);
+    const sp=CR.spots[i];sp.visible=true;sp.position.set(x,9,3);sp.target.position.set(x,.8,-.3);
+    R.seats.push({x,k,s,seatY:.3+.775*k,side:n>1?(i?1:-1):(i?1:-1)});CR.scene.add(f.ch.root);f.ch.root.visible=true;f.crTop=null;});
+  for(let i=n;i<2;i++){CR.thrones[i].visible=false;CR.spots[i].visible=false;}
+  // with one winner the girls come in from both sides; with two, one girl each
+  R.girls=n>1?[{g:CR.girls[0],w:0,side:-1},{g:CR.girls[1],w:1,side:1}]:[{g:CR.girls[0],w:0,side:-1},{g:CR.girls[1],w:0,side:1,helper:1}];
+  CR.crowns.forEach((c,i)=>c.visible=i<n);CR.girls.forEach(g=>g.visible=true);CR.run=R;}
+function clearCrown(){const R=CR.run;if(!R)return;for(const f of R.who){scene.add(f.ch.root);if(f.crFace){f.crFace.m.map=f.crFace.map;f.crFace.m.needsUpdate=true;for(const c of f.crFace.hide)c.visible=true;f.crFace=null;}f.ch.headG.rotation.set(0,0,0);}CR.run=null;}
+function updCrown(dt){const R=CR.run;if(!R)return;if(S.state==='fight'||S.state==='countdown'||S.state==='menu'){clearCrown();return;}R.t+=dt;}
+// pose everything for this frame (runs after the fighters' own animation, just before drawing)
+function poseCrown(){const R=CR.run,t=R.t,T=THREE,V=V3;const ease=u=>u*u*(3-2*u),seg=(a,b)=>clamp((t-a)/(b-a),0,1);
+  const cuts=R.n>1?[3.7,5.5,7.3]:[3.7,5.6];let shot=-1;if(t>=cuts[0]&&t<cuts[cuts.length-1])shot=t<cuts[1]?0:1;
+  R.who.forEach((f,i)=>{const st=R.seats[i],ch=f.ch,r=ch.root,sit=ease(seg(.35,1.15));
+    r.visible=true;r.position.set(st.x,lerp(.3,st.seatY-1*st.s,sit),lerp(.75*st.k,-.3+.1*st.k,sit));r.rotation.set(0,0,0);ch.flip.rotation.set(0,0,0);ch.body.rotation.set(0,0,0);
+    ch.lL.p.rotation.set(-1.35*sit,0,.08*sit);ch.lR.p.rotation.set(-1.35*sit,0,-.08*sit);ch.aL.p.rotation.set(-.55*sit,0,-.12);ch.aR.p.rotation.set(-.55*sit,0,.12);
+    for(const g of Object.values(f.guns||{})){g.visible=false;if(g.userData.twin)g.userData.twin.visible=false;}if(ch.bubble)ch.bubble.visible=false;
+    // head: glances at the girl crowning him, then turns to the lens and smirks in his close-up
+    const myCut=cuts[i],turn=ease(seg(myCut+.35,myCut+.75));if(t>=myCut+.5&&!f.crFace)crSmirk(f);
+    let hy=t>2.2&&t<myCut?-st.side*.45*ease(seg(2.2,2.6)):0;const tc=Math.max(0,t-myCut),look=Math.atan2(.75-.1*tc,2.4-.12*tc);
+    hy=t>=myCut?lerp(-st.side*.45,shot===i?look*.9:0,turn):hy;if(t>=myCut&&shot!==i)hy=0;ch.headG.rotation.set(t>=myCut+.4?.06:0,hy,t>=myCut+.4?-.06:0);
+    r.updateMatrixWorld(true);});
+  // girls walk in carrying the crowns overhead, lower them onto the heads, then step back
+  for(const G of R.girls){const g=G.g,u=g.userData,st=R.seats[G.w],f=R.who[G.w],k=st.k,cr=CR.crowns[G.w];
+    const end=new V(st.x+G.side*(1.0*k+.55),.3,.45),start=new V(st.x+G.side*5.5,.3,.7);const w=ease(seg(.7,2.3));g.position.lerpVectors(start,end,w);if(t>3.6)g.position.x+=G.side*.25*ease(seg(3.6,4.1));
+    const walking=t>.7&&t<2.3;g.rotation.y=walking?-G.side*Math.PI/2:lerp(-G.side*Math.PI/2,-G.side*(Math.PI/2-.75),ease(seg(2.3,2.6)));if(t>3.6)g.rotation.y=-G.side*(Math.PI/2-.75)*(1-ease(seg(3.6,4.1)))*1+(-G.side*.35)*ease(seg(3.6,4.1));
+    const ph=t*8;u.legs[0].rotation.x=walking?Math.sin(ph)*.45:0;u.legs[1].rotation.x=walking?-Math.sin(ph)*.45:0;u.head.rotation.set(-.1,0,0);
+    // where the crown sits on the head (it rides with the head once it's on)
+    const hg=f.ch.headG;hg.updateMatrixWorld(true);if(f.crTop==null)f.crTop=crTop(f);const on=hg.localToWorld(new V(0,f.crTop+.07,-.02)),q=hg.getWorldQuaternion(new T.Quaternion()),hs=hg.getWorldScale(new V()).x;
+    const over=g.position.clone().add(new V(0,(u.hip+1.25)*.9,0)).addScaledVector(new V(-G.side,0,0),.35);
+    let hand;
+    if(!G.helper){const lower=ease(seg(2.5,3.4));const pos=t<2.5?over:over.clone().lerp(on,lower);cr.position.copy(pos);if(t>=3.4){cr.position.copy(on);cr.quaternion.copy(q);}else cr.quaternion.identity();cr.scale.setScalar(hs);hand=cr.position;}
+    else hand=on.clone().add(new V(G.side*.35,.2+.3*(1-ease(seg(2.5,3.4))),0));
+    // arms reach for the crown until it's placed, then one hand on the hip, one presenting the king
+    g.updateMatrixWorld(true);const inv=g.getWorldQuaternion(new T.Quaternion()).invert();
+    u.arms.forEach((p,j)=>{const sw=p.getWorldPosition(new V());let dir;
+      if(t<3.5){const tw=hand.clone().add(new V(0,0,0));const side=new V(j?1:-1,0,0).applyQuaternion(g.quaternion).multiplyScalar(.14*hs);tw.add(side);dir=tw.sub(sw).normalize().applyQuaternion(inv);p.quaternion.setFromUnitVectors(new V(0,-1,0),dir);}
+      else{const pres=ease(seg(3.6,4.1));if((j?1:-1)===-G.side)p.quaternion.setFromEuler(new T.Euler(-1.2*pres,0,(j?1:-1)*.5*pres));else p.quaternion.setFromEuler(new T.Euler(0,0,(j?1:-1)*.45));}});}
+  // camera: a wide shot of the stage, then a close-up of each winner in turn, then wide again
+  const asp=renderer.domElement.width/Math.max(1,renderer.domElement.height),cam=CR.cam;cam.aspect=asp;
+  if(shot<0){const half=R.half,fov=38,d=Math.max(7.5,half/Math.tan(fov*Math.PI/360)/asp+1.2);cam.fov=fov;const push=Math.min(.45,t>=cuts[cuts.length-1]?(t-cuts[cuts.length-1])*.15:t*.12);
+    cam.position.set(0,2.6+d*.03,d-push);cam.lookAt(0,1.85,0);}
+  else{const f=R.who[shot],hg=f.ch.headG,h=hg.localToWorld(new V(0,.35,0)),tt=t-cuts[shot],k=R.seats[shot].k;cam.fov=30;cam.position.set(h.x+(.75-.1*tt)*k,h.y+.15*k,h.z+(2.4-.12*tt)*k);cam.lookAt(h.x+.05*k,h.y-.02*k,h.z);}
+  cam.updateProjectionMatrix();}
 function endRound(winner,head){if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;S.lastWin=winner;for(const x of FS)if(x.team!==winner)x.stamBoost=false;const won=winner===ME.team;for(const f of FS)if(f.team!==winner){f.armor=0;f.nades=0;f.speedT=0;f.scopeKit=false;}if(won){S.stats.kills++;addXP(10);}else addXP(5);
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
   if(!won&&winner>=0)setTimeout(()=>sfx('lose'),450);
   if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;showRoundEndBar();if(winner>=0)celebrate(FS.filter(f=>f.team===winner&&f.alive),done);}
+  S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?f.hp/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
@@ -6144,7 +6252,7 @@ function step(rdt){pfBudget=24000;
   for(const b of FS){if(b===ME)continue;
     if(b.carriedBy||b.skyHeld){}else if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?11.75:10.75)*stimMul(b),c.jumpPress);}
     else if(b.alive&&!(b.finishing&&b.finishing.move)&&!FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===b))physics(b,dt,0,0,false,0);}
-  updWalls(dt);updProps(dt);updPlates(dt);updCelebrate(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
+  updWalls(dt);updProps(dt);updPlates(dt);updCelebrate(dt);updCrown(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');
   updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updScorch(dt);updParts(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
@@ -6165,7 +6273,7 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
     if(relv&&o.isMesh)o.castShadow=u._cs&&(lv==='high'||u._cr>=.6);
     let far=false;if(K){const e=o.matrixWorld.elements,dx=e[12]-cx,dy=e[13]-cy,dz=e[14]-cz,m=Math.max(12,u._cr*k);far=dx*dx+dy*dy+dz*dz>m*m;}
     const want=far?1:0;if(o.layers.mask!==1<<want)o.layers.set(want);});}
-function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}renderer.render(scene,camera);renderVM();}
+function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}renderer.render(scene,camera);renderVM();}
 function frame(rdt){step(rdt);render();capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip

@@ -507,6 +507,9 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .pv-head{display:grid;grid-template-columns:110px 1fr 110px;align-items:center}.pv-head h3{margin:0;text-align:center;font:400 26px/1 var(--f-display)}.pv-head .btn:last-child{justify-self:end}
 .btn.sm{padding:7px 12px;font-size:13px}
 .hud-list{display:flex;flex-direction:column;gap:4px;text-align:left}
+#hud-edit-bar.mini>*:not(#hud-edit-min):not(#hud-edit-done){display:none!important}
+#hud-edit-bar.mini{top:calc(env(safe-area-inset-top,0px) + 6px)!important;bottom:auto!important;left:50%!important;transform:translateX(-50%)!important;padding:4px 6px!important;max-width:none!important}
+#duel-hud.touch .d-items{display:none}
 .hud-sub{margin:10px 2px 2px;font:800 11px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .hud-row{display:grid;grid-template-columns:1fr 64px;align-items:center;gap:12px;padding:7px 10px;border-radius:8px;background:color-mix(in srgb,var(--panel-ink) 5%,transparent);font:600 14px/1 var(--f-body)}
 .hud-row .tg{padding:6px 0;border-radius:99px;border:2px solid #14161c;background:#2bd44f;color:#14161c;font:800 12px/1 var(--f-body);cursor:pointer}.hud-row .tg[aria-pressed="false"]{background:#eef0f3;color:var(--muted);border-color:#c9ced8}
@@ -885,7 +888,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
     </div>
     <div class="d-edge" id="d-edge"></div>
     <div class="panel d-rend" id="d-rend" hidden></div>
-    <div class="panel hud-edit-bar" id="hud-edit-bar" hidden><b id="hud-edit-msg">Drag anything to move it; tap it to resize</b><span class="hz" id="hud-sz" hidden><button id="hud-sz-dn" aria-label="Smaller">−</button><b id="hud-sz-v">100%</b><button id="hud-sz-up" aria-label="Bigger">+</button></span><span class="hz" id="hud-all" hidden><span>All buttons</span><button id="hud-all-dn" aria-label="All buttons smaller">−</button><b id="hud-all-v">100%</b><button id="hud-all-up" aria-label="All buttons bigger">+</button></span><button class="btn sm" id="hud-edit-reset">Reset layout</button><button class="btn primary sm" id="hud-edit-done">Done</button></div>
+    <div class="panel hud-edit-bar" id="hud-edit-bar" hidden><b id="hud-edit-msg">Drag anything to move it; tap it to resize</b><span class="hz" id="hud-sz" hidden><button id="hud-sz-dn" aria-label="Smaller">−</button><b id="hud-sz-v">100%</b><button id="hud-sz-up" aria-label="Bigger">+</button></span><span class="hz" id="hud-all" hidden><span>All buttons</span><button id="hud-all-dn" aria-label="All buttons smaller">−</button><b id="hud-all-v">100%</b><button id="hud-all-up" aria-label="All buttons bigger">+</button></span><button class="btn sm" id="hud-edit-reset">Reset layout</button><button class="btn sm" id="hud-edit-min" aria-label="Minimise">▾ Hide</button><button class="btn primary sm" id="hud-edit-done">Done</button></div>
     <div class="panel" id="d-shop" hidden>
       <div class="sh-t">Shop · pick one</div>
       <div class="sh-items" id="sh-items"></div>
@@ -5804,7 +5807,7 @@ let hudSel=null;
 function hudSelect(k){hudSel=k;document.querySelectorAll('#duel-hud [data-hudk].sel').forEach(e=>e.classList.remove('sel'));
   const el=k&&document.querySelector(`#duel-hud [data-hudk="${k}"]`);if(el)el.classList.add('sel');$('hud-sz').hidden=!k;$('hud-sz-v').textContent=Math.round((S.hudZ[k]||1)*100)+'%';
   $('hud-all').hidden=!S.touch;$('hud-all-v').textContent=Math.round((S.hudZ['b-all']||1)*100)+'%';$('hud-edit-msg').textContent=k?'Size':'Drag anything to move it; tap it to resize';}
-function hudEdit(on){S.hudEdit=on;$('duel-hud').classList.toggle('hud-edit',on);$('hud-edit-bar').hidden=!on;$('duel-pause').hidden=on;applyTouch();if(on)document.querySelectorAll('#dtouch .dt-btns .dt-b').forEach(b=>{b.hidden=false;});else{try{updTouchLabels();}catch(_){}}hudSelect(null);applyHudPos();if(!on){saveHud();showPV('hud');}}
+function hudEdit(on){$('hud-edit-bar').classList.remove('mini');$('hud-edit-min').textContent='▾ Hide';S.hudEdit=on;$('duel-hud').classList.toggle('hud-edit',on);$('hud-edit-bar').hidden=!on;$('duel-pause').hidden=on;applyTouch();if(on)document.querySelectorAll('#dtouch .dt-btns .dt-b').forEach(b=>{b.hidden=false;});else{try{updTouchLabels();}catch(_){}}hudSelect(null);applyHudPos();if(!on){saveHud();showPV('hud');}}
 for(const [id,d,all] of [['hud-sz-dn',-1],['hud-sz-up',1],['hud-all-dn',-1,1],['hud-all-up',1,1]])$(id).addEventListener('click',()=>{const k=all?'b-all':hudSel;if(!k)return;S.hudZ[k]=clamp(Math.round(((S.hudZ[k]||1)+d*.1)*10)/10,.6,1.6);saveHud();applyHud();hudSelect(hudSel);});
 document.addEventListener('pointerdown',e=>{if(!S.hudEdit)return;const el=e.target.closest('[data-hudk]');if(e.target.closest('#hud-edit-bar'))return;if(!el){hudSelect(null);return;}e.preventDefault();e.stopPropagation();
   const k=el.dataset.hudk,btn=k.startsWith('b-'),r=(k==='score'&&el.querySelector('.d-score')||el).getBoundingClientRect();if(!r.width||!r.height)return;hudSelect(k);try{el.setPointerCapture&&el.releasePointerCapture&&el.hasPointerCapture&&el.hasPointerCapture(e.pointerId)&&el.releasePointerCapture(e.pointerId);}catch(_){}
@@ -5816,6 +5819,7 @@ addEventListener('pointermove',e=>{if(!hudDrag||e.pointerId!==hudDrag.id)return;
   applyHudPos();},true);
 addEventListener('pointerup',()=>{if(hudDrag){hudDrag=null;saveHud();}},true);
 $('dp-hud-move').addEventListener('click',()=>hudEdit(true));$('hud-edit-done').addEventListener('click',()=>hudEdit(false));
+$('hud-edit-min').addEventListener('click',()=>{const b=$('hud-edit-bar'),m=b.classList.toggle('mini');$('hud-edit-min').textContent=m?'▴ Edit bar':'▾ Hide';});
 $('hud-edit-reset').addEventListener('click',()=>{S.hudPos={};S.hudZ={};saveHud();applyHud();hudSelect(null);});
 applyHud();applyHudPos();
 const ICON={

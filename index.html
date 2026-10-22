@@ -931,7 +931,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
               <button role="radio" data-g="0" aria-checked="true">Off</button>
             </div></div>
           <label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0.2" max="6" step="0.05"><b data-sens-val="cam">1.50×</b></label>
-          <label class="sens" for="sens-ads-d"><span>Aim / scope sensitivity</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.1" max="1" step="0.05"><b data-sens-val="ads">1.00×</b></label>
+          <label class="sens" for="sens-ads-d"><span>Aim sensitivity (other guns)</span><input type="range" id="sens-ads-d" data-sens="ads" min="0.1" max="1" step="0.05"><b data-sens-val="ads">1.00×</b></label><label class="sens" for="sens-snp-d"><span>Sniper scope sensitivity</span><input type="range" id="sens-snp-d" data-sens="snipe" min="0.1" max="2" step="0.05"><b data-sens-val="snipe">1.00×</b></label>
           <label class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.05"><b data-vol-val>100%</b></label><label class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.05"><b data-mvol-val>50%</b></label>
         </div>
         <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
@@ -2136,7 +2136,8 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 })();
 </script>
 <script>
-(function(){let S={cam:1.5,ads:.3};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);if(!S.v2){S.ads=.3;S.v2=1;localStorage.setItem('blockrush:sens',JSON.stringify(S));}}catch(e){}S.ads=Math.min(1,Math.max(.1,+S.ads||.3)); // aim/scope sensitivity: 0.1-1, default 0.30
+(function(){let S={cam:1.5,ads:.3};try{const v=JSON.parse(localStorage.getItem('blockrush:sens')||'null');if(v)S=Object.assign(S,v);if(!S.v2){S.ads=.3;S.v2=1;localStorage.setItem('blockrush:sens',JSON.stringify(S));}}catch(e){}S.ads=Math.min(1,Math.max(.1,+S.ads||.3)); // aim sensitivity for every gun except snipers: 0.1-1, default 0.30
+  if(S.snipe==null)S.snipe=S.ads;S.snipe=Math.min(2,Math.max(.1,+S.snipe||.3)); // sniper scope sensitivity (HDR, Kar98), starts where aim sensitivity was
   window.SENS=S;const sync=()=>{document.querySelectorAll('[data-sens]').forEach(i=>{i.value=S[i.dataset.sens];});document.querySelectorAll('[data-sens-val]').forEach(b=>{b.textContent=(+S[b.dataset.sensVal]).toFixed(2)+'×';});};
   document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.sens;if(!k)return;S[k]=+e.target.value;try{localStorage.setItem('blockrush:sens',JSON.stringify(S));}catch(err){}sync();});
   sync();})();
@@ -5645,7 +5646,7 @@ canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){if(!snipeDown())mouseL=true;}if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
-  const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?SN.ads*(gunOf(ME)==='sniper'?.3:.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
+  const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads)*(gunOf(ME)==='sniper'?.3:.65):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
 window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)equip(ME,ME.slot?0:1);},{passive:true});
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{S.lockOK=false;});}catch(err){S.lockOK=false;}}
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});
@@ -5670,12 +5671,12 @@ $('dp-aa').addEventListener('click',e=>{const b=e.target.closest('[data-aa]');if
 $('dp-gyro').addEventListener('click',async e=>{const b=e.target.closest('[data-g]');if(!b)return;let on=b.dataset.g==='1';
   if(on){const DM=window.DeviceMotionEvent;if(!DM){on=false;}else if(typeof DM.requestPermission==='function'){try{on=(await DM.requestPermission())==='granted';}catch(_){on=false;}}}
   AA.gyro=on;store.set('duel:gyro',on);syncAimOpts();if(on)gyroOn();});
-const lookBy=(dx,dy)=>{const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?SN.ads*(gunOf(ME)==='sniper'?.3:.65):1);
+const lookBy=(dx,dy)=>{const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads)*(gunOf(ME)==='sniper'?.3:.65):SN.ads*.65):1);
   const sp=Math.hypot(dx,dy),acc=1+.7*clamp((sp-6)/34,0,1);const k=.0055*sc*acc*AA.fric;ME.yaw-=dx*k;ME.pitch=clamp(ME.pitch-dy*k,-1.3,1.3);};
 // gyro: device rotation rate (deg/s) mapped to the landscape screen; turning the phone turns the view one-to-one at 1x sensitivity
 let gyroLive=false;function gyroOn(){if(gyroLive)return;gyroLive=true;window.addEventListener('devicemotion',e=>{const r=e.rotationRate;if(!AA.gyro||!r||!S.touch||!playing()||!ME.alive)return;
   const dt=Math.min(.05,(e.interval>1?e.interval/1000:e.interval)||.016),ang=(screen.orientation&&screen.orientation.angle)??window.orientation??90,sg=ang===270||ang===-90?-1:1;
-  if(ang===0||ang===180)return;const SN=window.SENS||{cam:1,ads:1};const sc=Math.min(1.6,SN.cam/1.5)*(ME.ads?Math.max(.35,SN.ads):1)*Math.PI/180*dt;
+  if(ang===0||ang===180)return;const SN=window.SENS||{cam:1,ads:1};const sc=Math.min(1.6,SN.cam/1.5)*(ME.ads?Math.max(.35,['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads):SN.ads):1)*Math.PI/180*dt;
   ME.yaw+=sg*(r.beta||0)*sc;ME.pitch=clamp(ME.pitch-sg*(r.gamma||0)*sc,-1.3,1.3);});}
 if(AA.gyro)gyroOn();
 const AAv=new V3(),AAd=new V3();

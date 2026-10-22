@@ -917,6 +917,11 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
               <button role="radio" data-t="1" aria-checked="false">On</button>
               <button role="radio" data-t="0" aria-checked="true">Off</button>
             </div></div>
+          <div class="pm-row gun-k"><span>Auto weapon switch <small>swap to your other gun when this one runs dry</small></span>
+            <div class="seg" role="radiogroup" aria-label="Auto weapon switch" id="dp-autosw">
+              <button role="radio" data-v="1" aria-checked="false">On</button>
+              <button role="radio" data-v="0" aria-checked="true">Off</button>
+            </div></div>
           <div class="pm-row t-only"><span>Aim assist</span>
             <div class="seg" role="radiogroup" aria-label="Aim assist" id="dp-aa">
               <button role="radio" data-aa="off" aria-checked="false">Off</button>
@@ -5683,6 +5688,8 @@ function syncAimOpts(){document.querySelectorAll('#dp-aa [data-aa]').forEach(b=>
   document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));
   document.querySelectorAll('#dp-autoads [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===AA.autoAds)));}
 $('d-sx').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();snipeUp(false);});
+S.autoSw=!!store.get('duel:autosw',false);const syncSw=()=>document.querySelectorAll('#dp-autosw [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===S.autoSw)));syncSw();
+$('dp-autosw').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;S.autoSw=b.dataset.v==='1';store.set('duel:autosw',S.autoSw);syncSw();});
 $('dp-autoads').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;AA.autoAds=b.dataset.v==='1';store.set('duel:autoads',AA.autoAds);syncAimOpts();});
 $('dp-aa').addEventListener('click',e=>{const b=e.target.closest('[data-aa]');if(!b)return;AA.lvl=b.dataset.aa;store.set('duel:aa',AA.lvl);syncAimOpts();});
 $('dp-gyro').addEventListener('click',async e=>{const b=e.target.closest('[data-g]');if(!b)return;let on=b.dataset.g==='1';
@@ -6115,7 +6122,7 @@ function step(rdt){pfBudget=24000;
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
   // player
-  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}aimAssist(rdt);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
+  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!ME.carrying&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary;if(g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0)equip(ME,o);}aimAssist(rdt);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
     const fi=clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si=clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1);
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}

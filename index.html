@@ -4032,27 +4032,42 @@ Object.assign(SKINS,{
 /* ---------- new roster skins ---------- */
 Object.assign(SKINS,{
  /* BRUTE — slate-skinned giant with glowing rage veins, torn cargo shorts and broken shackles */
- brute_smash(ch){const sk=mat('#8d9aa8',null,{roughness:.7}),skD=mat('#6c7987',null,{roughness:.75}),veinM=new THREE.MeshBasicMaterial({color:'#ff7a2a',toneMapped:false}),
-   shorts=mat('#c25a1c',null,{roughness:.85}),shortsD=mat('#7f360e',null,{roughness:.9}),iron=mat('#4a4d55',null,{metalness:.7,roughness:.35}),hairM=mat('#1b1d23',null,{roughness:.6,flatShading:true});
-  hideBase(ch,{head:false});hideHair(ch);for(const m of ch.head.material)m.color.set('#a6b2bf');
-  const b=ch.body,h=ch.headG;b.scale.setScalar(1.12);
-  piece(b,RBX(1.42,1.08,.8,.2),sk,0,1.55,0);
-  for(const sx of [-1,1]){piece(b,RBX(.6,.36,.12,.08),skD,sx*.31,1.8,.4,{outline:false});piece(b,RBX(.46,.32,.62,.12),sk,sx*.55,2.08,-.02,{rot:[0,0,sx*-.35]});}
-  for(let r=0;r<3;r++)for(const sx of [-1,1])piece(b,RBX(.26,.17,.06,.05),skD,sx*.15,1.48-r*.2,.41,{outline:false});
-  piece(b,RBX(.5,.24,.5,.1),sk,0,2.04,0);
-  const vein=(p,x,y,z,w,hh,r)=>piece(p,new THREE.BoxGeometry(w,hh,.02),veinM,x,y,z,{outline:false,rot:[0,0,r]});
-  vein(b,-.42,1.42,.41,.04,.42,.5);vein(b,.44,1.6,.41,.04,.36,-.4);vein(b,-.06,1.98,.41,.03,.18,.3);
-  piece(b,RBX(1.34,.4,.76,.1),shorts,0,1.04,0);piece(b,new THREE.BoxGeometry(1.36,.1,.78),shortsD,0,1.2,0,{outline:false});
+ brute_smash(ch){/* BRUTE — a hulking moss beast: green scaly hide under leafy fur, curled ram horns, glowing eyes, fangs, bone spikes, claws and a leafy tail */
+  const sk=mat('#3f6b34',null,{roughness:.85}),skD=mat('#2c4f27',null,{roughness:.9}),leaf=mat('#5f9a3a',null,{roughness:.8,flatShading:true}),leafD=mat('#2f5a24',null,{roughness:.85,flatShading:true}),
+   bone=mat('#cfc3a6',null,{roughness:.7}),horn=mat('#8b8170',null,{roughness:.8,flatShading:true}),belt=mat('#2a3a28',null,{roughness:.6,metalness:.3}),dark=mat('#16120f',null,{roughness:.9}),eye=GLOW('#ff6a1f');
+  hideBase(ch,{head:true});hideHair(ch);const b=ch.body,h=ch.headG;b.scale.setScalar(1.12);
+  const tuft=(p,x,y,z,s,rx,rz,m)=>piece(p,new THREE.ConeGeometry(.09*s,.3*s,4),m||leaf,x,y,z,{outline:false,rot:[rx||0,0,rz||0]});
+  const spike=(p,x,y,z,s,rx,rz)=>piece(p,new THREE.ConeGeometry(.07*s,.32*s,5),bone,x,y,z,{outline:false,rot:[rx||0,0,rz||0]});
+  // torso: scaly chest under a thick leafy mane
+  piece(b,RBX(1.42,1.08,.8,.2),sk,0,1.55,0);for(let r=0;r<3;r++)for(const sx of [-1,1])piece(b,RBX(.26,.16,.06,.05),skD,sx*.16,1.5-r*.18,.41,{outline:false});
+  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;tuft(b,Math.cos(a)*.62,1.98+Math.sin(i*1.7)*.06,Math.sin(a)*.38,1.4,Math.sin(a)*.6,-Math.cos(a)*.7,i%2?leaf:leafD);}
+  for(let i=0;i<7;i++)tuft(b,-.45+i*.15,1.82,.42,1.2,1.9,0,i%2?leafD:leaf);
+  // belt with a carved plate and a leafy loincloth
+  piece(b,RBX(1.36,.2,.82,.06),belt,0,1.06,0);piece(b,RBX(.36,.36,.08,.06),belt,0,1.02,.44);piece(b,new THREE.BoxGeometry(.16,.16,.04),skD,0,1.04,.49,{outline:false,rot:[0,0,Math.PI/4]});
+  for(let i=0;i<6;i++)tuft(b,-.25+i*.1,.82,.43,1.3,Math.PI,0,i%2?leaf:leafD);
+  // tail
+  {let p=b,y=1.0,z=-.4;for(let i=0;i<5;i++){const g=new THREE.Group();g.position.set(0,i?-.02:y,i?-.24:z);g.rotation.x=i?-.25:.9;p.add(g);piece(g,RBX(.26-i*.035,.24-i*.03,.3,.06),sk,0,0,-.12);tuft(g,0,.12,-.12,1-i*.1,-.6,0,i%2?leaf:leafD);p=g;}tuft(p,0,0,-.32,1.2,-1.57,0);}
+  // arms: mossy, spiky, clawed
   for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1,o=sx*.2;
     piece(a.p,RBX(.74,.66,.74,.18),sk,o,-.2,0);piece(a.p,RBX(.78,.58,.78,.18),sk,o,-.72,0);piece(a.p,RBX(.74,.44,.74,.14),skD,o,-1.12,0);
-    piece(a.p,RBX(.92,.16,.9,.05),iron,o,-.88,0);vein(a.p,o+sx*.1,-.62,.42,.04,.4,sx*.3);
-    const ch2=new THREE.Group();ch2.position.set(o+sx*.42,-.9,0);a.p.add(ch2);for(let i=0;i<3;i++){const l=new THREE.Mesh(new THREE.TorusGeometry(.08,.028,5,8),iron);l.position.y=-.1-i*.13;l.rotation.y=i%2?Math.PI/2:0;ch2.add(l);}a.chain=ch2;}
-  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.56,.64,.12),shorts,0,-.26,0);for(let i=0;i<4;i++)piece(l.p,new THREE.BoxGeometry(.14,.1+(i%2)*.08,.66),shortsD,-.22+i*.15,-.56-(i%2)*.04,0,{outline:false});
-    piece(l.p,RBX(.54,.42,.56,.12),sk,0,-.76,0);piece(l.p,RBX(.6,.2,.74,.08),skD,0,-.98,.06);}
-  const brow=mat('#2b2f36',null,{roughness:.6});for(const sx of [-1,1])piece(h,new THREE.BoxGeometry(.2,.06,.04),brow,sx*.13,.45,.31,{outline:false,rot:[0,0,sx*.38]});
-  piece(h,new THREE.BoxGeometry(.36,.13,.02),mat('#a6b2bf',null,{roughness:.6}),0,.2,.302,{outline:false});piece(h,new THREE.BoxGeometry(.26,.08,.02),brow,0,.2,.306,{outline:false});piece(h,new THREE.BoxGeometry(.22,.04,.02),mat('#f4f1e6'),0,.21,.312,{outline:false});
-  for(let i=0;i<5;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(.1,.34+(i===2?.1:0),4),hairM);c.position.set(0,.72,.22-i*.13);c.rotation.x=-.3-i*.18;c.castShadow=true;h.add(c);}
-  ch.anim=(dt,t)=>{const k=.55+.45*Math.sin(t*5);veinM.color.setRGB(1,.3+.25*k,.08*k);ch.aL.chain.rotation.z=Math.sin(t*3)*.3;ch.aR.chain.rotation.z=-Math.sin(t*3+1)*.3;};},
+    for(let i=0;i<8;i++){const a2=i/8*Math.PI*2;tuft(a.p,o+Math.cos(a2)*.38,.08,Math.sin(a2)*.38,1.3,Math.sin(a2)*.5,-Math.cos(a2)*.5,i%2?leaf:leafD);}
+    for(let i=0;i<6;i++)tuft(a.p,o+sx*.4,-.5-i*.1,(i%3-1)*.2,1,0,-sx*1.4,i%2?leaf:leafD);
+    spike(a.p,o+sx*.1,.22,-.1,1.6,0,-sx*.35);spike(a.p,o+sx*.3,.14,.15,1.2,0,-sx*.8);spike(a.p,o+sx*.42,-.62,-.12,1,0,-sx*1.4);spike(a.p,o+sx*.42,-.86,.08,1,0,-sx*1.4);
+    for(let i=0;i<3;i++)piece(a.p,new THREE.ConeGeometry(.05,.22,4),bone,o-.18+i*.18,-1.4,.22,{outline:false,rot:[Math.PI-.4,0,0]});a.chain=new THREE.Group();}
+  // legs with claws
+  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.56,.64,.12),sk,0,-.26,0);for(let i=0;i<5;i++)tuft(l.p,-.24+i*.12,-.5,.32,1.1,Math.PI-.3,0,i%2?leaf:leafD);
+    piece(l.p,RBX(.54,.42,.56,.12),sk,0,-.76,0);piece(l.p,RBX(.6,.2,.74,.08),skD,0,-.98,.06);for(let i=0;i<3;i++)piece(l.p,new THREE.ConeGeometry(.05,.2,4),bone,-.18+i*.18,-1.0,.45,{outline:false,rot:[Math.PI/2,0,0]});}
+  // head: snarling, horned, glowing eyes, fangs, pointed ears, leafy mane round the face
+  piece(h,RBX(.78,.66,.66,.14),sk,0,.34,0);piece(h,RBX(.46,.26,.24,.08),skD,0,.2,.34);piece(h,RBX(.16,.09,.06,.03),dark,0,.29,.46,{outline:false});
+  piece(h,new THREE.BoxGeometry(.34,.1,.04),dark,0,.12,.47,{outline:false});for(let i=0;i<5;i++){const x=-.14+i*.07;piece(h,new THREE.ConeGeometry(.025,i%2?.07:.11,4),bone,x,.15,.48,{outline:false,rot:[Math.PI,0,0]});piece(h,new THREE.ConeGeometry(.022,.07,4),bone,x+.035,.08,.48,{outline:false});}
+  for(const sx of [-1,1]){piece(h,new THREE.ConeGeometry(.04,.16,4),bone,sx*.16,.2,.47,{outline:false,rot:[Math.PI,0,0]});
+    piece(h,new THREE.BoxGeometry(.12,.06,.04),eye,sx*.15,.44,.34,{outline:false,rot:[0,0,sx*.25]});piece(h,new THREE.BoxGeometry(.24,.08,.12),skD,sx*.15,.53,.3,{outline:false,rot:[0,0,sx*.35]});
+    piece(h,new THREE.ConeGeometry(.08,.3,4),sk,sx*.46,.46,0,{outline:false,rot:[0,0,-sx*1.2]});
+    // curled ram horn
+    let p=h,base=new THREE.Group();base.position.set(sx*.3,.62,-.05);h.add(base);p=base;for(let i=0;i<7;i++){const g=new THREE.Group();g.position.set(i?sx*.13:0,i?.02:0,0);g.rotation.z=-sx*(i?.55:-.6);p.add(g);piece(g,RBX(.17-i*.012,.17-i*.012,.17-i*.012,.04),horn,sx*.06,0,0,{outline:false});p=g;}}
+  for(let i=0;i<10;i++){const a=-1.2+i*.27;tuft(h,Math.sin(a)*.44,.05+Math.cos(a*2)*.05,Math.cos(a)*.24-.04,1.2,0,-Math.sin(a)*1.8,i%2?leaf:leafD);}
+  for(let i=0;i<5;i++)tuft(h,-.24+i*.12,.7,.05,1,-.4,(i-2)*-.2,i%2?leaf:leafD);
+  ch.anim=(dt,t)=>{const k=.7+.3*Math.sin(t*5);eye.color.setRGB(1,.35*k,.1*k);};},
  /* FROST — ice mage with a crystal crown */
  frost_mage(ch){const robe=mat('#5fa8d8',null,{roughness:.7}),robeD=mat('#2f6f9f',null,{roughness:.8}),fur=mat('#f4f8fb',null,{roughness:1}),silver=mat('#d6dbe2',null,{metalness:.8,roughness:.25}),
    ice=new THREE.MeshStandardMaterial({color:'#bfeaff',emissive:'#5fd0ff',emissiveIntensity:.5,transparent:true,opacity:.88,roughness:.1,metalness:.2});

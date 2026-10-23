@@ -4256,7 +4256,12 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
    miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight */
 const DIFF={easy:{name:'Easy',react:1.15,err:5.5,head:.03,turn:3.2,strafe:.3,build:.2,settle:.8,sway:.9,flinch:6,recoil:2.2,lead:0,tol:.16,rof:1.35,burst:4,pause:[.6,1.2],hes:.3,miss:.5},
   normal:{name:'Normal',react:.6,err:2.7,head:.14,turn:6.5,strafe:.6,build:.4,settle:1.4,sway:.5,flinch:3,recoil:1,lead:.5,tol:.09,rof:1.25,burst:6,pause:[.3,.7],hes:.12,miss:.25},
-  hard:{name:'Hard',react:.3,err:1.3,head:.34,turn:12,strafe:.95,build:.75,settle:2.2,sway:.25,flinch:1.2,recoil:.3,lead:1,tol:.06,rof:1.1,burst:0,pause:[0,0],hes:0,miss:.1}};
+  hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15}};
+// your bot team-mates aim one level better than the enemies; when you're the last one left on your team against two or more, the enemies ease off a little
+const DIFF_UP={easy:'normal',normal:'hard',hard:'hard'};
+function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return DIFF[DIFF_UP[S.diff]]||base;
+  if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
+  return base;}
 // spare finishers, built but not assigned to anyone yet
 const SHARED_MOVES=['Gone fishing','Piledriver','Shadow grab','Overgrown'];
 const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Knockout',ghost:'Heartbreaker',patch:'Clear!',volt:'Overcharge',hook:'Hot potato',zip:'Blur rush',thorn:'Dog pile'};
@@ -5498,7 +5503,7 @@ function botTarget(f){const a=f.ai;const saving=FS.find(o=>o.alive&&o.finishT>0&
   const e=eyeOf(f,new V3());let best=null,bs=1e9;for(const o of foesOf(f)){if(o.finishing)continue;let sc=Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
     if(los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))sc-=18;if(o.downed)sc-=12;if(o.finishT>0&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)))sc-=40;if(o===a.tgt)sc-=8;if(o.ghostT>0)sc+=15;if(sc<bs){bs=sc;best=o;}}
   if(!best)best=foesOf(f)[0]||null;if(best!==a.tgt){a.tgt=best;a.lastSeen=null;a.seeT=0;a.path=null;a.goalT=0;}a.tgtUntil=S.t+.6;return best;}
-function botThink(f,dt){const a=f.ai,dif=DIFF[S.diff];if(!f.alive||f.skySlam||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
+function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.skySlam||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
   if(f.downed){updCrouch(f,true,dt);const dd=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z);const seen=T.alive&&los(eyeOf(T,new V3()),new V3(f.pos.x,f.pos.y+.5,f.pos.z));
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
   if(f.carrying)return{wx:0,wz:0,jump:false};

@@ -631,6 +631,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .d-prof.empty{grid-template-columns:1fr;place-items:center;text-align:center;color:var(--muted);font:500 14px/1.4 var(--f-body)}
 .mfull .d-chars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mfull .opt.char-opt{flex-direction:row;align-items:center;gap:8px;padding:5px 8px 5px 5px}
+#menu img[src=""]{visibility:hidden}
 .char-opt img{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#12151e;flex:0 0 44px}
 .char-opt .t{font-size:14px}
 .mfull .d-guns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -6474,10 +6475,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b
 
 /* ================= menu integration ================= */
 function renderRecord(){let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}$('d-record').textContent=`${w}–${l}`;}
-function enterMenu(){clearFx();$('d-homebtn').hidden=true;makePreviews();if(!Object.keys(MAPS).every(k=>thumbs[k])){for(const k of Object.keys(MAPS))makeThumb(k);}renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
+function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'sniper');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
-  $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();}
+  $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 function setMode(m){document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
   const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;store.set('mode',m);
@@ -7024,7 +7025,7 @@ function heroShots(ids,RB,W=640,H=320){const out={};let r;
     wrap.add(m);S.add(wrap);wrap.rotation.y+=id==='stars'?0:-.42;wrap.rotation.x=id==='stars'?0:.3;wrap.updateMatrixWorld(true);
     const box=new THREE.Box3().setFromObject(wrap),c=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3());
     const span=Math.max(sz.x/(W/H),sz.y)*1.04;const d=span/2/Math.tan(C.fov*Math.PI/360)+sz.z/2;C.position.set(c.x,c.y,c.z+d);C.lookAt(c);
-    r.render(S,C);out[id]=r.domElement.toDataURL('image/png');S.remove(wrap);}
+    r.render(S,C);out[id]=r.domElement.toDataURL('image/webp',.92);S.remove(wrap);}
   pm.dispose();r.dispose();try{r.forceContextLoss();}catch(e){}return out;}
 /* ================= first-person aim (viewmodel) =================
    When you aim with a supported gun the camera eases into your eyes and the gun is drawn in its own pass
@@ -7065,19 +7066,41 @@ function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.pa
 function renderVM(){if(!VM.cur||!VM.cur.visible||VM.raise<=0)return;VM.cam.aspect=innerWidth/innerHeight;VM.cam.updateProjectionMatrix();
   const ac=renderer.autoClear;renderer.autoClear=false;renderer.clearDepth();renderer.render(VM.scene,VM.cam);renderer.autoClear=ac;}
 const PREV={};let previewsMade=false;
-function makePreviews(){if(previewsMade)return;previewsMade=true;
+function previewTasks(){const T=[];
   const PS=new THREE.Scene();PS.background=new THREE.Color('#e9edf2');PS.add(new THREE.HemisphereLight('#ffffff','#b9c2cf',1.1));const dl=new THREE.DirectionalLight('#ffffff',1.6);dl.position.set(3,5,6);PS.add(dl);
   const PC=new THREE.PerspectiveCamera(28,1,.05,100);const W=renderer.domElement.width,H=renderer.domElement.height;PC.aspect=W/H;PC.updateProjectionMatrix();
   const snap=(obj,tw,th,fit,lookY,dir)=>{PS.add(obj);obj.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(obj),c=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3());
     const ty=lookY!=null?box.min.y+sz.y*lookY:c.y;const span=fit(sz);const dist=span/2/Math.tan(PC.fov*Math.PI/360);const dv=(dir||new THREE.Vector3(.35,.12,1)).normalize();
     PC.position.set(c.x+dv.x*dist,ty+dv.y*dist,c.z+dv.z*dist);PC.lookAt(c.x,ty,c.z);renderer.render(PS,PC);
     const cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const ar=tw/th;let sw=H*ar,sh=H;if(sw>W){sw=W;sh=W/ar;}
-    g.drawImage(renderer.domElement,(W-sw)/2,(H-sh)/2,sw,sh,0,0,tw,th);PS.remove(obj);try{return cv.toDataURL('image/png');}catch(e){return '';}};
-  for(const id of CHAR_IDS){const L=buildLook(id);const r=L.ch.root;r.scale.setScalar(SC);for(const k in L.guns)L.guns[k].visible=false;r.rotation.y=.35;L.ch.aL.p.rotation.x=-.15;L.ch.aR.p.rotation.x=.15;
-    PREV['c_'+id]=snap(r,120,120,sz=>sz.y*.5,.78,new THREE.Vector3(.2,.05,1));PREV['p_'+id]=snap(r,300,380,sz=>sz.y*1.12,.5,new THREE.Vector3(.25,.08,1));}
-  const HS=heroShots([...PRIMARIES,...SECONDARIES],B.roundedBox);{const HC=heroShots(CONS_IDS.map(k=>'c_'+k),B.roundedBox,420,280);for(const k in HC)PREV['g_'+k]=HC[k];}
-  for(const id of [...PRIMARIES,...SECONDARIES]){if(HS[id]){PREV['g_'+id]=HS[id];continue;}const g=gunModel(id);for(const fm of (g.userData.flash||[]))fm.parent&&fm.parent.remove(fm);g.rotation.y=-Math.PI/2;const wrap=new THREE.Group();wrap.add(g);PREV['g_'+id]=snap(wrap,320,160,sz=>Math.max(sz.x*1.08,sz.y*2.3),null,new THREE.Vector3(.05,.18,1));}
-  renderer.setRenderTarget(null);}
+    g.drawImage(renderer.domElement,(W-sw)/2,(H-sh)/2,sw,sh,0,0,tw,th);PS.remove(obj);try{return cv.toDataURL('image/jpeg',.9);}catch(e){return '';}};
+  const chars=[...CHAR_IDS].sort((a,b)=>(b===S.char)-(a===S.char));
+  for(const id of chars)T.push(()=>{const L=buildLook(id);const r=L.ch.root;r.scale.setScalar(SC);for(const k in L.guns)L.guns[k].visible=false;r.rotation.y=.35;L.ch.aL.p.rotation.x=-.15;L.ch.aR.p.rotation.x=.15;
+    PREV['c_'+id]=snap(r,120,120,sz=>sz.y*.5,.78,new THREE.Vector3(.2,.05,1));PREV['p_'+id]=snap(r,300,380,sz=>sz.y*1.12,.5,new THREE.Vector3(.25,.08,1));});
+  T.push(()=>{const HS=heroShots([...PRIMARIES,...SECONDARIES],B.roundedBox);
+  for(const id of [...PRIMARIES,...SECONDARIES]){if(HS[id]){PREV['g_'+id]=HS[id];continue;}const g=gunModel(id);for(const fm of (g.userData.flash||[]))fm.parent&&fm.parent.remove(fm);g.rotation.y=-Math.PI/2;const wrap=new THREE.Group();wrap.add(g);PREV['g_'+id]=snap(wrap,320,160,sz=>Math.max(sz.x*1.08,sz.y*2.3),null,new THREE.Vector3(.05,.18,1));}});
+  T.push(()=>{const HC=heroShots(CONS_IDS.map(k=>'c_'+k),B.roundedBox,420,280);for(const k in HC)PREV['g_'+k]=HC[k];});
+  T.push(()=>{renderer.setRenderTarget(null);previewsMade=true;});return T;}
+/* menu pictures (characters, guns, lethals, map thumbnails) used to be drawn all at once before the menu appeared, every visit.
+   Now: the menu shows straight away, a saved set is used if this exact version of the game drew one before (IndexedDB),
+   otherwise they're drawn a few at a time between frames and filled in as they're ready, then saved for next time. */
+const IMG_DB={db:null,open(){if(this.db)return this.db;return this.db=new Promise((res,rej)=>{try{const q=indexedDB.open('imok-menu-img',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}catch(e){rej(e);}});},
+  async get(k){const db=await this.open();return new Promise(r=>{try{const t=db.transaction('k').objectStore('k').get(k);t.onsuccess=()=>r(t.result||null);t.onerror=()=>r(null);}catch(e){r(null);}});},
+  async put(k,v){const db=await this.open();return new Promise(r=>{try{const tx=db.transaction('k','readwrite'),st=tx.objectStore('k');st.clear();st.put(v,k);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false);}catch(e){r(false);}});}};
+let imgVer=null,imgQ=null,imgLoad=null;
+function imgVersion(){if(imgVer)return imgVer;let h=2166136261;for(const sc of document.querySelectorAll('script:not([src])')){const t=sc.textContent;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}}return imgVer='v1_'+(h>>>0).toString(36);}
+function menuImagesReady(){return previewsMade&&Object.keys(MAPS).every(k=>thumbs[k]);}
+// the saved set is looked up the moment the page starts, while the maps are still being built
+const imgCached=(()=>{try{return IMG_DB.get(imgVersion()).catch(()=>null);}catch(e){return Promise.resolve(null);}})();
+function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
+  if(!imgLoad)imgLoad=Promise.race([imgCached,new Promise(r=>setTimeout(()=>r(null),15000))]).catch(()=>null).then(v=>{
+    if(v&&v.prev&&v.thumbs&&Object.keys(MAPS).every(k=>v.thumbs[k])){Object.assign(PREV,v.prev);Object.assign(thumbs,v.thumbs);previewsMade=true;if(S.state==='menu')renderDuelMenu();}
+    else startImgQueue();});
+  else if(!menuImagesReady())imgLoad.then(()=>{if(!menuImagesReady())startImgQueue();});}
+function startImgQueue(){if(imgQ||menuImagesReady())return;imgQ=[...(previewsMade?[]:previewTasks()),...Object.keys(MAPS).filter(k=>!thumbs[k]).map(k=>()=>makeThumb(k))];setTimeout(runImgQ,60);}
+function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
+  const t=imgQ.shift();if(t){try{t();}catch(e){console.warn('menu image',e);}if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);return;}
+  imgQ=null;if(menuImagesReady())IMG_DB.put(imgVersion(),{prev:Object.assign({},PREV),thumbs:Object.assign({},thumbs)}).catch(()=>{});}
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a primary');if(!S.sec)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble';

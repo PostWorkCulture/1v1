@@ -485,6 +485,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .card.dpause{width:min(760px,100%);gap:14px;margin:auto 0}
 .pv{display:flex;flex-direction:column;gap:16px}.pv[hidden]{display:none}
 .pm-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.pm-btns .btn{width:100%}
+#fps-meter{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 2px);transform:translateX(-50%);z-index:95;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,.55);color:#9effa8;font:700 11px/1.3 ui-monospace,monospace;pointer-events:none}#fps-meter[hidden]{display:none}
 .gfx-row .seg{flex:0 1 260px}.gfx-row .seg button{flex:1}.gfx-note{margin:-4px 0 0;font:500 12px/1.35 var(--f-body);color:var(--muted);text-align:left}.gfx-set{margin:12px 0 4px}
 
 #rotate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:#16171c;color:#fff;text-align:center;font:500 15px/1.4 var(--f-body)}
@@ -811,6 +812,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <div class="sens-box"><label class="sens" for="sens-cam-pk"><span>Camera sensitivity</span><input type="range" id="sens-cam-pk" data-sens="cam" min="0.2" max="6" step="0.05"><b data-sens-val="cam">1.50×</b></label><label class="sens" for="vol-pk"><span>Sound volume</span><input type="range" id="vol-pk" data-vol min="0" max="1" step="0.05"><b data-vol-val>100%</b></label><label class="sens" for="mvol-pk"><span>Music volume</span><input type="range" id="mvol-pk" data-mvol min="0" max="1" step="0.05"><b data-mvol-val>50%</b></label></div>
       <div class="pm-set gfx-set"><div class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
           <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
+          <div class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
+          <div class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
           <p class="gfx-note" hidden></p></div>
       <div class="btns">
         <button class="btn primary" id="resume">Resume</button>
@@ -911,6 +914,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         <div class="pm-set">
           <div class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
           <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
+          <div class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
+          <div class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
           <p class="gfx-note" hidden></p>
           <div class="pm-row"><span>Touch controls</span>
             <div class="seg" role="radiogroup" aria-label="Touch controls" id="dp-touch">
@@ -1100,8 +1105,15 @@ const GFX=(()=>{
   let pick=store.get('gfx','auto');if(pick!=='auto'&&!LV.includes(pick))pick='auto';
   let autoLv=store.get('gfx:autolv',mobile?'med':'high');if(!LV.includes(autoLv))autoLv=mobile?'med':'high';
   let fps=store.get('gfx:fps',null);if(![0,30,60].includes(fps))fps=mobile?60:0;
+  let saver=!!store.get('gfx:saver',false),showFps=!!store.get('gfx:showfps',false);const FC={n:0,t:0,el:null};
+  // strong phone GPUs (recent Adreno, Xclipse, Mali-G7xx+, Apple) start Auto on High
+  {let gpu='';try{const c=document.createElement('canvas').getContext('webgl');const d=c&&c.getExtension('WEBGL_debug_renderer_info');gpu=d?c.getParameter(d.UNMASKED_RENDERER_WEBGL):'';}catch(e){}
+   const strong=/Adreno[^0-9]*(7[3-9]\d|8\d\d)|Xclipse|Apple GPU|Apple M\d|Mali-G(7[1-9]|[89]\d|\d{3})|Immortalis/i.test(gpu);
+   const best=mobile?(strong?'high':'med'):'high';
+   // a level Auto dropped to last time gets one step back up each new session, so one bad match isn't remembered for ever
+   const saved=store.get('gfx:autolv',null);if(LV.includes(saved)&&LV.indexOf(saved)<LV.indexOf(best))autoLv=LV[Math.min(LV.indexOf(best),LV.indexOf(saved)+1)];else autoLv=best;}
   let res=1,r=null;const scenes=[],suns=[];let fno=0,lastT=0;
-  const lv=()=>pick==='auto'?autoLv:pick,q=()=>Q[lv()];
+  const lv=()=>saver?'low':pick==='auto'?autoLv:pick,q=()=>Q[lv()];
   // frame-rate watcher (only while actually playing, so menus and loading hitches don't count)
   const W={n:0,t:0,good:0,cool:0};
   function apply(){if(!r)return;const c=q(),on=c.shadow>0,type=c.soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
@@ -1120,10 +1132,11 @@ const GFX=(()=>{
     setFps(f){fps=f;store.set('gfx:fps',f);W.n=W.t=W.good=0;G2.ui();},
     // true when this animation frame should be drawn (frame-rate cap)
     idle:false,
-    gate(now){const cap=G2.idle?(fps?Math.min(fps,20):20):fps;if(!cap){lastT=now;return true;}const iv=1000/cap,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
+    get saver(){return saver;},setSaver(v){saver=!!v;store.set('gfx:saver',saver);res=1;apply();},
+    gate(now){const f0=saver?30:fps,cap=G2.idle?(f0?Math.min(f0,20):20):f0;if(!cap){lastT=now;return true;}const iv=1000/cap,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
     // called once per drawn frame
-    tick(dt,live){fno++;const c=q();if(c.every>1&&fno%c.every===0)for(const s of suns)s.shadow.needsUpdate=true;
-      if(pick!=='auto'||!live||document.hidden||dt>.25){W.n=W.t=0;return;}
+    tick(dt,live){fno++;if(showFps){FC.n++;FC.t+=dt;if(FC.t>=.5){if(!FC.el){FC.el=document.createElement('div');FC.el.id='fps-meter';document.body.appendChild(FC.el);}FC.el.textContent=Math.round(FC.n/FC.t)+' fps · '+NAME[lv()]+(res<1?' '+Math.round(res*100)+'%':'');FC.n=FC.t=0;}}const c=q();if(c.every>1&&fno%c.every===0)for(const s of suns)s.shadow.needsUpdate=true;
+      if(pick!=='auto'||saver||!live||document.hidden||dt>.25){W.n=W.t=0;return;}
       W.n++;W.t+=dt;if(W.t<2.5)return;const f=W.n/W.t;W.n=W.t=0;if(W.cool>0){W.cool--;return;}
       const target=Math.min(fps||60,60)*.83;
       if(f<target){W.good=0;W.cool=1;
@@ -1134,10 +1147,10 @@ const GFX=(()=>{
       else W.good=0;},
     // keeps every graphics control on the page in step
     ui(){document.querySelectorAll('[data-gfx]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.gfx===pick)));
-      document.querySelectorAll('[data-fps]').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.fps===fps)));
-      const note=(pick==='auto'?`Auto is using ${NAME[autoLv]}${res<1?` at ${Math.round(res*100)}% resolution`:''}.`:'')+(mobile&&lv()==='high'&&r&&!r.getContextAttributes().antialias?' Smoother edges after a reload.':'');
+      document.querySelectorAll('[data-fps]').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.fps===fps)));document.querySelectorAll('[data-saver]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.saver==='1')===saver)));document.querySelectorAll('[data-showfps]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.showfps==='1')===showFps)));if(FC.el)FC.el.hidden=!showFps;
+      const note=saver?'Battery saver is on: 30 fps and Low graphics.':(pick==='auto'?`Auto is using ${NAME[autoLv]}${res<1?` at ${Math.round(res*100)}% resolution`:''}.`:'')+(mobile&&lv()==='high'&&r&&!r.getContextAttributes().antialias?' Smoother edges after a reload.':'');
       document.querySelectorAll('.gfx-note').forEach(e=>{e.textContent=note;e.hidden=!note;});}};
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-gfx],[data-fps]');if(!b)return;if(b.dataset.gfx)G2.set(b.dataset.gfx);else G2.setFps(+b.dataset.fps);});
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-gfx],[data-fps],[data-saver],[data-showfps]');if(!b)return;if(b.dataset.showfps){showFps=b.dataset.showfps==='1';store.set('gfx:showfps',showFps);G2.ui();}else if(b.dataset.saver)G2.setSaver(b.dataset.saver==='1');else if(b.dataset.gfx)G2.set(b.dataset.gfx);else G2.setFps(+b.dataset.fps);});
   return G2;})();
 window.GFX=GFX;
 const canvas=$('c');
@@ -4147,7 +4160,62 @@ Object.assign(SKINS,{
 function buildLook(id){const ch=B.buildCharacter(CHARS[id].look);ch.root.rotation.order='YXZ';ch.aL.p.rotation.order='YXZ';ch.aR.p.rotation.order='YXZ';accessory(ch,id);
   const guns={};for(const k of Object.keys(GUNS)){if(GUNS[k].type==='ability')continue;const g=gunModel(k);g.position.set(0,-.86,.06);g.rotation.x=Math.PI/2;g.visible=false;ch.aR.p.add(g);guns[k]=g;if(k==='duals'){const t=gunModel(k);t.position.set(0,-.86,.06);t.rotation.x=Math.PI/2;t.visible=false;ch.aL.p.add(t);g.userData.twin=t;}}
   const bub=new THREE.Mesh(new THREE.SphereGeometry(1.75,24,16),new THREE.MeshBasicMaterial({color:'#7fd3ff',transparent:true,opacity:.22,depthWrite:false}));bub.position.y=1.25;bub.visible=false;ch.root.add(bub);ch.bubble=bub;
-  ch.root.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)&&o.material.transparent===false&&o.material.type!=='MeshBasicMaterial'){}});return{ch,guns};}
+  ch.root.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)&&o.material.transparent===false&&o.material.type!=='MeshBasicMaterial'){}});slimLook(ch,guns);return{ch,guns};}
+/* Fewer draw calls per character (phones): each multi-material box (torso, arms, legs, head) gets one small texture sheet instead of
+   up to six materials, and plain leaf meshes that share a material under the same parent (hair spikes, gun parts, trim) are merged.
+   Anything the game holds a reference to, or that an animation moves on its own, is left alone. Looks the same. */
+function slimLook(ch,guns){try{
+  const refs=new Set(),seen=new Set();
+  const walk=(v,d)=>{if(!v||typeof v!=='object'||seen.has(v)||d>3)return;seen.add(v);if(v.isObject3D){refs.add(v);if(v.userData)walk(v.userData,d+1);return;}
+    if(Array.isArray(v)){for(const x of v)walk(x,d+1);return;}if(Object.getPrototypeOf(v)===Object.prototype)for(const k in v)walk(v[k],d+1);};
+  for(const k in ch)if(k!=='root')walk(ch[k],0);for(const k in guns)walk(guns[k],0);
+  // leaves an animation moves on their own keep their own mesh
+  const moved=new Set();if(typeof ch.anim==='function'){const snap=new Map();ch.root.traverse(o=>{if(o.isMesh)snap.set(o,o.position.clone().add(o.scale).add(new V3(o.rotation.x,o.rotation.y,o.rotation.z)));});
+    try{ch.anim(.11,1.37);ch.anim(.13,2.71);}catch(e){}ch.root.traverse(o=>{const a=snap.get(o);if(a&&!a.equals(o.position.clone().add(o.scale).add(new V3(o.rotation.x,o.rotation.y,o.rotation.z))))moved.add(o.parent);});}
+  ch.root.traverse(o=>{if(o.isMesh&&Array.isArray(o.material))atlasMesh(o);});
+  const parents=[];ch.root.traverse(o=>{if(o.children.length>1&&!moved.has(o))parents.push(o);});for(const p of parents)mergeLeaves(p,refs);
+}catch(e){console.warn('slimLook',e);}}
+function atlasMesh(o){const ms=o.material,g=o.geometry;if(!g.groups.length||!g.attributes.uv||ms.length<2)return;
+  const okMap=t=>!t||(t.image&&t.image.width&&t.repeat.x===1&&t.repeat.y===1&&t.offset.x===0&&t.offset.y===0&&!t.rotation);
+  if(!ms.every(m=>m&&m.isMeshStandardMaterial&&!m.transparent&&m.side===THREE.FrontSide&&m.emissive.getHex()===0&&okMap(m.map)&&!m.normalMap&&!m.roughnessMap))return;
+  const r=ms[0];if(!ms.every(m=>m.roughness===r.roughness&&m.metalness===r.metalness&&m.flatShading===r.flatShading))return;
+  const used=[...new Set(g.groups.map(q=>q.materialIndex))],S=128,P=3,C=S+P*2,cols=Math.ceil(Math.sqrt(used.length)),rows=Math.ceil(used.length/cols);
+  const cv=document.createElement('canvas');cv.width=cols*C;cv.height=rows*C;const x=cv.getContext('2d'),cell={};
+  used.forEach((mi,i)=>{const m=ms[mi],x0=(i%cols)*C+P,y0=Math.floor(i/cols)*C+P;cell[mi]={x0,y0,map:!!m.map};const col='#'+m.color.getHexString();
+    if(m.map){x.drawImage(m.map.image,x0-P,y0-P,S+P*2,S+P*2);x.drawImage(m.map.image,x0,y0,S,S);if(m.color.getHex()!==0xffffff){x.globalCompositeOperation='multiply';x.fillStyle=col;x.fillRect(x0-P,y0-P,C,C);x.globalCompositeOperation='source-over';}}
+    else{x.fillStyle=col;x.fillRect(x0-P,y0-P,C,C);}});
+  const ng=g.index?g.toNonIndexed():g.clone(),uv=ng.attributes.uv,W=cv.width,H=cv.height;
+  for(const q of ng.groups){const c=cell[q.materialIndex];for(let i=q.start;i<q.start+q.count;i++){let u=uv.getX(i),v=uv.getY(i);
+      if(!c.map){u=.5;v=.5;}else if(u<-.01||u>1.01||v<-.01||v>1.01){ng.dispose();return;}
+      uv.setXY(i,(c.x0+u*S)/W,1-(c.y0+(1-v)*S)/H);}}
+  ng.clearGroups();const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=2;
+  o.geometry=ng;o.material=new THREE.MeshStandardMaterial({map:t,roughness:r.roughness,metalness:r.metalness,flatShading:r.flatShading});}
+function mergeLeaves(p,refs){const groups=new Map();
+  // a mesh may carry outline shells (back-face copies); those get merged too, in their own outline mesh
+  const shellsOf=o=>o.children.every(c=>c.isMesh&&!c.children.length&&!refs.has(c)&&!Array.isArray(c.material)&&c.material&&c.material.side===THREE.BackSide&&c.visible)?o.children:null;
+  for(const o of p.children){if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||!shellsOf(o)||refs.has(o)||Array.isArray(o.material)||!o.material||o.material.transparent||!o.visible||o.renderOrder)continue;
+    const a=o.geometry.attributes;if(!a.position||!a.normal||o.geometry.morphAttributes&&Object.keys(o.geometry.morphAttributes).length)continue;
+    const mt=o.material,plain=mt.isMeshStandardMaterial&&!mt.map&&!mt.normalMap&&!mt.vertexColors&&mt.emissive.getHex()===0&&mt.side===THREE.FrontSide&&!a.color;
+    // plain-coloured parts with the same finish can share one material: their colour goes into the vertices
+    const key=(plain?'vc|'+mt.roughness+'|'+mt.metalness+'|'+mt.flatShading:mt.uuid)+'|'+o.castShadow+'|'+o.receiveShadow+'|'+(plain?'':(a.uv?1:0)+'|'+(a.color?1:0));(groups.get(key)||groups.set(key,[]).get(key)).push(o);}
+  for(const [key,list] of groups){if(list.length<2)continue;const vc=key.startsWith('vc|');
+    const parts=list.map(o=>{o.updateMatrix();const q=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone());q.applyMatrix4(o.matrix);
+      if(vc){for(const n of Object.keys(q.attributes))if(n!=='position'&&n!=='normal')q.deleteAttribute(n);const c=o.material.color,n=q.attributes.position.count,arr=new Float32Array(n*3);for(let i=0;i<n;i++){arr[i*3]=c.r;arr[i*3+1]=c.g;arr[i*3+2]=c.b;}q.setAttribute('color',new THREE.BufferAttribute(arr,3));}
+      return q;});
+    const names=Object.keys(parts[0].attributes).filter(n=>parts.every(q=>q.attributes[n]&&q.attributes[n].itemSize===parts[0].attributes[n].itemSize));
+    const g=new THREE.BufferGeometry();for(const n of names){const sz=parts[0].attributes[n].itemSize;let len=0;for(const q of parts)len+=q.attributes[n].count*sz;const arr=new Float32Array(len);let off=0;
+      for(const q of parts){const at=q.attributes[n];for(let i=0;i<at.count;i++)for(let k=0;k<sz;k++)arr[off++]=at.array[i*sz+k]!==undefined&&!at.isInterleavedBufferAttribute?at.array[i*sz+k]:at.getComponent(i,k);}
+      g.setAttribute(n,new THREE.BufferAttribute(arr,sz));}
+    for(const q of parts)q.dispose();g.computeBoundingSphere();
+    const f=list[0],m=new THREE.Mesh(g,vc?new THREE.MeshStandardMaterial({vertexColors:true,roughness:f.material.roughness,metalness:f.material.metalness,flatShading:f.material.flatShading}):f.material);m.castShadow=f.castShadow;m.receiveShadow=f.receiveShadow;
+    const shells=[];for(const o of list)for(const c of o.children){c.updateMatrix();shells.push({c,mx:o.matrix.clone().multiply(c.matrix)});}
+    const at=p.children.indexOf(f);for(const o of list)p.remove(o);p.children.splice(Math.min(at,p.children.length),0,m);m.parent=p;
+    // outline shells grouped by material, merged into meshes beside it
+    const sg=new Map();for(const x of shells){const k=x.c.material.uuid;(sg.get(k)||sg.set(k,[]).get(k)).push(x);}
+    for(const xs of sg.values()){const qs=xs.map(x=>{const q=x.c.geometry.index?x.c.geometry.toNonIndexed():x.c.geometry.clone();for(const n of Object.keys(q.attributes))if(n!=='position'&&n!=='normal')q.deleteAttribute(n);q.applyMatrix4(x.mx);return q;});
+      const og=new THREE.BufferGeometry();for(const n of ['position','normal']){if(!qs.every(q=>q.attributes[n]))continue;let len=0;for(const q of qs)len+=q.attributes[n].array.length;const arr=new Float32Array(len);let off=0;for(const q of qs){arr.set(q.attributes[n].array,off);off+=q.attributes[n].array.length;}og.setAttribute(n,new THREE.BufferAttribute(arr,3));}
+      for(const q of qs)q.dispose();og.computeBoundingSphere();const om=new THREE.Mesh(og,xs[0].c.material);p.add(om);}}}
+
 function setLook(f,id){if(f.char===id&&f.ch)return;if(f.ch)scene.remove(f.ch.root);const L=buildLook(id);f.ch=L.ch;f.guns=L.guns;f.char=id;scene.add(f.ch.root);f.slot=-1;equip(f,0);f.ghostShown=null;}
 function setGhost(f,a){if(f.ghostShown===a)return;f.ghostShown=a;f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];
     if(ms.some(m=>m&&m.side===THREE.BackSide)){o.visible=a>.9;return;}for(const m of ms){if(!m)continue;if(m.userData.o0===undefined)m.userData.o0=m.opacity;m.transparent=a<.99||m.userData.o0<1;m.opacity=m.userData.o0*a;m.depthWrite=a>.99;}});}
@@ -5796,7 +5864,7 @@ const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60
 const hc={};const txt=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}};
 let vigA=0;function vig(a){vigA=Math.max(vigA,a);}
 function hitMarker(head){sfx(head?'headshot':'hit',null,{rate:head?1:1.05});const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');requestAnimationFrame(()=>h.classList.add('on'));} // restart next frame (forcing a layout here caused hitches)
-const nums=[];function dmgNumber(f,n,head){const el=document.createElement('div');el.className='dmg'+(head?' head':'');el.textContent=n;$('d-nums').appendChild(el);
+const nums=[],numPool=[];function dmgNumber(f,n,head){const el=numPool.pop()||$('d-nums').appendChild(document.createElement('div'));el.className='dmg'+(head?' head':'');el.textContent=n;el.style.opacity='';el.hidden=false;
   nums.push({el,p:new V3(f.pos.x+rnd(-.4,.4),f.pos.y+2.9*SC,f.pos.z+rnd(-.4,.4)),t:0});}
 function feedMsg(html){const el=document.createElement('div');el.className='panel feed';el.innerHTML=html;const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
 function feed(you,gun,head){const el=document.createElement('div');el.className='panel feed';
@@ -5941,7 +6009,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='
   cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':(id==='rocket'||id==='thumper')?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':'');cr.style.opacity=S.state==='menu'||scoped||holo?0:id==='duals'?1:clamp(1-VM.raise*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id);if(cr.dataset.on!==String(on)){cr.dataset.on=String(on);cr.style.setProperty('--cc',on?'#ff2a2a':'#ffffff');}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*1.65);$('d-flash').style.opacity=flashA.toFixed(3);{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
-  for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.remove();nums.splice(i,1);}else n.el.style.opacity=0;continue;}
+  for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.hidden=true;numPool.push(n.el);nums.splice(i,1);}else n.el.style.opacity=0;continue;}
     n.el.style.opacity=String(1-Math.max(0,n.t-.5)/.4);n.el.style.transform=`translate(${sc[0]}px,${sc[1]}px) translate(-50%,-50%) scale(${1+Math.max(0,.15-n.t)*3})`;}
   for(const f of FS){if(f===ME)continue;const tag=tagFor(f),foe=isFoe(ME,f);const tp=f.alive?toScreen(new V3(f.pos.x,f.pos.y+3.15*SC,f.pos.z)):null;
     const vis=tp&&S.state!=='menu'&&(!foe||los(camera.position,new V3(f.pos.x,f.pos.y+2.4*SC,f.pos.z)))&&!(foe&&f.ghostT>0);

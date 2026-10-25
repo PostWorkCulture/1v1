@@ -4346,7 +4346,12 @@ const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
-const D={get live(){return (S.state==='fight'||S.state==='countdown')&&!S.paused&&!S.replayOpen;},__studio(list,t){const PS=new THREE.Scene();PS.background=new THREE.Color('#dfe5ee');PS.add(new THREE.HemisphereLight('#ffffff','#9aa6b8',1.0));const dl=new THREE.DirectionalLight('#ffffff',1.8);dl.position.set(3,6,7);PS.add(dl);const rl=new THREE.DirectionalLight('#9fd3ff',.8);rl.position.set(-5,3,-6);PS.add(rl);
+function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
+  yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
+function snapshot(){return {t:+S.t.toFixed(3),round:S.round,timer:+S.timer.toFixed(2),state:S.state,score:S.score.slice(),seed:S.seed,f:FS.map(snapFighter)};}
+function applySnap(sn){for(const x of sn.f){const f=FS[x.id];if(!f)continue;f.pos.set(x.x,x.y,x.z);f.vel.set(x.vx,x.vy,x.vz);f.yaw=x.yaw;f.pitch=x.pitch;f.hp=x.hp;f.armor=x.armor;f.stam=x.stam;f.alive=x.alive;f.downed=x.downed;Object.assign(f.ammo,x.ammo);f.walls=x.walls;f.nades=x.nades;}
+  S.score=sn.score.slice();S.timer=sn.timer;S.round=sn.round;}
+const D={get snapshot(){return snapshot();},applySnap,get cmd(){return CMD.last;},get live(){return (S.state==='fight'||S.state==='countdown')&&!S.paused&&!S.replayOpen;},__studio(list,t){const PS=new THREE.Scene();PS.background=new THREE.Color('#dfe5ee');PS.add(new THREE.HemisphereLight('#ffffff','#9aa6b8',1.0));const dl=new THREE.DirectionalLight('#ffffff',1.8);dl.position.set(3,6,7);PS.add(dl);const rl=new THREE.DirectionalLight('#9fd3ff',.8);rl.position.set(-5,3,-6);PS.add(rl);
   const fl=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,.08,32),mat('#c3ccd8'));fl.position.y=-.04;PS.add(fl);
   const PC=new THREE.PerspectiveCamera(26,1,.05,100);const W=renderer.domElement.width,H=renderer.domElement.height;PC.aspect=W/H;PC.updateProjectionMatrix();const out={};
   const grab=(tw,th)=>{const cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const ar=tw/th;let sw=H*ar,sh=H;if(sw>W){sw=W;sh=W/ar;}g.drawImage(renderer.domElement,(W-sw)/2,(H-sh)/2,sw,sh,0,0,tw,th);return cv.toDataURL('image/png');};
@@ -4361,7 +4366,8 @@ const D={get live(){return (S.state==='fight'||S.state==='countdown')&&!S.paused
 const tmpA=new V3(),tmpB=new V3(),tmpC=new V3();
 function eyeOf(f,out){if(f.downed)return out.set(f.pos.x,f.pos.y+.85,f.pos.z);return out.set(f.pos.x,f.pos.y+2.35*(f.scale||1)*(1-.27*(f.cv||0)),f.pos.z);}
 function dirOf(yaw,pitch,out){const cp=Math.cos(pitch);return out.set(Math.sin(yaw)*cp,Math.sin(pitch),Math.cos(yaw)*cp);}
-function spreadDir(d,deg){if(deg<=0)return d.clone();const a=deg*Math.PI/180*Math.sqrt(Math.random()),t=Math.random()*TAU;
+let gSeed=1;const GR=()=>{gSeed=(gSeed+0x6D2B79F5)|0;let t=Math.imul(gSeed^(gSeed>>>15),1|gSeed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
+function spreadDir(d,deg){if(deg<=0)return d.clone();const a=deg*Math.PI/180*Math.sqrt(GR()),t=GR()*TAU;
   const up=Math.abs(d.y)>.95?new V3(1,0,0):new V3(0,1,0);const u=new V3().crossVectors(d,up).normalize(),v=new V3().crossVectors(d,u);
   return d.clone().multiplyScalar(Math.cos(a)).addScaledVector(u,Math.sin(a)*Math.cos(t)).addScaledVector(v,Math.sin(a)*Math.sin(t)).normalize();}
 function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;if(f===ME&&f.ads&&VM_GUNS.includes(gunOf(f)))s=lerp(g.spread,g.adsSpread,VM.raise);if(f.ads&&f.scopeKit&&OPTIC_GUNS.includes(gunOf(f)))s*=.6;const sp=Math.hypot(f.vel.x,f.vel.z);if(sp>2)s*=1.45;if(!f.grounded)s*=2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;if(f.crouching)s*=.65;const aimed=f.ads&&(f!==ME||!VM_GUNS.includes(gunOf(f))||VM.raise>.9);return s+f.bloom*(aimed?.3:1);}
@@ -4673,7 +4679,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){for(const [foe,hr] of hits){const total=Math.round(hr.t);if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(total,100);dmgNumber(foe,total,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
-  if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(Math.random()-.5)*g.kick*.4;}
+  if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(GR()-.5)*g.kick*.4;}
   f.bloom=Math.min(f.bloom+g.bloom,3);}
 function damage(f,dmg,src,head,gun){if(f.thornT>0&&!f.downed&&src&&src!==f&&gun!=='thorns'&&f.alive&&S.state==='fight'&&!f.finishing){dmg*=.7;const r=damage0(f,dmg,src,head,gun);
     if(src.alive&&!src.finishing){emit(f.pos.x,f.pos.y+1.3,f.pos.z,{n:10,speed:5,size:.18,life:.4,grav:4,colors:['#b6ff3b','#4f9a2e','#e9e2c8']});damage0(src,Math.max(1,dmg*.6),f,false,'thorns');}return r;}
@@ -5777,6 +5783,16 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.skySlam||f.stu
 
 /* ================= input ================= */
 const keys={};let mouseL=false,mouseR=false;
+/* input -> one command per game tick. Everything the player does reaches the game as {fi,si,yaw,pitch,jump,jumpPress,fire,aim,acts}:
+   held state is sampled each tick, and one-off actions (reload, wall, ability, swap...) are queued and applied at the start of the next tick.
+   This is the shape a multiplayer client will send to the server. */
+const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};
+function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
+  yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!mouseR,run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
+function applyActs(acts){for(const a of acts){if(S.paused||!D.active)continue;
+  if(a==='KeyT')throwNade(ME);else if(a==='Digit1')equip(ME,0);else if(a==='Digit2')equip(ME,1);else if(a==='KeyR')startReload(ME);else if(a==='KeyQ')buildWall(ME);
+  else if(a==='KeyE'){if(!ME.downed)useAbility(ME);}else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
+  else if(a==='KeyF'){if(!ME.carrying){const v=finishable(ME);if(v)finish(ME,v);}}else if(a==='KeyC'){if(!ME.carrying&&!ME.downed)ME.crouchOn=!ME.crouchOn;}}}
 window.addEventListener('keydown',e=>{if(!D.active||S.state==='menu'||S.state==='off')return;keys[e.code]=true;
   if(['Space','KeyW','KeyA','KeyS','KeyD','KeyE','KeyF','KeyC','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='Space'&&!e.repeat)ME.jumpPress=true;
@@ -5788,10 +5804,9 @@ window.addEventListener('keydown',e=>{if(!D.active||S.state==='menu'||S.state===
   if(S.shopOpen&&/^Digit[1-9]$/.test(e.code)){buyShop(+e.code.slice(5)-1);return;}
   if(CR.run&&S.state==='roundEnd'&&(e.code==='Space'||e.code==='Enter')){S.t0=Math.min(S.t0,.05);return;}
   if(S.state==='roundEnd'&&!$('d-rend').hidden){if(/^Digit[1-9]$/.test(e.code)&&RP.bar){const c=RP.bar[+e.code.slice(5)-1];if(c){openReplay(RP.clips.indexOf(c));return;}}if(e.code==='KeyH'){$('d-rend').hidden=true;leave();return;}}
-  if(e.code==='KeyT')throwNade(ME);
-  if(e.code==='Digit1')equip(ME,0);if(e.code==='Digit2')equip(ME,1);if(e.code==='KeyR')startReload(ME);if(e.code==='KeyQ')buildWall(ME);if(e.code==='KeyE'&&!ME.downed)useAbility(ME);if(e.code==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}if(e.code==='KeyF'&&!ME.carrying){const v=finishable(ME);if(v)finish(ME,v);}if(e.code==='KeyC'&&!e.repeat){if(!ME.carrying&&!ME.downed)ME.crouchOn=!ME.crouchOn;}
+  if(['KeyT','Digit1','Digit2','KeyR','KeyQ','KeyE','KeyG','KeyF','KeyC'].includes(e.code))queueAct(e.code);
 },true);
-window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyG'&&ME.aimThrow){ME.aimThrow=false;if(D.active&&!S.paused)useCons(ME);}});
+window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){if(!snipeDown())mouseL=true;}if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
@@ -5799,6 +5814,7 @@ window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state=
   const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads)*(gunOf(ME)==='sniper'?.3:.65):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
 window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)equip(ME,ME.slot?0:1);},{passive:true});
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{S.lockOK=false;});}catch(err){S.lockOK=false;}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.active&&!S.paused&&S.state!=='menu'&&S.state!=='done')pause();simAcc=0;});
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});
 document.addEventListener('pointerlockerror',()=>{S.lockOK=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseL=mouseR=false;});
@@ -6078,7 +6094,7 @@ function updCamera(dt){
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'grenade');if(S.mode==='rumble')ME.primary=ME.secondary='fists';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -6366,18 +6382,18 @@ function step(rdt){pfBudget=24000;
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
   // player
-  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!ME.carrying&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary;if(g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0)equip(ME,o);}aimAssist(rdt);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
-    const fi=clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si=clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1);
+  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!ME.carrying&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary;if(g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0)equip(ME,o);}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
+    const fi=cmd.fi,si=cmd.si;
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
-    f.ads=mouseR&&live&&!f.downed;f.reviving=f.downed&&!!keys.KeyE;if(f.carrying||!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=false&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!f.carrying&&!(f.stunT>0)&&!f.stamLock&&f.stam>0&&Math.hypot(wx,wz)>.5&&fi>=0;
+    f.ads=cmd.aim&&live&&!f.downed;f.reviving=f.downed&&!!keys.KeyE;if(f.carrying||!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=false&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!f.carrying&&!(f.stunT>0)&&!f.stamLock&&f.stam>0&&Math.hypot(wx,wz)>.5&&fi>=0;
     const spd=(f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):11.25)*stimMul(f)*(f.sprinting?SPRINT_MUL:1);
-    if(f.carriedBy||f.skyHeld){}else if(f.thrownT>0||f.stunT>0)physics(f,dt,0,0,false,0,false);else if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&keys.Space,spd,live&&f.jumpPress);f.jumpPress=false;
-    if(live&&f.downed&&!f.carriedBy&&!f.skyHeld&&!(f.thrownT>0)&&mouseL&&!f.triggerWas)tagShot(f);
-    else if(live&&!f.downed&&!f.carrying&&!f.skySlam&&!(f.stunT>0)&&mouseL&&canFire(f)&&(GUNS[id].auto||!f.triggerWas)){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);
+    if(f.carriedBy||f.skyHeld){}else if(f.thrownT>0||f.stunT>0)physics(f,dt,0,0,false,0,false);else if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&cmd.jump,spd,live&&f.jumpPress);f.jumpPress=false;
+    if(live&&f.downed&&!f.carriedBy&&!f.skyHeld&&!(f.thrownT>0)&&cmd.fire&&!f.triggerWas)tagShot(f);
+    else if(live&&!f.downed&&!f.carrying&&!f.skySlam&&!(f.stunT>0)&&cmd.fire&&canFire(f)&&(GUNS[id].auto||!f.triggerWas)){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);
       const head=eyeOf(f,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(f,cam.addScaledVector(d,t0),d);}
-    else if(live&&mouseL&&f.ammo[id]===0&&f.reloadT<=0){if(!f.triggerWas)sfx('dry');startReload(f);}
-    f.triggerWas=mouseL;if(SNQ.rel){SNQ.rel=false;mouseL=false;mouseR=SNQ.prevR;}}
+    else if(live&&cmd.fire&&f.ammo[id]===0&&f.reloadT<=0){if(!f.triggerWas)sfx('dry');startReload(f);}
+    f.triggerWas=cmd.fire;if(SNQ.rel){SNQ.rel=false;mouseL=false;mouseR=SNQ.prevR;}}
   for(const x of FS){if(x.dazeT>0){x.dazeT-=dt;if(!x.alive)x.dazeT=0;else if(Math.random()<.4){const a=S.t*8+Math.random()*.3;emit(x.pos.x+Math.cos(a)*.5,x.pos.y+2.8*(x.scale||1),x.pos.z+Math.sin(a)*.5,{n:1,speed:.1,size:.16,life:.4,grav:0,colors:['#ffd21f','#ffffff']});}}if(x.stunT>0){x.stunT-=dt;if(Math.random()<.5){const a=S.t*8+Math.random()*.3;emit(x.pos.x+Math.cos(a)*.5,x.pos.y+2.8*(x.scale||1),x.pos.z+Math.sin(a)*.5,{n:1,speed:.1,size:.16,life:.25,grav:0,colors:['#ffd23f','#ffffff']});}}x.finishT-=dt;if(S.state==='fight'||S.state==='roundEnd')tickStatus(x,dt);x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.trigger?1:3));x.buildT-=x===ME?dt:0;if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}if(x.burstN>0){x.burstT-=dt;if(x.burstT<=0){const bid=gunOf(x),bg=GUNS[bid];if(!x.alive||x.downed||x.carrying||x.skySlam||x.stunT>0||x.reloadT>0||x.switchT>0||x.ammo[bid]<=0||!bg.burst||S.state!=='fight'){x.burstN=0;}else{x.burstN--;x.burstT=bg.burstGap;if(x===ME){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const head=eyeOf(x,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(x,cam.addScaledVector(d,t0),d,true);}else{const e=eyeOf(x,new V3()),d=dirOf(x.yaw,x.pitch,new V3());fire(x,e,d,true);}if(x.ammo[bid]===0&&x.reloadT<=0){x.burstN=0;startReload(x);}}}}}
   // clicking fire during your own finishing move cancels it
   if(ME.finishT>0&&mouseL&&!S.finMouseWas){const fv=FS.find(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===ME);if(fv)cancelFinish(fv);}S.finMouseWas=mouseL;
@@ -6409,7 +6425,9 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
     let far=false;if(K){const e=o.matrixWorld.elements,dx=e[12]-cx,dy=e[13]-cy,dz=e[14]-cz,m=Math.max(12,u._cr*k);far=dx*dx+dy*dy+dz*dz>m*m;}
     const want=far?1:0;if(o.layers.mask!==1<<want)o.layers.set(want);});}
 function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}renderer.render(scene,camera);renderVM();}
-function frame(rdt){step(rdt);render();capFrame(rdt);}
+const SIM=1/60;let simAcc=0;
+function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;step(SIM);n++;}
+  if(!n&&S.state!=='menu')updCamera(rdt);render();capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip
 /* kill replays: a rolling few seconds of exactly what you see (scope included) at up to 1280x720 and 30 fps; frames are cropped to 16:9 and

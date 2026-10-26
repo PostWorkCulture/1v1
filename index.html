@@ -3560,7 +3560,33 @@ const MAPS={
   tree(-10.8,-3,.8);tree(10.8,2,.8);
   M.shopAt=[{x:0,z:-7}];M.spawns=[[0,-14],[0,14.8],[-10,-8],[10,-1],[-4,6],[4,-3],[10.5,14],[-10.5,14.5]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}}
 };
-function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();addBuildingSpawns();placePlates();}
+// red explosive drums on every duel map (current and future): small clusters on open ground tucked beside cover,
+// clear of spawns, shops, ladders, stairs, water and the train lines; same spots each time a map is built
+function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||md.drums===0)return false;const g=M.grid;if(!g)return false;
+  let sd=0;for(const ch of M.id)sd=(sd*31+ch.charCodeAt(0))|0;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
+  const b=M.bounds,area=(b.x1-b.x0)*(b.z1-b.z0),want=md.drums||Math.round(Math.min(16,Math.max(8,area/800))),placed=[],far=(x,z,L,d)=>L.every(p=>Math.hypot(p.x-x,p.z-z)>=d);
+  for(const B of M.boxes)if(B.boom)placed.push({x:(B.x0+B.x1)/2,z:(B.z0+B.z1)/2});
+  const avoid=[...(M.spawns||[]),...(M.shops||[])],lad=M.ladders||[];
+  const goal=placed.length+want;for(let tries=0;tries<4000&&placed.length<goal;tries++){
+    const i=1+((rnd()*(g.nx-2))|0),j=1+((rnd()*(g.nz-2))|0),k=i+j*g.nx;if(!g.n[k])continue;const h=g.h[k*NL];if(h>1.2)continue;
+    const x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS;if(x<b.x0+3||x>b.x1-3||z<b.z0+3||z>b.z1-3)continue;if(M.id==='rail'&&Math.abs(x)<14.5)continue;
+    if(!far(x,z,avoid,7)||!far(x,z,placed,9))continue;
+    if(lad.some(L=>x>L.x0-2.5&&x<L.x1+2.5&&z>L.z0-2.5&&z<L.z1+2.5))continue;
+    if(M.wade&&M.wade(x,z))continue;if(M.waterY!=null&&h<M.waterY+.05)continue;
+    if(M.railGlow&&M.railGlow.some(G=>Math.abs(x-G.x)<2.6))continue;
+    // the whole drum footprint stands on the same level, nothing in the way, and some cover (a wall, crate, car…) within a couple of metres
+    let ok=true,cover=false;for(const B of M.boxes){if(B.mover){if(x>B.x0-3&&x<B.x1+3&&z>B.z0-3&&z<B.z1+3){ok=false;break;}continue;}
+      if(B.y1>h+.05&&B.y0<h+2.2&&x>B.x0-.9&&x<B.x1+.9&&z>B.z0-.9&&z<B.z1+.9){ok=false;break;}
+      if(B.y1>h+1.1&&B.y0<h+.3&&x>B.x0-2.2&&x<B.x1+2.2&&z>B.z0-2.2&&z<B.z1+2.2)cover=true;}
+    if(!ok||!cover)continue;
+    // stairs feet stay clear: a level change of more than a step within 2 m
+    let stair=false;for(let di=-4;di<=4&&!stair;di++)for(let dj=-4;dj<=4;dj++){const k2=i+di+(j+dj)*g.nx;if(k2<0||k2>=g.n.length)continue;for(let l=0;l<g.n[k2];l++){const dh=g.h[k2*NL+l]-h;if(dh>.3&&dh<1.6){stair=true;break;}}if(stair)break;}
+    if(stair)continue;
+    const n=rnd()<.45?2:rnd()<.2?3:1,a=rnd()*Math.PI*2;
+    for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
+    placed.push({x,z});}
+  return true;}
+function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);

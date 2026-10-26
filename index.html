@@ -3861,7 +3861,7 @@ function drawFace(g,F,mode,bg){const W=256,sm=mode==='smirk';g.fillStyle=bg||'#f
     if(sm&&s<0){g.fillStyle=bg||'#f4f5f7';g.fillRect(x-20,y-24,40,14);}
     g.fillStyle='#fff';g.beginPath();g.arc(x+5,y-(sm&&s<0?2:8)*es,4.5*es,0,TAU);g.fill();}
   // mouth
-  g.strokeStyle=ink;g.fillStyle=ink;g.lineWidth=7;const M=sm?'smirk':F.mouth;g.beginPath();
+  g.strokeStyle=ink;g.fillStyle=ink;g.lineWidth=7;g.save();if(F.extra==='tache')g.translate(0,12);const M=sm?'smirk':F.mouth;g.beginPath();
   if(M==='smirk'){g.moveTo(100,182);g.quadraticCurveTo(150,188,186,160);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(181,151);g.quadraticCurveTo(194,158,191,171);g.stroke();}
   else if(M==='grin'){g.moveTo(84,172);g.quadraticCurveTo(128,204,176,166);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(172,156);g.quadraticCurveTo(186,162,183,176);g.stroke();}
   else if(M==='half'){g.moveTo(96,180);g.quadraticCurveTo(140,192,176,170);g.stroke();}
@@ -3871,7 +3871,11 @@ function drawFace(g,F,mode,bg){const W=256,sm=mode==='smirk';g.fillStyle=bg||'#f
   else if(M==='open'||M==='laugh'){g.moveTo(90,166);g.quadraticCurveTo(128,166,168,166);g.quadraticCurveTo(128,(M==='laugh'?222:208),90,166);g.fill();g.fillStyle='#ff6b7d';g.beginPath();g.ellipse(129,(M==='laugh'?194:186),16,8,0,0,TAU);g.fill();}
   else if(M==='teeth'){g.moveTo(86,166);g.quadraticCurveTo(128,212,172,166);g.closePath();g.fill();g.fillStyle='#fff';g.fillRect(96,168,66,12);}
   else{g.moveTo(88,172);g.quadraticCurveTo(128,198,170,170);g.stroke();}
-  if(F.extra==='tache'){g.fillStyle=ink;g.beginPath();g.moveTo(128,150);g.quadraticCurveTo(104,140,88,154);g.quadraticCurveTo(108,152,128,156);g.quadraticCurveTo(148,152,168,154);g.quadraticCurveTo(152,140,128,150);g.fill();}}
+  g.restore();if(F.extra==='tache'){// handlebar: two bushy lobes, centre notch, curled-up tips
+    g.fillStyle=ink;for(const sx of [-1,1]){const X=x=>128+sx*x;g.beginPath();g.moveTo(X(3),146);
+      g.bezierCurveTo(X(22),138,X(44),142,X(56),152);g.bezierCurveTo(X(64),158,X(74),156,X(76),146);
+      g.bezierCurveTo(X(80),152,X(76),166,X(60),166);g.bezierCurveTo(X(42),166,X(22),160,X(3),162);g.closePath();g.fill();}
+    g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=2;for(const sx of [-1,1]){g.beginPath();g.moveTo(128+sx*14,150);g.quadraticCurveTo(128+sx*34,146,128+sx*50,154);g.stroke();}}}
 function applyFace(ch,id){const F=FACES[id],hd=ch.head;if(!F||!hd||!hd.visible||!Array.isArray(hd.material))return;const m=hd.material[4];if(!m)return;
   // drop small stuck-on 3D brows/mouths over the face
   for(const c of ch.headG.children){if(!c.isMesh||c===hd||!c.visible||c.position.z<.28||Math.abs(c.position.x)>.3||c.position.y<.05||c.position.y>.55)continue;c.geometry.computeBoundingBox();const b=c.geometry.boundingBox;if(b.max.z-b.min.z<.06&&b.max.y-b.min.y<.14&&b.max.x-b.min.x<.4)c.visible=false;}

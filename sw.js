@@ -1,7 +1,7 @@
 /* imok 1v1 offline cache.
    The page itself is fetched fresh whenever there's a connection (so updates show up straight away) and falls back to the cached copy offline.
    Sounds, icons, three.js and fonts are served from the cache after the first visit. Music streams normally (browsers fetch it in ranges). */
-const CACHE='imok-1v1-v4';
+const CACHE='imok-1v1-v5';
 const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png',
   'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));});

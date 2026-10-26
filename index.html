@@ -3956,21 +3956,48 @@ function pixelTex(rows,pal){const h=rows.length,w=rows[0].length,cv=document.cre
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const c=pal[rows[y][x]];if(c){g.fillStyle=c;g.fillRect(x,y,1,1);}}
   const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;}
 const SKINS={
- // A — hooded spectre in a tattered cloak
- shroud(ch){hideBase(ch);const robe=mat('#353a48',null,{roughness:.9}),robeD=mat('#262a35',null,{roughness:.95}),trim=mat('#8fa3bd',null,{roughness:.6}),eye=GLOW('#7ff3ff'),voidM=mat('#05060a',null,{roughness:1});
-  const b=ch.body;
-  piece(b,RBX(1.14,1.08,.66,.14),robe,0,1.5,0);
-  piece(b,RBX(1.36,.26,.78,.1),trim,0,2.02,0);
-  const sk=new THREE.CylinderGeometry(.62,.9,1.05,4,1);sk.rotateY(Math.PI/4);piece(b,sk,robeD,0,.52,0,{ol:1.04});
-  for(let i=0;i<10;i++){const a=i/10*Math.PI*2,r=.74,len=.18+((i*37)%5)*.05;piece(b,new THREE.BoxGeometry(.22,len,.12),robeD,Math.cos(a)*r,.02-len/2+.05,Math.sin(a)*r*.75,{outline:false,rot:[0,-a,0]});}
-  piece(b,new THREE.BoxGeometry(.18,.18,.06),GLOW('#7ff3ff'),0,1.86,.36,{outline:false,rot:[0,0,Math.PI/4]});
-  const h=ch.headG;piece(h,RBX(.9,.9,.84,.16),robe,0,.38,-.03);
-  piece(h,new THREE.BoxGeometry(.62,.56,.06),voidM,0,.34,.39,{outline:false});
-  piece(h,RBX(.5,.34,.44,.1),robe,0,.86,-.2,{rot:[-.5,0,0]});
-  for(const sx of [-1,1])piece(h,new THREE.BoxGeometry(.14,.07,.03),eye,sx*.14,.38,.43,{outline:false,rot:[0,0,sx*.18]});
-  for(const arm of [ch.aL,ch.aR]){piece(arm.p,RBX(.56,1,.56,.1),robe,0,-.42,0);piece(arm.p,RBX(.7,.22,.7,.06),robeD,0,-.92,0);piece(arm.p,RBX(.3,.24,.3,.06),mat('#c9e9f5',null,{emissive:'#7ff3ff',emissiveIntensity:.5}),0,-1.1,0,{outline:false});}
-  const w=new THREE.Group();w.position.y=1.6;b.add(w);for(let i=0;i<3;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.13,.13,.13),GLOW('#9ff7ff'));const a=i/3*Math.PI*2;s.position.set(Math.cos(a)*1.05,Math.sin(i*2)*.25,Math.sin(a)*1.05);w.add(s);}
-  ch.anim=(dt,t)=>{w.rotation.y+=dt*1.4;w.children.forEach((s,i)=>{s.position.y=Math.sin(t*2+i*2)*.25;s.rotation.x+=dt*2;s.rotation.y+=dt*3;});};},
+ // A — Cyber-Horned Wraith (Option 1: dark obsidian armour, high-collar cape, glowing red eyes, segmented cyan horns, crystal chest cluster, floating voxels, glowing cyan hands & soles)
+ shroud(ch){hideBase(ch);const ob=mat('#252a36',null,{roughness:.48,metalness:.38}),obD=mat('#171a22',null,{roughness:.6,metalness:.28}),capeM=mat('#12161f',null,{roughness:.85}),voidM=mat('#07080c',null,{roughness:1}),
+   cyan=GLOW('#78f6ff'),cyanSoft=new THREE.MeshStandardMaterial({color:'#78f6ff',emissive:'#38d8ff',emissiveIntensity:.85,roughness:.2}),redEye=GLOW('#ff3352');
+  const b=ch.body,h=ch.headG;
+  // segmented obsidian torso & abdomen plates
+  piece(b,RBX(1.12,1.06,.62,.1),obD,0,1.5,0);piece(b,RBX(1.16,.58,.66,.1),ob,0,1.72,0);
+  for(const sx of [-1,1])piece(b,RBX(.44,.22,.65,.06),ob,sx*.28,1.3,0);
+  piece(b,RBX(1.14,.16,.66,.05),ob,0,1.05,0);
+  // high-collar dark cape extending down the back & flaring out at the bottom
+  const cape=new THREE.Group();cape.position.set(0,1.98,-.32);b.add(cape);
+  piece(cape,RBX(1.52,1.86,.07,.04),capeM,0,-.88,0,{rot:[.08,0,0]});
+  for(const sx of [-1,1])piece(b,RBX(.42,.48,.24,.05),ob,sx*.44,2.1,-.12,{rot:[0,sx*-.22,-sx*.52]});
+  // glowing cyan diamond chest constellation (1 large central diamond + 6 smaller satellite shards)
+  piece(b,new THREE.BoxGeometry(.24,.24,.04),cyan,0,1.66,.34,{outline:false,rot:[0,0,Math.PI/4]});
+  for(const [x,y,sc] of [[-.22,1.76,.085],[.22,1.76,.085],[-.17,1.54,.075],[.17,1.54,.075],[0,1.43,.065],[0,1.87,.065]]){
+    piece(b,new THREE.BoxGeometry(sc,sc,.035),cyan,x,y,.34,{outline:false,rot:[0,0,Math.PI/4]});}
+  // deep sculpted hood + void face + fierce glowing crimson eyes
+  piece(h,RBX(.88,.86,.82,.18),ob,0,.38,-.02);piece(h,RBX(.72,.74,.14,.1),ob,0,.38,.34);
+  piece(h,RBX(.58,.58,.1,.08),voidM,0,.36,.36,{outline:false});
+  for(const sx of [-1,1])piece(h,new THREE.BoxGeometry(.15,.065,.03),redEye,sx*.14,.42,.42,{outline:false,rot:[0,0,sx*.22]});
+  // segmented glowing cyan energy horns curving up from both sides of the hood
+  for(const sx of [-1,1]){const hg=new THREE.Group();hg.position.set(sx*.38,.56,.02);h.add(hg);
+    piece(hg,RBX(.18,.22,.18,.04),ob,0,0,0);
+    piece(hg,RBX(.2,.16,.18,.04),cyan,sx*.14,.06,0,{outline:false,rot:[0,0,-sx*.35]});
+    piece(hg,RBX(.19,.07,.19,.02),obD,sx*.22,.14,0,{outline:false,rot:[0,0,-sx*.65]});
+    piece(hg,RBX(.18,.22,.17,.04),cyan,sx*.26,.26,0,{outline:false,rot:[0,0,-sx*.2]});
+    piece(hg,RBX(.18,.06,.18,.02),obD,sx*.24,.36,0,{outline:false,rot:[0,0,sx*.3]});
+    piece(hg,RBX(.14,.22,.14,.04),cyan,sx*.16,.46,0,{outline:false,rot:[0,0,sx*.55]});}
+  // segmented obsidian arms with glowing cyan voxel inlays & glowing cyan phantom hands
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,RBX(.62,.42,.6,.09),ob,sx*.04,-.08,0);piece(a.p,RBX(.56,.34,.56,.07),obD,0,-.42,0);piece(a.p,RBX(.6,.34,.58,.08),ob,0,-.66,0);
+    piece(a.p,new THREE.BoxGeometry(.09,.09,.03),cyan,sx*-.1,-.08,.31,{outline:false});piece(a.p,new THREE.BoxGeometry(.06,.06,.03),cyan,sx*.12,-.02,.31,{outline:false});
+    piece(a.p,RBX(.52,.22,.52,.07),cyanSoft,0,-.88,0,{outline:false});}
+  // segmented obsidian legs with hex knee plates & glowing cyan boot soles
+  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.52,.92,.54,.08),ob,0,-.46,0);
+    piece(l.p,new THREE.CylinderGeometry(.14,.14,.06,6).rotateX(Math.PI/2),obD,0,-.52,.26);
+    piece(l.p,RBX(.56,.14,.62,.04),cyanSoft,0,-.96,.03,{outline:false});}
+  // floating cyan voxel cubes around the shoulders
+  const vox=new THREE.Group();b.add(vox);
+  [[-.82,2.14,.1,.085],[-.92,1.84,-.05,.065],[.82,2.12,.1,.085],[.92,1.82,-.05,.065],[-.7,2.34,-.1,.06],[.7,2.32,-.1,.06]].forEach(([x,y,z,sc])=>{
+    const m=new THREE.Mesh(new THREE.BoxGeometry(sc,sc,sc),cyan);m.position.set(x,y,z);vox.add(m);});
+  ch.anim=(dt,t)=>{vox.children.forEach((m,i)=>{m.position.y+=Math.sin(t*3+i*1.4)*.0015;});};},
  // B — chunky bedsheet ghost
  sheet(ch){hideBase(ch);const sheet=mat('#f4f7fb',null,{roughness:.7,emissive:'#bfe6ff',emissiveIntensity:.12}),ink=mat('#16171c',null,{roughness:.4}),blush=mat('#ffb3c7',null,{roughness:.8});
   const b=ch.body;piece(b,RBX(1.22,2.15,.94,.34),sheet,0,1.72,0);
@@ -4025,17 +4052,48 @@ function jetFlames(g,pts,y){const fm=new THREE.MeshBasicMaterial({color:'#ffb347
   for(const [x,z] of pts){const f=new THREE.Mesh(new THREE.ConeGeometry(.12,.55,10).rotateX(Math.PI),fm);f.position.set(x,y,z);f.visible=false;g.add(f);fl.push(f);}g.userData.flames=fl;}
 const skinTone=()=>mat('#f4f5f7',null,{roughness:.6});
 Object.assign(SKINS,{
- /* ---------- JET ---------- */
- jet_pilot(ch){const leather=mat('#7a4a2a',null,{roughness:.7}),fur=mat('#efe3c8',null,{roughness:1}),khaki=mat('#8f8a5c',null,{roughness:.85}),boot=mat('#2b1d14',null,{roughness:.6}),chrome=mat('#d6dbe2',null,{metalness:.85,roughness:.2}),lens=mat('#7fd3ff',null,{metalness:.4,roughness:.1,emissive:'#2a7fb0',emissiveIntensity:.3}),white=mat('#f6f6f2',null,{roughness:.9});
-  suit(ch,{torso:leather,arms:leather,legs:khaki,shoes:boot,hands:mat('#3a2a1e')});const b=ch.body,h=ch.headG;
-  piece(b,RBX(1.18,.26,.68,.1),fur,0,2.0,0);piece(b,new THREE.BoxGeometry(.06,.9,.02),mat('#c9a14a',null,{metalness:.7}),0,1.48,.3,{outline:false});
-  piece(h,RBX(.74,.32,.7,.12),leather,0,.68,-.02);for(const sx of [-1,1])piece(h,RBX(.12,.34,.3,.05),leather,sx*.36,.42,-.02);
-  piece(h,RBX(.62,.1,.08,.04),mat('#2b2d33'),0,.74,.33,{outline:false});for(const sx of [-1,1])piece(h,new THREE.CylinderGeometry(.11,.11,.08,14).rotateX(Math.PI/2),lens,sx*.15,.74,.36);
-  const sc=new THREE.Group();sc.position.set(.25,1.95,-.2);b.add(sc);for(let i=0;i<3;i++)piece(sc,RBX(.22,.18,.36,.05),white,.05+i*.04,-i*.08,-i*.32,{rot:[.2,.3,0]});
-  const g=new THREE.Group();for(const sx of [-.22,.22]){piece(g,new THREE.CylinderGeometry(.16,.16,.78,14),chrome,sx,0,0);piece(g,new THREE.ConeGeometry(.16,.22,14),chrome,sx,.5,0);piece(g,new THREE.ConeGeometry(.13,.18,12).rotateX(Math.PI),mat('#3a3d45'),sx,-.47,0);
-    piece(g,new THREE.BoxGeometry(.04,.3,.24),mat('#e8463a'),sx+(sx>0?.12:-.12),-.25,0,{outline:false});}
-  piece(g,RBX(.26,.5,.16,.05),mat('#3a3d45'),0,0,.12);jetFlames(g,[[-.22,0],[.22,0]],-.82);g.position.set(0,1.5,-.46);b.add(g);ch.jet=g;
-  ch.anim=(dt,t)=>{sc.rotation.y=.3+Math.sin(t*6)*.15;};},
+ /* ---------- JET (Option 2: Supersonic Jet Racer) ---------- */
+ jet_pilot(ch){const blue=mat('#1d4ed8',null,{roughness:.42,metalness:.15}),blueD=mat('#15389e',null,{roughness:.5}),white=mat('#f4f6fa',null,{roughness:.35}),red=mat('#dc2626',null,{roughness:.4}),
+   visor=new THREE.MeshStandardMaterial({color:'#f5b82e',metalness:.88,roughness:.1,emissive:'#9a6200',emissiveIntensity:.3}),flameGlow=GLOW('#ff9824'),flameCore=GLOW('#ffe866');
+  suit(ch,{torso:blue,arms:blue,legs:blue,shoes:blue,hands:blueD});hideBase(ch,{head:true,torso:true,arms:true,legs:true});const b=ch.body,h=ch.headG;
+  // aerodynamic racing stripes framing the torso + chest badge
+  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.12,1.04,.6),white,sx*.38,1.5,0,{outline:false});
+    piece(b,new THREE.BoxGeometry(.05,1.04,.61),red,sx*.31,1.5,0,{outline:false});
+    piece(b,RBX(.24,.28,.6,.05),white,sx*.44,1.9,0,{outline:false});}
+  piece(b,new THREE.BoxGeometry(.18,.06,.03),white,.18,1.76,.3,{outline:false});
+  // arms with red-and-white racing stripes
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,new THREE.BoxGeometry(.09,.82,.56),white,sx*.24,-.38,0,{outline:false});
+    piece(a.p,new THREE.BoxGeometry(.04,.82,.57),red,sx*.19,-.38,0,{outline:false});
+    piece(a.p,new THREE.BoxGeometry(.56,.07,.56),blueD,0,-.76,0,{outline:false});}
+  // legs with racing stripes + red-white-blue flight sneakers
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
+    piece(l.p,new THREE.BoxGeometry(.08,.82,.54),white,sx*.22,-.44,0,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.04,.82,.55),red,sx*.17,-.44,0,{outline:false});
+    piece(l.p,RBX(.54,.24,.64,.08),blue,0,-.9,.04);piece(l.p,RBX(.32,.18,.42,.05),red,0,-.88,.14,{outline:false});
+    for(let i=0;i<3;i++)piece(l.p,new THREE.BoxGeometry(.22,.025,.03),white,0,-.82-i*.04,.35,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.55,.05,.65),white,0,-1.0,.04,{outline:false});}
+  // full-face white-and-red aerodynamic helmet with reflective gold visor
+  piece(h,RBX(.84,.82,.8,.26),white,0,.38,-.02);
+  piece(h,new THREE.BoxGeometry(.24,.84,.82),red,0,.4,-.02,{outline:false});
+  piece(h,RBX(.64,.16,.24,.06),red,0,.06,.29,{outline:false});piece(h,RBX(.82,.1,.78,.04),blueD,0,-.01,-.02,{outline:false});
+  piece(h,RBX(.76,.34,.18,.08),visor,0,.4,.32);
+  // winged dual-rocket jetpack with red nosecones peeking over shoulders, wide delta wings & glowing afterburner plumes
+  const g=new THREE.Group();g.position.set(0,1.56,-.34);b.add(g);
+  piece(g,RBX(.68,.76,.26,.08),white,0,-.02,0);
+  for(const sx of [-1,1]){const x=sx*.36;
+    piece(g,new THREE.CylinderGeometry(.155,.155,.84,14),white,x,.14,0);
+    piece(g,new THREE.ConeGeometry(.155,.28,14),red,x,.68,0);
+    piece(g,new THREE.CylinderGeometry(.16,.16,.07,14),red,x,.44,0,{outline:false});
+    piece(g,new THREE.ConeGeometry(.13,.2,12).rotateX(Math.PI),mat('#262932'),x,-.36,0);
+    // glowing idle afterburner plume visible behind the hips
+    piece(g,new THREE.ConeGeometry(.11,.42,10).rotateX(Math.PI),flameGlow,x,-.64,0,{outline:false});
+    piece(g,new THREE.ConeGeometry(.07,.28,8).rotateX(Math.PI),flameCore,x,-.58,0,{outline:false});
+    // wide swept delta wing extending past the arms with blue trim & wingtip fin
+    piece(g,RBX(.92,.4,.08,.03),white,sx*.82,-.02,.04,{rot:[0,0,-sx*.34]});
+    piece(g,new THREE.BoxGeometry(.94,.09,.09),blue,sx*.84,-.16,.04,{outline:false,rot:[0,0,-sx*.34]});
+    piece(g,new THREE.BoxGeometry(.11,.42,.09),blue,sx*1.22,-.18,.04,{outline:false});}
+  jetFlames(g,[[-.36,0],[.36,0]],-.86);ch.jet=g;},
  jet_racer(ch){const blue=mat('#2f7fe0',null,{roughness:.45}),white=mat('#f4f6fa',null,{roughness:.4}),red=mat('#e8463a',null,{roughness:.4}),dark=mat('#1b1d23',null,{roughness:.5}),visor=new THREE.MeshStandardMaterial({color:'#ffcf5a',metalness:.6,roughness:.1,emissive:'#a86a00',emissiveIntensity:.25,transparent:true,opacity:.75});
   suit(ch,{torso:blue,arms:blue,legs:blue,shoes:white,hands:white});const b=ch.body,h=ch.headG;
   piece(b,new THREE.BoxGeometry(.24,1.06,.03),white,0,1.5,.3,{outline:false});piece(b,new THREE.BoxGeometry(.06,1.06,.03),red,-.15,1.5,.305,{outline:false});piece(b,new THREE.BoxGeometry(.06,1.06,.03),red,.15,1.5,.305,{outline:false});
@@ -4053,17 +4111,58 @@ Object.assign(SKINS,{
   const g=new THREE.Group();piece(g,RBX(.96,1.0,.42,.12),suitM,0,0,0);piece(g,RBX(.8,.2,.44,.06),orange,0,.3,0,{outline:false});for(const sx of [-.28,.28])piece(g,new THREE.CylinderGeometry(.1,.14,.2,10),grey,sx,-.58,0);
   jetFlames(g,[[-.28,0],[.28,0]],-.92);g.position.set(0,1.5,-.52);b.add(g);ch.jet=g;},
  /* ---------- BLAZE ---------- */
- blaze_brawler(ch){const hood=mat('#1d1e24',null,{roughness:.8}),orange=mat('#ff6a1a',null,{roughness:.7}),wrap=mat('#f3e6d0',null,{roughness:.9}),dark=mat('#2b2d33',null,{roughness:.7});
-  suit(ch,{torso:hood,arms:null,legs:dark,shoes:mat('#ff6a1a'),hands:null});const b=ch.body,h=ch.headG;
-  piece(b,new THREE.BoxGeometry(1.1,.36,.6),orange,0,1.12,0,{outline:false});piece(b,new THREE.BoxGeometry(1.1,.18,.6),mat('#ffb347'),0,1.36,0,{outline:false});
-  for(const a of [ch.aL,ch.aR]){piece(a.p,RBX(.54,.4,.54,.08),hood,0,-.12,0);piece(a.p,RBX(.5,.62,.5,.08),skinTone(),0,-.6,0);piece(a.p,RBX(.52,.3,.52,.08),wrap,0,-.82,0);piece(a.p,new THREE.BoxGeometry(.54,.06,.54),GLOW('#ffb347'),0,-.7,0,{outline:false});}
-  // flame hair: a fitted cap hugging the top and back of the head, with a tidy crest of short flames growing out of it (they flicker from the base, so nothing pokes into the face)
-  const hr=mat('#c0261b',null,{roughness:.6});piece(h,RBX(.72,.16,.68,.07),hr,0,.69,-.01);piece(h,RBX(.72,.4,.14,.06),hr,0,.5,-.29);
-  const fh=new THREE.Group();fh.position.set(0,.75,0);h.add(fh);const fc=['#ff3b1f','#ff7a1f','#ffb347','#ffd36a'];
-  [[-.2,.14,.24,2],[0,.16,.3,3],[.2,.14,.24,2],[-.24,-.06,.3,1],[-.08,-.04,.36,2],[.08,-.04,.36,2],[.24,-.06,.3,1],[-.14,-.22,.3,0],[.14,-.22,.3,0]].forEach(([x,z,ht,ci],i)=>{
-    const g=new THREE.ConeGeometry(.11,ht,5);g.translate(0,ht/2,0);const c=new THREE.Mesh(g,GLOW(fc[ci]));c.position.set(x,0,z);c.rotation.set(-.28,0,-x*.45);fh.add(c);});
-  for(const sx of [-1,1])piece(h,new THREE.BoxGeometry(.14,.05,.02),GLOW('#ffb347'),sx*.14,.44,.31,{outline:false,rot:[0,0,sx*.2]});
-  ch.anim=(dt,t)=>{fh.children.forEach((c,i)=>{c.scale.y=1+Math.sin(t*10+i*1.7)*.15;});};},
+ blaze_brawler(ch){/* BLAZE — Pyro-Tech Inferno Suit: sculpted orange pauldrons, glowing heat-conduit chest armour with a flame core, forearm pyromancer gauntlets with glowing coils and side igniter nozzles, thermal visor goggles, twin backpack fuel canisters and a faceted 3D flame crown */
+  const dark=mat('#171920',null,{roughness:.55,metalness:.25}),plate=mat('#252832',null,{roughness:.45,metalness:.4}),orange=mat('#ff6a1a',null,{roughness:.42,metalness:.18}),
+   orangeD=mat('#c8430c',null,{roughness:.5,metalness:.25}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),brass=mat('#e89b32',null,{metalness:.7,roughness:.28}),
+   glow=GLOW('#ff6a1a'),glowHot=GLOW('#ffc847'),lens=new THREE.MeshStandardMaterial({color:'#ff8c1a',metalness:.75,roughness:.12,emissive:'#ff5500',emissiveIntensity:.65});
+  suit(ch,{torso:dark,arms:dark,legs:dark,shoes:dark,hands:dark,tw:1.12,td:.62});const b=ch.body,h=ch.headG;
+  // chest & torso armour with glowing heat conduits and central flame core
+  piece(b,RBX(1.16,.34,.64,.08),orange,0,1.84,0);piece(b,RBX(1.02,.62,.66,.1),plate,0,1.66,0);piece(b,RBX(.96,.34,.64,.06),plate,0,1.24,0);
+  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.36,.045,.03),glowHot,sx*.22,1.76,.33,{outline:false,rot:[0,0,-sx*.48]});
+    piece(b,new THREE.BoxGeometry(.38,.045,.03),glow,sx*.24,1.48,.33,{outline:false,rot:[0,0,sx*.52]});
+    piece(b,new THREE.BoxGeometry(.045,.32,.03),glow,sx*.22,1.24,.325,{outline:false,rot:[0,0,-sx*.12]});
+    piece(b,RBX(.18,.34,.65,.04),orange,sx*.49,1.5,0,{outline:false});}
+  const core=new THREE.Group();core.position.set(0,1.64,.33);b.add(core);
+  piece(core,new THREE.CylinderGeometry(.19,.19,.05,6).rotateX(Math.PI/2),dark,0,0,0);
+  piece(core,new THREE.CylinderGeometry(.14,.14,.055,6).rotateX(Math.PI/2),glow,0,0,.005,{outline:false});
+  piece(core,new THREE.SphereGeometry(.065,10,8),glowHot,0,-.02,.025,{outline:false});piece(core,new THREE.ConeGeometry(.06,.12,6),glowHot,0,.045,.025,{outline:false});
+  // tactical belt
+  piece(b,RBX(1.16,.15,.66,.05),dark,0,1.04,0);for(const sx of [-1,1])piece(b,new THREE.BoxGeometry(.26,.11,.68),orange,sx*.32,1.04,0,{outline:false});
+  piece(b,RBX(.26,.19,.7,.05),plate,0,1.04,0);
+  // twin backpack fuel canisters peeking over the shoulders
+  const pack=new THREE.Group();pack.position.set(0,1.56,-.42);b.add(pack);piece(pack,RBX(.58,.64,.24,.06),plate,0,-.04,0);
+  for(const sx of [-1,1]){const x=sx*.33;piece(pack,new THREE.CylinderGeometry(.14,.14,.56,14),orange,x,-.04,0);
+    piece(pack,new THREE.CylinderGeometry(.146,.146,.08,14),dark,x,.2,0,{outline:false});
+    piece(pack,new THREE.CylinderGeometry(.136,.136,.26,14),chrome,x,.36,0);piece(pack,new THREE.SphereGeometry(.136,14,10),chrome,x,.49,0);
+    piece(pack,new THREE.CylinderGeometry(.065,.065,.07,10),brass,x,.64,0);piece(pack,new THREE.CylinderGeometry(.08,.08,.025,10),glowHot,x,.61,0,{outline:false});}
+  // sculpted orange shoulder pauldrons + forearm pyro-gauntlets with 3 glowing heat coils & side igniter nozzles
+  const coils=[];
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,RBX(.76,.44,.7,.12),orange,sx*.08,.02,0);piece(a.p,RBX(.64,.14,.62,.05),orange,sx*.03,.21,0);
+    piece(a.p,new THREE.BoxGeometry(.04,.26,.42),orangeD,sx*.44,.02,0,{outline:false});
+    piece(a.p,RBX(.62,.48,.62,.09),plate,0,-.56,0);piece(a.p,new THREE.BoxGeometry(.63,.05,.63),orange,0,-.34,0,{outline:false});
+    for(let i=0;i<3;i++){const c=piece(a.p,new THREE.BoxGeometry(.65,.042,.65),i===1?glowHot:glow,0,-.45-i*.1,0,{outline:false});coils.push(c);}
+    // side-mounted fireball igniter nozzle
+    piece(a.p,RBX(.12,.24,.16,.03),dark,sx*.35,-.56,.02);piece(a.p,new THREE.CylinderGeometry(.042,.048,.16,10),orange,sx*.36,-.68,.02);
+    piece(a.p,new THREE.CylinderGeometry(.028,.036,.12,10),brass,sx*.36,-.79,.02);piece(a.p,new THREE.CylinderGeometry(.024,.024,.04,8),glowHot,sx*.36,-.86,.02,{outline:false});
+    piece(a.p,RBX(.22,.12,.52,.04),orange,-sx*.13,-.91,0);}
+  // armoured legs, hex knee pads, shin vents and glowing thermal soles
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
+    piece(l.p,new THREE.BoxGeometry(.045,.28,.03),glow,sx*.16,-.2,.265,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.22,.045,.03),glow,sx*.08,-.36,.265,{outline:false,rot:[0,0,-sx*.45]});
+    piece(l.p,new THREE.BoxGeometry(.52,.08,.54),orange,0,-.56,0,{outline:false});piece(l.p,RBX(.3,.22,.12,.05),plate,0,-.52,.24);
+    piece(l.p,RBX(.54,.36,.56,.08),plate,0,-.76,.02);
+    for(const y of [-.7,-.79])piece(l.p,new THREE.BoxGeometry(.18,.032,.03),glow,0,y,.305,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.56,.07,.64),orange,0,-.95,.04,{outline:false});piece(l.p,new THREE.BoxGeometry(.56,.05,.64),glowHot,0,-1.02,.04,{outline:false});}
+  // thermal visor goggles (keeps smile visible below y=.28) + faceted 3D flame hair crown
+  piece(h,RBX(.7,.13,.63,.04),dark,0,.43,0,{outline:false});piece(h,RBX(.66,.2,.14,.05),plate,0,.43,.27);
+  piece(h,new THREE.BoxGeometry(.58,.03,.15),orange,0,.52,.275,{outline:false});piece(h,RBX(.58,.14,.05,.03),lens,0,.43,.325,{outline:false});
+  piece(h,new THREE.BoxGeometry(.44,.026,.02),glowHot,0,.45,.355,{outline:false});
+  const hr=mat('#d93814',null,{roughness:.55});piece(h,RBX(.68,.15,.64,.07),hr,0,.66,-.01);piece(h,RBX(.68,.34,.14,.06),hr,0,.51,-.28);
+  const fh=new THREE.Group();fh.position.set(0,.72,0);h.add(fh);const fc=['#ff3b1f','#ff6a1a','#ffb347','#ffe066'];
+  [[-.22,.14,.3,1],[-.08,.16,.38,2],[.08,.16,.38,2],[.22,.14,.3,1],[-.26,-.02,.36,0],[-.12,0,.46,2],[0,.02,.54,3],[.12,0,.46,2],[.26,-.02,.36,0],[-.2,-.18,.34,0],[0,-.16,.42,1],[.2,-.18,.34,0]].forEach(([x,z,ht,ci])=>{
+    const g=new THREE.ConeGeometry(.115,ht,5);g.translate(0,ht/2,0);const c=new THREE.Mesh(g,GLOW(fc[ci]));c.position.set(x,0,z);c.rotation.set(-.22+z*.35,0,-x*.5);fh.add(c);});
+  ch.anim=(dt,t)=>{fh.children.forEach((c,i)=>{c.scale.y=1+Math.sin(t*10+i*1.7)*.14;});core.scale.setScalar(1+Math.sin(t*6)*.05);};},
  blaze_monk(ch){const robe=mat('#e8742a',null,{roughness:.85}),sash=mat('#8a1f1f',null,{roughness:.8}),bead=mat('#3a2a1e',null,{roughness:.5}),skin=skinTone();
   suit(ch,{torso:robe,arms:robe,legs:robe,shoes:mat('#5b3a22'),hands:skin,tw:1.12});const b=ch.body,h=ch.headG;
   const sk=new THREE.CylinderGeometry(.55,.68,.8,4,1);sk.rotateY(Math.PI/4);piece(b,sk,robe,0,.62,0,{ol:1.04});
@@ -4091,14 +4190,39 @@ Object.assign(SKINS,{
   const tails=new THREE.Group();tails.position.set(0,.5,-.33);h.add(tails);for(const sx of [-1,1])piece(tails,new THREE.BoxGeometry(.08,.5,.03),mask,sx*.06,-.25,0,{rot:[.4,0,sx*.25]});
   const kat=new THREE.Group();kat.position.set(0,1.5,-.34);kat.rotation.z=.7;b.add(kat);piece(kat,new THREE.BoxGeometry(.08,1.5,.06),mat('#dfe3ea',null,{metalness:.85,roughness:.2}),0,.35,0);piece(kat,new THREE.BoxGeometry(.24,.06,.1),mat('#ffc61a',null,{metalness:.6}),0,-.42,0);piece(kat,new THREE.BoxGeometry(.08,.36,.07),mat('#16131f'),0,-.62,0);
   ch.anim=(dt,t)=>{tails.rotation.x=.2+Math.sin(t*5)*.25;};},
- blink_magician(ch){const coat=mat('#4b2a6e',null,{roughness:.6}),black=mat('#16171c',null,{roughness:.5}),gold=mat('#e6c25a',null,{metalness:.7,roughness:.3}),red=mat('#c0261b',null,{roughness:.6}),white=mat('#f6f6f2');
-  suit(ch,{torso:coat,arms:coat,legs:black,shoes:black,hands:white});const b=ch.body,h=ch.headG;
-  piece(b,new THREE.BoxGeometry(.36,.9,.03),white,0,1.52,.3,{outline:false});piece(b,RBX(.3,.12,.06,.03),red,0,1.9,.33,{outline:false});for(let i=0;i<3;i++)piece(b,new THREE.SphereGeometry(.03,6,5),gold,0,1.7-i*.18,.32,{outline:false});
-  const cape=new THREE.Group();cape.position.set(0,2.0,-.3);b.add(cape);piece(cape,RBX(1.2,1.6,.08,.04),red,0,-.8,0,{rot:[.12,0,0]});piece(cape,RBX(1.24,.18,.12,.04),coat,0,0,0);
-  piece(h,RBX(.76,.08,.72,.03),black,0,.66,0);piece(h,RBX(.5,.6,.5,.06),black,0,.98,0);piece(h,new THREE.BoxGeometry(.52,.1,.52),red,0,.76,0,{outline:false});
-  const wand=new THREE.Group();ch.aR.p.add(wand);wand.position.set(0,-1.0,.15);wand.rotation.x=1.2;piece(wand,new THREE.BoxGeometry(.06,.6,.06),black,0,.3,0);piece(wand,new THREE.BoxGeometry(.07,.12,.07),white,0,.62,0);
-  const sp=new THREE.Group();b.add(sp);for(let i=0;i<4;i++){const s=new THREE.Mesh(new THREE.OctahedronGeometry(.07,0),GLOW(i%2?'#ffe45e':'#d68cff'));sp.add(s);}
-  ch.anim=(dt,t)=>{cape.rotation.x=Math.sin(t*2.2)*.06;sp.children.forEach((s,i)=>{const a=t*2+i*Math.PI/2;s.position.set(Math.cos(a)*.95,1.3+Math.sin(t*3+i)*.4,Math.sin(a)*.95);s.rotation.y+=dt*4;});};},
+ blink_magician(ch){/* BLINK — Option 1: Grand Illusionist (royal velvet tailcoat with gold filigree, high-collar crimson cape, glowing magenta hatband top hat, glowing wand & wide arc of floating neon rune cards) */
+  const coat=mat('#4f2682',null,{roughness:.55}),black=mat('#15161c',null,{roughness:.45}),gold=mat('#e8b948',null,{metalness:.75,roughness:.25}),
+   red=mat('#c81e28',null,{roughness:.5}),white=mat('#f6f6f2'),pinkGlow=GLOW('#ff4fd8'),cardFace=mat('#2a1448',null,{roughness:.4,emissive:'#7a1fa2',emissiveIntensity:.45});
+  suit(ch,{torso:coat,arms:coat,legs:black,shoes:red,hands:skinTone()});const b=ch.body,h=ch.headG;
+  // white dress shirt V-insert, red bow tie, white pocket square & ornate gold filigree trim
+  piece(b,new THREE.BoxGeometry(.36,.78,.03),white,0,1.62,.3,{outline:false});
+  piece(b,RBX(.28,.12,.06,.03),red,0,1.9,.33,{outline:false});piece(b,new THREE.BoxGeometry(.07,.09,.07),mat('#9a141c'),0,1.9,.335,{outline:false});
+  piece(b,new THREE.BoxGeometry(.14,.05,.02),white,.28,1.66,.31,{outline:false});
+  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.065,.68,.03),gold,sx*.17,1.62,.31,{outline:false,rot:[0,0,sx*.22]});
+    piece(b,new THREE.BoxGeometry(.05,.48,.03),gold,sx*.24,1.32,.31,{outline:false,rot:[0,0,-sx*.3]});
+    piece(b,new THREE.BoxGeometry(.44,.06,.62),gold,sx*.28,1.02,0,{outline:false});
+    for(let i=0;i<3;i++)piece(b,new THREE.SphereGeometry(.035,8,6),gold,sx*.11,1.46-i*.13,.32,{outline:false});}
+  // gold filigree sleeve cuffs
+  for(const a of [ch.aL,ch.aR]){piece(a.p,new THREE.BoxGeometry(.56,.1,.56),gold,0,-.66,0,{outline:false});piece(a.p,new THREE.BoxGeometry(.55,.045,.55),white,0,-.74,0,{outline:false});}
+  for(const l of [ch.lL,ch.lR])piece(l.p,new THREE.BoxGeometry(.55,.06,.63),mat('#8a121a'),0,-1.0,.04,{outline:false});
+  // dramatic flared high-collar crimson cape framing the head and torso
+  const cape=new THREE.Group();cape.position.set(0,1.98,-.3);b.add(cape);
+  piece(cape,RBX(1.42,1.84,.08,.04),red,0,-.86,0,{rot:[.08,0,0]});
+  for(const sx of [-1,1])piece(b,RBX(.54,.58,.09,.04),red,sx*.48,2.22,-.18,{rot:[-.12,sx*-.18,-sx*.52]});
+  // tall black silk top hat with bright glowing neon-magenta hatband
+  piece(h,RBX(.82,.08,.78,.03),black,0,.64,0);piece(h,RBX(.54,.64,.54,.08),black,0,.98,0);
+  piece(h,new THREE.BoxGeometry(.56,.11,.56),pinkGlow,0,.73,0,{outline:false});
+  // magic wand held across the chest with a bright glowing tip (just like Option 1)
+  const wand=new THREE.Group();ch.aL.p.add(wand);wand.position.set(.08,-.76,.32);wand.rotation.set(.15,0,-.78);
+  piece(wand,new THREE.CylinderGeometry(.028,.028,.76,8),black,0,.34,0);piece(wand,new THREE.CylinderGeometry(.034,.034,.16,8),GLOW('#ffe885'),0,.76,0,{outline:false});
+  // wide semicircular fan of 8 floating glowing magenta rune cards outside the arms
+  const cards=new THREE.Group();b.add(cards);
+  [[-1.24,1.5,.28,.16],[-1.18,1.86,.24,.08],[-1.0,2.2,.2,-.05],[-.72,2.42,.16,-.18],[.72,2.42,.16,.18],[1.0,2.2,.2,.05],[1.18,1.86,.24,-.08],[1.24,1.5,.28,-.16]].forEach(([x,y,z,rz])=>{
+    const cg=new THREE.Group();cg.position.set(x,y,z);cg.rotation.set(0,x>0?-.22:.22,rz);cards.add(cg);
+    piece(cg,new THREE.BoxGeometry(.22,.32,.02),pinkGlow,0,0,0,{outline:false});
+    piece(cg,new THREE.BoxGeometry(.18,.28,.026),cardFace,0,0,0,{outline:false});
+    piece(cg,new THREE.BoxGeometry(.075,.075,.032),pinkGlow,0,0,0,{outline:false,rot:[0,0,Math.PI/4]});});
+  ch.anim=(dt,t)=>{cape.rotation.x=.08+Math.sin(t*2.2)*.04;cards.children.forEach((c,i)=>{c.position.y+=Math.sin(t*3+i)*.0015;});};},
  blink_hacker(ch){const hood=mat('#3a2556',null,{roughness:.8}),jeansM=mat('#2b2d38',null,{roughness:.8}),glow=GLOW('#36f3ff'),pink=GLOW('#ff3fd2'),dark=mat('#16171c');
   suit(ch,{torso:hood,arms:hood,legs:jeansM,shoes:mat('#f4f6fa'),hands:null,noHair:false});const b=ch.body,h=ch.headG;
   const trace=(p,x,y,z,w,hh,m)=>piece(p,new THREE.BoxGeometry(w,hh,.02),m||glow,x,y,z,{outline:false});
@@ -4125,122 +4249,257 @@ Object.assign(SKINS,{
   for(const a of [ch.aL,ch.aR])piece(a.p,RBX(.5,.5,.5,.08),skinTone(),0,-.67,0);
   piece(h,RBX(.8,.3,.8,.14),orange,0,.7,0);piece(h,RBX(.9,.06,.92,.03),orange,0,.58,.04);piece(h,new THREE.BoxGeometry(.12,.18,.8),mat('#ffb347'),0,.82,0,{outline:false});
   piece(h,RBX(.68,.26,.12,.06),beard,0,.06,.28);piece(h,new THREE.BoxGeometry(.3,.06,.04),beard,0,.2,.32,{outline:false});},
- tank_mech(ch){const yel=mat('#f4c22b',null,{metalness:.35,roughness:.4}),dark=mat('#2b2d33',null,{metalness:.5,roughness:.4}),grey=mat('#8a8f99',null,{metalness:.6,roughness:.35}),glow=GLOW('#7fd3ff');
-  suit(ch,{torso:mat('#3a3d45'),arms:mat('#3a3d45'),legs:mat('#3a3d45'),shoes:dark,hands:dark,noHair:false});const b=ch.body,h=ch.headG;
-  const fr=new THREE.Group();b.add(fr);piece(fr,RBX(1.3,1.1,.8,.14),yel,0,1.5,-.06);piece(fr,new THREE.BoxGeometry(.7,.5,.04),dark,0,1.55,.36,{outline:false});piece(fr,new THREE.BoxGeometry(.22,.22,.03),glow,0,1.55,.385,{outline:false});
-  for(const sx of [-1,1]){piece(fr,new THREE.CylinderGeometry(.08,.08,.7,8),grey,sx*.4,2.25,-.3);piece(fr,RBX(.24,.16,.24,.04),dark,sx*.4,2.6,-.3);}
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;piece(a.p,RBX(.8,.42,.8,.12),yel,sx*.1,0,0);piece(a.p,RBX(.72,.62,.72,.1),yel,0,-.68,0);piece(a.p,new THREE.BoxGeometry(.06,.6,.06),grey,sx*.38,-.36,0);}
-  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.56,.66,.1),yel,0,-.62,.03);piece(l.p,new THREE.BoxGeometry(.66,.08,.7),dark,0,-.34,.03,{outline:false});}
-  const ex=new THREE.Group();ex.position.set(0,1.55,-.55);b.add(ex);piece(ex,RBX(.9,.7,.3,.08),dark,0,0,0);for(const sx of [-.25,.25]){const v=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.3,8),GLOW('#ffb347'));v.position.set(sx,.4,0);ex.add(v);}
-  ch.anim=(dt,t)=>{ex.children.slice(-2).forEach((v,i)=>v.scale.y=1+Math.sin(t*8+i)*.2);};}
+ tank_mech(ch){/* TANK — Option 1: Upgraded Heavy Exo-Suit (chunky yellow/gunmetal plating, glowing cyan hex shield core, twin smoking exhaust stacks, arm hydraulic pistons, forearm cyan emitters & HUD eyepiece) */
+  const yel=mat('#f2b718',null,{metalness:.3,roughness:.42}),dark=mat('#282c36',null,{metalness:.5,roughness:.45}),grey=mat('#68707e',null,{metalness:.65,roughness:.35}),
+   cyan=GLOW('#1ff0ff'),hudLens=new THREE.MeshStandardMaterial({color:'#24f0ff',transparent:true,opacity:.72,emissive:'#00c8ff',emissiveIntensity:.6,roughness:.1});
+  suit(ch,{torso:dark,arms:dark,legs:dark,shoes:yel,hands:dark,noHair:false,tw:1.18,td:.68});const b=ch.body,h=ch.headG;
+  // yellow chest frame & dark segmented abdomen
+  piece(b,RBX(1.28,.66,.78,.12),yel,0,1.68,-.02);
+  for(const y of [1.18,1.3,1.42])piece(b,RBX(.82,.1,.72,.03),grey,0,y,.02);
+  for(const sx of [-1,1])piece(b,RBX(.24,.46,.74,.06),yel,sx*.46,1.32,0);
+  piece(b,RBX(1.24,.18,.76,.05),yel,0,1.02,0);piece(b,RBX(.34,.28,.72,.05),yel,0,.92,.02);
+  // central hexagonal glowing cyan shield core + conduit pipes
+  piece(b,new THREE.CylinderGeometry(.25,.25,.08,6).rotateX(Math.PI/2),dark,0,1.66,.36);
+  piece(b,new THREE.CylinderGeometry(.19,.19,.09,6).rotateX(Math.PI/2),cyan,0,1.66,.365,{outline:false});
+  for(const sx of [-1,1])piece(b,new THREE.CylinderGeometry(.035,.035,.42,8),grey,sx*.22,1.36,.36,{rot:[0,0,sx*-.22]});
+  // twin perforated gunmetal exhaust stacks rising behind shoulders + smoke puffs
+  const sm=new THREE.Group();b.add(sm);
+  for(const sx of [-1,1]){const x=sx*.38;
+    piece(b,new THREE.CylinderGeometry(.11,.12,.72,12),grey,x,2.22,-.28);
+    piece(b,new THREE.CylinderGeometry(.115,.115,.08,12),mat('#b85a24'),x,2.56,-.28);
+    for(let i=0;i<3;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.09+i*.03,8,6),new THREE.MeshBasicMaterial({color:'#9aa2ae',transparent:true,opacity:.38-i*.1,depthWrite:false}));
+      p.position.set(x+(i%2?.03:-.03),2.72+i*.18,-.28);sm.add(p);}}
+  // oversized yellow shoulder pauldrons + hydraulic arm pistons + cyan wrist emitters
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,RBX(.82,.46,.78,.12),yel,sx*.1,.02,0);piece(a.p,new THREE.BoxGeometry(.16,.14,.04),dark,sx*-.12,.04,.38,{outline:false});
+    piece(a.p,RBX(.72,.52,.72,.1),yel,0,-.62,0);piece(a.p,RBX(.56,.14,.56,.04),yel,0,-.9,0);
+    for(const z of [-.14,.14]){piece(a.p,new THREE.CylinderGeometry(.032,.032,.72,8),grey,sx*.38,-.42,z);piece(a.p,new THREE.CylinderGeometry(.05,.05,.24,8),dark,sx*.38,-.26,z);}
+    piece(a.p,RBX(.12,.16,.24,.03),cyan,sx*.36,-.68,0,{outline:false});}
+  // heavy yellow greaves & hex knee pads
+  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.58,.66,.1),yel,0,-.62,.03);
+    piece(l.p,RBX(.28,.24,.14,.05),yel,0,-.38,.32);piece(l.p,new THREE.BoxGeometry(.64,.08,.68),dark,0,-.84,.03,{outline:false});}
+  // cyan HUD scouter eyepiece over left eye
+  piece(h,RBX(.12,.1,.32,.02),grey,.34,.42,.14);piece(h,RBX(.24,.13,.04,.02),hudLens,.16,.42,.33,{outline:false});
+  piece(h,new THREE.BoxGeometry(.26,.025,.05),cyan,.16,.48,.33,{outline:false});
+  ch.anim=(dt,t)=>{sm.children.forEach((p,i)=>{p.position.y=2.68+((t*.5+i*.3)%1)*.45;});};}
 });
 
 /* ---------- new roster skins ---------- */
 Object.assign(SKINS,{
- /* BRUTE — slate-skinned giant with glowing rage veins, torn cargo shorts and broken shackles */
- brute_smash(ch){/* BRUTE — a hulking moss beast: green scaly hide under leafy fur, curled ram horns, glowing eyes, fangs, bone spikes, claws and a leafy tail */
-  const sk=mat('#3f6b34',null,{roughness:.85}),skD=mat('#2c4f27',null,{roughness:.9}),leaf=mat('#5f9a3a',null,{roughness:.8,flatShading:true}),leafD=mat('#2f5a24',null,{roughness:.85,flatShading:true}),
-   bone=mat('#cfc3a6',null,{roughness:.7}),horn=mat('#8b8170',null,{roughness:.8,flatShading:true}),belt=mat('#2a3a28',null,{roughness:.6,metalness:.3}),dark=mat('#16120f',null,{roughness:.9}),eye=GLOW('#ff6a1f');
-  hideBase(ch,{head:true});hideHair(ch);const b=ch.body,h=ch.headG;b.scale.setScalar(1.12);
-  const tuft=(p,x,y,z,s,rx,rz,m)=>piece(p,new THREE.ConeGeometry(.09*s,.3*s,4),m||leaf,x,y,z,{outline:false,rot:[rx||0,0,rz||0]});
-  const spike=(p,x,y,z,s,rx,rz)=>piece(p,new THREE.ConeGeometry(.07*s,.32*s,5),bone,x,y,z,{outline:false,rot:[rx||0,0,rz||0]});
-  // torso: scaly chest under a thick leafy mane
-  piece(b,RBX(1.42,1.08,.8,.2),sk,0,1.55,0);for(let r=0;r<3;r++)for(const sx of [-1,1])piece(b,RBX(.26,.16,.06,.05),skD,sx*.16,1.5-r*.18,.41,{outline:false});
-  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;tuft(b,Math.cos(a)*.62,1.98+Math.sin(i*1.7)*.06,Math.sin(a)*.38,1.4,Math.sin(a)*.6,-Math.cos(a)*.7,i%2?leaf:leafD);}
-  for(let i=0;i<7;i++)tuft(b,-.45+i*.15,1.82,.42,1.2,1.9,0,i%2?leafD:leaf);
-  // belt with a carved plate and a leafy loincloth
-  piece(b,RBX(1.36,.2,.82,.06),belt,0,1.06,0);piece(b,RBX(.36,.36,.08,.06),belt,0,1.02,.44);piece(b,new THREE.BoxGeometry(.16,.16,.04),skD,0,1.04,.49,{outline:false,rot:[0,0,Math.PI/4]});
-  for(let i=0;i<6;i++)tuft(b,-.25+i*.1,.82,.43,1.3,Math.PI,0,i%2?leaf:leafD);
-  // tail
-  {let p=b,y=1.0,z=-.4;for(let i=0;i<5;i++){const g=new THREE.Group();g.position.set(0,i?-.02:y,i?-.24:z);g.rotation.x=i?-.25:.9;p.add(g);piece(g,RBX(.26-i*.035,.24-i*.03,.3,.06),sk,0,0,-.12);tuft(g,0,.12,-.12,1-i*.1,-.6,0,i%2?leaf:leafD);p=g;}tuft(p,0,0,-.32,1.2,-1.57,0);}
-  // arms: mossy, spiky, clawed
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1,o=sx*.2;
-    piece(a.p,RBX(.74,.66,.74,.18),sk,o,-.2,0);piece(a.p,RBX(.78,.58,.78,.18),sk,o,-.72,0);piece(a.p,RBX(.74,.44,.74,.14),skD,o,-1.12,0);
-    for(let i=0;i<8;i++){const a2=i/8*Math.PI*2;tuft(a.p,o+Math.cos(a2)*.38,.08,Math.sin(a2)*.38,1.3,Math.sin(a2)*.5,-Math.cos(a2)*.5,i%2?leaf:leafD);}
-    for(let i=0;i<6;i++)tuft(a.p,o+sx*.4,-.5-i*.1,(i%3-1)*.2,1,0,-sx*1.4,i%2?leaf:leafD);
-    spike(a.p,o+sx*.1,.22,-.1,1.6,0,-sx*.35);spike(a.p,o+sx*.3,.14,.15,1.2,0,-sx*.8);spike(a.p,o+sx*.42,-.62,-.12,1,0,-sx*1.4);spike(a.p,o+sx*.42,-.86,.08,1,0,-sx*1.4);
-    for(let i=0;i<3;i++)piece(a.p,new THREE.ConeGeometry(.05,.22,4),bone,o-.18+i*.18,-1.4,.22,{outline:false,rot:[Math.PI-.4,0,0]});a.chain=new THREE.Group();}
-  // legs with claws
-  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.56,.64,.12),sk,0,-.26,0);for(let i=0;i<5;i++)tuft(l.p,-.24+i*.12,-.5,.32,1.1,Math.PI-.3,0,i%2?leaf:leafD);
-    piece(l.p,RBX(.54,.42,.56,.12),sk,0,-.76,0);piece(l.p,RBX(.6,.2,.74,.08),skD,0,-.98,.06);for(let i=0;i<3;i++)piece(l.p,new THREE.ConeGeometry(.05,.2,4),bone,-.18+i*.18,-1.0,.45,{outline:false,rot:[Math.PI/2,0,0]});}
-  // head: snarling, horned, glowing eyes, fangs, pointed ears, leafy mane round the face
-  piece(h,RBX(.78,.66,.66,.14),sk,0,.34,0);piece(h,RBX(.46,.26,.24,.08),skD,0,.2,.34);piece(h,RBX(.16,.09,.06,.03),dark,0,.29,.46,{outline:false});
-  piece(h,new THREE.BoxGeometry(.34,.1,.04),dark,0,.12,.47,{outline:false});for(let i=0;i<5;i++){const x=-.14+i*.07;piece(h,new THREE.ConeGeometry(.025,i%2?.07:.11,4),bone,x,.15,.48,{outline:false,rot:[Math.PI,0,0]});piece(h,new THREE.ConeGeometry(.022,.07,4),bone,x+.035,.08,.48,{outline:false});}
-  for(const sx of [-1,1]){piece(h,new THREE.ConeGeometry(.04,.16,4),bone,sx*.16,.2,.47,{outline:false,rot:[Math.PI,0,0]});
-    piece(h,new THREE.BoxGeometry(.12,.06,.04),eye,sx*.15,.44,.34,{outline:false,rot:[0,0,sx*.25]});piece(h,new THREE.BoxGeometry(.24,.08,.12),skD,sx*.15,.53,.3,{outline:false,rot:[0,0,sx*.35]});
-    piece(h,new THREE.ConeGeometry(.08,.3,4),sk,sx*.46,.46,0,{outline:false,rot:[0,0,-sx*1.2]});
-    // curled ram horn
-    let p=h,base=new THREE.Group();base.position.set(sx*.3,.62,-.05);h.add(base);p=base;for(let i=0;i<7;i++){const g=new THREE.Group();g.position.set(i?sx*.13:0,i?.02:0,0);g.rotation.z=-sx*(i?.55:-.6);p.add(g);piece(g,RBX(.17-i*.012,.17-i*.012,.17-i*.012,.04),horn,sx*.06,0,0,{outline:false});p=g;}}
-  for(let i=0;i<10;i++){const a=-1.2+i*.27;tuft(h,Math.sin(a)*.44,.05+Math.cos(a*2)*.05,Math.cos(a)*.24-.04,1.2,0,-Math.sin(a)*1.8,i%2?leaf:leafD);}
-  for(let i=0;i<5;i++)tuft(h,-.24+i*.12,.7,.05,1,-.4,(i-2)*-.2,i%2?leaf:leafD);
-  ch.anim=(dt,t)=>{const k=.7+.3*Math.sin(t*5);eye.color.setRGB(1,.35*k,.1*k);};},
- /* FROST — ice mage with a crystal crown */
- frost_mage(ch){const robe=mat('#5fa8d8',null,{roughness:.7}),robeD=mat('#2f6f9f',null,{roughness:.8}),fur=mat('#f4f8fb',null,{roughness:1}),silver=mat('#d6dbe2',null,{metalness:.8,roughness:.25}),
-   ice=new THREE.MeshStandardMaterial({color:'#bfeaff',emissive:'#5fd0ff',emissiveIntensity:.5,transparent:true,opacity:.88,roughness:.1,metalness:.2});
-  suit(ch,{torso:robe,arms:robe,legs:robeD,shoes:fur,hands:mat('#eaf6ff'),noHair:false});const b=ch.body,h=ch.headG;
-  const sk=new THREE.CylinderGeometry(.55,.72,.8,4,1);sk.rotateY(Math.PI/4);piece(b,sk,robe,0,.62,0,{ol:1.04});
-  piece(b,RBX(1.22,.24,.7,.1),fur,0,2.0,0);piece(b,new THREE.BoxGeometry(1.14,.14,.62),silver,0,1.06,0,{outline:false});piece(b,new THREE.BoxGeometry(.24,1.0,.02),fur,0,1.5,.3,{outline:false});
-  piece(b,new THREE.OctahedronGeometry(.13),ice,0,1.66,.36);
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;piece(a.p,RBX(.62,.2,.62,.06),fur,0,-.74,0);for(let i=0;i<3;i++)piece(a.p,new THREE.ConeGeometry(.08,.36-i*.06,5),ice,sx*(.12+i*.1),.18,-.1+i*.1,{rot:[0,0,-sx*(.4+i*.25)]});}
-  const cr=new THREE.Group();cr.position.y=.78;h.add(cr);piece(cr,new THREE.TorusGeometry(.36,.04,6,20).rotateX(Math.PI/2),silver,0,0,0,{outline:false});
-  for(let i=0;i<5;i++){const a=(i-2)*.38;const c=new THREE.Mesh(new THREE.ConeGeometry(.07,.28+(i===2?.16:0),5),ice);c.position.set(Math.sin(a)*.34,.14,Math.cos(a)*.34);cr.add(c);}
-  const w=new THREE.Group();w.position.y=1.5;b.add(w);for(let i=0;i<4;i++){const s=new THREE.Mesh(new THREE.OctahedronGeometry(.09),ice);const a=i/4*Math.PI*2;s.position.set(Math.cos(a)*1.0,0,Math.sin(a)*1.0);w.add(s);}
-  ch.anim=(dt,t)=>{w.rotation.y+=dt*1.2;w.children.forEach((s,i)=>{s.position.y=Math.sin(t*2+i*1.6)*.3;s.rotation.y+=dt*3;});};},
- /* PATCH — field medic with a med-kit backpack */
- patch_medic(ch){const coat=mat('#f4f6fa',null,{roughness:.8}),scrub=mat('#2fa59a',null,{roughness:.85}),red=mat('#e8463a',null,{roughness:.6}),white=mat('#ffffff',null,{roughness:.6}),dark=mat('#2b2d33',null,{roughness:.5});
-  suit(ch,{torso:coat,arms:coat,legs:scrub,shoes:mat('#dfe3ea'),hands:mat('#bfe3ff')});const b=ch.body,h=ch.headG;
-  piece(b,new THREE.BoxGeometry(.32,1.0,.03),scrub,0,1.5,.3,{outline:false});piece(b,RBX(1.12,.36,.62,.06),coat,0,.88,0,{ol:1.04});
-  for(const sx of [-1,1])piece(b,new THREE.BoxGeometry(.06,.9,.02),mat('#cfd5de'),sx*.17,1.5,.315,{outline:false});
-  piece(b,new THREE.TorusGeometry(.24,.025,6,16,Math.PI),dark,0,1.92,.33,{outline:false,rot:[0,0,Math.PI]});piece(b,new THREE.CylinderGeometry(.06,.06,.03,12).rotateX(Math.PI/2),mat('#c9ced8',null,{metalness:.8,roughness:.2}),.24,1.62,.33,{outline:false});
-  const bag=new THREE.Group();bag.position.set(0,1.55,-.42);b.add(bag);piece(bag,RBX(.74,.66,.32,.08),red,0,0,0);piece(bag,new THREE.BoxGeometry(.38,.11,.03),white,0,0,-.17,{outline:false});piece(bag,new THREE.BoxGeometry(.11,.38,.03),white,0,0,-.17,{outline:false});
-  for(const a of [ch.aL,ch.aR])piece(a.p,new THREE.BoxGeometry(.56,.14,.56),red,0,-.22,0,{outline:false});
-  piece(h,RBX(.74,.26,.7,.12),scrub,0,.66,-.02);piece(h,new THREE.BoxGeometry(.2,.06,.02),red,0,.68,.34,{outline:false});piece(h,new THREE.BoxGeometry(.06,.2,.02),red,0,.68,.34,{outline:false});
-  const plus=new THREE.Group();plus.position.set(0,1.1,0);h.add(plus);const pg=GLOW('#7bff8a');plus.add(new THREE.Mesh(new THREE.BoxGeometry(.2,.06,.06),pg));plus.add(new THREE.Mesh(new THREE.BoxGeometry(.06,.2,.06),pg));
-  ch.anim=(dt,t)=>{plus.rotation.y+=dt*2;plus.position.y=1.1+Math.sin(t*3)*.05;};},
- /* VOLT — electric punk with tesla coils */
- volt_zapper(ch){const jacket=mat('#ffd23f',null,{roughness:.5}),black=mat('#1b1d23',null,{roughness:.6}),copper=mat('#c87a3a',null,{metalness:.7,roughness:.3}),glow=GLOW('#fff27a'),cyan=GLOW('#7ff3ff');
-  suit(ch,{torso:black,arms:jacket,legs:black,shoes:jacket,hands:black});const b=ch.body,h=ch.headG;
-  for(const sx of [-1,1])piece(b,RBX(.44,1.06,.62,.06),jacket,sx*.32,1.5,0);
-  const bolt=[[0,.2,.4],[.1,0,-.5],[0,-.2,.4]];bolt.forEach(([x,y,r])=>piece(b,new THREE.BoxGeometry(.07,.26,.02),glow,x,1.6+y,.33,{outline:false,rot:[0,0,r]}));
-  for(let i=0;i<7;i++){const x=-.27+(i%4)*.18,z=i<4?.08:-.14;const c=new THREE.Mesh(new THREE.ConeGeometry(.09,.42+((i*5)%3)*.1,4),glow);c.position.set(x+(i<4?0:.09),.84,z);c.rotation.set(-.2,0,-x*.9);h.add(c);}
-  piece(h,RBX(.7,.12,.66,.04),black,0,.56,0,{outline:false});for(const sx of [-1,1])piece(h,new THREE.CylinderGeometry(.1,.1,.08,14).rotateX(Math.PI/2),cyan,sx*.15,.56,.33);
-  const tops=[];for(const sx of [-1,1]){const g=new THREE.Group();g.position.set(sx*.28,1.75,-.42);b.add(g);piece(g,new THREE.CylinderGeometry(.08,.1,.7,10),copper,0,0,0);
-    for(let i=0;i<4;i++)piece(g,new THREE.TorusGeometry(.12,.025,5,12).rotateX(Math.PI/2),copper,0,-.24+i*.16,0,{outline:false});const ball=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),cyan);ball.position.y=.44;g.add(ball);tops.push(ball);}
-  const arc=new THREE.Mesh(new THREE.BoxGeometry(.56,.03,.03),cyan);arc.position.set(0,2.19,-.42);b.add(arc);
-  ch.anim=(dt,t)=>{arc.visible=Math.sin(t*23)>.1;arc.rotation.z=Math.sin(t*37)*.15;arc.position.y=2.19+Math.sin(t*41)*.04;tops.forEach((s,i)=>s.scale.setScalar(1+Math.sin(t*14+i*2)*.15));};},
- /* HOOK — climber with a grappling hook and coiled rope */
- hook_climber(ch){const red=mat('#c0261b',null,{roughness:.6}),redD=mat('#8a1a12',null,{roughness:.6}),strap=mat('#1b1d23',null,{roughness:.5}),rope=mat('#e6c25a',null,{roughness:.8}),steel=mat('#d6dbe2',null,{metalness:.85,roughness:.2}),blue=mat('#2f7fe0',null,{roughness:.9});
-  suit(ch,{torso:red,arms:red,legs:mat('#3a3d45'),shoes:mat('#5b3a22'),hands:strap,tw:1.14,td:.64});const b=ch.body,h=ch.headG;
-  for(const y of [1.22,1.52,1.82])piece(b,new THREE.BoxGeometry(1.16,.06,.66),redD,0,y,0,{outline:false});
-  for(const sx of [-1,1])piece(b,new THREE.BoxGeometry(.1,1.1,.68),strap,sx*.24,1.5,0,{outline:false});piece(b,new THREE.BoxGeometry(1.16,.14,.68),strap,0,1.08,0,{outline:false});
-  piece(b,new THREE.TorusGeometry(.09,.025,6,12),steel,.3,1.0,.36,{outline:false});
-  for(const a of [ch.aL,ch.aR])for(const y of [-.3,-.6])piece(a.p,new THREE.BoxGeometry(.56,.05,.56),redD,0,y,0,{outline:false});
-  piece(h,RBX(.74,.32,.7,.14),blue,0,.68,-.02);piece(h,RBX(.76,.1,.72,.04),mat('#f4f6fa'),0,.53,-.02,{outline:false});piece(h,new THREE.SphereGeometry(.12,10,8),mat('#f4f6fa'),0,.9,-.02);
-  const coil=new THREE.Mesh(new THREE.TorusGeometry(.3,.08,8,18),rope);coil.position.set(0,1.5,-.4);coil.castShadow=true;b.add(coil);
-  const hk=new THREE.Group();hk.position.set(.34,1.9,-.38);hk.rotation.z=-.35;b.add(hk);piece(hk,new THREE.CylinderGeometry(.04,.04,.7,8),steel,0,.2,0);
-  for(let i=0;i<3;i++){const g=new THREE.Group();g.rotation.y=i/3*Math.PI*2;hk.add(g);const p2=new THREE.Mesh(new THREE.TorusGeometry(.12,.03,6,10,Math.PI*.8),steel);p2.position.set(.12,.58,0);p2.rotation.z=Math.PI*.9;g.add(p2);}
-  ch.anim=(dt,t)=>{hk.rotation.y=Math.sin(t*1.5)*.2;};},
- /* ZIP — sprinter in a tracksuit */
- zip_runner(ch){const teal=mat('#1fbfae',null,{roughness:.55}),white=mat('#f6f7f9',null,{roughness:.5}),pink=mat('#ff4fa3',null,{roughness:.5});
-  suit(ch,{torso:teal,arms:teal,legs:teal,shoes:white,hands:skinTone(),noHair:false});const b=ch.body,h=ch.headG;
-  piece(b,new THREE.BoxGeometry(.05,1.02,.02),white,0,1.5,.3,{outline:false});piece(b,RBX(.5,.18,.56,.06),teal,0,2.0,0);
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;piece(a.p,new THREE.BoxGeometry(.03,.9,.56),white,sx*.275,-.42,0,{outline:false});}
-  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;piece(l.p,new THREE.BoxGeometry(.03,.8,.54),white,sx*.26,-.45,0,{outline:false});piece(l.p,new THREE.BoxGeometry(.56,.06,.64),GLOW('#ff4fa3'),0,-1.03,.04,{outline:false});piece(l.p,new THREE.BoxGeometry(.3,.06,.03),pink,0,-.88,.36,{outline:false,rot:[0,0,.3]});}
-  piece(h,RBX(.74,.1,.7,.04),pink,0,.5,0,{outline:false});const tail=new THREE.Group();tail.position.set(.2,.5,-.36);h.add(tail);for(const r of [-.2,.25])piece(tail,new THREE.BoxGeometry(.08,.04,.36),pink,0,0,-.16,{outline:false,rot:[r,.4,0]});
-  ch.anim=(dt,t)=>{tail.rotation.y=Math.sin(t*9)*.25;};},
- /* THORN — bark-armoured plant warden */
- thorn_warden(ch){const bark=mat('#5b3a22',null,{roughness:.95}),barkD=mat('#3d2716',null,{roughness:.95}),leaf=mat('#4f9a2e',null,{roughness:.7}),leafL=mat('#7bd13a',null,{roughness:.7}),spine=mat('#e9e2c8',null,{roughness:.6}),vine=mat('#2f6a1e',null,{roughness:.8}),glow=GLOW('#b6ff3b');
-  suit(ch,{torso:bark,arms:barkD,legs:barkD,shoes:bark,hands:vine,tw:1.14,td:.64});const b=ch.body,h=ch.headG;for(const m of ch.head.material)m.color.set('#dfe9cf');
-  piece(b,new THREE.BoxGeometry(.16,1.3,.02),vine,0,1.5,.34,{outline:false,rot:[0,0,.7]});piece(b,new THREE.BoxGeometry(.12,.12,.03),glow,0,1.6,.345,{outline:false,rot:[0,0,Math.PI/4]});
-  for(const [x,y] of [[-.38,1.3],[.4,1.75],[-.3,1.86],[.34,1.2]])piece(b,new THREE.ConeGeometry(.05,.22,5),spine,x,y,.38,{outline:false,rot:[Math.PI/2,0,0]});
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;for(let i=0;i<3;i++)piece(a.p,new THREE.BoxGeometry(.42,.05,.24),i%2?leafL:leaf,sx*(.12+i*.08),.1-i*.03,-.16+i*.16,{rot:[0,i*.4,-sx*(.25+i*.15)]});
-    piece(a.p,new THREE.ConeGeometry(.05,.22,5),spine,sx*.3,-.5,0,{outline:false,rot:[0,0,-sx*Math.PI/2]});piece(a.p,new THREE.BoxGeometry(.56,.08,.56),vine,0,-.62,0,{outline:false,rot:[0,0,.2]});}
-  for(const sx of [-1,1]){const br=new THREE.Group();br.position.set(sx*.26,.66,-.04);br.rotation.z=-sx*.5;h.add(br);piece(br,new THREE.CylinderGeometry(.035,.05,.46,6),barkD,0,.2,0,{outline:false});
-    piece(br,new THREE.CylinderGeometry(.025,.035,.22,6),barkD,sx*.08,.32,0,{outline:false,rot:[0,0,-sx*.8]});piece(br,new THREE.BoxGeometry(.18,.04,.1),leafL,0,.46,0,{outline:false,rot:[0,0,sx*.3]});}
-  piece(h,RBX(.74,.18,.7,.08),leaf,0,.66,-.02);
-  ch.anim=(dt,t)=>{const k=.6+.4*Math.sin(t*3);glow.color.setRGB(.5+.21*k,k,.23*k);};}
-});
+ /* BRUTE — Option 3: Cyber-Gorilla Mecha-Beast (hulking gunmetal & hazard-orange cybernetic ape armour, glowing red optic visor, mechanical fanged jaw & seismic-smash fists) */
+ brute_smash(ch){const gun=mat('#5c6270',null,{roughness:.4,metalness:.55}),gunD=mat('#282c35',null,{roughness:.55,metalness:.4}),orange=mat('#e57c24',null,{roughness:.4,metalness:.25}),
+   steel=mat('#dfe5ef',null,{metalness:.88,roughness:.18}),redGlow=GLOW('#ff1e38'),ambGlow=GLOW('#ff7a1a');
+  hideBase(ch,{head:true});hideHair(ch);const b=ch.body,h=ch.headG;b.scale.setScalar(1.14);
+  // massive segmented gunmetal chest & abdomen with burnt-orange shoulder harness
+  piece(b,RBX(1.44,.68,.84,.16),gun,0,1.68,0);piece(b,RBX(1.18,.48,.76,.1),gunD,0,1.26,0);
+  for(const sx of [-1,1]){piece(b,RBX(.56,.3,.12,.06),gun,sx*.32,1.68,.4);
+    piece(b,RBX(.24,.64,.86,.06),orange,sx*.54,1.76,0);piece(b,new THREE.CylinderGeometry(.065,.065,.05,12).rotateX(Math.PI/2),steel,sx*.54,1.62,.44);}
+  for(const y of [1.38,1.22])for(const sx of [-1,1])piece(b,RBX(.32,.12,.8,.04),gun,sx*.19,y,.02);
+  piece(b,RBX(1.32,.24,.82,.08),gunD,0,.98,0);piece(b,RBX(.42,.3,.84,.06),gun,0,.94,.02);
+  // colossal cyber-gorilla smash arms with orange hazard plates, hydraulic cable & glowing seismic knuckles
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1,o=sx*.22;
+    piece(a.p,RBX(.82,.56,.82,.18),gun,o,-.06,0);piece(a.p,new THREE.CylinderGeometry(.11,.11,.06,12).rotateX(Math.PI/2),steel,o+sx*.12,-.06,.4);
+    piece(a.p,RBX(.68,.38,.68,.12),gunD,o,-.42,0);
+    piece(a.p,RBX(.88,.64,.86,.16),gun,o,-.78,0);piece(a.p,RBX(.28,.5,.78,.06),orange,o+sx*.34,-.74,0);
+    piece(a.p,RBX(.86,.42,.86,.14),gunD,o,-1.18,0);
+    for(let i=0;i<4;i++){const kx=o-.27+i*.18;piece(a.p,RBX(.16,.24,.22,.04),gun,kx,-1.22,.36);piece(a.p,new THREE.BoxGeometry(.11,.14,.04),ambGlow,kx,-1.18,.48,{outline:false});}
+    a.chain=new THREE.Group();}
+  // thick ribbed hydraulic hose curving outside the left arm (viewer left)
+  for(let i=0;i<6;i++)piece(ch.aL.p,new THREE.CylinderGeometry(.065,.065,.16,10),gunD,-.66-Math.sin(i*.6)*.08,-.16-i*.11,0,{rot:[0,0,.22-i*.08]});
+  // heavy mecha legs with orange knee pads & toe guards
+  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.54,.64,.12),gun,0,-.28,0);piece(l.p,RBX(.58,.46,.62,.12),gun,0,-.74,0);
+    piece(l.p,RBX(.34,.24,.16,.05),orange,0,-.52,.32);piece(l.p,RBX(.64,.22,.76,.08),gunD,0,-.96,.06);piece(l.p,RBX(.38,.16,.28,.05),orange,0,-.96,.34);}
+  // cyber-gorilla head with orange dome, glowing crimson optic visor & fanged mechanical jaw
+  piece(h,RBX(.8,.68,.72,.14),gun,0,.35,0);piece(h,RBX(.54,.24,.58,.08),orange,0,.63,-.02);
+  for(const sx of [-1,1])piece(h,RBX(.14,.42,.56,.04),orange,sx*.38,.28,0);
+  piece(h,RBX(.62,.18,.1,.04),gunD,0,.45,.34);piece(h,RBX(.52,.1,.04,.02),redGlow,0,.45,.39,{outline:false});
+  piece(h,RBX(.6,.3,.3,.06),gun,0,.16,.28);piece(h,new THREE.BoxGeometry(.44,.16,.06),gunD,0,.17,.42,{outline:false});
+  for(const sx of [-1,1]){piece(h,new THREE.ConeGeometry(.05,.18,4),steel,sx*.17,.19,.44,{outline:false});
+    piece(h,new THREE.ConeGeometry(.04,.13,4),steel,sx*.14,.23,.44,{outline:false,rot:[Math.PI,0,0]});}
+  for(let i=0;i<4;i++)piece(h,new THREE.BoxGeometry(.045,.09,.03),steel,-.09+i*.06,.15,.44,{outline:false});},
 
+ /* FROST — Option 2: Cryo-Tech Valkyrie (white & cyan cryo-armour, glowing liquid-nitrogen tubes, winged Valkyrie visor tiara & cold-vent shoulder pods) */
+ frost_mage(ch){const white=mat('#f2f7fc',null,{roughness:.32,metalness:.15}),cyanM=mat('#5ab8d8',null,{roughness:.45,metalness:.2}),dark=mat('#2a4660',null,{roughness:.5}),
+   cyanGlow=GLOW('#4ef2ff'),visor=new THREE.MeshStandardMaterial({color:'#4ee8ff',metalness:.82,roughness:.1,emissive:'#18b8e0',emissiveIntensity:.55}),
+   wingM=new THREE.MeshStandardMaterial({color:'#7ef4ff',transparent:true,opacity:.88,emissive:'#38d8ff',emissiveIntensity:.65,roughness:.1});
+  suit(ch,{torso:cyanM,arms:cyanM,legs:cyanM,shoes:white,hands:dark,tw:1.12,td:.62});const b=ch.body,h=ch.headG;for(const m of ch.head.material)if(m.color)m.color.set('#edf6fc');
+  // sculpted white cryo-chest plates & triangular cyan core
+  piece(b,RBX(1.16,.58,.66,.1),white,0,1.72,0);piece(b,RBX(.92,.38,.64,.08),white,0,1.24,0);piece(b,RBX(1.14,.16,.66,.05),white,0,1.02,0);
+  piece(b,new THREE.CylinderGeometry(.16,.16,.06,3).rotateX(Math.PI/2).rotateZ(Math.PI),cyanGlow,0,1.72,.33,{outline:false});
+  // glowing liquid-nitrogen tubes on torso, arms & thighs + back cryo-exhaust pods with cold mist puffs
+  const mist=new THREE.Group();b.add(mist);
+  for(const sx of [-1,1]){piece(b,new THREE.CylinderGeometry(.032,.032,.52,8),cyanGlow,sx*.32,1.48,.32,{outline:false,rot:[0,0,sx*.35]});
+    piece(b,new THREE.CylinderGeometry(.032,.032,.52,8),cyanGlow,sx*.58,1.52,.1,{outline:false,rot:[0,0,-sx*.22]});
+    piece(b,new THREE.CylinderGeometry(.13,.15,.46,12),white,sx*.42,2.12,-.24,{rot:[-.18,0,-sx*.38]});
+    piece(b,new THREE.CylinderGeometry(.135,.135,.06,12),cyanGlow,sx*.5,2.3,-.28,{outline:false,rot:[-.18,0,-sx*.38]});
+    for(let i=0;i<3;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(.09+i*.035,8,6),new THREE.MeshBasicMaterial({color:'#d8f6ff',transparent:true,opacity:.42-i*.1,depthWrite:false}));
+      p.position.set(sx*(.54+i*.06),2.44+i*.15,-.28);mist.add(p);}}
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,RBX(.72,.38,.68,.1),white,sx*.06,-.02,0);piece(a.p,new THREE.SphereGeometry(.055,8,6),cyanGlow,sx*-.08,.04,.34,{outline:false});
+    piece(a.p,RBX(.6,.42,.6,.08),white,0,-.6,0);piece(a.p,new THREE.BoxGeometry(.62,.06,.62),cyanGlow,0,-.74,0,{outline:false});
+    piece(a.p,new THREE.CylinderGeometry(.03,.03,.54,8),cyanGlow,sx*.34,-.34,.08,{outline:false,rot:[0,0,-sx*.15]});}
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
+    piece(l.p,RBX(.54,.54,.58,.08),white,0,-.64,.02);piece(l.p,RBX(.26,.22,.12,.05),white,0,-.42,.28);
+    piece(l.p,new THREE.CylinderGeometry(.03,.03,.5,8),cyanGlow,sx*.26,-.28,.16,{outline:false,rot:[0,0,-sx*.18]});}
+  // Valkyrie helmet with full cyan V-visor shield covering the eyes, frost-blue lips & tall swept translucent cyan wings
+  piece(h,RBX(.78,.44,.74,.14),white,0,.58,-.02);for(const sx of [-1,1])piece(h,RBX(.14,.48,.52,.04),white,sx*.36,.32,-.02);
+  piece(h,RBX(.64,.52,.12,.06),mat('#edf6fc',null,{roughness:.5}),0,.32,.27,{outline:false});
+  for(const sx of [-1,1]){piece(h,RBX(.36,.2,.08,.03),visor,sx*.14,.42,.33,{outline:false,rot:[0,sx*-.14,-sx*.22]});
+    piece(h,RBX(.09,.7,.24,.03),wingM,sx*.42,.74,-.02,{outline:false,rot:[.16,0,-sx*.2]});}
+  piece(h,RBX(.18,.052,.03,.015),cyanM,0,.16,.335,{outline:false});
+  piece(h,new THREE.BoxGeometry(.13,.16,.04),cyanGlow,0,.58,.35,{outline:false,rot:[0,0,Math.PI/4]});},
+
+ /* PATCH — Option 1: Upgraded Chief Surgeon (white lab coat with red lapels, teal scrubs, stethoscope, wide red med-kit backpack, glowing cross headlamp & cyan surgical gloves) */
+ patch_medic(ch){const coat=mat('#f4f6fa',null,{roughness:.7}),scrub=mat('#2ca59a',null,{roughness:.8}),red=mat('#dc2e26',null,{roughness:.55}),white=mat('#ffffff',null,{roughness:.5}),
+   dark=mat('#383d48',null,{roughness:.45}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),glove=new THREE.MeshStandardMaterial({color:'#1ff0ff',emissive:'#00d8f0',emissiveIntensity:.55,roughness:.25}),
+   greenGlow=GLOW('#42ff6b'),lensGlow=GLOW('#a8ffbe');
+  suit(ch,{torso:coat,arms:coat,legs:scrub,shoes:scrub,hands:glove});const b=ch.body,h=ch.headG;
+  // teal inner scrub shirt + red coat lapels & vertical trim + split lower coat skirt
+  piece(b,new THREE.BoxGeometry(.34,1.02,.03),scrub,0,1.5,.3,{outline:false});
+  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.065,1.02,.035),red,sx*.16,1.5,.305,{outline:false});
+    piece(b,new THREE.BoxGeometry(.14,.36,.04),red,sx*.22,1.8,.31,{outline:false,rot:[0,0,-sx*.38]});
+    piece(b,RBX(.48,.42,.62,.05),coat,sx*.31,.82,0);piece(b,new THREE.BoxGeometry(.065,.42,.035),red,sx*.11,.82,.315,{outline:false});}
+  // 3D stethoscope around the neck (chest diaphragm on right, ear loop on left)
+  for(const sx of [-1,1])piece(b,new THREE.CylinderGeometry(.026,.026,.46,8),dark,sx*.24,1.76,.32,{rot:[0,0,sx*-.15]});
+  piece(b,new THREE.CylinderGeometry(.095,.095,.04,16).rotateX(Math.PI/2),chrome,-.25,1.48,.33);
+  piece(b,new THREE.TorusGeometry(.09,.022,6,14),dark,.24,1.46,.33);
+  // red cuff stripes & white sneaker soles
+  for(const a of [ch.aL,ch.aR])piece(a.p,new THREE.BoxGeometry(.56,.08,.56),red,0,-.7,0,{outline:false});
+  for(const l of [ch.lL,ch.lR])piece(l.p,new THREE.BoxGeometry(.55,.06,.63),white,0,-1.0,.04,{outline:false});
+  // tall wide red-and-white med-kit backpack rising clearly behind the shoulders + top handle pipe
+  const bag=new THREE.Group();bag.position.set(0,1.78,-.36);b.add(bag);
+  piece(bag,RBX(1.34,.96,.38,.1),red,0,0,0);
+  for(const sx of [-1,1])piece(bag,RBX(.12,.84,.4,.04),white,sx*.52,0,0);
+  piece(bag,new THREE.BoxGeometry(.38,.11,.03),white,0,0,-.2,{outline:false});piece(bag,new THREE.BoxGeometry(.11,.38,.03),white,0,0,-.2,{outline:false});
+  piece(bag,RBX(.28,.18,.1,.04),mat('#6b3e26'),.22,.54,0);
+  // white surgeon cap with dark headband strap & circular glowing green-cross headlamp
+  piece(h,RBX(.74,.28,.7,.12),white,0,.66,-.01);piece(h,RBX(.76,.08,.72,.03),dark,0,.64,-.01,{outline:false});
+  piece(h,new THREE.CylinderGeometry(.15,.15,.07,18).rotateX(Math.PI/2),chrome,0,.66,.34);
+  piece(h,new THREE.CylinderGeometry(.115,.115,.076,18).rotateX(Math.PI/2),lensGlow,0,.66,.345,{outline:false});
+  piece(h,new THREE.BoxGeometry(.13,.042,.02),greenGlow,0,.66,.39,{outline:false});piece(h,new THREE.BoxGeometry(.042,.13,.02),greenGlow,0,.66,.39,{outline:false});},
+
+ /* VOLT — Option 1: Tesla Coil Punk (yellow punk jacket with black lapels, twin tall angled copper Tesla coils with overhead jumping electric arc, spiky yellow hair & shock gauntlets) */
+ volt_zapper(ch){const jacket=mat('#f8cc28',null,{roughness:.45}),black=mat('#181a20',null,{roughness:.55}),copper=mat('#c87332',null,{metalness:.75,roughness:.28}),
+   insul=mat('#2ed8e8',null,{roughness:.3,emissive:'#12a8c8',emissiveIntensity:.45}),yelGlow=GLOW('#fff04d'),cyan=GLOW('#78f6ff');
+  suit(ch,{torso:black,arms:jacket,legs:black,shoes:black,hands:black});const b=ch.body,h=ch.headG;
+  // yellow jacket panels, black notched lapels & glowing lightning bolt on inner shirt
+  for(const sx of [-1,1]){piece(b,RBX(.44,1.06,.64,.06),jacket,sx*.33,1.5,0);
+    piece(b,new THREE.BoxGeometry(.18,.42,.04),black,sx*.22,1.76,.32,{outline:false,rot:[0,0,-sx*.38]});}
+  [[-.04,1.76,.45],[.05,1.6,-.5],[-.02,1.44,.45]].forEach(([x,y,r])=>piece(b,new THREE.BoxGeometry(.075,.24,.03),yelGlow,x,y,.315,{outline:false,rot:[0,0,r]}));
+  // shock-coil gauntlets on forearms with copper plates & crackling sparks
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;piece(a.p,RBX(.6,.38,.6,.07),black,0,-.68,0);
+    for(const s2 of [-1,1])piece(a.p,new THREE.BoxGeometry(.06,.26,.34),copper,s2*.29,-.68,0,{outline:false});
+    for(const y of [-.58,-.76])piece(a.p,new THREE.BoxGeometry(.63,.042,.63),cyan,0,y,0,{outline:false});
+    piece(a.p,new THREE.BoxGeometry(.035,.22,.035),yelGlow,sx*.36,-.66,.14,{outline:false,rot:[0,0,sx*.45]});}
+  // spiky glowing electric-yellow hair + cyan visor goggles
+  for(let i=0;i<11;i++){const x=-.28+(i%6)*.11,z=i<6?.08:-.12;const c=new THREE.Mesh(new THREE.ConeGeometry(.095,.46+((i*5)%3)*.08,4),yelGlow);
+    c.position.set(x+(i<6?0:.05),.82,z);c.rotation.set(-.18,0,-x*.75);h.add(c);}
+  piece(h,RBX(.7,.13,.65,.04),mat('#4a5260'),0,.44,0,{outline:false});piece(h,RBX(.58,.15,.08,.03),cyan,0,.44,.32,{outline:false});
+  // twin tall angled copper Tesla coils rising high behind the shoulders + overhead jumping lightning arc above the hair
+  for(const sx of [-1,1]){const g=new THREE.Group();g.position.set(sx*.48,2.22,-.2);g.rotation.z=-sx*.38;b.add(g);
+    piece(g,new THREE.CylinderGeometry(.17,.17,.08,14),insul,0,-.34,0);piece(g,new THREE.CylinderGeometry(.16,.16,.08,14),insul,0,.36,0);
+    piece(g,new THREE.CylinderGeometry(.1,.1,.68,12),copper,0,0,0);
+    for(let i=0;i<5;i++)piece(g,new THREE.TorusGeometry(.135,.026,6,14).rotateX(Math.PI/2),copper,0,-.24+i*.12,0,{outline:false});
+    piece(g,new THREE.SphereGeometry(.09,10,8),copper,0,.48,0);}
+  const arcG=new THREE.Group();b.add(arcG);
+  [[-.58,2.72,-.14,.36,-.65],[-.36,2.98,-.08,.34,-.35],[-.12,3.12,-.04,.28,-.12],[.12,3.12,-.04,.28,.12],[.36,2.98,-.08,.34,.35],[.58,2.72,-.14,.36,.65]].forEach(([x,y,z,w,r])=>{
+    piece(arcG,new THREE.BoxGeometry(w,.042,.042),cyan,x,y,z,{outline:false,rot:[0,0,r]});});
+  ch.anim=(dt,t)=>{arcG.position.y=Math.sin(t*35)*.03;arcG.rotation.z=Math.sin(t*29)*.04;};},
+
+ /* HOOK — Option 1: Upgraded Brawny Mountaineer (red-and-black buffalo-plaid jacket with cream shearling collar/cuffs, full climbing harness with carabiners, coiled shoulder rope, 3-prong grapple hook, beard & blue pom-pom beanie) */
+ hook_climber(ch){const plaidRows=[],R='r',D='d',K='k';for(let y=0;y<24;y++){let row='';for(let x=0;x<24;x++){const by=Math.floor(y/3)&1,bx=Math.floor(x/3)&1;row+=by&&bx?K:(by||bx?D:R);}plaidRows.push(row);}
+  const plaidT=pixelTex(plaidRows,{r:'#d42620',d:'#8f1712',k:'#18191e'});
+  const plaid=new THREE.MeshStandardMaterial({map:plaidT,roughness:.8}),fur=mat('#e8dec6',null,{roughness:.95}),strap=mat('#5c3d26',null,{roughness:.65}),
+   rope=mat('#d8a438',null,{roughness:.75}),steel=mat('#9aa2ae',null,{metalness:.8,roughness:.25}),brass=mat('#d8a838',null,{metalness:.75,roughness:.25}),
+   blue=mat('#1d62d0',null,{roughness:.85}),beard=mat('#5a3822',null,{roughness:.9}),boot=mat('#583922',null,{roughness:.7});
+  suit(ch,{torso:plaid,arms:plaid,legs:mat('#323640'),shoes:boot,hands:strap,tw:1.14,td:.64});const b=ch.body,h=ch.headG;
+  // cream shearling V-collar & sleeve cuffs
+  piece(b,RBX(.92,.22,.68,.08),fur,0,2.0,-.04);for(const sx of [-1,1])piece(b,RBX(.22,.46,.16,.06),fur,sx*.16,1.82,.28,{rot:[0,0,sx*.38]});
+  for(const a of [ch.aL,ch.aR])piece(a.p,RBX(.58,.15,.58,.05),fur,0,-.73,0);
+  // leather climbing harness (chest straps, belt, thigh loops & hanging carabiners)
+  for(const sx of [-1,1])piece(b,new THREE.BoxGeometry(.1,1.04,.68),strap,sx*.26,1.5,0,{outline:false});
+  piece(b,new THREE.BoxGeometry(.64,.09,.69),strap,0,1.62,0,{outline:false});piece(b,RBX(1.18,.15,.68,.04),strap,0,1.04,0);
+  piece(b,new THREE.BoxGeometry(.18,.18,.04),brass,0,1.04,.35,{outline:false});
+  for(const sx of [-1,1]){piece(b,new THREE.TorusGeometry(.095,.024,6,12),steel,sx*.62,.92,.14,{rot:[0,Math.PI/2,0]});
+    piece(b,new THREE.TorusGeometry(.085,.022,6,12),brass,sx*.62,.94,-.1,{rot:[0,Math.PI/2,.3]});}
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;piece(l.p,new THREE.BoxGeometry(.52,.08,.54),strap,0,-.28,0,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.08,.32,.55),strap,sx*-.14,-.14,0,{outline:false,rot:[0,0,sx*-.25]});
+    for(let i=0;i<3;i++)piece(l.p,new THREE.ConeGeometry(.032,.09,4),steel,-.14+i*.14,-1.04,.2,{outline:false,rot:[Math.PI,0,0]});}
+  // thick coiled golden rope draped over left shoulder
+  const rg=new THREE.Group();rg.position.set(.42,1.68,.04);rg.rotation.set(.12,.18,-.32);b.add(rg);
+  for(let i=0;i<4;i++)piece(rg,new THREE.TorusGeometry(.33,.05,8,18),rope,(i-1.5)*.055,0,0,{rot:[0,Math.PI/2,0]});
+  // large 3-pronged steel grappling hook rising prominently behind right shoulder
+  const hk=new THREE.Group();hk.position.set(-.52,2.04,-.18);hk.rotation.set(.1,0,.46);b.add(hk);
+  piece(hk,new THREE.CylinderGeometry(.04,.04,.74,8),steel,0,.22,0);
+  for(let i=0;i<3;i++){const g2=new THREE.Group();g2.rotation.y=i/3*Math.PI*2+.3;hk.add(g2);
+    const pr=new THREE.Mesh(new THREE.TorusGeometry(.17,.034,6,12,Math.PI*.88),steel);pr.position.set(.17,.56,0);pr.rotation.z=Math.PI*.88;g2.add(pr);}
+  // full brown beard + ribbed blue pom-pom beanie
+  piece(h,RBX(.68,.26,.22,.07),beard,0,.13,.23);for(const sx of [-1,1]){piece(h,RBX(.12,.32,.22,.04),beard,sx*.3,.26,.18);piece(h,new THREE.BoxGeometry(.18,.06,.04),beard,sx*.1,.24,.34,{outline:false,rot:[0,0,-sx*.22]});}
+  piece(h,RBX(.76,.16,.72,.06),blue,0,.6,0);piece(h,RBX(.72,.26,.68,.12),blue,0,.74,0);piece(h,new THREE.SphereGeometry(.11,10,8),blue,0,.92,0);},
+
+ /* ZIP — Option 1: Neon Track Star (teal tracksuit with pink/white lightning bolts, flowing pink headband, cyan speed visor & glowing neon-pink kinetic soles) */
+ zip_runner(ch){const teal=mat('#19b5b0',null,{roughness:.5}),white=mat('#f6f8fa',null,{roughness:.45}),pink=mat('#ff4ca8',null,{roughness:.45}),
+   dark=mat('#2a2e38',null,{roughness:.6}),pinkGlow=GLOW('#ff38a8'),cyanGlow=GLOW('#4ce8ff');
+  suit(ch,{torso:teal,arms:teal,legs:teal,shoes:white,hands:dark});const b=ch.body,h=ch.headG;
+  // raised track collar, center zip & dual white/pink lightning bolts on chest
+  piece(b,RBX(.58,.18,.58,.06),teal,0,2.0,0);piece(b,new THREE.BoxGeometry(.045,1.02,.025),dark,0,1.5,.305,{outline:false});
+  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.16,.38,.03),white,sx*.26,1.68,.305,{outline:false,rot:[0,0,-sx*.28]});
+    piece(b,new THREE.BoxGeometry(.14,.38,.032),pink,sx*.22,1.38,.31,{outline:false,rot:[0,0,-sx*.22]});
+    piece(b,new THREE.BoxGeometry(.11,.32,.035),white,sx*.25,1.4,.315,{outline:false,rot:[0,0,-sx*.22]});}
+  // white arm stripes & hot-pink cuffs
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
+    piece(a.p,new THREE.BoxGeometry(.04,.82,.56),white,sx*.26,-.38,0,{outline:false});
+    piece(a.p,new THREE.BoxGeometry(.56,.08,.56),pink,0,-.72,0,{outline:false});}
+  // white leg stripes & running shoes with glowing neon-pink kinetic soles
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
+    piece(l.p,new THREE.BoxGeometry(.04,.82,.54),white,sx*.25,-.44,0,{outline:false});
+    piece(l.p,new THREE.BoxGeometry(.26,.1,.04),pink,0,-.86,.35,{outline:false});
+    piece(l.p,RBX(.56,.07,.64,.03),pinkGlow,0,-1.02,.04,{outline:false});}
+  // cyan speed-visor sunglasses + hot-pink headband with flowing side ribbons + swept pink hair
+  piece(h,RBX(.66,.16,.12,.04),white,0,.43,.28);piece(h,RBX(.58,.11,.04,.03),cyanGlow,0,.43,.335,{outline:false});
+  piece(h,RBX(.72,.11,.68,.04),pink,0,.56,0);
+  const tail=new THREE.Group();tail.position.set(-.36,.56,-.04);h.add(tail);
+  piece(tail,RBX(.44,.075,.06,.02),pink,-.22,.05,0,{rot:[0,0,-.22]});piece(tail,RBX(.48,.075,.06,.02),pink,-.26,-.08,0,{rot:[0,0,.18]});
+  for(let i=0;i<7;i++){const x=-.22+i*.08;const c=new THREE.Mesh(new THREE.ConeGeometry(.11,.36+(i%3)*.06,5),pink);
+    c.position.set(x,.76,-.02+(i%2)*.08);c.rotation.set(-.2,0,-.45);h.add(c);}
+  ch.anim=(dt,t)=>{tail.rotation.z=Math.sin(t*8)*.15;};},
+
+ /* THORN — Option 3: Bio-Toxic Venus Jungle Guardian (gnarled bark & jungle-green symbiote armour, glowing neon-green veins, wide-open carnivorous Venus-flytrap shoulder jaws & tropical leaf/thorn crown) */
+ thorn_warden(ch){const bark=mat('#3b281a',null,{roughness:.92}),green=mat('#2d8e2b',null,{roughness:.6}),tealLeaf=mat('#1f7a52',null,{roughness:.65}),
+   mouth=mat('#c8285c',null,{roughness:.55}),tooth=mat('#f5efe0',null,{roughness:.45}),glow=GLOW('#7fff24');
+  hideBase(ch,{head:true});hideHair(ch);suit(ch,{torso:bark,arms:bark,legs:bark,shoes:bark,hands:bark,tw:1.14,td:.64});const b=ch.body,h=ch.headG;
+  // jungle-green symbiote chest plates & glowing bioluminescent veins
+  for(const sx of [-1,1]){piece(b,RBX(.5,.44,.66,.08),green,sx*.28,1.72,0,{rot:[0,0,-sx*.12]});
+    piece(b,RBX(.42,.34,.64,.06),green,sx*.26,1.34,0);
+    piece(b,new THREE.BoxGeometry(.34,.045,.03),glow,sx*.22,1.62,.34,{outline:false,rot:[0,0,sx*.42]});
+    piece(b,new THREE.BoxGeometry(.28,.04,.03),glow,sx*.2,1.32,.335,{outline:false,rot:[0,0,-sx*.35]});}
+  piece(b,new THREE.BoxGeometry(.055,.68,.03),glow,0,1.52,.34,{outline:false});
+  piece(b,RBX(1.18,.22,.68,.06),bark,0,1.02,0);piece(b,RBX(.36,.36,.7,.05),bark,0,.92,.02);
+  // wide-open carnivorous Venus-flytrap shoulder jaws with big white fang teeth + vine-wrapped forearms
+  const jaws=[];
+  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;const jg=new THREE.Group();jg.position.set(sx*.18,.08,0);a.p.add(jg);jaws.push(jg);
+    piece(jg,RBX(.68,.18,.62,.08),green,0,.18,0,{rot:[0,0,-sx*.36]});
+    piece(jg,RBX(.66,.16,.6,.08),green,0,-.12,0,{rot:[0,0,sx*.26]});
+    piece(jg,RBX(.56,.22,.54,.04),mouth,sx*.02,.03,0,{outline:false});
+    for(let i=0;i<4;i++){const x=(i-1.5)*.13;
+      piece(jg,new THREE.ConeGeometry(.034,.12,4),tooth,sx*.14+x,.11,.28,{outline:false,rot:[Math.PI,0,0]});
+      piece(jg,new THREE.ConeGeometry(.034,.12,4),tooth,sx*.14+x,-.05,.28,{outline:false});}
+    for(let i=0;i<3;i++)piece(a.p,RBX(.6,.08,.6,.03),green,0,-.46-i*.14,0,{rot:[0,0,(i%2?1:-1)*.22]});
+    piece(a.p,new THREE.BoxGeometry(.04,.38,.03),glow,sx*.12,-.58,.28,{outline:false});}
+  // legs with green shin guards & glowing V-veins
+  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
+    piece(l.p,RBX(.54,.44,.56,.08),green,0,-.68,.02);
+    piece(l.p,new THREE.BoxGeometry(.04,.36,.03),glow,sx*.12,-.28,.27,{outline:false,rot:[0,0,-sx*.2]});
+    for(const s2 of [-1,1])piece(l.p,new THREE.BoxGeometry(.18,.04,.03),glow,s2*.08,-.68,.31,{outline:false,rot:[0,0,-s2*.5]});}
+  // bark head with glowing lime eyes & sculpted tropical leaf + thorn crown
+  piece(h,RBX(.72,.64,.64,.12),bark,0,.33,0);for(const sx of [-1,1]){piece(h,RBX(.26,.38,.66,.06),green,sx*.22,.34,0);
+    piece(h,new THREE.BoxGeometry(.15,.06,.03),glow,sx*.15,.4,.33,{outline:false,rot:[0,0,sx*.22]});
+    piece(h,new THREE.BoxGeometry(.035,.28,.03),glow,sx*.12,.22,.33,{outline:false,rot:[0,0,-sx*.2]});}
+  piece(h,RBX(.74,.1,.66,.04),mouth,0,.62,0);for(let i=0;i<5;i++)piece(h,new THREE.ConeGeometry(.032,.11,4),tooth,-.24+i*.12,.64,.35,{outline:false,rot:[Math.PI/2,0,0]});
+  for(let i=0;i<7;i++){const x=(i-3)*.11,ht=.42+(3-Math.abs(i-3))*.08;const lg=new THREE.ConeGeometry(.12,ht,4);lg.translate(0,ht/2,0);
+    piece(h,lg,i%2?tealLeaf:green,x,.66,-.02,{rot:[-.12,0,-x*1.15]});}
+  ch.anim=(dt,t)=>{const k=.7+.3*Math.sin(t*4);glow.color.setRGB(.45*k,k,.15*k);};}
+});
 /* ================= fighters ================= */
 function buildLook(id){const ch=B.buildCharacter(CHARS[id].look);ch.root.rotation.order='YXZ';ch.aL.p.rotation.order='YXZ';ch.aR.p.rotation.order='YXZ';accessory(ch,id);
   const guns={};for(const k of Object.keys(GUNS)){if(GUNS[k].type==='ability')continue;const g=gunModel(k);g.position.set(0,-.86,.06);g.rotation.x=Math.PI/2;g.visible=false;ch.aR.p.add(g);guns[k]=g;if(k==='duals'){const t=gunModel(k);t.position.set(0,-.86,.06);t.rotation.x=Math.PI/2;t.visible=false;ch.aL.p.add(t);g.userData.twin=t;}}

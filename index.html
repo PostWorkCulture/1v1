@@ -2175,12 +2175,12 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 (function(){
   const NAMES=['rifle','sniper','smg','shotgun','pistol','revolver','lmg','rocket','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','round','wall','swap',
     'step1','step2','step3','step4','step5','impact','wood','whiz','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','stim','sense','buy','tick','win','lose','heart',
-    'horn','birds','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat'];
+    'horn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat'];
   const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={rifle:.5,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.42,headshot:.5,hurt:.5,kill:.6,down:.5,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
-    horn:.45,birds:.4,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,thumper:.62};
+    horn:.45,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,thumper:.62};
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1;
   try{const v=JSON.parse(localStorage.getItem('blockrush:vol')||'null');if(typeof v==='number')vol=Math.max(0,Math.min(1,v));}catch(e){}
@@ -5676,7 +5676,7 @@ function damageBrick(br,dm){if(!br||!br.alive)return;br.hp-=dm;br.mesh.material=
   if(!w.bricks.some(o=>o.alive)){w.alive=false;M.group.remove(w.group);}dirtyGrid(br.b,.4);}
 function splashBricks(at,Rr,dmg){for(const w of M.walls)for(const br of w.bricks){if(!br.alive)continue;const b=br.b;const q=new V3(clamp(at.x,b.x0,b.x1),clamp(at.y,b.y0,b.y1),clamp(at.z,b.z0,b.z1));const dd=q.distanceTo(at);if(dd<Rr)damageBrick(br,dmg*(1-dd/Rr)+10);}}
 const WALL_LIFE=6; // built walls crumble away after 6 seconds
-/* proximity ambience: car engines, horns when you're close, birds overhead, the sea and boats on Wreck Cove */
+/* proximity ambience: car engines, horns when you're close, birds overhead, gulls, the sea and boats on Wreck Cove */
 const ambV=new V3();
 function ambAt(x,y,z,range){const c=camera.position,dx=x-c.x,dz=z-c.z,d=Math.hypot(dx,y-c.y,dz);camera.getWorldDirection(ambV);const h=Math.hypot(dx,dz)||1;return {v:1/(1+Math.max(0,d-2)/range),d,pan:(dx*-ambV.z+dz*ambV.x)/h*.7};}
 function updAmb(dt){const X=window.SFX;if(!X||!X.bed)return;const on=D.active&&S.state!=='menu'&&!S.paused;
@@ -5685,6 +5685,7 @@ function updAmb(dt){const X=window.SFX;if(!X||!X.bed)return;const on=D.active&&S
   for(const T of (on&&M.trains)||[]){if(T.z<-9000)continue;const c=camera.position,za=Math.min(T.z,T.z-T.dir*T.len),zb=Math.max(T.z,T.z-T.dir*T.len),a=ambAt(T.x,2,clamp(c.z,za,zb),16),v=a.v*1.4;if(v>ev){ev=v;ep=a.pan;}}
   X.bed('engine',ev,ep);
   for(const L of (on&&M.flockLists)||[])for(const f of L){if(f.chirp)continue;const p=f.g.position;if(Math.hypot(p.x-camera.position.x,p.z-camera.position.z)<22){f.chirp=1;sfx('birds',{x:p.x,y:p.y,z:p.z},{range:30});}}
+  if(on&&M.gulls&&M.gulls.length){S.gullT=(S.gullT??4)-dt;if(S.gullT<=0){S.gullT=5+Math.random()*9;const g=M.gulls[Math.floor(Math.random()*M.gulls.length)].position;if(Math.hypot(g.x-camera.position.x,g.z-camera.position.z)<45)sfx('gulls',{x:g.x,y:g.y,z:g.z},{range:30});}}
   if(on&&M.wade){const c=camera.position,sx=wcShore(c.z),d=Math.max(0,sx-c.x);const a=ambAt(Math.max(c.x,sx),.5,c.z,8);X.bed('waves',clamp(1-d/40,.12,1)*(d<1?1:a.v*1.4),d<1?0:a.pan);}else X.bed('waves',0,0);
   let bv=0,bp=0;for(const g of (on&&M.boats)||[]){const p=g.position,a=ambAt(p.x,p.y,p.z,14);if(a.v>bv){bv=a.v;bp=a.pan;}}X.bed('boat',bv,bp);}
 function updWalls(dt){for(const w of M.walls){if(!w.alive)continue;const age=S.t-(w.born??S.t);

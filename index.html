@@ -3197,7 +3197,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     const sp=M.spawns[0],s0=nearestNode(sp.x,sp.y||0,sp.z);return s0<0||g.comp[id]===g.comp[s0];};
   M.shopOK=(x,z)=>x<wcShore(z)-4&&x>-34;
   M.mmPaint=(g,k,b)=>{g.fillStyle='#efe0b5';g.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);g.fillStyle='#8fd6e4';for(let z=b.z0;z<b.z1;z+=1){const xs=wcShore(z+.5);g.fillRect((xs-b.x0)*k,(z-b.z0)*k,(b.x1-xs)*k,k+1);}};
-  M.spawns=[[-24,-54,G],[6,54,G],[-32,-12,G],[12,-36,G],[-12,50,G],[12,-54,G],[10,36,G],[-32,2,G]].map(([x,z,y])=>({x,z,y,yaw:Math.atan2(-x,-z)}));}
+  M.spawns=[[-24,-54,G],[6,54,G],[-32,-12,G],[10,-36,G],[-12,50,G],[12,-54,G],[10,36,G],[-32,2,G]].map(([x,z,y])=>({x,z,y,yaw:Math.atan2(-x,-z)}));}
 
 /* ================= Rail Yard ================= */
 tex('ribs',128,64,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let x=0;x<w;x+=16){g.fillStyle='rgba(0,0,0,.16)';g.fillRect(x,0,5,h);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(x+7,0,3,h);}
@@ -6194,7 +6194,7 @@ function startMatch(){S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&
   const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':'Duels'} · ${PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':'')} · ${MAPS[S.map].name}`;
   $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · first to 10 kills wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · fists only':'');
   h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}
-// spawns: 1v1 two far-apart points; 2v2 two far-apart points with each teammate beside their partner; FFA four points spread as far apart as possible
+// spawns: 1v1 two far-apart points out of each other's sight; 2v2 two far-apart points with each teammate beside their partner; FFA four points spread as far apart as possible
 // extra spawn spots for big free-for-alls: random open places in the main walkable area of the map (facing the middle)
 function openSpots(){if(M.spots&&M.spots.id===M.id)return M.spots.list;const g=M.grid,list=[];if(!g||!g.comp)return list;const cnt=new Map();
   for(let i=0;i<g.comp.length;i++)if(g.comp[i]>=0)cnt.set(g.comp[i],(cnt.get(g.comp[i])||0)+1);let main=-1,mc=0;for(const [c,n] of cnt)if(n>mc){mc=n;main=c;}
@@ -6205,15 +6205,14 @@ function openSpots(){if(M.spots&&M.spots.id===M.id)return M.spots.list;const g=M
 const spotFree=p=>!(M.movers||[]).some(b=>p.x>b.x0-1&&p.x<b.x1+1&&p.z>b.z0-1&&p.z<b.z1+1)&&!(M.blds||[]).some(B=>B.stage===2&&p.x>B.x0-1&&p.x<B.x1+1&&p.z>B.z0-1&&p.z<B.z1+1);
 function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1-b.x0,b.z1-b.z0)*.5),d=(p,q)=>Math.hypot(p.x-q.x,p.z-q.z),rp=a=>a[Math.floor(Math.random()*a.length)];
   if(S.players==='ffa'){const n=FS.length,cand=(sp.length>=n+2?sp:sp.concat(openSpots())).filter(spotFree);const out=[rp(cand)];while(out.length<n){let best=null,bv=-1;for(const s of cand){if(out.includes(s))continue;const m=Math.min(...out.map(o=>d(o,s)))*(s.open?.8:1);if(m>bv){bv=m;best=s;}}out.push(best||rp(cand));}return out.sort(()=>Math.random()-.5);}
-  const a=rp(sp);let far=sp.filter(s=>s!==a&&d(s,a)>lim);if(!far.length)far=sp.filter(s=>s!==a);const c=rp(far);
-  if(S.players!=='2v2')return[a,c];
-  // 2v2: try every far-apart pair of team spawns and keep one where neither team can see the other at the start
-  // (only if every pair on the map has a sightline do the teams start in view, picking the least exposed)
-  const seen=(A,B)=>{let n=0;for(const p of A)for(const q of B){const e1=new V3(p.x,(p.y||0)+1.9,p.z),e2=new V3(q.x,(q.y||0)+1.9,q.z);if(los(e1,e2))n++;}return n;};
-  const pairs=[];for(const p of sp)for(const q of sp)if(p!==q&&d(p,q)>lim)pairs.push([p,q]);if(!pairs.length)for(const p of sp)for(const q of sp)if(p!==q)pairs.push([p,q]);
-  pairs.sort(()=>Math.random()-.5);let best=null,bv=1e9;
-  for(const [p,q] of pairs.slice(0,40)){const r=teamSpots(p,q),v=seen([r[0],r[1]],[r[2],r[3]]);if(v<bv){bv=v;best=r;}if(v===0)break;}
-  return best||teamSpots(a,c);}
+  // 1v1 and 2v2: try far-apart pairs of spawns (random order) and keep one where neither side can see the other at the start
+  // (head to head and head to chest); only if every pair on the map has a sightline do they start in view, picking the least exposed
+  const seen=(A,B)=>{let n=0;for(const p of A)for(const q of B)for(const [h1,h2] of [[1.9,1.9],[1.9,1],[1,1.9]])if(los(new V3(p.x,(p.y||0)+h1,p.z),new V3(q.x,(q.y||0)+h2,q.z)))n++;return n;};
+  const ok=sp.filter(spotFree),pool=ok.length>=2?ok:sp;
+  let pairs=[];for(const p of pool)for(const q of pool)if(p!==q&&d(p,q)>lim)pairs.push([p,q]);if(!pairs.length)for(const p of pool)for(const q of pool)if(p!==q)pairs.push([p,q]);
+  pairs.sort(()=>Math.random()-.5);const two=S.players==='2v2';let best=null,bv=1e9;
+  for(const [p,q] of pairs.slice(0,40)){const r=two?teamSpots(p,q):[p,q],v=two?seen([r[0],r[1]],[r[2],r[3]]):seen([p],[q]);if(v<bv){bv=v;best=r;}if(v===0)break;}
+  return best;}
 function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x,p.z-q.z);
   const used=[a,c];// teammate stands beside you (to your left, then right), a gap between you, both facing the same way so the camera sees you both
   const mate=(s,other)=>{const y=s.y||0,rx=Math.cos(s.yaw),rz=-Math.sin(s.yaw),fx=Math.sin(s.yaw),fz=Math.cos(s.yaw);for(const [sd,bk] of [[1,0],[-1,0],[1,-.8],[-1,-.8],[1,.8],[-1,.8]]){for(const r of [2.5,2.1,3]){const x=s.x+rx*sd*r+fx*bk,z=s.z+rz*sd*r+fz*bk;

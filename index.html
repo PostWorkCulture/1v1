@@ -4538,7 +4538,9 @@ function breakProp(b,at){if(!b.alive)return;knockOn(b,b.y1);sfx(b.snd||(b.prop==
   for(const o of M.props||[])if(o.alive&&Math.abs(o.y0-b.y1)<.05&&o.x0<b.x1&&o.x1>b.x0&&o.z0<b.z1&&o.z1>b.z0)breakProp(o,at);
   if(b.boom)drumBoom(b);}
 /* armour plates: a few pickups (+50 armour, up to 100) on the hardest places to get to: the highest spots you can actually reach
-   from the spawns by walking, climbing stairs, dropping and jumping. They come back 30 s after being taken, and at every round start. */
+   from the spawns by walking, climbing stairs, dropping and jumping. A pool of those hard spots is kept; plates stand in different
+   areas of the map from each other, and one that's taken comes back 60 s later somewhere else in the pool (away from where it was and
+   from the other plates). They're shuffled to fresh spots at every round start. */
 function placePlates(){M.plates=[];const g=M.grid;if(!g||!g.comp)return;const nx=g.nx,nz=g.nz,N=nx*nz,NN=N*NL,seen=new Uint8Array(NN),q=[];
   const base=M.spawns.filter(s=>!s.bld);for(const sp of base){const id=nearestNode(sp.x,sp.y||0,sp.z);if(id>=0&&!seen[id]){seen[id]=1;q.push(id);}}
   while(q.length){const id=q.pop(),k=(id/NL)|0,i=k%nx,j=(k-i)/nx,h=g.h[id];for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const a=i+di,b=j+dj;if(a<1||b<1||a>=nx-1||b>=nz-1)continue;const k2=a+b*nx,far=Math.abs(di+dj)>1;
@@ -4546,16 +4548,27 @@ function placePlates(){M.plates=[];const g=M.grid;if(!g||!g.comp)return;const nx
   const cand=[];for(let id=0;id<NN;id++){if(!seen[id])continue;const k=(id/NL)|0,i=k%nx,j=(k-i)/nx,h=g.h[id];if(h<.9)continue;const x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS;
     let flat=true;for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const k2=k+di+dj*nx;let ok=false;for(let l=0;l<g.n[k2];l++)if(Math.abs(g.h[k2*NL+l]-h)<.05)ok=true;if(!ok){flat=false;break;}}
     if(!flat||!bodyFits(x,z,h))continue;let dsp=1e9;for(const sp of base)dsp=Math.min(dsp,Math.hypot(sp.x-x,sp.z-z));cand.push({x,y:h,z,sc:h+Math.min(dsp,20)*.08});}
-  cand.sort((a,b)=>b.sc-a.sc);const big=M.id==='street'||M.id==='rail',want=big?3:2,gap=big?18:8,pick=[];
-  for(const c of cand){if(pick.length>=want)break;if(pick.every(p=>Math.hypot(p.x-c.x,p.z-c.z)>gap))pick.push(c);}
+  cand.sort((a,b)=>b.sc-a.sc);const big=M.id==='street'||M.id==='rail',want=big?3:2,bb=M.bounds,pool=[];
+  for(const c of cand){if(pool.length>=(big?40:20))break;if(pool.every(p=>Math.hypot(p.x-c.x,p.z-c.z)>5))pool.push(c);}
+  // plates keep this far apart (about 30% of the map's width), shrunk only if the pool can't fit them all that far apart
+  let gap=Math.max(8,.3*Math.max(bb.x1-bb.x0,bb.z1-bb.z0));const fits=g=>{const p=[];for(const c of pool)if(p.every(q=>Math.hypot(q.x-c.x,q.z-c.z)>g))p.push(c);return p.length>=want;};
+  while(gap>4&&!fits(gap))gap*=.85;M.plateSpots=pool;M.plateGap=gap;const pick=[];
+  for(const c of pool){if(pick.length>=want)break;if(pick.every(p=>Math.hypot(p.x-c.x,p.z-c.z)>gap))pick.push(c);}
   for(const p of pick){const grp=new THREE.Group();const plate=new THREE.Mesh(B.roundedBox?B.roundedBox(.62,.78,.12,.06,3):new THREE.BoxGeometry(.62,.78,.12),new THREE.MeshStandardMaterial({color:'#2f7fe0',metalness:.6,roughness:.3,emissive:'#1f5fd0',emissiveIntensity:.35}));
     const strip=new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.14),new THREE.MeshBasicMaterial({color:'#bfe3ff',toneMapped:false}));strip.position.y=.18;plate.add(strip);grp.add(plate);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.04,8,32),new THREE.MeshBasicMaterial({color:'#7fc4ff',transparent:true,opacity:.7,toneMapped:false}));ring.rotation.x=Math.PI/2;ring.position.y=-.55;grp.add(ring);
     grp.position.set(p.x,p.y+.9,p.z);grp.userData.dyn=1;M.group.add(grp);M.plates.push({x:p.x,y:p.y,z:p.z,grp,plate,back:0});}}
-function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P.back<=0)P.grp.visible=true;continue;}P.plate.rotation.y+=dt*2;P.grp.position.y=P.y+.9+Math.sin(S.t*2.5)*.12;
-  if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<1.1&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=30;P.grp.visible=false;
+const PLATE_BACK=60;
+// a fresh spot for plate P from the pool: away from every other plate (shown or waiting), away from where P just was, not on a
+// collapsed building and not right next to anyone; the distance rule is relaxed step by step if nothing qualifies
+function movePlate(P,keepAway=true){const pool=M.plateSpots||[];if(!pool.length)return;const others=(M.plates||[]).filter(q=>q!==P);
+  const ruined=c=>(M.blds||[]).some(B=>B.stage===2&&c.x>B.x0-.5&&c.x<B.x1+.5&&c.z>B.z0-.5&&c.z<B.z1+.5);
+  for(let g=M.plateGap||12;g>2;g*=.8){const ok=pool.filter(c=>!ruined(c)&&others.every(q=>Math.hypot(q.x-c.x,q.z-c.z)>g)&&(!keepAway||Math.hypot(P.x-c.x,P.z-c.z)>g)&&!FS.some(f=>f.alive&&Math.hypot(f.pos.x-c.x,f.pos.z-c.z)<5));
+    if(ok.length){const c=ok[Math.floor(GR()*ok.length)];P.x=c.x;P.y=c.y;P.z=c.z;P.grp.position.set(c.x,c.y+.9,c.z);return;}}}
+function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P.back<=0){if(P.move){P.move=0;movePlate(P);}P.grp.visible=true;}continue;}P.plate.rotation.y+=dt*2;P.grp.position.y=P.y+.9+Math.sin(S.t*2.5)*.12;
+  if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<1.1&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=PLATE_BACK;P.move=1;P.grp.visible=false;
     emit(P.x,P.y+.9,P.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#2f7fe0','#bfe3ff','#ffffff']});sfx('plate',f,{range:10});if(f===ME)feedMsg('<span class="y">You</span><em>picked up armour</em>');break;}}}}
-function resetPlates(){for(const P of M.plates||[]){P.back=0;P.grp.visible=true;}}
+function resetPlates(){const L=M.plates||[];for(const P of L){P.back=0;P.move=0;P.x=P.z=1e5;}for(const P of L){movePlate(P,false);P.grp.visible=true;}}
 function blastProps(at,Rr,src){knockBlast(at,Rr);ruinBlast(at,Rr,src);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
   for(const b of M.chips||[]){if(b.broken)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(b.wood&&dd<Rr*.75)breakChip(b,at);else if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
   for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
@@ -4642,7 +4655,7 @@ function ruinFall(B,at,src){B.stage=2;B.fallT=0;const c=new V3((B.x0+B.x1)/2,0,(
   for(const b of B.props)if(b.alive)breakProp(b,at);for(const b of B.props){const i=M.props.indexOf(b);if(i>=0)M.props.splice(i,1);}
   for(const b of B.chips){const i=M.chips.indexOf(b);if(i>=0)M.chips.splice(i,1);}
   for(const b of B.boxes)ruinOut(B,b);
-  for(const P of M.plates||[])if(P.x>B.x0-.5&&P.x<B.x1+.5&&P.z>B.z0-.5&&P.z<B.z1+.5){P.back=1e9;P.grp.visible=false;}
+  for(const P of M.plates||[])if(P.x>B.x0-.5&&P.x<B.x1+.5&&P.z>B.z0-.5&&P.z<B.z1+.5){P.back=PLATE_BACK;P.move=1;P.grp.visible=false;}
   // the pile: three rough layers of big blocks, settling from the top of the house down
   const W=B.x1-B.x0,D=B.z1-B.z0,L=[];
   for(let i=0;i<3;i++)for(let j=0;j<3;j++){const h=rnd(1.1,1.6);L.push([B.x0+W*(i+.5)/3+rnd(-.4,.4),B.z0+D*(j+.5)/3+rnd(-.4,.4),W/3*rnd(.85,1),h,D/3*rnd(.85,1),0]);}

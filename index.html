@@ -2676,11 +2676,13 @@ function batchStatic(g=M.group){g.updateMatrixWorld(true);const groups=new Map()
   return made;}
 // extra spawn points up on roofs and upper floors and inside buildings, picked from the nav grid so they're always somewhere you can stand
 function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spawns)return;const hi=[],ins=[];
+  // only spots bots can climb to (same area as the open ground, counting ladders and jumps), so nobody spawns somewhere a bot can never reach
+  let main=-1;if(g.comp){const cnt=new Map();for(let q=0;q<g.comp.length;q++){const c=g.comp[q];if(c>=0)cnt.set(c,(cnt.get(c)||0)+1);}let bn=0;for(const [c,n] of cnt)if(n>bn){bn=n;main=c;}}
   const layerNear=(i,j,h)=>{const k=i+j*g.nx;for(let l=0;l<g.n[k];l++)if(Math.abs(g.h[k*NL+l]-h)<.3)return true;return false;};
   for(let j=3;j<g.nz-3;j+=2)for(let i=3;i<g.nx-3;i+=2){const k=i+j*g.nx;for(let l=0;l<g.n[k];l++){const h=g.h[k*NL+l],x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS;
       if((M.shops||[]).some(s=>Math.hypot(x-s.x,z-s.z)<5))continue;
       let open=true;for(const [di,dj] of [[-2,0],[2,0],[0,-2],[0,2],[-2,-2],[2,2],[-2,2],[2,-2]])if(!layerNear(i+di,j+dj,h)){open=false;break;}if(!open)continue;
-      if(M.reachSpawns&&!M.reachSpawns(k*NL+l))continue;
+      if(M.reachSpawns&&!M.reachSpawns(k*NL+l))continue;if(main>=0&&g.comp[k*NL+l]!==main)continue;
       if(h>=2.5&&h<=14)hi.push({x,z,y:h});
       else if(h<.4&&rayBoxes(new V3(x,h+1,z),new V3(0,1,0),4.5))ins.push({x,z,y:h});}}
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
@@ -3324,7 +3326,7 @@ function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     // mezzanine along the back wall, stairs up to it and a second flight up through the roof hatch
     wcBox(x0+.2,-27,3.3,3.6,z0+.2,z1-.2,'#8a8f99');for(let z=z0+.5;z<z1;z+=3.2){const za=z,zb=Math.min(z1-.3,z+2.6);if(zb>7.4&&za<13)continue;wcBox(-27.15,-26.95,3.6,4.6,za,zb,'#f4c22b');}
     wcStairs(12.5,-1,-26.9,-25.6,0,3.6,10,.45,'#9aa0a8',true);
-    wcStairs(-2.2,-1,-30.9,-27.5,3.6,H+.35,10,.45,'#9aa0a8',true);
+    wcStairs(-2.2,-1,-30.9,-27.5,3.6,H+.35,10,.45,'#9aa0a8',true);wcBox(-30.9,-27.5,H+.2,H+.35,hz0-.02,-6.7,'#9aa0a8');// top landing closes the gap to the hatch edge
     // inside: crate stacks, pallets, a forklift, drums
     for(const [x,z,n] of [[-22,-6,2],[-22,-3.6,1],[-23.3,13,3],[-21,13,1],[-29.6,8,2],[-29.6,-1,1]])for(let i=0;i<n;i++)rlCrate(x,i*1.2,z);
     rlPallet(-24,4);rlPallet(-24,5.3);rlDrum(-30.8,0,-8.6,'#2f63c8',false);rlDrum(-30.1,0,-8.8,'#3bb54a',false);
@@ -3627,10 +3629,28 @@ function buildGrid(rg){const b=M.bounds;let g=M.grid;
       const mx=b.x0+(i+.5+di*.5)*CS,mz=b.z0+(j+.5+dj*.5)*CS;let mid=0;for(const bx of L)if(mx>bx.x0-.01&&mx<bx.x1+.01&&mz>bx.z0-.01&&mz<bx.z1+.01&&bx.y1<=h2+.05&&bx.y1>mid)mid=bx.y1;
       if(mid-h<=STEP+.02&&h2-mid<=STEP+.02){g.st.add((k*NL+l)*NN+k2*NL+l2);g.st.add((k2*NL+l2)*NN+k*NL+l);}}}}}
   // areas are worked out once per map (a whole-map flood is too slow to redo every time a wall goes up); cells a wall touched are marked unknown
-  if(!rg)gridComps(g);else if(g.comp)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=i+j*nx;for(let l=0;l<NL;l++)g.comp[k*NL+l]=-1;}}
+  if(!rg){ladLinks(g);gridComps(g);}else if(g.comp)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=i+j*nx;for(let l=0;l<NL;l++)g.comp[k*NL+l]=-1;}}
 // areas you can walk around in both ways (flat ground, stairs, roofs joined by steps); dropping down is one-way between them.
 // lets the pathfinder tell instantly that a target is somewhere nobody can get up to, instead of searching the whole map
 // can you actually fall into cell k2 (down to h2) from height h? Not if a floor edge or ledge between the two heights still holds your feet up there
+// ladders: link the node at the foot to the node you step off onto at the top (both ways), so bots path up and down them
+function ladSpot(L,up){const ax=L.nx!==0,cx=(L.x0+L.x1)/2,cz=(L.z0+L.z1)/2,rp=L.rung??(ax?cx:cz),o=up?1.0:-.75;return ax?{x:rp+L.nx*o,z:cz}:{x:cx,z:rp+L.nz*o};}
+function ladLinks(g){g.lk=new Map();if(!M.ladders)return;const add=(a,b,L,up)=>{let A=g.lk.get(a);if(!A)g.lk.set(a,A=[]);A.push({to:b,L,up,jmp:!L,fail:0});};
+  for(const L of M.ladders){const lo=ladSpot(L,false),hi=ladSpot(L,true),a=nearestNode(lo.x,L.y0,lo.z),b=nearestNode(hi.x,L.y1,hi.z);
+    if(a<0||b<0||a===b||Math.abs(g.h[a]-L.y0)>.6||Math.abs(g.h[b]-L.y1)>.6)continue;add(a,b,L,true);add(b,a,L,false);}
+  // jumps: a ledge up to ~1.2 m (single jump) or ~3 m (double jump) within 1.5 m straight ahead. Coming back down is an ordinary drop
+  const nx=g.nx,nz=g.nz;for(let j=2;j<nz-2;j++)for(let i=2;i<nx-2;i++){const k=i+j*nx;for(let l=0;l<g.n[k];l++){const id=k*NL+l,h=g.h[id];
+    for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){let top=h;for(let r=1;r<=3;r++){const a=i+di*r,b=j+dj*r;if(a<1||b<1||a>=nx-1||b>=nz-1)break;const k2=a+b*nx;let hit=-1,hm=-1e9;
+      for(let l2=0;l2<g.n[k2];l2++){const h2=g.h[k2*NL+l2];if(h2>hm&&h2<=h+3.05)hm=h2;}
+      if(hm>-1e9){const dh=hm-h;if(dh>STEP+.02&&hm>top+.05){for(let l2=0;l2<g.n[k2];l2++)if(g.h[k2*NL+l2]===hm){hit=k2*NL+l2;break;}let under=false;for(let l2=0;l2<g.n[k2];l2++)if(Math.abs(g.h[k2*NL+l2]-h)<=STEP+.02)under=true;
+        // landing is an eave over open floor: only from right beside the edge, jumping straight up and stepping on once clear (see physics)
+        if(hit>=0&&(!under||r<=2)&&!g.st.has(id*nx*nz*NL+hit)&&jumpClear(g,i,j,di,dj,r,h,hm,under)){add(id,hit,null,true);if(under)g.lk.get(id).at(-1).eave=1;}break;}if(hm>top)top=hm;}}
+      // squeeze: a cell dropped only for clearance (floor under it, no node) between two level spots, e.g. a stair top tucked against a railing
+      {const k1=i+di+(j+dj)*nx,k2=i+2*di+(j+2*dj)*nx;let near=false;for(let l1=0;l1<g.n[k1];l1++)if(Math.abs(g.h[k1*NL+l1]-h)<=STEP+.02)near=true;
+       if(!near){const cx=g.x0+(i+di+.5)*CS,cz=g.z0+(j+dj+.5)*CS;let fl=false;for(const b of (g.sb[k1]||[]))if(cx>=b.x0-.15&&cx<=b.x1+.15&&cz>=b.z0-.15&&cz<=b.z1+.15&&Math.abs(b.y1-h)<=STEP)fl=true;
+        if(fl)for(let l2=0;l2<g.n[k2];l2++){const n2=k2*NL+l2;if(Math.abs(g.h[n2]-h)<=STEP+.02){add(id,n2,null,true);break;}}}}}}}}
+function jumpClear(g,i,j,di,dj,r,h,hm,eave){for(let q=0;q<=r;q++){const k=i+di*q+(j+dj*q)*g.nx,L=g.sb[k];if(!L)continue;const cx=g.x0+(i+di*q+.5)*CS,cz=g.z0+(j+dj*q+.5)*CS;
+  if(eave&&q>0)continue;for(const b of L){const land=b.y1<=hm+.06,m=q<r?(land?-.01:.2):R;if(cx>b.x0-m&&cx<b.x1+m&&cz>b.z0-m&&cz<b.z1+m&&b.y0<hm+NAV_H&&(q<r?b.y0>h+.05:b.y1>hm+STEP+.02))return false;}}return true;}
 function canDrop(g,k2,h2,h){const L=g.sb[k2];if(!L)return true;const i=k2%g.nx,j=(k2-i)/g.nx,cx=g.x0+(i+.5)*CS,cz=g.z0+(j+.5)*CS,r=R*.8+.04;
   for(const b of L){if(b.y1>h2+STEP+.02&&b.y1<=h+STEP+.02&&cx>b.x0-r&&cx<b.x1+r&&cz>b.z0-r&&cz<b.z1+r)return false;
     // and a railing or wall at the upper level stops you stepping out over the edge at all
@@ -3639,7 +3659,8 @@ function gridComps(g){const nx=g.nx,nz=g.nz,N=nx*nz,NN=N*NL,comp=g.comp&&g.comp.
   for(let k0=0;k0<N;k0++)for(let l0=0;l0<g.n[k0];l0++){const s0=k0*NL+l0;if(comp[s0]>=0)continue;let qh=0,qt=0;q[qt++]=s0;comp[s0]=nc;
     while(qh<qt){const id=q[qh++],k=(id/NL)|0,h=g.h[id],i=k%nx,j=(k-i)/nx;
       for(let d=0;d<4;d++){const a=i+(d===0?1:d===1?-1:0),b=j+(d===2?1:d===3?-1:0);if(a<1||b<1||a>=nx-1||b>=nz-1)continue;const k2=a+b*nx;
-        for(let l=0;l<g.n[k2];l++){const n2=k2*NL+l;if(comp[n2]>=0)continue;const dh=g.h[n2]-h;if(Math.abs(dh)<=STEP+.02||g.st.has(id*NN+n2)){comp[n2]=nc;q[qt++]=n2;}}}}
+        for(let l=0;l<g.n[k2];l++){const n2=k2*NL+l;if(comp[n2]>=0)continue;const dh=g.h[n2]-h;if(Math.abs(dh)<=STEP+.02||g.st.has(id*NN+n2)){comp[n2]=nc;q[qt++]=n2;}}}
+      const LK=g.lk&&g.lk.get(id);if(LK)for(const e of LK)if(comp[e.to]<0){comp[e.to]=nc;q[qt++]=e.to;}}
     nc++;}
   // which areas can be dropped into from another one
   const into=new Uint8Array(nc);
@@ -3693,11 +3714,12 @@ function findPath(fx,fy,fz,tx,ty,tz,partial){const g=M.grid,nx=g.nx,N=nx*g.nz*NL
     for(let q=0;q<8;q++){const di=PDIRS[q][0],dj=PDIRS[q][1],c=PDIRS[q][2],a=i+di,b=j+dj;if(a<1||b<1||a>=nx-1||b>=nz-1)continue;const k2=a+b*nx;if(!gn[k2])continue;
       if(di&&dj&&(!gn[i+di+j*nx]||!gn[i+(j+dj)*nx]||!hasNear(i+di+j*nx,h)||!hasNear(i+(j+dj)*nx,h)))continue;
       for(let l=0;l<gn[k2];l++){const h2=gh[k2*NL+l],dh=h2-h,n2=k2*NL+l;if((dh>STEP+.02&&!(g.st&&!(di&&dj)&&g.st.has(id*N+n2)))||dh<-17)continue;if(di&&dj&&Math.abs(dh)>.05)continue;if(P.cl[n2]===gen)continue;if(dh<-STEP-.02&&!canDrop(g,k2,h2,h))continue;if(mv.size&&k2!==sk){const o=mv.get(k2);if(o&&o[1]>h2+STEP&&o[0]<h2+NAV_H-.05)continue;}
-        let rc=0;if(M.railGlow&&h2<.45){const cz=g.z0+(b+.5)*CS;if(Math.abs(cz+50)>=3.1){const cx=g.x0+(a+.5)*CS;for(const G of M.railGlow)if(G.hot&&Math.abs(cx-G.x)<1.2){rc=3.5;break;}}}const ng=P.g[id]+c+Math.abs(dh)*.6+(dh<-1?3:0)+rc;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;push(n2,ng+H(a,b,h2));}}}}
+        let rc=0;if(M.railGlow&&h2<.45){const cz=g.z0+(b+.5)*CS;if(Math.abs(cz+50)>=3.1){const cx=g.x0+(a+.5)*CS;for(const G of M.railGlow)if(G.hot&&Math.abs(cx-G.x)<1.2){rc=3.5;break;}}}const ng=P.g[id]+c+Math.abs(dh)*.6+(dh<-1?3:0)+rc;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;push(n2,ng+H(a,b,h2));}}}
+    const LK=g.lk&&g.lk.get(id);if(LK)for(const e of LK){if(e.L&&e.L.ruin&&e.L.ruin.stage===2)continue;const n2=e.to;if(P.cl[n2]===gen)continue;if(e.jmp&&mv.size&&mv.has((n2/NL)|0))continue;const ng=P.g[id]+(e.jmp?1.5+(gh[n2]-h>1.8?3:0):2)+Math.abs(gh[n2]-h)*1.2;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;const k2=(n2/NL)|0,a=k2%nx;push(n2,ng+H(a,(k2-a)/nx,gh[n2]));}}}
   pfBudget-=it;
   // can't get all the way there (target up somewhere you can't walk to): head for the closest point you can reach instead of standing still
   if(P.cl[t]!==gen&&t!==s){if(!partial||best===s)return null;t=best;}const ids=[];for(let k=t;k>=0&&k!==s;k=P.f[k])ids.push(k);ids.reverse();
-  const pts=ids.map(id=>{const k=(id/NL)|0,i=k%nx,j=(k-i)/nx;return{x:g.x0+(i+.5)*CS,z:g.z0+(j+.5)*CS,h:g.h[id]};});
+  const pts=ids.map((id,q)=>{const k=(id/NL)|0,i=k%nx,j=(k-i)/nx,pv=q?ids[q-1]:s,LK=g.lk&&g.lk.get(pv),e=LK&&LK.find(e=>e.to===id);const p={x:g.x0+(i+.5)*CS,z:g.z0+(j+.5)*CS,h:g.h[id]};if(e){if(e.jmp){p.jmp=g.h[id]-g.h[pv];p.lk=e;p.from=pv;if(e.eave)p.eave=1;}else{p.lad=e.L;p.up=e.up;}}return p;});
   const out=[];let cx=fx,cz=fz,ch=g.h[s],i=0;
   while(i<pts.length){let j=i;while(j+1<pts.length&&j-i<36&&Math.abs(pts[j+1].h-ch)<.05&&Math.abs(pts[i].h-ch)<.05)j++;
     while(j>i&&!flatLine(cx,cz,pts[j].x,pts[j].z,ch))j--;out.push(pts[j]);cx=pts[j].x;cz=pts[j].z;ch=pts[j].h;i=j+1;}
@@ -4319,7 +4341,11 @@ function depen(f){const H=hhOf(f);for(let it=0;it<4;it++){let moved=false;
       const bd=M.bounds;for(const [dx,dz] of c){const nx=f.pos.x+dx,nz=f.pos.z+dz;if(nx<bd.x0+R||nx>bd.x1-R||nz<bd.z0+R||nz>bd.z1-R)continue;f.pos.x=nx;f.pos.z=nz;if(dx)f.vel.x=0;else f.vel.z=0;moved=true;break;}}
     if(!moved)break;}}
 // long frames (low frame rate, hitches) and fast moves are split into short steps so you can't skip through a thin wall or land differently at different frame rates
-function physics(f,dt,wx,wz,jump,speed,jumpPress){if(f.stamLock&&!f.downed)speed*=.75;if(f.dazeT>0)speed*=.25;const v=Math.max(Math.hypot(f.vel.x,f.vel.z),(speed||0)*1.25*((CHARS[f.char]||{}).speed||1)*(f.zipT>0?1.6:1))+Math.abs(f.vel.y)*.5;
+// bot path step that uses a ladder: walk to the foot (or the top edge), then push into it to climb up / back off it to climb down
+function ladSteer(f,n){const L=n.lad,d=n.up?1:-1;if(L.ruin&&L.ruin.stage===2)return null;f._ladT=S.t;f._ladDir=d;if(f.onLadder===L)return[L.nx*d,L.nz*d];
+  const A=ladSpot(L,!n.up),ax=L.nx!==0,cx=(L.x0+L.x1)/2,cz=(L.z0+L.z1)/2,rp=L.rung??(ax?cx:cz),o=n.up?-.55:.35,tx=ax?rp+L.nx*o:cx,tz=ax?cz:rp+L.nz*o,dx=tx-f.pos.x,dz=tz-f.pos.z,l=Math.hypot(dx,dz);
+  if(l>.3&&!(n.up&&f.pos.y>L.y0+.4))return[dx/l,dz/l];return[L.nx*d,L.nz*d];}
+function physics(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f._jl){const J=f._jl;if(J.eave&&f.pos.y<J.h+.05&&S.t-J.t<1.2){wx=0;wz=0;}if(S.t-J.t>1.6||(J.air&&f.grounded)){const miss=J.e&&f.pos.y<J.h-.3&&Math.hypot(f.pos.x-J.x,f.pos.z-J.z)<1.6;if(miss&&++J.e.fail>=3){const g=M.grid,A=g&&g.lk&&g.lk.get(J.from);if(A){const q=A.indexOf(J.e);if(q>=0)A.splice(q,1);}}if(miss&&f.ai){f.ai.path=null;f.ai.goalT=0;}f._jl=null;}else if(f.grounded&&!J.air){jump=true;jumpPress=true;J.air=1;}else if(!f.grounded){J.air=1;if(J.dh>1.2&&!J.dj&&f.vel.y<2.5){jump=true;jumpPress=true;J.dj=1;}}}if(f.stamLock&&!f.downed)speed*=.75;if(f.dazeT>0)speed*=.25;const v=Math.max(Math.hypot(f.vel.x,f.vel.z),(speed||0)*1.25*((CHARS[f.char]||{}).speed||1)*(f.zipT>0?1.6:1))+Math.abs(f.vel.y)*.5;
   const n=Math.min(5,Math.max(1,Math.ceil(dt*60-.05),Math.ceil(v*dt/.45)));if(n===1){physics1(f,dt,wx,wz,jump,speed,jumpPress);}else for(let i=0;i<n;i++)physics1(f,dt/n,wx,wz,jump,speed,i===0&&jumpPress);
   const bd=M.bounds;if(bd){f.pos.x=clamp(f.pos.x,bd.x0+R,bd.x1-R);f.pos.z=clamp(f.pos.z,bd.z0+R,bd.z1-R);}}
 function ladderStep(f,dt,wx,wz,jump){for(const L of M.ladders){if(L.ruin&&L.ruin.stage===2)continue;if(f.pos.x<L.x0-R||f.pos.x>L.x1+R||f.pos.z<L.z0-R||f.pos.z>L.z1+R||f.pos.y<L.y0-.15||f.pos.y>L.y1+.05)continue;
@@ -4332,7 +4358,8 @@ function ladderStep(f,dt,wx,wz,jump){for(const L of M.ladders){if(L.ruin&&L.ruin
     else if(f.pos.y>=L.y1){f.pos.y=L.y1+.02;f.pos.x+=L.nx*1.0;f.pos.z+=L.nz*1.0;f.onLadder=null;f.grounded=true;}
     return true;}
   f.onLadder=null;return false;}
-function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(M.ladders&&M.ladders.length&&!f.bot&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
+function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladDir){wx=f.onLadder.nx*f._ladDir;wz=f.onLadder.nz*f._ladDir;jump=false;}
+  if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
   const acc=f.thrownT>0?0:f.stunT>0?8:f.hookT>0?5:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
@@ -5658,7 +5685,7 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.skySlam||f.stu
   if(T.downed&&T.alive&&!a.planFor&&(f===ME||isFoe(f,ME)||a.lastSeen||los(eyeOf(f,new V3()),new V3(T.pos.x,T.pos.y+.45,T.pos.z)))){a.planFor=T;a.plan=Math.random()<.5?'finish':'shoot';}
   if(T.downed&&T.alive&&!T.finishing&&!(T.thrownT>0)&&a.planFor===T&&a.plan==='finish'){if(canFinish(f,T)&&!f.carrying&&!T.carriedBy&&Math.random()<dt*3){finish(f,T);return{wx:0,wz:0,jump:false};}
     if(Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z)<70){a.goalT-=dt;if(a.goalT<=0||!a.path){a.goalT=.5;a.path=findPath(f.pos.x,f.pos.y,f.pos.z,T.pos.x,T.pos.y,T.pos.z,true);}
-      let wx=0,wz=0;if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45)a.path.shift();else{wx=dx/l;wz=dz/l;}}else{const dx=T.pos.x-f.pos.x,dz=T.pos.z-f.pos.z,l=Math.hypot(dx,dz)||1;wx=dx/l;wz=dz/l;}
+      let wx=0,wz=0;if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3)a.path.shift();else{wx=dx/l;wz=dz/l;}if(a.path&&a.path.length&&a.path[0].lad){const q=ladSteer(f,a.path[0]);if(q){wx=q[0];wz=q[1];}}else if(a.path&&a.path.length&&a.path[0].jmp&&f.grounded&&!f._jl){const n=a.path[0];if(Math.hypot(n.x-f.pos.x,n.z-f.pos.z)<1.7&&n.h-f.pos.y>STEP)f._jl={t:S.t,dh:n.h-f.pos.y,air:0,h:n.h,e:n.lk,from:n.from,x:n.x,z:n.z,eave:n.eave};}}else{const dx=T.pos.x-f.pos.x,dz=T.pos.z-f.pos.z,l=Math.hypot(dx,dz)||1;wx=dx/l;wz=dz/l;}
       if(wx||wz)f.yaw=Math.atan2(wx,wz);return{wx,wz,jump:false};}}
   const eye=eyeOf(f,new V3()),tgtHead=eyeOf(T,new V3()),tgtBody=new V3(T.pos.x,T.pos.y+(T.downed?.45:1.25*SC),T.pos.z);
   const ghosted=T.ghostT>0&&Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z)>8;const seeB=!ghosted&&!(f.blindT>0)&&T.alive&&los(eye,tgtBody),seeH=!ghosted&&!seeB&&T.alive&&los(eye,tgtHead),see=seeB||seeH;
@@ -5666,7 +5693,7 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.skySlam||f.stu
   if(see){a.seeT+=dt;a.lostT=0;a.lastSeen=T.pos.clone();}else{a.seeT=0;a.lostT+=dt;if(f.senseT>0||T.tagT>S.t)a.lastSeen=T.pos.clone();else if(ally)for(const o of foesOf(f)){if(o.tagT>S.t||S.t-(o.shotT||-9)<2.5||(S.t-f.lastHurt<1.5&&f.lastBy===o)||(ME.alive&&!ME.downed&&los(eyeOf(ME,new V3()),new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))){a.tgt=o;a.lastSeen=(o.shotP&&S.t-(o.shotT||-9)<2.5?o.shotP:o.pos).clone();a.lostT=0;break;}}}
   if(ally&&!see&&!a.lastSeen){if(!a.roam||Math.hypot(a.roam.x-f.pos.x,a.roam.z-f.pos.z)<2.5||(a.roamT=(a.roamT||0)-dt)<=0){const b=M.bounds;a.roam=sampleSpot(M.center.x,M.center.z,4,Math.min(b.x1-b.x0,b.z1-b.z0)*.38)||{x:M.center.x,h:0,z:M.center.z};a.roamT=rnd(4,7);a.path=null;a.goalT=0;}
     a.goalT-=dt;if(a.goalT<=0||!a.path){a.goalT=1.2;a.path=findPath(f.pos.x,f.pos.y,f.pos.z,a.roam.x,a.roam.h,a.roam.z,true);}
-    let wx=0,wz=0,jump=false;if(a.path&&a.path.length){const n=a.path[0],dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3)a.path.shift();else if(l>.05){wx=dx/l;wz=dz/l;}}
+    let wx=0,wz=0,jump=false;if(a.path&&a.path.length){const n=a.path[0],dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3)a.path.shift();else if(l>.05){wx=dx/l;wz=dz/l;}if(a.path&&a.path.length&&a.path[0].lad){const q=ladSteer(f,a.path[0]);if(q){wx=q[0];wz=q[1];}}else if(a.path&&a.path.length&&a.path[0].jmp&&f.grounded&&!f._jl){const n=a.path[0];if(Math.hypot(n.x-f.pos.x,n.z-f.pos.z)<1.7&&n.h-f.pos.y>STEP)f._jl={t:S.t,dh:n.h-f.pos.y,air:0,h:n.h,e:n.lk,from:n.from,x:n.x,z:n.z,eave:n.eave};}}
     if(a.sideT>0&&(wx||wz)){a.sideT-=dt;const c=Math.cos(1.25*a.sideD),sn=Math.sin(1.25*a.sideD),x=wx*c-wz*sn,z=wx*sn+wz*c;wx=x;wz=z;}
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;a.sideT=.5;a.sideD=(a.sideD||1)*-1;a.roam=null;}
     if(a.railHop){a.railHop=0;jump=true;wx+=(Math.sign(f.pos.x)||1)*.85;}else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
@@ -5796,7 +5823,7 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.skySlam||f.stu
       else if(!see&&a.lastSeen&&a.lostT<6&&st!=='turtle'){gx=a.lastSeen.x;gz=a.lastSeen.z;gy=a.lastSeen.y;}
       else{const b=botSpot('view',f,{T,r0:4,r1:26,range:pr});if(b){gx=b.x;gy=b.h;gz=b.z;}}
       a.path=findPath(f.pos.x,f.pos.y,f.pos.z,gx,gy,gz,true);}usePath=true;}}
-  if(usePath){if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3){a.path.shift();}else if(l>.05){wx=dx/l;wz=dz/l;}}
+  if(usePath){if(a.path&&a.path.length){const n=a.path[0];const dx=n.x-f.pos.x,dz=n.z-f.pos.z,l=Math.hypot(dx,dz);if(l<.45&&Math.abs(n.h-f.pos.y)<1.3){a.path.shift();}else if(l>.05){wx=dx/l;wz=dz/l;}if(a.path&&a.path.length&&a.path[0].lad){const q=ladSteer(f,a.path[0]);if(q){wx=q[0];wz=q[1];}}else if(a.path&&a.path.length&&a.path[0].jmp&&f.grounded&&!f._jl){const n=a.path[0];if(Math.hypot(n.x-f.pos.x,n.z-f.pos.z)<1.7&&n.h-f.pos.y>STEP)f._jl={t:S.t,dh:n.h-f.pos.y,air:0,h:n.h,e:n.lk,from:n.from,x:n.x,z:n.z,eave:n.eave};}}
     // blocked by something that isn't on the map grid (a car pulling in, another fighter, a fresh wall): hop, recompute and sidestep round it
     if(a.sideT>0&&(wx||wz)){a.sideT-=dt;const c=Math.cos(1.25*a.sideD),sn=Math.sin(1.25*a.sideD),x=wx*c-wz*sn,z=wx*sn+wz*c;wx=x;wz=z;}
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;a.sideT=.5;a.sideD=(a.sideD||1)*-1;}}

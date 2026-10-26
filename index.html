@@ -3829,7 +3829,58 @@ const CHARS={
   thorn:{skin:'thorn_warden',fx:['Gold statue','Black hole'],name:'Thorn',desc:'Thorn armour blocks 30% and reflects 60%',abil:'Thorns',cd:12,hp:100,look:{shirt:'#5b3a22',shirtSolid:'#3d2716',hair:'#2f6a1e'},color:'#7bd13a'}};
 const ABIL_KILL={rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',zap:'Zap',thorns:'Thorns'};
 const CHAR_IDS=['blaze',...Object.keys(CHARS).filter(k=>k!=='blaze')]; // Blaze first: top-left of the character grid
-function accessory(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castShadow=true;(p||ch.torso).add(m);return m;};
+function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
+/* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or
+   mouths a skin used to stick on top are removed, so features never double up. mode 'smirk' is the crowning close-up. */
+const FACES={
+  blaze:{brow:'#ff6a1a',bw:13,browA:.32,eye:'#121318',mouth:'grin'},
+  jet:{brow:'#5a3a1e',bw:9,browA:.12,mouth:'half',extra:'freckles'},
+  blink:{brow:'#121318',bw:6,browA:-.25,arch:1,mouth:'sly',extra:'tache'},
+  tank:{brow:'#2b1d12',bw:16,browA:.22,eyeS:.85,mouth:'flat',extra:'stubble'},
+  frost:{brow:'#8fd3ff',bw:7,browA:-.1,iris:'#5fc6ff',mouth:'small'},
+  patch:{brow:'#4a3a2a',bw:8,browA:-.15,arch:1,mouth:'open',extra:'blush'},
+  volt:{brow:'#ffd23f',bw:9,zig:1,eyeS:1.2,mouth:'teeth'},
+  hook:{brow:'#3a2a1e',bw:14,browA:.05,mouth:'smile',extra:'beard'},
+  zip:{brow:'#ff4fb0',bw:9,browA:-.2,eyeS:1.15,iris:'#ff4fb0',mouth:'laugh',extra:'blush'},
+  thorn:{brow:'#3f8a2a',bw:9,browA:-.05,iris:'#4f9a2e',mouth:'smile',extra:'leaves'}};
+function drawFace(g,F,mode,bg){const W=256,sm=mode==='smirk';g.fillStyle=bg||'#f4f5f7';g.fillRect(0,0,W,W);
+  const gr=g.createLinearGradient(0,150,0,256);gr.addColorStop(0,'rgba(40,50,70,0)');gr.addColorStop(1,'rgba(40,50,70,.12)');g.fillStyle=gr;g.fillRect(0,0,W,W);
+  const ink='#121318';g.lineCap='round';g.lineJoin='round';
+  // extras under the features
+  if(F.extra==='blush'){g.fillStyle='rgba(255,120,140,.35)';g.beginPath();g.ellipse(62,150,20,12,0,0,TAU);g.ellipse(196,150,20,12,0,0,TAU);g.fill();}
+  if(F.extra==='freckles'){g.fillStyle='rgba(150,90,50,.55)';for(const [x,y] of [[60,146],[72,154],[54,158],[198,146],[186,154],[204,158]]){g.beginPath();g.arc(x,y,3,0,TAU);g.fill();}}
+  if(F.extra==='soot'){g.fillStyle='rgba(40,30,30,.18)';g.beginPath();g.ellipse(200,160,16,8,-.4,0,TAU);g.fill();}
+  if(F.extra==='stubble'||F.extra==='beard'){g.fillStyle=F.extra==='beard'?'#3a2a1e':'rgba(60,60,70,.28)';if(F.extra==='beard'){g.beginPath();g.moveTo(40,150);g.quadraticCurveTo(128,262,216,150);g.lineTo(216,256);g.lineTo(40,256);g.fill();}else for(let i=0;i<90;i++){g.fillRect(60+Math.random()*136,165+Math.random()*60,2,2);}}
+  if(F.extra==='leaves'){g.fillStyle='#6fae3a';for(const [x,y,r] of [[48,52,-.6],[214,60,.6]]){g.save();g.translate(x,y);g.rotate(r);g.beginPath();g.ellipse(0,0,12,6,0,0,TAU);g.fill();g.restore();}}
+  // brows
+  const by=sm?[96,72]:[84,80];g.strokeStyle=F.brow;g.lineWidth=F.bw;
+  for(const s of [-1,1]){const cx=128+s*38,cy=s<0?by[0]:by[1],a=(sm&&s>0)?-.35:(sm?0:F.browA*s*-1);g.save();g.translate(cx,cy);g.rotate(a);g.beginPath();
+    if(F.zig){g.moveTo(-26,4);g.lineTo(-9,-6);g.lineTo(6,4);g.lineTo(24,-6);}else{g.moveTo(-26,0);g.quadraticCurveTo(0,F.arch?-14:-6,26,0);}g.stroke();g.restore();}
+  // eyes
+  const es=F.eyeS||1;for(const s of [-1,1]){const x=128+s*38,y=118;g.fillStyle=ink;g.beginPath();g.ellipse(x,y,13*es,(sm&&s<0?11:18)*es,0,0,TAU);g.fill();
+    if(F.iris){g.fillStyle=F.iris;g.beginPath();g.arc(x,y+2,7*es,0,TAU);g.fill();}
+    if(sm&&s<0){g.fillStyle=bg||'#f4f5f7';g.fillRect(x-20,y-24,40,14);}
+    g.fillStyle='#fff';g.beginPath();g.arc(x+5,y-(sm&&s<0?2:8)*es,4.5*es,0,TAU);g.fill();}
+  // mouth
+  g.strokeStyle=ink;g.fillStyle=ink;g.lineWidth=7;const M=sm?'smirk':F.mouth;g.beginPath();
+  if(M==='smirk'){g.moveTo(100,182);g.quadraticCurveTo(150,188,186,160);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(181,151);g.quadraticCurveTo(194,158,191,171);g.stroke();}
+  else if(M==='grin'){g.moveTo(84,172);g.quadraticCurveTo(128,204,176,166);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(172,156);g.quadraticCurveTo(186,162,183,176);g.stroke();}
+  else if(M==='half'){g.moveTo(96,180);g.quadraticCurveTo(140,192,176,170);g.stroke();}
+  else if(M==='sly'){g.moveTo(96,190);g.quadraticCurveTo(130,186,172,170);g.stroke();}
+  else if(M==='flat'){g.moveTo(96,182);g.lineTo(162,180);g.stroke();}
+  else if(M==='small'){g.moveTo(108,178);g.quadraticCurveTo(128,190,150,178);g.stroke();}
+  else if(M==='open'||M==='laugh'){g.moveTo(90,166);g.quadraticCurveTo(128,166,168,166);g.quadraticCurveTo(128,(M==='laugh'?222:208),90,166);g.fill();g.fillStyle='#ff6b7d';g.beginPath();g.ellipse(129,(M==='laugh'?194:186),16,8,0,0,TAU);g.fill();}
+  else if(M==='teeth'){g.moveTo(86,166);g.quadraticCurveTo(128,212,172,166);g.closePath();g.fill();g.fillStyle='#fff';g.fillRect(96,168,66,12);}
+  else{g.moveTo(88,172);g.quadraticCurveTo(128,198,170,170);g.stroke();}
+  if(F.extra==='tache'){g.fillStyle=ink;g.beginPath();g.moveTo(128,150);g.quadraticCurveTo(104,140,88,154);g.quadraticCurveTo(108,152,128,156);g.quadraticCurveTo(148,152,168,154);g.quadraticCurveTo(152,140,128,150);g.fill();}}
+function applyFace(ch,id){const F=FACES[id],hd=ch.head;if(!F||!hd||!hd.visible||!Array.isArray(hd.material))return;const m=hd.material[4];if(!m)return;
+  // drop small stuck-on 3D brows/mouths over the face
+  for(const c of ch.headG.children){if(!c.isMesh||c===hd||!c.visible||c.position.z<.28||Math.abs(c.position.x)>.3||c.position.y<.05||c.position.y>.55)continue;c.geometry.computeBoundingBox();const b=c.geometry.boundingBox;if(b.max.z-b.min.z<.06&&b.max.y-b.min.y<.14&&b.max.x-b.min.x<.4)c.visible=false;}
+  ch.faceId=id;m.map=faceTexFor(F,'');m.needsUpdate=true;}
+function setFace(hd,F,mode){const at=hd.userData.atlas;if(at&&at.cell[4]&&!Array.isArray(hd.material)){const c=at.cell[4],cv=document.createElement('canvas');cv.width=cv.height=256;drawFace(cv.getContext('2d'),F,mode);const x=at.cv.getContext('2d');x.drawImage(cv,c.x0-at.P,c.y0-at.P,at.S+at.P*2,at.S+at.P*2);x.drawImage(cv,c.x0,c.y0,at.S,at.S);hd.material.map.needsUpdate=true;return true;}
+  if(Array.isArray(hd.material)&&hd.material[4]){hd.material[4].map=faceTexFor(F,mode);hd.material[4].needsUpdate=true;return true;}return false;}
+function faceTexFor(F,mode){const cv=document.createElement('canvas');cv.width=cv.height=256;drawFace(cv.getContext('2d'),F,mode);const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;}
+function accessory0(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castShadow=true;(p||ch.torso).add(m);return m;};
   {const sk=ch.forceSkin||CHARS[id].skin;if(sk&&SKINS[sk]){SKINS[sk](ch);return;}}
   if(id==='jet'){const g=new THREE.Group();const m=mat('#c9ced8',null,{metalness:.6,roughness:.3});for(const sx of [-.2,.2]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.7,12),m);c.position.set(sx,0,0);g.add(c);
       const n=new THREE.Mesh(new THREE.ConeGeometry(.12,.18,12).rotateX(Math.PI),mat('#3a3d45'));n.position.set(sx,-.44,0);g.add(n);}
@@ -4161,7 +4212,7 @@ function atlasMesh(o){const ms=o.material,g=o.geometry;if(!g.groups.length||!g.a
   const okMap=t=>!t||(t.image&&t.image.width&&t.repeat.x===1&&t.repeat.y===1&&t.offset.x===0&&t.offset.y===0&&!t.rotation);
   if(!ms.every(m=>m&&m.isMeshStandardMaterial&&!m.transparent&&m.side===THREE.FrontSide&&m.emissive.getHex()===0&&okMap(m.map)&&!m.normalMap&&!m.roughnessMap))return;
   const r=ms[0];if(!ms.every(m=>m.roughness===r.roughness&&m.metalness===r.metalness&&m.flatShading===r.flatShading))return;
-  const used=[...new Set(g.groups.map(q=>q.materialIndex))],S=128,P=3,C=S+P*2,cols=Math.ceil(Math.sqrt(used.length)),rows=Math.ceil(used.length/cols);
+  const used=[...new Set(g.groups.map(q=>q.materialIndex))],S=ms.some(m=>m.map&&m.map.image&&m.map.image.width>=256)?256:128,P=3,C=S+P*2,cols=Math.ceil(Math.sqrt(used.length)),rows=Math.ceil(used.length/cols);
   const cv=document.createElement('canvas');cv.width=cols*C;cv.height=rows*C;const x=cv.getContext('2d'),cell={};
   used.forEach((mi,i)=>{const m=ms[mi],x0=(i%cols)*C+P,y0=Math.floor(i/cols)*C+P;cell[mi]={x0,y0,map:!!m.map};const col='#'+m.color.getHexString();
     if(m.map){x.drawImage(m.map.image,x0-P,y0-P,S+P*2,S+P*2);x.drawImage(m.map.image,x0,y0,S,S);if(m.color.getHex()!==0xffffff){x.globalCompositeOperation='multiply';x.fillStyle=col;x.fillRect(x0-P,y0-P,C,C);x.globalCompositeOperation='source-over';}}
@@ -4171,7 +4222,7 @@ function atlasMesh(o){const ms=o.material,g=o.geometry;if(!g.groups.length||!g.a
       if(!c.map){u=.5;v=.5;}else if(u<-.01||u>1.01||v<-.01||v>1.01){ng.dispose();return;}
       uv.setXY(i,(c.x0+u*S)/W,1-(c.y0+(1-v)*S)/H);}}
   ng.clearGroups();const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=2;
-  o.geometry=ng;o.material=new THREE.MeshStandardMaterial({map:t,roughness:r.roughness,metalness:r.metalness,flatShading:r.flatShading});}
+  o.geometry=ng;o.material=new THREE.MeshStandardMaterial({map:t,roughness:r.roughness,metalness:r.metalness,flatShading:r.flatShading});o.userData.atlas={cv,cell,S,P};}
 function mergeLeaves(p,refs){const groups=new Map();
   // a mesh may carry outline shells (back-face copies); those get merged too, in their own outline mesh
   const shellsOf=o=>o.children.every(c=>c.isMesh&&!c.children.length&&!refs.has(c)&&!Array.isArray(c.material)&&c.material&&c.material.side===THREE.BackSide&&c.visible)?o.children:null;
@@ -6279,7 +6330,8 @@ function crGirl(sc){const T=THREE,r=new T.Group();sc.add(r);const M=(c,o)=>new T
   const arms=[-1,1].map(sx=>{const p=new T.Group();p.position.set(sx*.33,hip+.68,0);r.add(p);crBox(p,.14,.85,.14,skin,0,-.42,0);crBox(p,.13,.12,.14,skin,0,-.88,0);return p;});
   r.userData={legs,arms,head,hip};r.scale.setScalar(.9);return r;}
 // the winner's own face with a raised eyebrow, a heavy eyelid and a one-sided smirk
-function crSmirk(f){const hd=f.ch.head;if(!hd||!Array.isArray(hd.material))return;const m=hd.material[4];if(!m||!m.map||!m.map.image)return;
+function crSmirk(f){const hd=f.ch.head;if(hd&&f.ch.faceId&&FACES[f.ch.faceId]){if(setFace(hd,FACES[f.ch.faceId],'smirk'))f.crFace={hd,id:f.ch.faceId,hide:[]};return;}if(!hd||!Array.isArray(hd.material))return;const m=hd.material[4];if(!m||!m.map||!m.map.image)return;
+
   const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');g.drawImage(m.map.image,0,0,256,256);
   const bg=g.getImageData(128,30,1,1).data,bc=`rgb(${bg[0]},${bg[1]},${bg[2]})`;g.fillStyle=bc;g.fillRect(40,50,180,170);
   g.strokeStyle='#121318';g.lineCap='round';g.lineWidth=10;g.beginPath();g.moveTo(62,96);g.quadraticCurveTo(90,92,116,98);g.stroke();g.beginPath();g.moveTo(144,84);g.quadraticCurveTo(172,58,198,70);g.stroke();
@@ -6307,7 +6359,7 @@ function startCrown(team){clearCrown();clearCelebrate();const who=team.filter(Bo
   // with one winner the girls come in from both sides; with two, one girl each
   R.girls=n>1?[{g:CR.girls[0],w:0,side:-1},{g:CR.girls[1],w:1,side:1}]:[{g:CR.girls[0],w:0,side:-1},{g:CR.girls[1],w:0,side:1,helper:1}];
   CR.crowns.forEach((c,i)=>c.visible=i<n);CR.girls.forEach(g=>g.visible=true);CR.run=R;}
-function clearCrown(){const R=CR.run;if(!R)return;for(const f of R.who){scene.add(f.ch.root);if(f.crFace){f.crFace.m.map=f.crFace.map;f.crFace.m.needsUpdate=true;for(const c of f.crFace.hide)c.visible=true;f.crFace=null;}f.ch.headG.rotation.set(0,0,0);}CR.run=null;}
+function clearCrown(){const R=CR.run;if(!R)return;for(const f of R.who){scene.add(f.ch.root);if(f.crFace){if(f.crFace.id)setFace(f.crFace.hd,FACES[f.crFace.id],'');else{f.crFace.m.map=f.crFace.map;f.crFace.m.needsUpdate=true;}for(const c of f.crFace.hide)c.visible=true;f.crFace=null;}f.ch.headG.rotation.set(0,0,0);}CR.run=null;}
 function updCrown(dt){const R=CR.run;if(!R)return;if(S.state==='fight'||S.state==='countdown'||S.state==='menu'){clearCrown();return;}R.t+=dt;}
 // pose everything for this frame (runs after the fighters' own animation, just before drawing)
 function poseCrown(){const R=CR.run,t=R.t,T=THREE,V=V3;const ease=u=>u*u*(3-2*u),seg=(a,b)=>clamp((t-a)/(b-a),0,1);

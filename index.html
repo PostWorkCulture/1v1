@@ -624,7 +624,22 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #col2 .mfoot{position:sticky;bottom:-14px;margin:auto -14px -14px;padding:10px 14px 14px;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--panel-ink) 4%,var(--panel)) 14px);z-index:2}
 .mback{margin-right:4px;border:0;cursor:pointer;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--panel-ink) 10%,transparent);color:var(--panel-ink);font:700 13px/1 var(--f-body)}
 .mback:hover{background:color-mix(in srgb,var(--panel-ink) 18%,transparent)}
-@media (max-width:720px),(max-height:520px) and (max-width:1000px){.mfull.duels[data-step="lobby"] .d-chars{grid-template-columns:repeat(3,1fr)}}
+/* Lobby: big map tiles (two across, full-width 16:9 pictures) and a big portrait of the selected character */
+.mfull.duels[data-step="lobby"] .d-maps{grid-template-columns:1fr 1fr;gap:10px}
+.mfull.duels[data-step="lobby"] .map-opt{flex-direction:column;align-items:stretch;gap:6px;padding:6px}
+.mfull.duels[data-step="lobby"] .map-opt .thumb{width:100%;flex:none;aspect-ratio:16/9}
+.mfull.duels[data-step="lobby"] .map-opt .mt{gap:2px;padding:0 4px 2px}
+.mfull.duels[data-step="lobby"] .map-opt .mt .t{font-size:15px}
+.mfull.duels[data-step="lobby"] .map-opt .mt .b{font-size:12px;line-height:1.3}
+.mfull.duels[data-step="lobby"] .map-opt.soon .thumb em{font-size:15px;padding:7px 10px}
+.mfull.duels[data-step="lobby"] .d-prof{grid-template-columns:auto 1fr;gap:18px;min-height:0;padding:12px}
+.mfull.duels[data-step="lobby"] .d-prof,.mfull.duels[data-step="lobby"] .d-chars,.mfull.duels[data-step="lobby"] .d-maps{flex:none}
+.mfull.duels[data-step="lobby"] .d-prof img{height:clamp(220px,40vh,440px);width:auto;aspect-ratio:480/608}
+.mfull.duels[data-step="lobby"] .d-prof .pn{font-size:40px}
+.mfull.duels[data-step="lobby"] .d-prof .pd{font-size:15px}
+.mfull.duels[data-step="lobby"] .d-prof.empty{min-height:clamp(220px,40vh,440px)}
+@media (max-width:720px),(max-height:520px) and (max-width:1000px){.mfull.duels[data-step="lobby"] .d-chars{grid-template-columns:repeat(3,1fr)}.mfull.duels[data-step="lobby"] .d-prof .pn{font-size:30px}}
+@media (max-width:480px){.mfull.duels[data-step="lobby"] .d-prof{grid-template-columns:1fr}.mfull.duels[data-step="lobby"] .d-prof img{width:100%;height:auto;max-height:60vh;object-fit:contain}}
 .msub{display:flex;align-items:center;gap:8px;font:600 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .slotk{display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;font:700 12px/1 var(--f-body);letter-spacing:0}
 .mfull .tag{margin:0;font:500 13px/1.4 var(--f-body);color:var(--muted);max-width:none;display:block}
@@ -683,6 +698,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .mfull .keys{justify-content:center;font-size:12px}
 .mfull .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mfull #pk-panel{gap:10px}
+/* narrower screens: logo, record and Play a friend on the first row, XP bar and the volume sliders on a second row */
+@media (max-width:1100px) and (min-width:721px){.mfull .mhead{flex-wrap:wrap;row-gap:8px}.mfull #mxp{order:3;flex:1 1 300px;margin-left:0}.mfull .mvol{order:4;width:auto}.mnet{flex-wrap:nowrap}}
 @media (max-width:1100px){.m3{grid-template-columns:1fr 1fr}.dcol3{grid-column:span 2}.mfull.pk .m3{grid-template-columns:1fr 1fr}.mfull #mxp{max-width:none}}
 @media (max-width:720px),(max-height:520px) and (max-width:1000px){#menu .menu-card.mfull{overflow-y:auto}.m3{display:flex;flex-direction:column;flex:none}.mcol{overflow:visible;flex:none}.mfull .mhead{flex-wrap:wrap}.mfull #mxp{order:3;flex-basis:100%}.mfull .levels{grid-template-columns:1fr 1fr}}
 @media (max-height:760px) and (min-width:721px){.d-prof{min-height:150px;grid-template-columns:120px 1fr}.d-prof img{width:120px;height:150px}.gun-opt .gp{aspect-ratio:2.6/1}.mfull .map-opt .thumb{width:96px;flex-basis:96px}}
@@ -6931,7 +6948,7 @@ function makeThumb(id){if(thumbs[id])return;const keep=M.id;buildMap(id);const b
   const saveA=camera.aspect,saveF=camera.fov;const W=renderer.domElement.width,H=renderer.domElement.height;
   camera.aspect=W/H;camera.fov=40;camera.position.set(c.x-r*.55,r*.62,c.z+r*.32);camera.lookAt(c.x+2,0,c.z);camera.updateProjectionMatrix();sky.position.copy(camera.position);
   sun.position.set(c.x+30,60,c.z+22);sun.target.position.set(c.x,0,c.z);ME.ch.root.visible=false;BOT.ch.root.visible=false;renderer.render(scene,camera);
-  const tw=320,th=180,cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const s=Math.min(W/tw,H/th)*.8;
+  const tw=640,th=360,cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const s=Math.min(W/tw,H/th)*.8;
   g.drawImage(renderer.domElement,(W-tw*s)/2,(H-th*s)/2,tw*s,th*s,0,0,tw,th);try{thumbs[id]=cv.toDataURL('image/jpeg',.82);}catch(e){}
   camera.aspect=saveA;camera.fov=saveF;camera.updateProjectionMatrix();ME.ch.root.visible=true;BOT.ch.root.visible=true;if(keep&&keep!==id)buildMap(keep);}
 /* ================= weapon hero models (menu previews only) ================= */
@@ -7512,7 +7529,7 @@ function previewTasks(){const T=[];
     g.drawImage(renderer.domElement,(W-sw)/2,(H-sh)/2,sw,sh,0,0,tw,th);PS.remove(obj);try{return cv.toDataURL('image/jpeg',.9);}catch(e){return '';}};
   const chars=[...CHAR_IDS].sort((a,b)=>(b===S.char)-(a===S.char));
   for(const id of chars)T.push(()=>{const L=buildLook(id);const r=L.ch.root;r.scale.setScalar(SC);for(const k in L.guns)L.guns[k].visible=false;r.rotation.y=.35;L.ch.aL.p.rotation.x=-.15;L.ch.aR.p.rotation.x=.15;
-    PREV['c_'+id]=snap(r,120,120,sz=>sz.y*.5,.78,new THREE.Vector3(.2,.05,1));PREV['p_'+id]=snap(r,300,380,sz=>sz.y*1.12,.5,new THREE.Vector3(.25,.08,1));});
+    PREV['c_'+id]=snap(r,120,120,sz=>sz.y*.5,.78,new THREE.Vector3(.2,.05,1));PREV['p_'+id]=snap(r,480,608,sz=>sz.y*1.12,.5,new THREE.Vector3(.25,.08,1));});
   T.push(()=>{const HS=heroShots([...PRIMARIES,...SECONDARIES],B.roundedBox);
   for(const id of [...PRIMARIES,...SECONDARIES]){if(HS[id]){PREV['g_'+id]=HS[id];continue;}const g=gunModel(id);for(const fm of (g.userData.flash||[]))fm.parent&&fm.parent.remove(fm);g.rotation.y=-Math.PI/2;const wrap=new THREE.Group();wrap.add(g);PREV['g_'+id]=snap(wrap,320,160,sz=>Math.max(sz.x*1.08,sz.y*2.3),null,new THREE.Vector3(.05,.18,1));}});
   T.push(()=>{const HC=heroShots(CONS_IDS.map(k=>'c_'+k),B.roundedBox,420,280);for(const k in HC)PREV['g_'+k]=HC[k];});

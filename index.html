@@ -613,6 +613,18 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .mstep{display:flex;align-items:center;gap:10px;margin:0;font:400 20px/1 var(--f-display);color:var(--panel-ink)}
 .mstep i{font-style:normal;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--panel-ink);color:var(--panel);font:400 15px/1 var(--f-display)}
 .mcol.done .mstep i{background:var(--good)}
+/* the duels menu is two screens: the Lobby (mode, map, players, bots, character and the options in the header) and the Loadout (weapons, then lethals) */
+.mfull.duels[data-step="lobby"] #col3,.mfull.duels[data-step="lobby"] #col4,.mfull.duels[data-step="loadout"] #col1,.mfull.duels[data-step="loadout"] #col2{display:none}
+.mfull.duels[data-step="lobby"] .m3{grid-template-columns:minmax(280px,1fr) minmax(320px,1.25fr)}
+.mfull.duels[data-step="loadout"] .m3{grid-template-columns:minmax(340px,1.5fr) minmax(280px,1fr)}
+.mfull.duels[data-step="loadout"] .dcol3{grid-column:auto}
+.mfull.duels[data-step="loadout"] .d-guns.cons{grid-template-columns:repeat(3,1fr)}
+.mfull.duels[data-step="loadout"] .d-guns.cons .gp{aspect-ratio:1.45/1}
+.mfull.duels[data-step="lobby"] .d-chars{grid-template-columns:repeat(4,1fr)}
+#col2 .mfoot{position:sticky;bottom:-14px;margin:auto -14px -14px;padding:10px 14px 14px;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--panel-ink) 4%,var(--panel)) 14px);z-index:2}
+.mback{margin-right:4px;border:0;cursor:pointer;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--panel-ink) 10%,transparent);color:var(--panel-ink);font:700 13px/1 var(--f-body)}
+.mback:hover{background:color-mix(in srgb,var(--panel-ink) 18%,transparent)}
+@media (max-width:720px),(max-height:520px) and (max-width:1000px){.mfull.duels[data-step="lobby"] .d-chars{grid-template-columns:repeat(3,1fr)}}
 .msub{display:flex;align-items:center;gap:8px;font:600 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .slotk{display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;font:700 12px/1 var(--f-body);letter-spacing:0}
 .mfull .tag{margin:0;font:500 13px/1.4 var(--f-body);color:var(--muted);max-width:none;display:block}
@@ -652,8 +664,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .wgroup{display:flex;flex-direction:column;gap:8px}
 .wgroup[hidden]{display:none}
 .mfoot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
-#col3 .mfoot{position:sticky;bottom:-14px;margin:auto -14px -14px;padding:10px 14px 14px;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--panel-ink) 4%,var(--panel)) 14px);z-index:2}
-#col3 .keys{display:none}
+#col4 .mfoot{position:sticky;bottom:-14px;margin:auto -14px -14px;padding:10px 14px 14px;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--panel-ink) 4%,var(--panel)) 14px);z-index:2}
+#col4 .keys{display:none}
 .mfull .d-guns .gp{aspect-ratio:2.7/1}.mfull .d-guns.cons .gp{aspect-ratio:1.6/1}
 #col3{gap:8px}#col3 .wgroup{gap:6px}
 .mfull .gun-opt .t{min-width:0}.mfull .gun-opt .t>*{flex:none}
@@ -662,7 +674,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .mstart.ready{background:#2fa84f !important}
 /* phones: the menu scrolls, so Start / Play float in the corner instead of sitting at the very bottom */
 @media (pointer:coarse) and (max-height:520px){
-  #menu #d-start,#menu #play{position:fixed;right:calc(max(14px,env(safe-area-inset-right,0px)) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:30;width:auto;min-width:150px;padding:12px 26px;font-size:20px;box-shadow:0 5px 0 rgba(0,0,0,.35),0 0 0 2px #14161c}
+  #menu #d-start,#menu #d-next,#menu #play{position:fixed;right:calc(max(14px,env(safe-area-inset-right,0px)) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:30;width:auto;min-width:150px;padding:12px 26px;font-size:20px;box-shadow:0 5px 0 rgba(0,0,0,.35),0 0 0 2px #14161c}
   #menu .mfoot{padding-bottom:64px}
 }
 
@@ -765,14 +777,13 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <h3 class="mstep"><i>2</i>Character</h3>
           <div class="d-prof" id="d-prof"></div>
           <div class="d-chars" id="d-chars"></div>
-          <div id="d-consrow" class="wgroup">
-            <div class="msub">Lethals <span class="eyebrow-note">press G in a match</span></div>
-            <div class="d-guns cons" id="d-consl"></div>
-            <div class="wdet" id="d-cdet"></div>
+          <div class="mfoot lobfoot">
+            <div class="mneed" id="d-need1"></div>
+            <button class="btn primary mstart" id="d-next">Next: Loadout</button>
           </div>
         </section>
         <section class="mcol dcol3" id="col3">
-          <h3 class="mstep"><i>3</i>Weapons</h3>
+          <h3 class="mstep"><button class="mback" id="d-back" title="Back to the lobby" aria-label="Back to the lobby">&#8249; Lobby</button><i>3</i>Weapons</h3>
           <div id="d-gungrp" class="wgroup">
             <div class="msub"><b class="slotk">1</b>Primary</div>
             <div class="d-guns" id="d-guns"></div>
@@ -784,6 +795,14 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
             <div class="wdet" id="d-sdet"></div>
           </div>
           <div class="rumble-info" id="d-rinfo" hidden><b>Fists only</b><span>No weapons to pick in Rumble. 15 damage a punch. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
+        </section>
+        <section class="mcol dcol4" id="col4">
+          <h3 class="mstep"><i>4</i>Lethals</h3>
+          <div id="d-consrow" class="wgroup">
+            <div class="msub">Pick one <span class="eyebrow-note">press G in a match</span></div>
+            <div class="d-guns cons" id="d-consl"></div>
+            <div class="wdet" id="d-cdet"></div>
+          </div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
             <button class="btn primary mstart" id="d-start">Start</button>
@@ -6896,9 +6915,9 @@ function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.sta
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'sniper');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
-function leave(){$('d-homebtn').hidden=true;clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
+function leave(){$('d-homebtn').hidden=true;S.mstep='lobby';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 function setMode(m){document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
-  const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;store.set('mode',m);
+  const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',m);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
   if(du)setDuelMode(m==='rumble'?'rumble':'duel');
   setTag();
@@ -7518,6 +7537,9 @@ function startImgQueue(){if(imgQ||menuImagesReady())return;imgQ=[...(previewsMad
 function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
   const t=imgQ.shift();if(t){try{t();}catch(e){console.warn('menu image',e);}if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);return;}
   imgQ=null;if(menuImagesReady())IMG_DB.put(imgVersion(),{prev:Object.assign({},PREV),thumbs:Object.assign({},thumbs)}).catch(()=>{});}
+// which duels menu screen is showing: 'lobby' or 'loadout' (Rumble is fists only, so it starts straight from the lobby)
+function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep=st;if(S.mode==='rumble')S.mstep='lobby';c.dataset.step=S.mstep||'lobby';const mc=document.querySelector('#menu .menu-card');if(mc)mc.scrollTop=0;for(const id of ['col1','col2','col3','col4'])$(id).scrollTop=0;}
+const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');return n;};
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a primary');if(!S.sec)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble';
@@ -7537,9 +7559,11 @@ function renderDuelMenu(){
   {const c=S.cons&&CONS[S.cons];$('d-cdet').innerHTML=c?`<b>${c.name}</b> ${c.desc}<span>${c.meta}</span>`:'Pick one';}
   $('d-consrow').hidden=ru;
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));
-  $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char&&(ru||!!S.cons));$('col3').classList.toggle('done',ru||(!!S.gun&&!!S.sec));
+  $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',ru||(!!S.gun&&!!S.sec));$('col4').classList.toggle('done',ru||!!S.cons);menuStep();
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';
-  $('d-need').textContent=need.length?'Choose '+need.join(', '):`Ready: ${CHARS[S.char].name} on ${MAPS[S.map].name} · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))}`;$('d-need').classList.toggle('ok',!need.length);}
+  $('d-need').textContent=need.length?'Choose '+need.join(', '):`Ready: ${CHARS[S.char].name} on ${MAPS[S.map].name} · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))}`;$('d-need').classList.toggle('ok',!need.length);
+  {const ln=lobbyNeeds(),nx=$('d-next');nx.textContent=ru?'Start':'Next: Loadout ›';nx.classList.toggle('ready',!(ru?need:ln).length);
+   $('d-need1').textContent=ln.length?'Choose '+ln.join(', '):ru?$('d-need').textContent:`${CHARS[S.char].name} on ${MAPS[S.map].name} · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))}`;$('d-need1').classList.toggle('ok',!ln.length);}}
 // the top map in the menu list for the current mode
 const topMap=()=>{const l=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode));return l.length?l[0][0]:null;};
 function setDuelMode(m){const prev=S.mode;S.mode=m==='rumble'?'rumble':'duel';store.set('duel:mode',S.mode);if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=topMap();}
@@ -7554,7 +7578,10 @@ $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]'
 $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);renderDuelMenu();setTag();});
 $('d-ffan').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;S.ffaN=+b.dataset.n;store.set('duel:ffan',S.ffaN);renderDuelMenu();setTag();});
 $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]');if(!b)return;S.diff=b.dataset.diff;store.set('duel:diff',S.diff);renderDuelMenu();});
-$('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col2'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});
+const flagNeed=need=>{const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col4'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}};
+$('d-next').addEventListener('click',()=>{if(S.mode==='rumble'){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);return;}menuStep('loadout');});
+$('d-back').addEventListener('click',()=>menuStep('lobby'));
+$('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep('lobby');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col4'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}
 $('duel-pause').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)showPV(g.dataset.go);});

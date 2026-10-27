@@ -3881,7 +3881,7 @@ function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
 /* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or
    mouths a skin used to stick on top are removed, so features never double up. mode 'smirk' is the crowning close-up. */
 const FACES={
-  blaze:{brow:'#ff6a1a',bw:13,browA:.32,eye:'#121318',mouth:'grin'},
+  blaze:{brow:'#ff6a1a',bw:13,browA:.32,eye:'#121318',mouth:'grin',noEyes:1},
   jet:{brow:'#5a3a1e',bw:9,browA:.12,mouth:'half',extra:'freckles'},
   blink:{brow:'#121318',bw:6,browA:-.25,arch:1,mouth:'sly',extra:'tache'},
   tank:{brow:'#2b1d12',bw:16,browA:.22,eyeS:.85,mouth:'flat',extra:'stubble'},
@@ -3901,14 +3901,14 @@ function drawFace(g,F,mode,bg){const W=256,sm=mode==='smirk';g.fillStyle=bg||'#f
   if(F.extra==='stubble'||F.extra==='beard'){g.fillStyle=F.extra==='beard'?'#3a2a1e':'rgba(60,60,70,.28)';if(F.extra==='beard'){g.beginPath();g.moveTo(40,150);g.quadraticCurveTo(128,262,216,150);g.lineTo(216,256);g.lineTo(40,256);g.fill();}else for(let i=0;i<90;i++){g.fillRect(60+Math.random()*136,165+Math.random()*60,2,2);}}
   if(F.extra==='leaves'){g.fillStyle='#6fae3a';for(const [x,y,r] of [[48,52,-.6],[214,60,.6]]){g.save();g.translate(x,y);g.rotate(r);g.beginPath();g.ellipse(0,0,12,6,0,0,TAU);g.fill();g.restore();}}
   // brows
-  const by=sm?[96,72]:[84,80];g.strokeStyle=F.brow;g.lineWidth=F.bw;
+  if(!F.noEyes){const by=sm?[96,72]:[84,80];g.strokeStyle=F.brow;g.lineWidth=F.bw;
   for(const s of [-1,1]){const cx=128+s*38,cy=s<0?by[0]:by[1],a=(sm&&s>0)?-.35:(sm?0:F.browA*s*-1);g.save();g.translate(cx,cy);g.rotate(a);g.beginPath();
     if(F.zig){g.moveTo(-26,4);g.lineTo(-9,-6);g.lineTo(6,4);g.lineTo(24,-6);}else{g.moveTo(-26,0);g.quadraticCurveTo(0,F.arch?-14:-6,26,0);}g.stroke();g.restore();}
   // eyes
   const es=F.eyeS||1;for(const s of [-1,1]){const x=128+s*38,y=118;g.fillStyle=ink;g.beginPath();g.ellipse(x,y,13*es,(sm&&s<0?11:18)*es,0,0,TAU);g.fill();
     if(F.iris){g.fillStyle=F.iris;g.beginPath();g.arc(x,y+2,7*es,0,TAU);g.fill();}
     if(sm&&s<0){g.fillStyle=bg||'#f4f5f7';g.fillRect(x-20,y-24,40,14);}
-    g.fillStyle='#fff';g.beginPath();g.arc(x+5,y-(sm&&s<0?2:8)*es,4.5*es,0,TAU);g.fill();}
+    g.fillStyle='#fff';g.beginPath();g.arc(x+5,y-(sm&&s<0?2:8)*es,4.5*es,0,TAU);g.fill();}}
   // mouth
   g.strokeStyle=ink;g.fillStyle=ink;g.lineWidth=7;g.save();if(F.extra==='tache')g.translate(0,12);const M=sm?'smirk':F.mouth;g.beginPath();
   if(M==='smirk'){g.moveTo(100,182);g.quadraticCurveTo(150,188,186,160);g.stroke();g.lineWidth=5;g.beginPath();g.moveTo(181,151);g.quadraticCurveTo(194,158,191,171);g.stroke();}
@@ -4154,10 +4154,10 @@ Object.assign(SKINS,{
     piece(l.p,RBX(.54,.36,.56,.08),plate,0,-.76,.02);
     for(const y of [-.7,-.79])piece(l.p,new THREE.BoxGeometry(.18,.032,.03),glow,0,y,.305,{outline:false});
     piece(l.p,new THREE.BoxGeometry(.56,.07,.64),orange,0,-.95,.04,{outline:false});piece(l.p,new THREE.BoxGeometry(.56,.05,.64),glowHot,0,-1.02,.04,{outline:false});}
-  // thermal visor goggles (keeps smile visible below y=.28) + faceted 3D flame hair crown
-  piece(h,RBX(.7,.13,.63,.04),dark,0,.43,0,{outline:false});piece(h,RBX(.66,.2,.14,.05),plate,0,.43,.27);
-  piece(h,new THREE.BoxGeometry(.58,.03,.15),orange,0,.52,.275,{outline:false});piece(h,RBX(.58,.14,.05,.03),lens,0,.43,.325,{outline:false});
-  piece(h,new THREE.BoxGeometry(.44,.026,.02),glowHot,0,.45,.355,{outline:false});
+  // thermal visor goggles covering the eyes + faceted 3D flame hair crown
+  piece(h,RBX(.7,.16,.63,.04),dark,0,.4,0,{outline:false});piece(h,RBX(.68,.24,.14,.05),plate,0,.4,.27);
+  piece(h,new THREE.BoxGeometry(.6,.035,.15),orange,0,.51,.275,{outline:false});piece(h,RBX(.6,.17,.05,.03),lens,0,.4,.325,{outline:false});
+  piece(h,new THREE.BoxGeometry(.46,.03,.02),glowHot,0,.42,.355,{outline:false});
   const hr=mat('#d93814',null,{roughness:.55});piece(h,RBX(.68,.15,.64,.07),hr,0,.66,-.01);piece(h,RBX(.68,.34,.14,.06),hr,0,.51,-.28);
   const fh=new THREE.Group();fh.position.set(0,.72,0);h.add(fh);const fc=['#ff3b1f','#ff6a1a','#ffb347','#ffe066'];
   [[-.22,.14,.3,1],[-.08,.16,.38,2],[.08,.16,.38,2],[.22,.14,.3,1],[-.26,-.02,.36,0],[-.12,0,.46,2],[0,.02,.54,3],[.12,0,.46,2],[.26,-.02,.36,0],[-.2,-.18,.34,0],[0,-.16,.42,1],[.2,-.18,.34,0]].forEach(([x,z,ht,ci])=>{
@@ -4278,9 +4278,6 @@ Object.assign(SKINS,{
   // heavy yellow greaves & hex knee pads
   for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.58,.66,.1),yel,0,-.62,.03);
     piece(l.p,RBX(.28,.24,.14,.05),yel,0,-.38,.32);piece(l.p,new THREE.BoxGeometry(.64,.08,.68),dark,0,-.84,.03,{outline:false});}
-  // cyan HUD scouter eyepiece over left eye
-  piece(h,RBX(.12,.1,.32,.02),grey,.34,.42,.14);piece(h,RBX(.24,.13,.04,.02),hudLens,.16,.42,.33,{outline:false});
-  piece(h,new THREE.BoxGeometry(.26,.025,.05),cyan,.16,.48,.33,{outline:false});
   ch.anim=(dt,t)=>{sm.children.forEach((p,i)=>{p.position.y=2.68+((t*.5+i*.3)%1)*.45;});};}
 });
 
@@ -4394,7 +4391,6 @@ Object.assign(SKINS,{
   // spiky glowing electric-yellow hair + cyan visor goggles
   for(let i=0;i<11;i++){const x=-.28+(i%6)*.11,z=i<6?.08:-.12;const c=new THREE.Mesh(new THREE.ConeGeometry(.095,.46+((i*5)%3)*.08,4),yelGlow);
     c.position.set(x+(i<6?0:.05),.82,z);c.rotation.set(-.18,0,-x*.75);h.add(c);}
-  piece(h,RBX(.7,.13,.65,.04),mat('#4a5260'),0,.44,0,{outline:false});piece(h,RBX(.58,.15,.08,.03),cyan,0,.44,.32,{outline:false});
   // twin tall angled copper Tesla coils rising high behind the shoulders + overhead jumping lightning arc above the hair
   for(const sx of [-1,1]){const g=new THREE.Group();g.position.set(sx*.48,2.22,-.2);g.rotation.z=-sx*.38;b.add(g);
     piece(g,new THREE.CylinderGeometry(.17,.17,.08,14),insul,0,-.34,0);piece(g,new THREE.CylinderGeometry(.16,.16,.08,14),insul,0,.36,0);
@@ -4456,7 +4452,6 @@ Object.assign(SKINS,{
     piece(l.p,new THREE.BoxGeometry(.26,.1,.04),pink,0,-.86,.35,{outline:false});
     piece(l.p,RBX(.56,.07,.64,.03),pinkGlow,0,-1.02,.04,{outline:false});}
   // cyan speed-visor sunglasses + hot-pink headband with flowing side ribbons + swept pink hair
-  piece(h,RBX(.66,.16,.12,.04),white,0,.43,.28);piece(h,RBX(.58,.11,.04,.03),cyanGlow,0,.43,.335,{outline:false});
   piece(h,RBX(.72,.11,.68,.04),pink,0,.56,0);
   const tail=new THREE.Group();tail.position.set(-.36,.56,-.04);h.add(tail);
   piece(tail,RBX(.44,.075,.06,.02),pink,-.22,.05,0,{rot:[0,0,-.22]});piece(tail,RBX(.48,.075,.06,.02),pink,-.26,-.08,0,{rot:[0,0,.18]});

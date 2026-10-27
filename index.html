@@ -3983,6 +3983,28 @@ function accessory0(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castS
 const OUTL=new THREE.MeshBasicMaterial({color:'#16171c',side:THREE.BackSide});
 const RBX=(w,h,d,r)=>B.roundedBox(w,h,d,Math.min(r,Math.min(w,h,d)*.45),3);
 const GLOW=c=>new THREE.MeshBasicMaterial({color:c,toneMapped:false});
+/* Minimal GLB reader for our own pre-split character models (no GLTFLoader needed): one material with base colour + emissive maps,
+   one mesh per body part, positions already relative to the part's pivot. Resolves to {parts:{name:BufferGeometry}, mat}. */
+function loadPartsGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(url+' '+r.status);return r.arrayBuffer();}).then(buf=>{
+  const dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
+  const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
+  const acc=i=>{const a=J.accessors[i],v=J.bufferViews[a.bufferView],C=T[a.componentType],o=bo+(v.byteOffset||0)+(a.byteOffset||0);return new C(buf.slice(o,o+a.count*NC[a.type]*C.BYTES_PER_ELEMENT));};
+  const tex=i=>{const im=J.images[J.textures[i].source],v=J.bufferViews[im.bufferView];const u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
+    return new Promise((ok,no)=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.needsUpdate=true;ok(t);},undefined,no);});};
+  const M=J.materials[0],pb=M.pbrMetallicRoughness;
+  return Promise.all([tex(pb.baseColorTexture.index),tex(M.emissiveTexture.index)]).then(([map,em])=>{
+    const mat=new THREE.MeshStandardMaterial({map,emissiveMap:em,emissive:0xffffff,emissiveIntensity:1,metalness:pb.metallicFactor,roughness:pb.roughnessFactor});
+    const parts={};for(const n of J.nodes){const p=J.meshes[n.mesh].primitives[0],g=new THREE.BufferGeometry();
+      g.setAttribute('position',new THREE.BufferAttribute(acc(p.attributes.POSITION),3));g.setAttribute('normal',new THREE.BufferAttribute(acc(p.attributes.NORMAL),3));
+      g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeBoundingSphere();parts[n.name]=g;}
+    return {parts,mat};});});}
+/* Sculpted character models (made in Tripo, split into the six moving parts offline). Until a model has loaded the built-in look is used;
+   once it arrives, Blazes sitting in the menu are rebuilt and everyone else picks it up at their next setLook. */
+const MODELS={},MODEL_URL={blaze:'chars/blaze.glb'};
+for(const id in MODEL_URL)loadPartsGLB(MODEL_URL[id]).then(m=>{MODELS[id]=m;try{if(S.state==='menu')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}}).catch(e=>console.warn('model',id,e));
+function modelSkin(ch,M){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
+  add(P.torso,ch.body);add(P.head,ch.headG);add(P.armL,ch.aL.p);add(P.armR,ch.aR.p);add(P.legL,ch.lL.p);add(P.legR,ch.lR.p);ch.model=true;
+  ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};}
 function piece(parent,geo,m,x,y,z,o){const me=new THREE.Mesh(geo,m);me.position.set(x,y,z);me.castShadow=true;parent.add(me);
   if(!o||o.outline!==false){const ol=new THREE.Mesh(geo,OUTL);ol.scale.setScalar(o&&o.ol||1.06);me.add(ol);}
   if(o&&o.rot)me.rotation.set(...o.rot);return me;}
@@ -4147,7 +4169,7 @@ Object.assign(SKINS,{
   const g=new THREE.Group();piece(g,RBX(.96,1.0,.42,.12),suitM,0,0,0);piece(g,RBX(.8,.2,.44,.06),orange,0,.3,0,{outline:false});for(const sx of [-.28,.28])piece(g,new THREE.CylinderGeometry(.1,.14,.2,10),grey,sx,-.58,0);
   jetFlames(g,[[-.28,0],[.28,0]],-.92);g.position.set(0,1.5,-.52);b.add(g);ch.jet=g;},
  /* ---------- BLAZE ---------- */
- blaze_brawler(ch){/* BLAZE — Pyro-Tech Inferno Suit: sculpted orange pauldrons, glowing heat-conduit chest armour with a flame core, forearm pyromancer gauntlets with glowing coils and side igniter nozzles, thermal visor goggles, twin backpack fuel canisters and a faceted 3D flame crown */
+ blaze_brawler(ch){if(MODELS.blaze)return modelSkin(ch,MODELS.blaze);/* BLAZE — Pyro-Tech Inferno Suit: sculpted orange pauldrons, glowing heat-conduit chest armour with a flame core, forearm pyromancer gauntlets with glowing coils and side igniter nozzles, thermal visor goggles, twin backpack fuel canisters and a faceted 3D flame crown */
   const dark=mat('#171920',null,{roughness:.55,metalness:.25}),plate=mat('#252832',null,{roughness:.45,metalness:.4}),orange=mat('#ff6a1a',null,{roughness:.42,metalness:.18}),
    orangeD=mat('#c8430c',null,{roughness:.5,metalness:.25}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),brass=mat('#e89b32',null,{metalness:.7,roughness:.28}),
    glow=GLOW('#ff6a1a'),glowHot=GLOW('#ffc847'),lens=new THREE.MeshStandardMaterial({color:'#ff8c1a',metalness:.75,roughness:.12,emissive:'#ff5500',emissiveIntensity:.65});
@@ -4591,7 +4613,7 @@ function mergeLeaves(p,refs){const groups=new Map();
       const og=new THREE.BufferGeometry();for(const n of ['position','normal']){if(!qs.every(q=>q.attributes[n]))continue;let len=0;for(const q of qs)len+=q.attributes[n].array.length;const arr=new Float32Array(len);let off=0;for(const q of qs){arr.set(q.attributes[n].array,off);off+=q.attributes[n].array.length;}og.setAttribute(n,new THREE.BufferAttribute(arr,3));}
       for(const q of qs)q.dispose();og.computeBoundingSphere();const om=new THREE.Mesh(og,xs[0].c.material);p.add(om);}}}
 
-function setLook(f,id){if(f.char===id&&f.ch)return;if(f.ch)scene.remove(f.ch.root);const L=buildLook(id);f.ch=L.ch;f.guns=L.guns;f.char=id;scene.add(f.ch.root);f.slot=-1;equip(f,0);f.ghostShown=null;}
+function setLook(f,id){if(f.char===id&&f.ch&&(f.ch.model||!MODELS[id]))return;if(f.ch)scene.remove(f.ch.root);const L=buildLook(id);f.ch=L.ch;f.guns=L.guns;f.char=id;scene.add(f.ch.root);f.slot=-1;equip(f,0);f.ghostShown=null;}
 function setGhost(f,a){if(f.ghostShown===a)return;f.ghostShown=a;f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];
     if(ms.some(m=>m&&m.side===THREE.BackSide)){o.visible=a>.9;return;}for(const m of ms){if(!m)continue;if(m.userData.o0===undefined)m.userData.o0=m.opacity;m.transparent=a<.99||m.userData.o0<1;m.opacity=m.userData.o0*a;m.depthWrite=a>.99;}});}
 function makeFighter(bot){

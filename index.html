@@ -3994,16 +3994,27 @@ function loadPartsGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(u
   const M=J.materials[0],pb=M.pbrMetallicRoughness;
   return Promise.all([tex(pb.baseColorTexture.index),tex(M.emissiveTexture.index)]).then(([map,em])=>{
     const mat=new THREE.MeshStandardMaterial({map,emissiveMap:em,emissive:0xffffff,emissiveIntensity:1,metalness:pb.metallicFactor,roughness:pb.roughnessFactor});
-    const parts={};for(const n of J.nodes){const p=J.meshes[n.mesh].primitives[0],g=new THREE.BufferGeometry();
+    const parts={},piv={};for(const n of J.nodes){piv[n.name]=n.translation;const p=J.meshes[n.mesh].primitives[0],g=new THREE.BufferGeometry();
       g.setAttribute('position',new THREE.BufferAttribute(acc(p.attributes.POSITION),3));g.setAttribute('normal',new THREE.BufferAttribute(acc(p.attributes.NORMAL),3));
       g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeBoundingSphere();parts[n.name]=g;}
-    return {parts,mat};});});}
-/* Sculpted character models (made in Tripo, split into the six moving parts offline). Until a model has loaded the built-in look is used;
-   once it arrives, Blazes sitting in the menu are rebuilt and everyone else picks it up at their next setLook. */
-const MODELS={},MODEL_URL={blaze:'chars/blaze.glb',blink:'chars/blink.glb'};
-for(const id in MODEL_URL)loadPartsGLB(MODEL_URL[id]).then(m=>{MODELS[id]=m;try{if(S.state==='menu')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}}).catch(e=>console.warn('model',id,e));
-function modelSkin(ch,M){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
+    return {parts,piv,mat};});});}
+/* Sculpted character models (made in Tripo, split into the six moving parts offline, each carrying its own shoulder and hip pivots).
+   A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
+   built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
+   their next setLook. */
+const MODELS={},MODEL_LOAD={},MODEL_IDS=['blaze','blink','brute','frost','ghost','hook','jet','patch','tank','thorn','volt','zip'];
+function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))return MODEL_LOAD[id];
+  return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>{MODELS[id]=m;try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
+    .catch(e=>{console.warn('model',id,e);delete MODEL_LOAD[id];});}
+function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
+setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const p=needModel(MODEL_IDS[i++]);(p||Promise.resolve()).then(next,next);};next();},2500);
+function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
   add(P.torso,ch.body);add(P.head,ch.headG);add(P.armL,ch.aL.p);add(P.armR,ch.aR.p);add(P.legL,ch.lL.p);add(P.legR,ch.lR.p);ch.model=true;
+  for(const [k,o] of [['armL',ch.aL.p],['armR',ch.aR.p],['legL',ch.lL.p],['legR',ch.lR.p]])if(M.piv[k])o.position.fromArray(M.piv[k]);
+  if(!P.armR.boundingBox)P.armR.computeBoundingBox();ch.handY=Math.min(-.7,P.armR.boundingBox.min.y+.14);
+  if(id==='jet'){const g=new THREE.Group(),fm=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,toneMapped:false}),fl=[];
+    for(const x of [-.465,0,.465]){const c=new THREE.Mesh(new THREE.ConeGeometry(.11,.5,10).rotateX(Math.PI),fm);c.position.set(x,1.02,-.43);c.visible=false;g.add(c);fl.push(c);}
+    g.userData.flames=fl;ch.body.add(g);ch.jet=g;}
   ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};}
 function piece(parent,geo,m,x,y,z,o){const me=new THREE.Mesh(geo,m);me.position.set(x,y,z);me.castShadow=true;parent.add(me);
   if(!o||o.outline!==false){const ol=new THREE.Mesh(geo,OUTL);ol.scale.setScalar(o&&o.ol||1.06);me.add(ol);}
@@ -4015,7 +4026,7 @@ function pixelTex(rows,pal){const h=rows.length,w=rows[0].length,cv=document.cre
   const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.colorSpace=THREE.SRGBColorSpace;return t;}
 const SKINS={
  // A — Cyber-Horned Wraith (Option 1: dark obsidian armour, high-collar cape, glowing red eyes, segmented cyan horns, crystal chest cluster, floating voxels, glowing cyan hands & soles)
- shroud(ch){hideBase(ch);const ob=mat('#252a36',null,{roughness:.48,metalness:.38}),obD=mat('#171a22',null,{roughness:.6,metalness:.28}),capeM=mat('#12161f',null,{roughness:.85}),voidM=mat('#07080c',null,{roughness:1}),
+ shroud(ch){{const M=modelFor('ghost');if(M)return modelSkin(ch,M,'ghost');}hideBase(ch);const ob=mat('#252a36',null,{roughness:.48,metalness:.38}),obD=mat('#171a22',null,{roughness:.6,metalness:.28}),capeM=mat('#12161f',null,{roughness:.85}),voidM=mat('#07080c',null,{roughness:1}),
    cyan=GLOW('#78f6ff'),cyanSoft=new THREE.MeshStandardMaterial({color:'#78f6ff',emissive:'#38d8ff',emissiveIntensity:.85,roughness:.2}),redEye=GLOW('#ff3352');
   const b=ch.body,h=ch.headG;
   // segmented obsidian torso & abdomen plates
@@ -4111,7 +4122,7 @@ function jetFlames(g,pts,y){const fm=new THREE.MeshBasicMaterial({color:'#ffb347
 const skinTone=()=>mat('#f4f5f7',null,{roughness:.6});
 Object.assign(SKINS,{
  /* ---------- JET (Option 2: Supersonic Jet Racer) ---------- */
- jet_pilot(ch){const blue=mat('#1d4ed8',null,{roughness:.42,metalness:.15}),blueD=mat('#15389e',null,{roughness:.5}),white=mat('#f4f6fa',null,{roughness:.35}),red=mat('#dc2626',null,{roughness:.4}),
+ jet_pilot(ch){{const M=modelFor('jet');if(M)return modelSkin(ch,M,'jet');}const blue=mat('#1d4ed8',null,{roughness:.42,metalness:.15}),blueD=mat('#15389e',null,{roughness:.5}),white=mat('#f4f6fa',null,{roughness:.35}),red=mat('#dc2626',null,{roughness:.4}),
    visor=new THREE.MeshStandardMaterial({color:'#f5b82e',metalness:.88,roughness:.1,emissive:'#9a6200',emissiveIntensity:.3}),flameGlow=GLOW('#ff9824'),flameCore=GLOW('#ffe866');
   suit(ch,{torso:blue,arms:blue,legs:blue,shoes:blue,hands:blueD});hideBase(ch,{head:true,torso:true,arms:true,legs:true});const b=ch.body,h=ch.headG;
   // aerodynamic racing stripes framing the torso + chest badge
@@ -4169,7 +4180,7 @@ Object.assign(SKINS,{
   const g=new THREE.Group();piece(g,RBX(.96,1.0,.42,.12),suitM,0,0,0);piece(g,RBX(.8,.2,.44,.06),orange,0,.3,0,{outline:false});for(const sx of [-.28,.28])piece(g,new THREE.CylinderGeometry(.1,.14,.2,10),grey,sx,-.58,0);
   jetFlames(g,[[-.28,0],[.28,0]],-.92);g.position.set(0,1.5,-.52);b.add(g);ch.jet=g;},
  /* ---------- BLAZE ---------- */
- blaze_brawler(ch){if(MODELS.blaze)return modelSkin(ch,MODELS.blaze);/* BLAZE — Pyro-Tech Inferno Suit: sculpted orange pauldrons, glowing heat-conduit chest armour with a flame core, forearm pyromancer gauntlets with glowing coils and side igniter nozzles, thermal visor goggles, twin backpack fuel canisters and a faceted 3D flame crown */
+ blaze_brawler(ch){{const M=modelFor('blaze');if(M)return modelSkin(ch,M,'blaze');}/* BLAZE — Pyro-Tech Inferno Suit: sculpted orange pauldrons, glowing heat-conduit chest armour with a flame core, forearm pyromancer gauntlets with glowing coils and side igniter nozzles, thermal visor goggles, twin backpack fuel canisters and a faceted 3D flame crown */
   const dark=mat('#171920',null,{roughness:.55,metalness:.25}),plate=mat('#252832',null,{roughness:.45,metalness:.4}),orange=mat('#ff6a1a',null,{roughness:.42,metalness:.18}),
    orangeD=mat('#c8430c',null,{roughness:.5,metalness:.25}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),brass=mat('#e89b32',null,{metalness:.7,roughness:.28}),
    glow=GLOW('#ff6a1a'),glowHot=GLOW('#ffc847'),lens=new THREE.MeshStandardMaterial({color:'#ff8c1a',metalness:.75,roughness:.12,emissive:'#ff5500',emissiveIntensity:.65});
@@ -4248,7 +4259,7 @@ Object.assign(SKINS,{
   const tails=new THREE.Group();tails.position.set(0,.5,-.33);h.add(tails);for(const sx of [-1,1])piece(tails,new THREE.BoxGeometry(.08,.5,.03),mask,sx*.06,-.25,0,{rot:[.4,0,sx*.25]});
   const kat=new THREE.Group();kat.position.set(0,1.5,-.34);kat.rotation.z=.7;b.add(kat);piece(kat,new THREE.BoxGeometry(.08,1.5,.06),mat('#dfe3ea',null,{metalness:.85,roughness:.2}),0,.35,0);piece(kat,new THREE.BoxGeometry(.24,.06,.1),mat('#ffc61a',null,{metalness:.6}),0,-.42,0);piece(kat,new THREE.BoxGeometry(.08,.36,.07),mat('#16131f'),0,-.62,0);
   ch.anim=(dt,t)=>{tails.rotation.x=.2+Math.sin(t*5)*.25;};},
- blink_magician(ch){if(MODELS.blink)return modelSkin(ch,MODELS.blink);/* BLINK — Option 1: Grand Illusionist (royal velvet tailcoat with gold filigree, high-collar crimson cape, glowing magenta hatband top hat, glowing wand & wide arc of floating neon rune cards) */
+ blink_magician(ch){{const M=modelFor('blink');if(M)return modelSkin(ch,M,'blink');}/* BLINK — Option 1: Grand Illusionist (royal velvet tailcoat with gold filigree, high-collar crimson cape, glowing magenta hatband top hat, glowing wand & wide arc of floating neon rune cards) */
   const coat=mat('#4f2682',null,{roughness:.55}),black=mat('#15161c',null,{roughness:.45}),gold=mat('#e8b948',null,{metalness:.75,roughness:.25}),
    red=mat('#c81e28',null,{roughness:.5}),white=mat('#f6f6f2'),pinkGlow=GLOW('#ff4fd8'),cardFace=mat('#2a1448',null,{roughness:.4,emissive:'#7a1fa2',emissiveIntensity:.45});
   suit(ch,{torso:coat,arms:coat,legs:black,shoes:red,hands:skinTone()});const b=ch.body,h=ch.headG;
@@ -4307,7 +4318,7 @@ Object.assign(SKINS,{
   for(const a of [ch.aL,ch.aR])piece(a.p,RBX(.5,.5,.5,.08),skinTone(),0,-.67,0);
   piece(h,RBX(.8,.3,.8,.14),orange,0,.7,0);piece(h,RBX(.9,.06,.92,.03),orange,0,.58,.04);piece(h,new THREE.BoxGeometry(.12,.18,.8),mat('#ffb347'),0,.82,0,{outline:false});
   piece(h,RBX(.68,.26,.12,.06),beard,0,.06,.28);piece(h,new THREE.BoxGeometry(.3,.06,.04),beard,0,.2,.32,{outline:false});},
- tank_mech(ch){/* TANK — Option 1: Upgraded Heavy Exo-Suit (chunky yellow/gunmetal plating, glowing cyan hex shield core, twin smoking exhaust stacks, arm hydraulic pistons, forearm cyan emitters & HUD eyepiece) */
+ tank_mech(ch){{const M=modelFor('tank');if(M)return modelSkin(ch,M,'tank');}/* TANK — Option 1: Upgraded Heavy Exo-Suit (chunky yellow/gunmetal plating, glowing cyan hex shield core, twin smoking exhaust stacks, arm hydraulic pistons, forearm cyan emitters & HUD eyepiece) */
   const yel=mat('#f2b718',null,{metalness:.3,roughness:.42}),dark=mat('#282c36',null,{metalness:.5,roughness:.45}),grey=mat('#68707e',null,{metalness:.65,roughness:.35}),
    cyan=GLOW('#1ff0ff'),hudLens=new THREE.MeshStandardMaterial({color:'#24f0ff',transparent:true,opacity:.72,emissive:'#00c8ff',emissiveIntensity:.6,roughness:.1});
   suit(ch,{torso:dark,arms:dark,legs:dark,shoes:yel,hands:dark,noHair:false,tw:1.18,td:.68});const b=ch.body,h=ch.headG;
@@ -4342,7 +4353,7 @@ Object.assign(SKINS,{
 /* ---------- new roster skins ---------- */
 Object.assign(SKINS,{
  /* BRUTE — Option 3: Cyber-Gorilla Mecha-Beast (hulking gunmetal & hazard-orange cybernetic ape armour, glowing red optic visor, mechanical fanged jaw & seismic-smash fists) */
- brute_smash(ch){const gun=mat('#5c6270',null,{roughness:.4,metalness:.55}),gunD=mat('#282c35',null,{roughness:.55,metalness:.4}),orange=mat('#e57c24',null,{roughness:.4,metalness:.25}),
+ brute_smash(ch){{const M=modelFor('brute');if(M)return modelSkin(ch,M,'brute');}const gun=mat('#5c6270',null,{roughness:.4,metalness:.55}),gunD=mat('#282c35',null,{roughness:.55,metalness:.4}),orange=mat('#e57c24',null,{roughness:.4,metalness:.25}),
    steel=mat('#dfe5ef',null,{metalness:.88,roughness:.18}),redGlow=GLOW('#ff1e38'),ambGlow=GLOW('#ff7a1a');
   hideBase(ch,{head:true});hideHair(ch);const b=ch.body,h=ch.headG;b.scale.setScalar(1.14);
   // massive segmented gunmetal chest & abdomen with burnt-orange shoulder harness
@@ -4374,7 +4385,7 @@ Object.assign(SKINS,{
   for(let i=0;i<4;i++)piece(h,new THREE.BoxGeometry(.045,.09,.03),steel,-.09+i*.06,.15,.44,{outline:false});},
 
  /* FROST — Option 2: Cryo-Tech Valkyrie (white & cyan cryo-armour, glowing liquid-nitrogen tubes, winged Valkyrie visor tiara & cold-vent shoulder pods) */
- frost_mage(ch){const white=mat('#f2f7fc',null,{roughness:.32,metalness:.15}),cyanM=mat('#5ab8d8',null,{roughness:.45,metalness:.2}),dark=mat('#2a4660',null,{roughness:.5}),
+ frost_mage(ch){{const M=modelFor('frost');if(M)return modelSkin(ch,M,'frost');}const white=mat('#f2f7fc',null,{roughness:.32,metalness:.15}),cyanM=mat('#5ab8d8',null,{roughness:.45,metalness:.2}),dark=mat('#2a4660',null,{roughness:.5}),
    cyanGlow=GLOW('#4ef2ff'),visor=new THREE.MeshStandardMaterial({color:'#4ee8ff',metalness:.82,roughness:.1,emissive:'#18b8e0',emissiveIntensity:.55}),
    wingM=new THREE.MeshStandardMaterial({color:'#7ef4ff',transparent:true,opacity:.88,emissive:'#38d8ff',emissiveIntensity:.65,roughness:.1});
   suit(ch,{torso:cyanM,arms:cyanM,legs:cyanM,shoes:white,hands:dark,tw:1.12,td:.62});const b=ch.body,h=ch.headG;for(const m of ch.head.material)if(m.color)m.color.set('#edf6fc');
@@ -4405,7 +4416,7 @@ Object.assign(SKINS,{
   piece(h,new THREE.BoxGeometry(.13,.16,.04),cyanGlow,0,.58,.35,{outline:false,rot:[0,0,Math.PI/4]});},
 
  /* PATCH — Option 1: Upgraded Chief Surgeon (white lab coat with red lapels, teal scrubs, stethoscope, wide red med-kit backpack, glowing cross headlamp & cyan surgical gloves) */
- patch_medic(ch){const coat=mat('#f4f6fa',null,{roughness:.7}),scrub=mat('#2ca59a',null,{roughness:.8}),red=mat('#dc2e26',null,{roughness:.55}),white=mat('#ffffff',null,{roughness:.5}),
+ patch_medic(ch){{const M=modelFor('patch');if(M)return modelSkin(ch,M,'patch');}const coat=mat('#f4f6fa',null,{roughness:.7}),scrub=mat('#2ca59a',null,{roughness:.8}),red=mat('#dc2e26',null,{roughness:.55}),white=mat('#ffffff',null,{roughness:.5}),
    dark=mat('#383d48',null,{roughness:.45}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),glove=new THREE.MeshStandardMaterial({color:'#1ff0ff',emissive:'#00d8f0',emissiveIntensity:.55,roughness:.25}),
    greenGlow=GLOW('#42ff6b'),lensGlow=GLOW('#a8ffbe');
   suit(ch,{torso:coat,arms:coat,legs:scrub,shoes:scrub,hands:glove});const b=ch.body,h=ch.headG;
@@ -4434,7 +4445,7 @@ Object.assign(SKINS,{
   piece(h,new THREE.BoxGeometry(.13,.042,.02),greenGlow,0,.66,.39,{outline:false});piece(h,new THREE.BoxGeometry(.042,.13,.02),greenGlow,0,.66,.39,{outline:false});},
 
  /* VOLT — Option 1: Tesla Coil Punk (yellow punk jacket with black lapels, twin tall angled copper Tesla coils with overhead jumping electric arc, spiky yellow hair & shock gauntlets) */
- volt_zapper(ch){const jacket=mat('#f8cc28',null,{roughness:.45}),black=mat('#181a20',null,{roughness:.55}),copper=mat('#c87332',null,{metalness:.75,roughness:.28}),
+ volt_zapper(ch){{const M=modelFor('volt');if(M)return modelSkin(ch,M,'volt');}const jacket=mat('#f8cc28',null,{roughness:.45}),black=mat('#181a20',null,{roughness:.55}),copper=mat('#c87332',null,{metalness:.75,roughness:.28}),
    insul=mat('#2ed8e8',null,{roughness:.3,emissive:'#12a8c8',emissiveIntensity:.45}),yelGlow=GLOW('#fff04d'),cyan=GLOW('#78f6ff');
   suit(ch,{torso:black,arms:jacket,legs:black,shoes:black,hands:black});const b=ch.body,h=ch.headG;
   // yellow jacket panels, black notched lapels & glowing lightning bolt on inner shirt
@@ -4461,7 +4472,7 @@ Object.assign(SKINS,{
   ch.anim=(dt,t)=>{arcG.position.y=Math.sin(t*35)*.03;arcG.rotation.z=Math.sin(t*29)*.04;};},
 
  /* HOOK — Option 1: Upgraded Brawny Mountaineer (red-and-black buffalo-plaid jacket with cream shearling collar/cuffs, full climbing harness with carabiners, coiled shoulder rope, 3-prong grapple hook, beard & blue pom-pom beanie) */
- hook_climber(ch){const plaidRows=[],R='r',D='d',K='k';for(let y=0;y<24;y++){let row='';for(let x=0;x<24;x++){const by=Math.floor(y/3)&1,bx=Math.floor(x/3)&1;row+=by&&bx?K:(by||bx?D:R);}plaidRows.push(row);}
+ hook_climber(ch){{const M=modelFor('hook');if(M)return modelSkin(ch,M,'hook');}const plaidRows=[],R='r',D='d',K='k';for(let y=0;y<24;y++){let row='';for(let x=0;x<24;x++){const by=Math.floor(y/3)&1,bx=Math.floor(x/3)&1;row+=by&&bx?K:(by||bx?D:R);}plaidRows.push(row);}
   const plaidT=pixelTex(plaidRows,{r:'#d42620',d:'#8f1712',k:'#18191e'});
   const plaid=new THREE.MeshStandardMaterial({map:plaidT,roughness:.8}),fur=mat('#e8dec6',null,{roughness:.95}),strap=mat('#5c3d26',null,{roughness:.65}),
    rope=mat('#d8a438',null,{roughness:.75}),steel=mat('#9aa2ae',null,{metalness:.8,roughness:.25}),brass=mat('#d8a838',null,{metalness:.75,roughness:.25}),
@@ -4492,7 +4503,7 @@ Object.assign(SKINS,{
   piece(h,RBX(.76,.16,.72,.06),blue,0,.6,0);piece(h,RBX(.72,.26,.68,.12),blue,0,.74,0);piece(h,new THREE.SphereGeometry(.11,10,8),blue,0,.92,0);},
 
  /* ZIP — Option 1: Neon Track Star (teal tracksuit with pink/white lightning bolts, flowing pink headband, cyan speed visor & glowing neon-pink kinetic soles) */
- zip_runner(ch){const teal=mat('#19b5b0',null,{roughness:.5}),white=mat('#f6f8fa',null,{roughness:.45}),pink=mat('#ff4ca8',null,{roughness:.45}),
+ zip_runner(ch){{const M=modelFor('zip');if(M)return modelSkin(ch,M,'zip');}const teal=mat('#19b5b0',null,{roughness:.5}),white=mat('#f6f8fa',null,{roughness:.45}),pink=mat('#ff4ca8',null,{roughness:.45}),
    dark=mat('#2a2e38',null,{roughness:.6}),pinkGlow=GLOW('#ff38a8'),cyanGlow=GLOW('#4ce8ff');
   suit(ch,{torso:teal,arms:teal,legs:teal,shoes:white,hands:dark});const b=ch.body,h=ch.headG;
   // raised track collar, center zip & dual white/pink lightning bolts on chest
@@ -4518,7 +4529,7 @@ Object.assign(SKINS,{
   ch.anim=(dt,t)=>{tail.rotation.z=Math.sin(t*8)*.15;};},
 
  /* THORN — Option 3: Bio-Toxic Venus Jungle Guardian (gnarled bark & jungle-green symbiote armour, glowing neon-green veins, wide-open carnivorous Venus-flytrap shoulder jaws & tropical leaf/thorn crown) */
- thorn_warden(ch){const bark=mat('#3b281a',null,{roughness:.92}),green=mat('#2d8e2b',null,{roughness:.6}),tealLeaf=mat('#1f7a52',null,{roughness:.65}),
+ thorn_warden(ch){{const M=modelFor('thorn');if(M)return modelSkin(ch,M,'thorn');}const bark=mat('#3b281a',null,{roughness:.92}),green=mat('#2d8e2b',null,{roughness:.6}),tealLeaf=mat('#1f7a52',null,{roughness:.65}),
    mouth=mat('#c8285c',null,{roughness:.55}),tooth=mat('#f5efe0',null,{roughness:.45}),glow=GLOW('#7fff24');
   hideBase(ch,{head:true});hideHair(ch);suit(ch,{torso:bark,arms:bark,legs:bark,shoes:bark,hands:bark,tw:1.14,td:.64});const b=ch.body,h=ch.headG;
   // jungle-green symbiote chest plates & glowing bioluminescent veins
@@ -4555,7 +4566,7 @@ Object.assign(SKINS,{
 });
 /* ================= fighters ================= */
 function buildLook(id){const ch=B.buildCharacter(CHARS[id].look);ch.root.rotation.order='YXZ';ch.aL.p.rotation.order='YXZ';ch.aR.p.rotation.order='YXZ';accessory(ch,id);
-  const guns={};for(const k of Object.keys(GUNS)){if(GUNS[k].type==='ability')continue;const g=gunModel(k);g.position.set(0,-.86,.06);g.rotation.x=Math.PI/2;g.visible=false;ch.aR.p.add(g);guns[k]=g;if(k==='duals'){const t=gunModel(k);t.position.set(0,-.86,.06);t.rotation.x=Math.PI/2;t.visible=false;ch.aL.p.add(t);g.userData.twin=t;}}
+  const guns={},hy=ch.handY||-.86;for(const k of Object.keys(GUNS)){if(GUNS[k].type==='ability')continue;const g=gunModel(k);g.position.set(0,hy,.06);g.rotation.x=Math.PI/2;g.visible=false;ch.aR.p.add(g);guns[k]=g;if(k==='duals'){const t=gunModel(k);t.position.set(0,hy,.06);t.rotation.x=Math.PI/2;t.visible=false;ch.aL.p.add(t);g.userData.twin=t;}}
   const bub=new THREE.Mesh(new THREE.SphereGeometry(1.75,24,16),new THREE.MeshBasicMaterial({color:'#7fd3ff',transparent:true,opacity:.22,depthWrite:false}));bub.position.y=1.25;bub.visible=false;ch.root.add(bub);ch.bubble=bub;
   ch.root.traverse(o=>{if(o.isMesh&&o.material&&!Array.isArray(o.material)&&o.material.transparent===false&&o.material.type!=='MeshBasicMaterial'){}});slimLook(ch,guns);return{ch,guns};}
 /* Fewer draw calls per character (phones): each multi-material box (torso, arms, legs, head) gets one small texture sheet instead of
@@ -4613,7 +4624,7 @@ function mergeLeaves(p,refs){const groups=new Map();
       const og=new THREE.BufferGeometry();for(const n of ['position','normal']){if(!qs.every(q=>q.attributes[n]))continue;let len=0;for(const q of qs)len+=q.attributes[n].array.length;const arr=new Float32Array(len);let off=0;for(const q of qs){arr.set(q.attributes[n].array,off);off+=q.attributes[n].array.length;}og.setAttribute(n,new THREE.BufferAttribute(arr,3));}
       for(const q of qs)q.dispose();og.computeBoundingSphere();const om=new THREE.Mesh(og,xs[0].c.material);p.add(om);}}}
 
-function setLook(f,id){if(f.char===id&&f.ch&&(f.ch.model||!MODELS[id]))return;if(f.ch)scene.remove(f.ch.root);const L=buildLook(id);f.ch=L.ch;f.guns=L.guns;f.char=id;scene.add(f.ch.root);f.slot=-1;equip(f,0);f.ghostShown=null;}
+function setLook(f,id){if(f.char===id&&f.ch&&(f.ch.model||!MODELS[id]))return;needModel(id);if(f.ch)scene.remove(f.ch.root);const L=buildLook(id);f.ch=L.ch;f.guns=L.guns;f.char=id;scene.add(f.ch.root);f.slot=-1;equip(f,0);f.ghostShown=null;}
 function setGhost(f,a){if(f.ghostShown===a)return;f.ghostShown=a;f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];
     if(ms.some(m=>m&&m.side===THREE.BackSide)){o.visible=a>.9;return;}for(const m of ms){if(!m)continue;if(m.userData.o0===undefined)m.userData.o0=m.opacity;m.transparent=a<.99||m.userData.o0<1;m.opacity=m.userData.o0*a;m.depthWrite=a>.99;}});}
 function makeFighter(bot){

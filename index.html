@@ -4000,7 +4000,7 @@ function loadPartsGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(u
     return {parts,mat};});});}
 /* Sculpted character models (made in Tripo, split into the six moving parts offline). Until a model has loaded the built-in look is used;
    once it arrives, Blazes sitting in the menu are rebuilt and everyone else picks it up at their next setLook. */
-const MODELS={},MODEL_URL={blaze:'chars/blaze.glb'};
+const MODELS={},MODEL_URL={blaze:'chars/blaze.glb',blink:'chars/blink.glb'};
 for(const id in MODEL_URL)loadPartsGLB(MODEL_URL[id]).then(m=>{MODELS[id]=m;try{if(S.state==='menu')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}}).catch(e=>console.warn('model',id,e));
 function modelSkin(ch,M){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
   add(P.torso,ch.body);add(P.head,ch.headG);add(P.armL,ch.aL.p);add(P.armR,ch.aR.p);add(P.legL,ch.lL.p);add(P.legR,ch.lR.p);ch.model=true;
@@ -4248,7 +4248,7 @@ Object.assign(SKINS,{
   const tails=new THREE.Group();tails.position.set(0,.5,-.33);h.add(tails);for(const sx of [-1,1])piece(tails,new THREE.BoxGeometry(.08,.5,.03),mask,sx*.06,-.25,0,{rot:[.4,0,sx*.25]});
   const kat=new THREE.Group();kat.position.set(0,1.5,-.34);kat.rotation.z=.7;b.add(kat);piece(kat,new THREE.BoxGeometry(.08,1.5,.06),mat('#dfe3ea',null,{metalness:.85,roughness:.2}),0,.35,0);piece(kat,new THREE.BoxGeometry(.24,.06,.1),mat('#ffc61a',null,{metalness:.6}),0,-.42,0);piece(kat,new THREE.BoxGeometry(.08,.36,.07),mat('#16131f'),0,-.62,0);
   ch.anim=(dt,t)=>{tails.rotation.x=.2+Math.sin(t*5)*.25;};},
- blink_magician(ch){/* BLINK — Option 1: Grand Illusionist (royal velvet tailcoat with gold filigree, high-collar crimson cape, glowing magenta hatband top hat, glowing wand & wide arc of floating neon rune cards) */
+ blink_magician(ch){if(MODELS.blink)return modelSkin(ch,MODELS.blink);/* BLINK — Option 1: Grand Illusionist (royal velvet tailcoat with gold filigree, high-collar crimson cape, glowing magenta hatband top hat, glowing wand & wide arc of floating neon rune cards) */
   const coat=mat('#4f2682',null,{roughness:.55}),black=mat('#15161c',null,{roughness:.45}),gold=mat('#e8b948',null,{metalness:.75,roughness:.25}),
    red=mat('#c81e28',null,{roughness:.5}),white=mat('#f6f6f2'),pinkGlow=GLOW('#ff4fd8'),cardFace=mat('#2a1448',null,{roughness:.4,emissive:'#7a1fa2',emissiveIntensity:.45});
   suit(ch,{torso:coat,arms:coat,legs:black,shoes:red,hands:skinTone()});const b=ch.body,h=ch.headG;

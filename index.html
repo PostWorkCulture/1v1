@@ -703,6 +703,43 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 @media (max-width:1100px){.m3{grid-template-columns:1fr 1fr}.dcol3{grid-column:span 2}.mfull.pk .m3{grid-template-columns:1fr 1fr}.mfull #mxp{max-width:none}}
 @media (max-width:720px),(max-height:520px) and (max-width:1000px){#menu .menu-card.mfull{overflow-y:auto}.m3{display:flex;flex-direction:column;flex:none}.mcol{overflow:visible;flex:none}.mfull .mhead{flex-wrap:wrap}.mfull #mxp{order:3;flex-basis:100%}.mfull .levels{grid-template-columns:1fr 1fr}}
 @media (max-height:760px) and (min-width:721px){.d-prof{min-height:150px;grid-template-columns:120px 1fr}.d-prof img{width:120px;height:150px}.gun-opt .gp{aspect-ratio:2.6/1}.mfull .map-opt .thumb{width:96px;flex-basis:96px}}
+
+/* ===== menu v2: full-screen white, icons top right, maps first, compact character tiles ===== */
+#menu{background:var(--panel,#fff)}
+#menu .menu-card.mfull{inset:0;border:0;border-radius:0;box-shadow:none;padding:max(16px,env(safe-area-inset-top,0px)) max(22px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(22px,env(safe-area-inset-left,0px))}
+.mfull .mhead{position:relative}
+.micons{display:flex;gap:8px;margin-left:auto;flex:none;position:relative}
+.micon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;border:2px solid var(--panel-ink);background:var(--panel,#fff);color:var(--panel-ink);cursor:pointer}
+.micon:hover,.micon[aria-expanded="true"]{background:var(--panel-ink);color:var(--panel,#fff)}
+.mpop{position:absolute;top:calc(100% + 8px);right:0;z-index:30;min-width:280px;padding:14px 16px;border-radius:14px;border:2px solid var(--panel-ink);background:var(--panel,#fff);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:12px}
+.mpop[hidden]{display:none}
+.mpop-h{font:700 13px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mpop .mvol{flex-direction:column;align-items:stretch;gap:12px;width:auto}
+.mpop .mvol label{justify-content:space-between;gap:10px;font-size:13px}
+.mpop .mvol input{width:150px}
+.mpop .mnet{flex-direction:column;align-items:stretch;gap:10px}
+.mpop .mnet input{width:auto}
+.mpop .mnet .net-or{text-align:center}
+#col1 .msub:first-of-type{margin-top:4px}
+#col1 .mode{width:100%}
+#menu #col1 .d-maps{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#menu #col1 .map-opt{padding:5px 5px 7px;gap:4px}
+#menu #col1 .map-opt .thumb{aspect-ratio:16/10;height:auto}
+#menu #col1 .map-opt .thumb img{width:100%;height:100%;object-fit:cover}
+#menu #col1 .map-opt .b{display:none}
+#menu #col1 .map-opt .t{font-size:13px}
+#menu #col1 .map-opt.soon .thumb em{font-size:11px;padding:3px 7px}
+#col1{overflow-y:auto}
+/* the "?" random map */
+.map-opt.rand .thumb{display:grid;place-items:center;background:repeating-linear-gradient(135deg,#eef1f6 0 14px,#e3e8f0 14px 28px)}
+.map-opt.rand .thumb b{font:800 64px/1 var(--f-display,var(--f-body));color:var(--panel-ink);opacity:.8}
+.map-opt.rand[aria-pressed="true"] .thumb b{color:var(--good,#1f8f3a);opacity:1}
+/* character tiles: small picture, name underneath, snug */
+#menu .d-chars{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;align-content:start}
+#menu .char-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 6px 7px;text-align:center}
+#menu .char-opt img{width:100%;max-width:72px;aspect-ratio:1;height:auto;object-fit:cover;border-radius:8px;background:#12151e;margin:0}
+#menu .char-opt .t{display:block;font-size:12.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.d-prof .php{margin-left:10px;font:600 12px/1 var(--f-body);color:var(--muted)}
 </style>
 
 </head>
@@ -752,22 +789,28 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
       <header class="mhead">
         <h1 class="logo">imok<br><span>1v1</span></h1>
         <div class="xpbar" id="mxp"><b id="mx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="mx-bar"></i></span><span id="mx-txt" class="xpn">0/100 XP</span></div>
-        <div class="total" id="mrec">Record <b id="d-record">0–0</b></div>
+        <div class="micons">
+          <button class="micon" id="m-net-btn" aria-haspopup="true" aria-expanded="false" aria-controls="m-net-pop" title="Play a friend" aria-label="Play a friend"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/></svg></button>
+          <button class="micon" id="m-opt-btn" aria-haspopup="true" aria-expanded="false" aria-controls="m-opt-pop" title="Options" aria-label="Options"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          <div class="mpop" id="m-net-pop" hidden>
         <div class="mnet" id="mnet"><b>Play a friend</b><button class="btn sm" id="net-host">Host game</button><span class="net-or">or</span><input id="net-code" maxlength="4" placeholder="CODE" aria-label="Room code" autocomplete="off" autocapitalize="characters"><button class="btn sm" id="net-join">Join</button><span id="net-msg" class="net-msg"></span></div>
+          </div>
+          <div class="mpop" id="m-opt-pop" hidden><b class="mpop-h">Options</b>
         <div class="mvol" aria-label="Volume"><label title="Sound effects volume"><span>Sound</span><input type="range" data-vol min="0" max="1" step="0.05" aria-label="Sound effects volume"><b data-vol-val>100%</b></label><label title="Music volume"><span>Music</span><input type="range" data-mvol min="0" max="1" step="0.05" aria-label="Music volume"><b data-mvol-val>50%</b></label></div>
+          </div>
+        </div>
       </header>
       <div class="m3">
         <section class="mcol" id="col1">
-          <h3 class="mstep"><i>1</i>Mode &amp; map</h3>
-          <div class="seg mode" role="radiogroup" aria-label="Game mode" id="mode">
-            <button role="radio" data-mode="duels" aria-checked="true">Duels</button>
-            <button role="radio" data-mode="rumble" aria-checked="false">Rumble</button>
-            <button role="radio" data-mode="parkour" aria-checked="false">Parkour</button>
-          </div>
-          <p class="tag">First to five rounds against a bot.</p>
+          <h3 class="mstep"><i>1</i>Map &amp; mode</h3>
           <div id="duel-panel" class="mpanel">
-            <div class="msub">Map</div>
             <div class="d-maps" id="d-maps"></div>
+            <div class="msub">Mode</div>
+            <div class="seg mode" role="radiogroup" aria-label="Game mode" id="mode">
+              <button role="radio" data-mode="duels" aria-checked="true">Duels</button>
+              <button role="radio" data-mode="rumble" aria-checked="false">Rumble</button>
+            </div>
+            <p class="tag" hidden>First to five rounds against a bot.</p>
             <div class="msub">Players</div>
             <div class="seg" role="radiogroup" aria-label="Players" id="d-team">
               <button role="radio" data-team="1v1" aria-checked="true">1v1</button>
@@ -796,7 +839,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <div class="d-chars" id="d-chars"></div>
           <div class="mfoot lobfoot">
             <div class="mneed" id="d-need1"></div>
-            <button class="btn primary mstart" id="d-next">Next: Loadout</button>
+            <button class="btn primary mstart" id="d-next">Loadout</button>
           </div>
         </section>
         <section class="mcol dcol3" id="col3">
@@ -2449,8 +2492,9 @@ function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
     stairs(uS,dir,v0,v1,y0,n,rise,run,color,alongV){const bx=(a0,a1,b0,b1,h0,h1,o)=>alongV?S.box(b0,b1,a0,a1,h0,h1,color,o):S.box(a0,a1,b0,b1,h0,h1,color,o);
       for(let k=0;k<n;k++){const a=uS+dir*run*k,b=a+dir*run,top=y0+rise*(k+1);
         bx(Math.min(a,b),Math.max(a,b),v0,v1,top-Math.min(rise*1.6,top-y0),top,{solid:false});
-        const e=uS+dir*run*n,A0=Math.min(a,e),A1=Math.max(a,e);let p,q,r,s;if(alongV){p=X(v0);q=X(v1);r=Z(A0);s=Z(A1);}else{p=X(A0);q=X(A1);r=Z(v0);s=Z(v1);}
-        collider(Math.min(p,q),Math.max(p,q),y0,top,Math.min(r,s),Math.max(r,s));}},
+        // open stairs (Railed): each step is its own slab, so you can walk underneath where there's headroom; otherwise one solid wedge to the ground
+        const e=OPEN_STAIRS?b:uS+dir*run*n,A0=Math.min(a,e),A1=Math.max(a,e);let p,q,r,s;if(alongV){p=X(v0);q=X(v1);r=Z(A0);s=Z(A1);}else{p=X(A0);q=X(A1);r=Z(v0);s=Z(v1);}
+        collider(Math.min(p,q),Math.max(p,q),OPEN_STAIRS?top-Math.min(rise*1.6,top-y0):y0,top,Math.min(r,s),Math.max(r,s));}},
     X,Z};return S;}
 const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=4.2)=>({c,w,y0:0,y1:3.2});
 function windowGlassFrames(){}
@@ -2727,6 +2771,7 @@ function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.
   M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;}
 
 // Ringfenced next Duels maps: shown in the menu as Coming Soon, not playable yet.
+let OPEN_STAIRS=false;
 const SOON=[
  {id:'sky',modes:['duel'],name:'Sky Islands',desc:'Floating islands and rope bridges above the clouds',thumb:'data:image/jpeg;base64,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'},
 ];
@@ -3328,7 +3373,7 @@ function rlCabin(cx,cz,rot,col){const r=ruinBegin(),S=St(cx,cz,1,1),H=2.9,ax=!ro
     S.box(-2.6,-1.4,-1.8,-.6,H+.25,H+1.45,'#c99a5b',{tx:'wood',prop:'crate',hp:80});S.box(1.2,3.6,1.6,1.75,H+.25,H+1.35,'#b07a4a',{tx:'wood',prop:'fence',hp:60});}
   knock(cx-2.7,.78,cz-1.45,.55,.45,.2,'#1c1d22',{parts:[[gB(.5,.3,.01),new THREE.MeshBasicMaterial({color:'#7fd3ff'}),0,.04,-.11]]});knock(cx-2,.78,cz-1.5,.1,.11,.1,'#ffffff',{cyl:1});
   ruinEnd(r,cx,cz,1,1,col,'#f4f5f7',H+.2);}
-function railYard(){const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-140,140,-150,150,'#7f9a5a','grass',-.03,1);floor(-X,X,-Z,Z,'#b0a898','asphalt',-.005,1);
   // ballast bed under the four tracks runs off both ends of the yard
   floor(-13.5,13.5,-Z-90,Z+90,'#8f877b','rock',.012,1.5);
@@ -3622,7 +3667,7 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
     for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
     placed.push({x,z});}
   return true;}
-function buildMap(id){clearMap();M.id=id;MAPS[id].build();const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
+function buildMap(id){clearMap();OPEN_STAIRS=false;M.id=id;MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
@@ -4584,6 +4629,7 @@ function setupRoster(){const P=S.players,n=P==='ffa'?ffaN():0;if(n)ensureBots(n-
   for(const b of BOTS)if(!FS.includes(b)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}}
 const gunOf=f=>f.slot===0?f.primary:(f.secondary||'smg');
 const SECONDARIES=['smg','hornet','duals','revolver','shotgun','autoshot','thumper','rocket','stars','sword'];
+for(const k of new Set([...PRIMARIES,...SECONDARIES])){const g=GUNS[k];if(!g||g.type==='melee')continue;g.dmg=Math.round(g.dmg*1.25);if(g.direct)g.direct=Math.round(g.direct*1.25);}
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;if(f.relSnd&&window.SFX){window.SFX.stop(f.relSnd,.06);f.relSnd=null;}if(S.state==='fight')sfx('swap',f,{range:6});f.slot=slot;f.reloadT=0;f.burstN=0;f.burstT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
 function resetFighter(f,sp){f.onLadder=null;f.ladK=0;f.ladHid=0;f.boostT=0;f.dazeT=0;f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.skyHeld=false;f.dangle=false;f.tumble=false;f.jolt=0;f.skySlam=false;f.skyShot=0;f.skyVictim=null;f.noThrowKill=false;f.cHold=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.carrying=null;f.carriedBy=null;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.thornT=0;
   f.ch.root.rotation.x=0;f.ch.root.rotation.z=0;f.ch.bubble.visible=false;setGhost(f,1);
@@ -4689,7 +4735,7 @@ const SHARED_MOVES=['Gone fishing','Piledriver','Shadow grab','Overgrown'];
 const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Knockout',ghost:'Heartbreaker',patch:'Clear!',thorn:'Dog pile',angel:'Shadow grab',crusty:'Piledriver',wednesday:'Blur rush',antihero:'Hot potato',thor:'Overcharge'};
 const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:!!store.get('duel:randmap',0),score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -5129,7 +5175,7 @@ function glowLook(f,on){if(!!f.glowOn===on){if(on&&f.glowMats){const k=.55+.25*M
   else{for(const m of f.glowMats||[]){if(m.userData.e0){m.emissive.copy(m.userData.e0);m.emissiveIntensity=m.userData.ei0;delete m.userData.e0;}}f.glowMats=null;}}
 function untintLook(f){f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m&&m.userData.c0){m.color.copy(m.userData.c0);m.map=m.userData.map0;m.metalness=m.userData.m0;m.roughness=m.userData.r0;m.needsUpdate=true;delete m.userData.c0;}}});}
 // every character always uses its own signature finisher
-function moveFor(a,v){return SIG[a.char]||'Dog pile';}
+function moveFor(a,v){const L=Object.keys(MOVE_DUR).filter(k=>k!==S.lastFin);const m=L[(Math.random()*L.length)|0];S.lastFin=m;return m;}
 function bat(){const g=new THREE.Group();const w=mat('#c98a4b',null,{roughness:.6});const h=new THREE.Mesh(new THREE.CylinderGeometry(.07,.05,.5,8),mat('#2b2b2b'));h.position.y=.25;g.add(h);
   const b=new THREE.Mesh(new THREE.CylinderGeometry(.13,.07,1.3,10),w);b.position.y=1.15;g.add(b);return g;}
 function axe(){const g=new THREE.Group();const h=new THREE.Mesh(new THREE.BoxGeometry(.1,1.6,.1),mat('#7a4a28'));h.position.y=.8;g.add(h);
@@ -6476,7 +6522,7 @@ function updCamera(dt){
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){if(S.randMap)rollMap();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec)S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'grenade');if(S.mode==='rumble')ME.primary=ME.secondary='fists';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -6821,7 +6867,7 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
 function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}renderer.render(scene,camera);renderVM();}
 const SIM=1/60;let simAcc=0;
 function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;step(SIM);n++;}
-  if(!n&&S.state!=='menu')updCamera(rdt);render();capFrame(rdt);}
+  if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;render();capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip
 /* kill replays: a rolling few seconds of exactly what you see (scope included) at up to 1280x720 and 30 fps; frames are cropped to 16:9 and
@@ -6900,13 +6946,13 @@ $('rv-play').addEventListener('click',()=>{RV.play=!RV.play;if(RV.play&&RV.i>=RV
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b){e.preventDefault();openReplay(+b.dataset.rp);return;}if(e.target.closest('#rp-home')){$('d-rend').hidden=true;leave();}});
 
 /* ================= menu integration ================= */
-function renderRecord(){let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}$('d-record').textContent=`${w}–${l}`;}
+function renderRecord(){const el=$('d-record');if(!el)return;let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}el.textContent=`${w}–${l}`;}
 function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'sniper');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;S.mstep='lobby';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
-function setMode(m){document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
+function setMode(m){if(m!=='duels'&&m!=='rumble')m='duels';document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
   const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',m);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
   if(du)setDuelMode(m==='rumble'?'rumble':'duel');
@@ -7532,10 +7578,10 @@ function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble';
   const c=S.char&&CHARS[S.char];
   $('d-prof').className='d-prof'+(c?'':' empty');
-  $('d-prof').innerHTML=c?`<img src="${PREV['p_'+S.char]||''}" alt="${c.name}"><div><div class="pn">${c.name}</div><div class="pd">${c.desc}${c.hp!==100?` · ${c.hp} HP`:''}</div><div class="pa"><kbd>E</kbd>${c.abil}</div><div class="pfx"><em>Signature finisher</em><span>${SIG[S.char]||''}</span></div></div>`:'Pick a character below to see their profile';
+  $('d-prof').innerHTML=c?`<img src="${PREV['p_'+S.char]||''}" alt="${c.name}"><div><div class="pn">${c.name}</div><div class="pa"><kbd>E</kbd>${c.abil}${c.hp!==100?`<span class="php">${c.hp} HP</span>`:''}</div></div>`:'Pick a character below to see their profile';
   $('d-chars').innerHTML=CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${k===S.char}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
   $('d-gungrp').hidden=$('d-secrow').hidden=ru;$('d-rinfo').hidden=!ru;
-  $('d-maps').innerHTML=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode)).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('')+SOON.filter(m=>m.modes.includes(S.mode)).map(m=>`<button class="opt map-opt soon" aria-disabled="true" tabindex="-1" title="Coming soon"><span class="thumb"><img src="${m.thumb}" alt=""><em>Coming soon</em></span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
+  $('d-maps').innerHTML=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode)).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('')+`<button class="opt map-opt rand" data-map="random" aria-pressed="${!!S.randMap}" title="Random map"><span class="thumb"><b aria-hidden="true">?</b></span><span class="mt"><span class="t">Random</span><span class="b">A surprise map every match</span></span></button>`+[].filter(m=>m.modes.includes(S.mode)).map(m=>`<button class="opt map-opt soon" aria-disabled="true" tabindex="-1" title="Coming soon"><span class="thumb"><img src="${m.thumb}" alt=""><em>Coming soon</em></span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp" src="${PREV['g_'+k]||''}" alt=""${HERO[k]?` style="background:radial-gradient(70% 90% at 50% 55%,${HERO[k].bg[2]} 0%,${HERO[k].bg[1]} 45%,${HERO[k].bg[0]} 100%)"`:''}><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
   $('d-guns').innerHTML=PRIMARIES.map(k=>card(k,S.gun,'data-gun')).join('');
   $('d-secs').innerHTML=SECONDARIES.map(k=>card(k,S.sec,'data-sec')).join('');
@@ -7548,18 +7594,25 @@ function renderDuelMenu(){
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',ru||(!!S.gun&&!!S.sec));$('col4').classList.toggle('done',ru||!!S.cons);menuStep();
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';
-  $('d-need').textContent=need.length?'Choose '+need.join(', '):`Ready: ${CHARS[S.char].name} on ${MAPS[S.map].name} · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))}`;$('d-need').classList.toggle('ok',!need.length);
-  {const ln=lobbyNeeds(),nx=$('d-next');nx.textContent=ru?'Start':'Next: Loadout ›';nx.classList.toggle('ready',!(ru?need:ln).length);
-   $('d-need1').textContent=ln.length?'Choose '+ln.join(', '):ru?$('d-need').textContent:`${CHARS[S.char].name} on ${MAPS[S.map].name} · ${(PLAYERS[S.players]+(S.players==='ffa'?' ('+ffaN()+')':''))}`;$('d-need1').classList.toggle('ok',!ln.length);}}
+  $('d-need').textContent=need.length?'Choose '+need.join(', '):'';$('d-need').classList.toggle('ok',!need.length);
+  {const ln=lobbyNeeds(),nx=$('d-next');nx.textContent=ru?'Start':'Loadout';nx.classList.toggle('ready',!(ru?need:ln).length);
+   $('d-need1').textContent=ln.length?'Choose '+ln.join(', '):'';$('d-need1').classList.toggle('ok',!ln.length);}}
 // the top map in the menu list for the current mode
 const topMap=()=>{const l=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode));return l.length?l[0][0]:null;};
 function setDuelMode(m){const prev=S.mode;S.mode=m==='rumble'?'rumble':'duel';store.set('duel:mode',S.mode);if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=topMap();}
 D.setDuelMode=setDuelMode;
-$('d-maps').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b)return;S.map=b.dataset.map;renderDuelMenu();buildMap(S.map);enterMenu();});
+$('d-maps').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b)return;if(b.dataset.map==='random'){S.randMap=true;store.set('duel:randmap',1);renderDuelMenu();return;}S.randMap=false;store.set('duel:randmap',0);S.map=b.dataset.map;renderDuelMenu();buildMap(S.map);enterMenu();});
+// random map: rolled fresh at the start of every match (rematches too), never the same one twice in a row when there's a choice
+function rollMap(){const l=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).map(([k])=>k);if(!l.length)return;const pool=l.length>1?l.filter(k=>k!==S.lastRand):l;S.map=pool[(Math.random()*pool.length)|0];S.lastRand=S.map;}
+D.rollMap=rollMap;
 $('d-guns').addEventListener('click',e=>{const b=e.target.closest('[data-gun]');if(!b)return;S.gun=b.dataset.gun;renderDuelMenu();});
 $('d-secs').addEventListener('click',e=>{const b=e.target.closest('[data-sec]');if(!b)return;S.sec=b.dataset.sec;renderDuelMenu();});
 $('d-consl').addEventListener('click',e=>{const b=e.target.closest('[data-cons]');if(!b)return;S.cons=b.dataset.cons;renderDuelMenu();});
 setDuelMode(S.mode);
+{const pops=[['m-opt-btn','m-opt-pop'],['m-net-btn','m-net-pop']];
+  const close=()=>pops.forEach(([b,p])=>{$(p).hidden=true;$(b).setAttribute('aria-expanded','false');});
+  pops.forEach(([b,p])=>$(b).addEventListener('click',e=>{e.stopPropagation();const open=$(p).hidden;close();$(p).hidden=!open;$(b).setAttribute('aria-expanded',String(open));if(open){const f=$(p).querySelector('input,button');f&&f.focus();}}));
+  document.addEventListener('click',e=>{if(!e.target.closest('.mpop'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});}
 $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 
 $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);renderDuelMenu();setTag();});
@@ -7678,7 +7731,7 @@ $('net-code').addEventListener('keydown',e=>{if(e.key==='Enter')netJoin(e.target
 {$('dd-again').addEventListener('click',e=>{if(NET.role==='client'){e.stopImmediatePropagation();netMsg('Waiting for the host to start the rematch',true);center('Waiting for host','','sm');}},true);const st=$('d-start');st.addEventListener('click',e=>{if(NET.role==='client'){e.stopImmediatePropagation();netSend({t:'load',load:myLoad()});netMsg('Your picks are sent · waiting for the host to start',true);}},true);}
 document.addEventListener('click',e=>{if(NET.role==='client'&&e.target.closest('#menu'))setTimeout(()=>netSend({t:'load',load:myLoad()}),0);});
 renderDuelMenu();renderRecord();
-{const sm=store.get('mode','duels');if(sm==='duels'||sm==='rumble'){const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode(sm);else setTimeout(w,100);};setTimeout(w,100);}}
+{let sm=store.get('mode','duels');if(sm!=='rumble')sm='duels';{const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode(sm);else setTimeout(w,100);};setTimeout(w,100);}}
 })();
 </script>
 </body>

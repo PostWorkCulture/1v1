@@ -3608,7 +3608,7 @@ function tyRings(S,u,v){const x=S.X(u),z=S.Z(v);tyCol(S,u-1.25,u+1.25,v-1.25,v+1
   deco(gC(.32,.32,4.4,14),mat('#f4c22b',null,{roughness:.4}),x,2.5,z);deco(new THREE.SphereGeometry(.55,16,10),mat('#e8463a',null,{roughness:.35}),x,4.75,z);
   ['#e8463a','#ff8a24','#f4c22b','#3bb54a','#2f7fe0','#a05ad6'].forEach((c,i)=>{const R=1.25-i*.13,tb=.36-i*.02,g=new THREE.TorusGeometry(R,tb,12,28);g.rotateX(Math.PI/2);deco(g,mat(c,null,{roughness:.35}),x,.5+tb+i*.66,z);});}
 // big bouncy ball: push it, kick it, shoot it about
-function tyBall(x,z,c1,c2,r=1.15){knock(x,0,z,r*2,r*2,r*2,'#ffffff',{ball:1,heavy:1,snd:'bounce1',shadow:1,geo:new THREE.SphereGeometry(r,20,14),
+function tyBall(x,z,c1,c2,r=1.15){knock(x,0,z,r*2,r*2,r*2,'#ffffff',{ball:1,heavy:1,pop:150,snd:'bounce1',shadow:1,geo:new THREE.SphereGeometry(r,20,14),
   parts:[[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,Math.PI*.38,Math.PI*.24),c1,0,0,0],[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,0,Math.PI*.16),c2,0,0,0],[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,Math.PI*.84,Math.PI*.16),c2,0,0,0]]});}
 // orange race-car track coming down off the book tower: a smooth strip to look at, small even steps underneath to walk on
 function tyTrack(S,uTop,uBot,v0,v1,yTop){const n=Math.ceil(yTop/.25),run=(uBot-uTop)/n;for(let k=0;k<n;k++){const a=uTop+run*k,b=a+run;tyCol(S,Math.min(a,b),Math.max(a,b),v0,v1,0,yTop-yTop*k/n);}
@@ -3628,6 +3628,20 @@ function tyTent(S,u0,u1,v0,v1,H,col){TY_PAGES();const [x0,x1,z0,z1]=tyW(S,u0,u1,
 // books standing up in a row, like on a shelf
 function tyRow(S,u0,u1,v,list){let c=v;for(const [t,h,col] of list){if(col){S.box(u0,u1,c,c+t,0,h,col);S.box(u0+.15,u1-.15,c+.12,c+t-.12,h,h+.01,'#f6eed8',{solid:false,edges:false});
     S.box(u0-.01,u1+.01,c,c+t,h*.12,h*.18,'#ffd98a',{solid:false,edges:false});S.box(u0-.01,u1+.01,c,c+t,h*.82,h*.88,'#ffd98a',{solid:false,edges:false});}c+=t;}}
+// a ladder standing in front of a ledge: climb it on the outside, step off onto the ledge at the top
+function tyLadder(S,u,v0,v1,top,flip){const rx=S.X(u),[z0,z1]=[Math.min(S.Z(v0),S.Z(v1)),Math.max(S.Z(v0),S.Z(v1))],nx=-flip,lm=mat('#d6a46a',null,{roughness:.6});
+  for(const zz of [z0,z1])deco(B.boxGeo(.14,top+1.1,.14),lm,rx,(top+1.1)/2,zz);for(let yy=.35;yy<top+.9;yy+=.35)deco(B.boxGeo(.1,.1,z1-z0),lm,rx,yy,(z0+z1)/2);
+  M.ladders.push({x0:nx<0?rx-.2:rx-.65,x1:nx<0?rx+.65:rx+.2,z0,z1,y0:0,y1:top,nx,nz:0,rung:rx});}
+function tyBookcase(S,north){const U0=-44,U1=-39.25,V0=.75,V1=9.75,FR='#f4efe6',lv=[[0,.5],[3.75,4.25],[8,8.5],[12,12.5]];
+  for(const [a,b] of lv)S.box(U0,U1,V0,V1,a,b,FR);S.box(U0,U0+.5,V0,V1,.5,12,FR);
+  for(const [a,b] of [[V0,V0+.5],[V1-.5,V1]])S.box(U0,U1,a,b,.5,12,FR);
+  const cols=['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#a05ad6','#1f2026','#ff8fab','#ff8a24'];let k=north?0:3;
+  for(const [y,gap] of [[.5,3.25],[4.25,3.75],[8.5,3.5]]){let v=V0+.5;while(v<V1-.5-.4){const t=Math.min(.6+((k*7)%5)*.15,V1-.5-v),h=gap-.5-((k*3)%4)*.22,c=cols[k%cols.length];
+      S.box(U0+.5,U0+2.75,v,v+t,y,y+h,c);S.box(U0+2.74,U0+2.76,v,v+t,y+h*.12,y+h*.17,'#ffd98a',{solid:false,edges:false});S.box(U0+2.74,U0+2.76,v,v+t,y+h*.83,y+h*.88,'#ffd98a',{solid:false,edges:false});v+=t;k++;}}
+  // things on top: a globe on a stand and a stack of paperbacks to hide behind
+  tyBook(S,-43.5,-41.5,6.25,9.25,12.5,.5,'#e8463a','u1');tyBook(S,-43.25,-41.75,6.75,9.25,13,.45,'#2f7fe0','u1');
+  // ladders up the front: one to each shelf and one to the top
+  for(const [v,top] of [[2,4.25],[4.4,8.5],[6.8,12.5]])tyLadder(S,-39.1,v,v+1.2,top,S.X(1)>S.X(0)?1:-1);}
 function tyHalf(flip){const S=St(0,0,flip),north=flip>0,CH=north?'#c8322b':'#2f63c8',TR=north?'#f4c22b':'#ffffff',CK=north?'#d33a2c':'#26272c';
   // ---- book tower in the corner: four hardbacks, each set back 2 m, so the edges are steps; the race track runs off the top ----
   tyBook(S,-40.25,-24.25,19.75,33.75,0,1.1,north?'#2f63c8':'#3bb54a','u1',north?'WORLD ATLAS':'BUGS');
@@ -3677,8 +3691,8 @@ function tyHalf(flip){const S=St(0,0,flip),north=flip>0,CH=north?'#c8322b':'#2f6
       g.fillStyle='#ffffff';g.font='bold 74px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(north?'GAME':'FAMILY',w/2,h*.33);g.fillText('NIGHT',w/2,h*.6);})}));
     lid.rotation.x=-Math.PI/2;lid.rotation.z=north?0:Math.PI;lid.position.set((x0+x1)/2,1.006,(z0+z1)/2);M.group.add(lid);}
   tyCol(S,32.25,38.25,1.75,5.75,1,1.75);S.box(32.25,38.25,1.75,5.75,1,1.75,north?'#ff8fab':'#ffd23f',{solid:false});
-  // ---- paperbacks dropped in a slipping pile on the far side ----
-  tyBook(S,-41.25,-33.25,1.75,7.25,0,.5,'#f4c22b','u1');tyBook(S,-40.75,-34.25,2.25,6.75,.5,.5,'#3bb54a','u0');tyBook(S,-40.25,-35.75,2.75,6.25,1,.5,'#e8463a','v1');
+  // ---- a tall bookcase against the side wall: books at the back of every shelf, a walkway along the front, a ladder up to each level ----
+  tyBookcase(S,north);
   // ---- brick walls by the shop for cover at spawn ----
   for(const [a,b] of [[-9.75,-5.75],[5.75,9.75]])S.box(a,b,39.75,40.75,0,1.25,north?'#e8463a':'#2f7fe0',{tx:'stud'});
   // ---- an open book face down in the west lane (run over it), a row of standing books in the east lane ----
@@ -5095,7 +5109,7 @@ function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P
   if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<1.1&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=PLATE_BACK;P.move=1;P.grp.visible=false;
     emit(P.x,P.y+.9,P.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#2f7fe0','#bfe3ff','#ffffff']});sfx('plate',f,{range:10});if(f===ME)feedMsg('<span class="y">You</span><em>picked up armour</em>');break;}}}}
 function resetPlates(){const L=M.plates||[];for(const P of L){P.back=0;P.move=0;P.x=P.z=1e5;}for(const P of L){movePlate(P,false);P.grp.visible=true;}}
-function blastProps(at,Rr,src){knockBlast(at,Rr);ruinBlast(at,Rr,src);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
+function blastProps(at,Rr,src){knockBlast(at,Rr,src);ruinBlast(at,Rr,src);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
   for(const b of M.chips||[]){if(b.broken)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(b.wood&&dd<Rr*.75)breakChip(b,at);else if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
   for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
   if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
@@ -5221,21 +5235,31 @@ function knock(x,y,z,w,h,d,color,o={}){const g=o.geo||(o.cyl?new THREE.CylinderG
   const m=new THREE.Mesh(g,o.mat||mat(color,o.tx,o.extra));m.rotation.order='YXZ';m.position.set(x,y+h/2,z);m.rotation.y=o.ry||0;m.castShadow=!!o.shadow;m.receiveShadow=true;m.userData.dyn=1;
   for(const [pg,pc,px,py,pz,ry] of o.parts||[]){const c=new THREE.Mesh(pg,typeof pc==='string'?mat(pc):pc);c.position.set(px,py,pz);if(ry)c.rotation.y=ry;m.add(c);}
   M.group.add(m);const ex=Math.abs(Math.cos(m.rotation.y))*w/2+Math.abs(Math.sin(m.rotation.y))*d/2,ez=Math.abs(Math.sin(m.rotation.y))*w/2+Math.abs(Math.cos(m.rotation.y))*d/2;
-  const K={m,w,h,d,r:Math.max(.18,Math.hypot(w,h,d)/2),ex,ez,hp:m.position.clone(),hr:m.rotation.clone(),v:new V3(),av:new V3(),st:0,kT:0,snd:o.snd,heavy:o.heavy||1,ball:o.ball};if(o.ball)K.r=w/2;
+  const K={m,w,h,d,r:Math.max(.18,Math.hypot(w,h,d)/2),ex,ez,hp:m.position.clone(),hr:m.rotation.clone(),v:new V3(),av:new V3(),st:0,kT:0,snd:o.snd,heavy:o.heavy||1,ball:o.ball,pop:o.pop||0,php:o.pop||0};if(o.ball)K.r=w/2;
   (M.knocks||(M.knocks=[])).push(K);return K;}
 function knockHY(K){const m=K.m;m.updateMatrix();const e=m.matrix.elements;return Math.abs(e[1])*K.w/2+Math.abs(e[5])*K.h/2+Math.abs(e[9])*K.d/2;}
 function knockGround(x,z,y){let s=0;for(const b of allBoxes()){if(b.y1>y+.06||x<b.x0||x>b.x1||z<b.z0||z>b.z1)continue;if(b.y1>s)s=b.y1;}return s;}
 function knockIt(K,dir,pw){if(S.t-K.kT<.25)return;K.kT=S.t;const p=K.m.position,h=new V3(dir.x,0,dir.z);if(h.lengthSq()<1e-4)h.set(Math.random()-.5,0,Math.random()-.5);h.normalize();pw/=K.heavy;
   K.v.set(h.x*pw*rnd(.6,1),K.st?rnd(1.5,3)*Math.min(1,pw/4):rnd(2,4.5)*Math.min(1,pw/4),h.z*pw*rnd(.6,1));K.av.set(h.z*rnd(6,11),rnd(-4,4),-h.x*rnd(6,11));if(K.ball){K.v.x+=h.x*pw*.4;K.v.z+=h.z*pw*.4;K.av.set(0,0,0);}K.st=1;K.rest=0;
   if(K.snd==='cash'){sfx('cash',p,{range:12});}else sfx(K.snd||(Math.random()<.5?'bounce1':'bounce2'),p,{range:10,rate:rnd(.9,1.4),vol:.7});}
-function knockRay(o,d,et){const L=M.knocks;if(!L||!L.length)return;for(const K of L){const p=K.m.position,t=(p.x-o.x)*d.x+(p.y-o.y)*d.y+(p.z-o.z)*d.z;if(t<0||t>et+K.r*.5)continue;
-  const qx=o.x+d.x*t-p.x,qy=o.y+d.y*t-p.y,qz=o.z+d.z*t-p.z;if(qx*qx+qy*qy+qz*qz<K.r*K.r*.7)knockIt(K,d,rnd(3,6));}}
-function knockBlast(at,Rr){for(const K of M.knocks||[]){const p=K.m.position,dd=p.distanceTo(at);if(dd<Rr*1.3){const dir=p.clone().sub(at);knockIt(K,dir,9*(1-dd/(Rr*1.3))+3);K.v.y+=rnd(2,5);}}}
+function knockRay(o,d,et,dmg,src){const L=M.knocks;if(!L||!L.length)return;for(const K of L){if(K.st===3)continue;const p=K.m.position,t=(p.x-o.x)*d.x+(p.y-o.y)*d.y+(p.z-o.z)*d.z;if(t<0||t>et+K.r*.5)continue;
+  const qx=o.x+d.x*t-p.x,qy=o.y+d.y*t-p.y,qz=o.z+d.z*t-p.z;if(qx*qx+qy*qy+qz*qz<K.r*K.r*.7){knockIt(K,d,rnd(3,6));if(dmg)knockHurt(K,dmg,src);}}}
+// toy balls (Playtime) take damage and pop with a bang when they've had enough; they come back 30 s later or next round
+function knockHurt(K,dm,src){if(!K.pop||K.st===3||K.boomAt)return;K.php-=dm;emit(K.m.position.x,K.m.position.y,K.m.position.z,{n:3,speed:3,up:1,size:.1,life:.3,colors:['#ffffff','#ffd23f']});if(K.php<=0){K.boomAt=S.t+.08;K.src=src;}}
+function knockPop(K){const at=K.m.position.clone(),Rr=4.6,src=K.src&&K.src.alive!==undefined?K.src:null;K.boomAt=0;K.st=3;K.m.visible=false;K.back=S.t+30;
+  sfx('explode',at,{range:26});boomFX(at,Rr);emit(at.x,at.y,at.z,{n:40,speed:9,up:4,size:.22,life:1.1,grav:6,colors:['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#ffffff','#a05ad6']});
+  if(ME.alive&&ME.pos.distanceTo(at)<16)S.shake=Math.max(S.shake,.6*(1-ME.pos.distanceTo(at)/16)+.15);
+  for(const o of FS){if(!o.alive)continue;const c=new V3(o.pos.x,o.pos.y+1.1*SC,o.pos.z),dd=c.distanceTo(at);if(dd>Rr+.6||(!los(at,c)&&dd>1.2))continue;const dm=Math.round(Math.max(15,70*(1-Math.max(0,dd-.6)/Rr)));
+    const kb=c.clone().sub(at).setY(0).normalize();o.vel.x+=kb.x*9;o.vel.z+=kb.z*9;o.vel.y=Math.max(o.vel.y,7);o.grounded=false;const by=src&&src!==o&&isFoe(src,o)?src:null;
+    if(by===ME){S.stats.hits++;hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,by,false,'barrel');}
+  splashBricks(at,Rr,150);blastProps(at,Rr,src);}
+function knockBlast(at,Rr,src){for(const K of M.knocks||[]){if(K.st===3)continue;const p=K.m.position,dd=p.distanceTo(at);if(dd<Rr*1.3){const dir=p.clone().sub(at);knockIt(K,dir,9*(1-dd/(Rr*1.3))+3);K.v.y+=rnd(2,5);knockHurt(K,140*(1-dd/(Rr*1.3))+20,src);}}}
 // a shelf or crate shrinking or breaking drops what stood on it
 function knockOn(b,top){for(const K of M.knocks||[]){if(K.st)continue;const p=K.m.position,y0=p.y-K.h/2;if(y0<b.y0+.02||y0>top+.1||p.x<b.x0-.45||p.x>b.x1+.45||p.z<b.z0-.45||p.z>b.z1+.45)continue;knockIt(K,new V3(p.x-(b.x0+b.x1)/2,0,p.z-(b.z0+b.z1)/2),rnd(1,2.5));}}
 function updKnocks(dt){const L=M.knocks;if(!L||!L.length)return;
+  for(const K of L){if(K.boomAt&&S.t>=K.boomAt)knockPop(K);else if(K.st===3&&S.t>K.back){K.m.position.copy(K.hp);K.m.rotation.copy(K.hr);K.v.set(0,0,0);K.av.set(0,0,0);K.st=0;K.php=K.pop;K.m.visible=true;}}
   // people walking into things push them over (and kick fallen ones about)
-  for(const f of FS){if(!f.alive)continue;const sp=Math.hypot(f.vel.x,f.vel.z);if(sp<1.2)continue;for(const K of L){const p=K.m.position;if(Math.abs(p.x-f.pos.x)>R+K.ex+.05||Math.abs(p.z-f.pos.z)>R+K.ez+.05)continue;
+  for(const f of FS){if(!f.alive)continue;const sp=Math.hypot(f.vel.x,f.vel.z);if(sp<1.2)continue;for(const K of L){if(K.st===3)continue;const p=K.m.position;if(Math.abs(p.x-f.pos.x)>R+K.ex+.05||Math.abs(p.z-f.pos.z)>R+K.ez+.05)continue;
     if(f.pos.y>p.y+K.h/2-.05||f.pos.y+HH<p.y-K.h/2)continue;knockIt(K,f.vel,K.st?sp*.6:Math.max(2.5,sp*.8));}}
   for(const K of L){if(K.st!==1)continue;const m=K.m,p=m.position;dt=Math.min(dt,.05);K.v.y-=24*dt;
     const nx=p.x+K.v.x*dt,nz=p.z+K.v.z*dt,hy=K.ball?K.w/2:knockHY(K);
@@ -5248,7 +5272,7 @@ function updKnocks(dt){const L=M.knocks;if(!L||!L.length)return;
     if(p.y-hy2<=g&&K.v.y<=0){p.y=g+hy2;if(K.v.y<-2.5){K.v.y*=-.28;K.v.x*=.55;K.v.z*=.55;K.av.multiplyScalar(.55);}
       else{K.v.set(0,0,0);K.av.set(0,0,0);const q=Math.PI/2;m.rotation.x=Math.round(m.rotation.x/q)*q;m.rotation.z=Math.round(m.rotation.z/q)*q;p.y=g+knockHY(K);K.st=2;}}
     if(p.y<-5){p.y=K.hp.y;K.st=2;}}}
-function resetKnocks(){for(const K of M.knocks||[]){K.m.position.copy(K.hp);K.m.rotation.copy(K.hr);K.v.set(0,0,0);K.av.set(0,0,0);K.st=0;}}
+function resetKnocks(){for(const K of M.knocks||[]){K.m.position.copy(K.hp);K.m.rotation.copy(K.hr);K.v.set(0,0,0);K.av.set(0,0,0);K.st=0;K.php=K.pop;K.boomAt=0;K.m.visible=true;}}
 function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&cfg.gun==='fireball'?1.1:1});cfg=cfg||{dmg:GUNS.rocket.dmg,radius:GUNS.rocket.radius,wall:300,gun:'rocket',colors:['#ffd23f','#ff7a1f','#ff3b1f','#3a3d45','#ffffff']};if(n)at.addScaledVector(n,.2);const g=cfg,Rr=cfg.radius;
   blastMarks(at,n,Rr,hitBox);
   if(cfg.gun==='grenade'||cfg.gun==='rocket'||cfg.gun==='thumper')boomFX(at,Rr);else emit(at.x,at.y+.2,at.z,{n:Math.round(70*Rr/4.5),speed:12*Rr/4.5,up:3,size:.38,life:.8,grav:4,colors:cfg.colors});
@@ -5291,7 +5315,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:w?5:3,speed:3,up:1,size:.1,life:.4,colors:w?[w.wall.color,'#ffffff']:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
       if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
-    {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
+    {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}

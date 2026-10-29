@@ -7003,6 +7003,63 @@ const HERO={
   crossbow:{bg:['#05170b','#0f3d1e','#1fd655']},
   thumper:{bg:['#1a0f04','#45270b','#ff9d1a']}
 };
+/* red dot sights (open reflex style): low housing on the top rail, thin window frame, tinted glass, glowing dot.
+   Fitted per gun: AKM classic posts, M4 tall arch, LMG + M60 wide window, FAMAS dome. ('round' is built but unassigned.)
+   o={st: style, y: rail top, z: sight centre, acc: gun colour, riser: extra mount height}. First person draws the sight 2.7x so the window frames the target. */
+const RD_FIT={ar:{st:'classic',y:.168,z:-.05,acc:'#2f6bff',riser:.03},gar:{st:'arch',y:.178,z:.02,acc:'#ffd23f'},mg:{st:'rect',y:.19,z:-.16,acc:'#e0261b'},m60:{st:'rect',y:.162,z:-.15,acc:'#ff3fa4'},burst:{st:'dome',y:.3,z:-.18,acc:'#8a3fff'}};
+function addOptic(g,RB,style,o,vm){if(!o)return null;style=style||o.st;
+  const k=vm?2.7:1;
+  const M=(c,x)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.4},x||{}));
+  const blk=M('#1a1c21',{metalness:.45,roughness:.36}),gm=M('#3a3f49',{metalness:.8,roughness:.36}),acc=M(o.acc||'#ff2a2a',{roughness:.3,metalness:.25}),
+    chrome=M('#e8edf5',{metalness:1,roughness:.12}),
+    coat=M('#8fdcff',{transparent:true,opacity:.14,roughness:.05,metalness:.6,depthWrite:false,side:THREE.DoubleSide}),
+    red=new THREE.MeshBasicMaterial({color:'#ff2a2a',side:THREE.DoubleSide}),halo=new THREE.MeshBasicMaterial({color:'#ff3b2f',transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide});
+  const G=new THREE.Group();G.position.set(0,o.y,o.z);G.scale.setScalar(k);g.add(G);
+  const add=(geo,m,x,y,z)=>{const me=new THREE.Mesh(geo,m);me.position.set(x||0,y||0,z||0);G.add(me);return me;};
+  const box=(w,h,d,x,y,z,m,r=.006)=>add(RB(w,h,d,Math.max(.001,Math.min(r,w/2-.002,h/2-.002,d/2-.002)),3),m,x,y,z);
+  const cylX=(r,len,x,y,z,m)=>{const ge=new THREE.CylinderGeometry(r,r,len,14);ge.rotateZ(Math.PI/2);return add(ge,m,x,y,z);};
+  // 2D outlines (x,y) for a window frame; outer & inner share a shape so the frame stays an even thickness
+  const rrect=(w,h,r,y0=0)=>{const s=new THREE.Path();s.moveTo(-w/2+r,y0);s.lineTo(w/2-r,y0);s.quadraticCurveTo(w/2,y0,w/2,y0+r);s.lineTo(w/2,y0+h-r);s.quadraticCurveTo(w/2,y0+h,w/2-r,y0+h);s.lineTo(-w/2+r,y0+h);s.quadraticCurveTo(-w/2,y0+h,-w/2,y0+h-r);s.lineTo(-w/2,y0+r);s.quadraticCurveTo(-w/2,y0,-w/2+r,y0);return s;};
+  const domeP=(w,h,y0=0)=>{const s=new THREE.Path(),r=w/2;s.moveTo(-r,y0);s.lineTo(r,y0);s.lineTo(r,y0+h-r);s.absarc(0,y0+h-r,r,0,Math.PI,false);s.lineTo(-r,y0);return s;};
+  const frameOf=(outer,inner,d,m,z)=>{const s=new THREE.Shape(outer.getPoints(40));s.holes.push(new THREE.Path(inner.getPoints(40).reverse()));const ge=new THREE.ExtrudeGeometry(s,{depth:d,bevelEnabled:true,bevelThickness:.0015,bevelSize:.0015,bevelSegments:2,curveSegments:24});ge.translate(0,0,-d/2);return add(ge,m,0,0,z);};
+  const glassOf=(inner,z)=>{const s=new THREE.Shape(inner.getPoints(40));return add(new THREE.ShapeGeometry(s),coat,0,0,z);};
+  const dot=(cy,z)=>{add(new THREE.CircleGeometry(.0042,20),red,0,cy,z);add(new THREE.CircleGeometry(.011,20),halo,0,cy,z-.001);};
+  const base=(w,h,len,zf)=>{box(w,h,len,0,h/2,0,blk,.008);for(const s of [-1,1])box(.012,.018,len*.8,s*(w/2+.002),.01,0,gm,.004);
+    for(const zz of [-len*.28,len*.28])cylX(.006,w+.012,0,.012,zz,chrome);box(.012,.026,.04,w/2+.008,.02,-len*.1,acc,.004); // clamp bolts + throw lever
+    box(w*.7,.006,len*.5,0,h+.002,-len*.12,acc,.003);}; // coloured top stripe
+  let cy=.08,rear=-.07,fz=.03;
+  if(o.riser){const r=o.riser;G.position.y+=r*k;box(.09,r,.16,0,-r/2,0,blk,.006);for(let i=0;i<4;i++)box(.094,.006,.012,0,-r*.5,-.06+i*.04,gm,.002);}
+  if(style==='classic'){ // folding two-post frame, open top, tiny side ears
+    base(.09,.04,.14);const W=.11,H=.085,y0=.03;
+    box(W,.008,.014,0,y0+.004,fz,blk,.003); // bottom bar
+    for(const s of [-1,1]){box(.007,H,.014,s*(W/2-.0035),y0+H/2,fz,blk,.003);const t=box(.028,.007,.014,s*(W/2-.016),y0+H+.002,fz,blk,.003);t.rotation.z=s*.45;box(.01,.016,.016,s*(W/2-.0035),y0+.026,fz,acc,.003);} // open posts with angled tips
+    glassOf(rrect(W-.014,H-.012,.006,y0+.008),fz+.002);cy=y0+.008+(H-.012)/2;rear=-.07;
+  }
+  else if(style==='rect'){ // wide rounded-rectangle window on a thick base, coloured brow
+    base(.1,.045,.15);const W=.13,H=.09,y0=.035;
+    frameOf(rrect(W,H,.016,y0),rrect(W-.011,H-.011,.011,y0+.0055),.018,blk,fz);box(W*.5,.008,.022,0,y0+H+.002,fz,acc,.003);
+    glassOf(rrect(W-.011,H-.011,.011,y0+.0055),fz+.004);cy=y0+H/2;rear=-.075;
+  }
+  else if(style==='dome'){ // flat bottom, round top, angled side wings
+    base(.095,.045,.15);const W=.115,H=.105,y0=.035;
+    frameOf(domeP(W,H,y0),domeP(W-.011,H-.011,y0+.0055),.018,blk,fz);for(const s of [-1,1])box(.006,.03,.03,s*(W/2+.004),y0+.025,fz-.01,acc,.002);
+    glassOf(domeP(W-.011,H-.011,y0+.0055),fz+.004);cy=y0+.0055+(H-.011)*.45;rear=-.075;
+  }
+  else if(style==='arch'){ // tall narrow D-window over a stepped base
+    base(.085,.05,.15);box(.07,.02,.06,0,.06,-.02,gm,.006);const W=.1,H=.12,y0=.04;
+    frameOf(domeP(W,H,y0),domeP(W-.012,H-.012,y0+.006),.02,blk,fz);box(.026,.008,.026,0,y0+H+.003,fz,acc,.003);
+    glassOf(domeP(W-.012,H-.012,y0+.006),fz+.005);cy=y0+.006+(H-.012)*.48;rear=-.075;
+  }
+  else if(style==='round'){ // round window ring on a tall body
+    base(.1,.06,.15);const R=.05,y0=.06,c=y0+R+.01;
+    const ring=(r)=>{const p=new THREE.Path();p.absarc(0,c,r,0,Math.PI*2,false);return p;};
+    frameOf(ring(R+.007),ring(R),.026,blk,fz);frameOf(ring(R+.009),ring(R+.006),.008,acc,fz+.015);
+    box(.06,.03,.06,0,y0+.008,fz-.01,blk,.008);glassOf(ring(R),fz+.008);cy=c;rear=-.075;
+  }
+  dot(cy,fz-.004);
+  if(vm){g.userData.sightY=o.y+(o.riser||0)*k+cy*k;g.userData.rearZ=o.z+rear*k;}
+  return G;}
+
 /* ================= detailed weapon models (menu previews + first-person) =================
    One design language for every gun (set by the MP5): gunmetal receiver and barrel, vivid polymer furniture,
    deep-tint accent slots and ribs, a glowing accent strip, chrome small parts. Built along +z (muzzle forward), y up.
@@ -7042,7 +7099,8 @@ function heroModelV2(id,RB,vm){
     cyl(r*bell*.86,.01,0,y,z+len*.6,lens);cyl(r*.94,.01,0,y,z-len*.6,lens);for(let i=0;i<5;i++)cyl(r*1.2,.008,0,y,z-len*.5+.02+i*.022,black);
     cyl(r*1.1,.025,0,y,z+len*.2,ring);cyl(r*1.1,.025,0,y,z-len*.18,ring);cylY(r*.42,r*1.0,0,y+r*1.05,z,body);cylY(r*.46,.02,0,y+r*1.55,z,ring);cylX(r*.42,r*1.0,r*1.05,y,z,body);cylX(r*.46,.02,r*1.56,y,z,ring);
     for(const zz of [z-len*.3,z+len*.3]){box(.05,r*1.1,.05,0,y-r*1.25,zz,black,.008);tor(r*1.04,.012,0,y,zz,black);for(const s of [-1,1])cylX(.008,.01,s*.028,y-r*1.25,zz,chrome,8);}};
-  const vmS=(o)=>{const k=o.m||black,y=o.y;if(o.rr){tor(o.rr,Math.max(.005,o.rr*.08),0,y,o.rz,k);const pb=y-o.rr;if(pb>o.base+.005)box(.03,pb-o.base+.01,.04,0,(pb+o.base)/2,o.rz,k,.006);}
+  const vmS=(o)=>{if(RD_FIT[id]){g.userData.muzZ=o.muz;g.userData.muzY=o.my??.05;g.userData.hands=o.hands;return;} // red dot fitted: no iron sights in first person
+   const k=o.m||black,y=o.y;if(o.rr){tor(o.rr,Math.max(.005,o.rr*.08),0,y,o.rz,k);const pb=y-o.rr;if(pb>o.base+.005)box(.03,pb-o.base+.01,.04,0,(pb+o.base)/2,o.rz,k,.006);}
     const ft=y-.04;if(ft>o.base+.005)box(.026,ft-o.base,.035,0,(ft+o.base)/2,o.fz,k,.006);box(.011,.045,.011,0,y-.0175,o.fz,k,.003);if(o.fr)tor(o.fr,Math.max(.005,o.fr*.07),0,y,o.fz,k);
     add(new THREE.SphereGeometry(.0075,12,8),glow(o.dot||'#ff3b2f',3),0,y,o.fz);g.userData.sightY=y;g.userData.rearZ=o.rz;g.userData.muzZ=o.muz;g.userData.muzY=o.my??.05;g.userData.hands=o.hands;};
   const X=(typeof XHAIR!=='undefined'&&XHAIR)||{};
@@ -7330,6 +7388,7 @@ function heroModelV2(id,RB,vm){
     box(.045,.09,.05,0,.2,-.1,steel,.006);box(.045,.09,.05,0,.2,.2,steel,.006);for(const z of [-.1,.2])cylX(.008,.05,0,.18,z,chrome,8);
     scope(.05,.28,.5,.058,black,chrome,glow('#dff4ff',1.2),1.3);cyl(.064,.03,0,.28,-.12,chrome);cyl(.064,.03,0,.28,.22,chrome);
   }
+  if(RD_FIT[id])addOptic(g,RB,null,RD_FIT[id],vm);
   return g;}
 function heroModel(id,RB,vm){
   {const v2=heroModelV2(id,RB,vm);if(v2)return v2;}

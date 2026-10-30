@@ -811,6 +811,17 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 @keyframes stName{from{opacity:0;transform:translateX(-34px) skewX(-12deg)}to{opacity:1;transform:none}}
 @keyframes stBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.012)}}
 @keyframes stBlink{50%{opacity:.2}}
+
+/* random character: tile + mystery stage */
+#menu .char-opt.rand .rq{display:grid;place-items:center;width:100%;max-width:72px;aspect-ratio:1;border-radius:8px;background:repeating-linear-gradient(135deg,#eef1f6 0 12px,#e3e8f0 12px 24px);font:800 44px/1 var(--f-display,var(--f-body));color:var(--panel-ink);opacity:.85}
+#menu .char-opt.rand[aria-pressed="true"] .rq{color:var(--good,#1f8f3a);opacity:1}
+.st-q{display:none;left:59%;bottom:16%;z-index:4;transform:translateX(-50%);font:400 clamp(180px,30vh,320px)/1 var(--f-display);color:#fff;text-shadow:0 0 18px var(--cc),0 0 60px var(--cc),0 8px 0 rgba(0,0,0,.4)}
+.stage.rand .st-q{display:block;animation:stQ 3.6s ease-in-out infinite}
+.stage.rand.go .st-q{animation:stQIn .65s cubic-bezier(.2,.9,.25,1.12) both,stQ 3.6s .65s ease-in-out infinite}
+.stage.rand .st-fig{display:none}
+@keyframes stQIn{0%{opacity:0;transform:translateX(-50%) translateY(46px) scale(.6)}100%{opacity:1;transform:translateX(-50%)}}
+@keyframes stQ{0%,100%{transform:translateX(-50%) translateY(0) rotateY(0)}50%{transform:translateX(-50%) translateY(-10px) rotateY(180deg)}}
+@media (max-width:720px){.st-q{left:50%!important;font-size:170px}}
 @media (prefers-reduced-motion:reduce){.stage *,.stage *::before,.stage *::after{animation:none!important}}
 </style>
 
@@ -5030,7 +5041,7 @@ const SHARED_MOVES=['Gone fishing','Piledriver','Shadow grab','Overgrown'];
 const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Knockout',ghost:'Heartbreaker',patch:'Clear!',thorn:'Dog pile',angel:'Shadow grab',crusty:'Piledriver',wednesday:'Blur rush',antihero:'Hot potato',thor:'Overcharge',isaac:'Gone fishing'};
 const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:true,randChar:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -6830,7 +6841,7 @@ function updCamera(dt){
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){if(S.randMap)rollMap();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec||!GUNS[S.sec])S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){if(S.randMap)rollMap();if(S.randChar)rollChar();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec||!GUNS[S.sec])S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'grenade');if(S.mode==='rumble')ME.primary=ME.secondary='fists';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -8417,13 +8428,15 @@ const CHAR_INFO={
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';
-  el.innerHTML='<div class="st-bg"></div><div class="st-grid"></div><div class="st-beam l"></div><div class="st-beam r"></div><div class="st-beam k"></div><div class="st-floor"><i></i><i></i></div><div class="st-wave"></div><div class="st-fig"><div class="st-in"><div class="st-br"><img alt=""><div class="st-rim"></div><div class="st-shade"></div><div class="st-sweep"></div></div></div></div><canvas class="st-fx"></canvas><div class="st-vig"></div><div class="st-flash"></div><div class="st-info"><div class="st-tag"></div><div class="st-name"></div><div class="st-abil"></div><div class="st-desc"></div></div>';
+  el.innerHTML='<div class="st-bg"></div><div class="st-grid"></div><div class="st-beam l"></div><div class="st-beam r"></div><div class="st-beam k"></div><div class="st-floor"><i></i><i></i></div><div class="st-wave"></div><div class="st-q" aria-hidden="true">?</div><div class="st-fig"><div class="st-in"><div class="st-br"><img alt=""><div class="st-rim"></div><div class="st-shade"></div><div class="st-sweep"></div></div></div></div><canvas class="st-fx"></canvas><div class="st-vig"></div><div class="st-flash"></div><div class="st-info"><div class="st-tag"></div><div class="st-name"></div><div class="st-abil"></div><div class="st-desc"></div></div>';
   const q=x=>el.querySelector(x);STG={el,img:q('.st-fig img'),br:q('.st-br'),name:q('.st-name'),abil:q('.st-abil'),desc:q('.st-desc'),tag:q('.st-tag'),cv:q('.st-fx'),id:undefined,cc:'#ff6a1a',parts:[],burst:0};
   STG.img.addEventListener('error',()=>{const k=STG.id;if(k&&!/_p\.webp$/.test(STG.img.src)){el.classList.add('boxed');STG.img.src=PREV['p_'+k]||`chars/${k}_p.webp`;}});
   stageLoop(STG);}
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
   if(STG.id===k)return;STG.id=k;const c=k&&CHARS[k];
-  el.classList.toggle('empty',!c);el.classList.remove('boxed','go');
+  el.classList.remove('boxed','go','rand');
+  if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='<p>A surprise fighter every match. Pick one from the list to choose for yourself.</p>';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
+  el.classList.toggle('empty',!c);
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
   STG.tag.textContent='Ready for battle';STG.name.textContent=c.name;
@@ -8449,8 +8462,8 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble';
   const c=S.char&&CHARS[S.char];
-  stageShow(c?S.char:null);
-  $('d-chars').innerHTML=CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${k===S.char}" title="${ch.name}: ${(CHAR_INFO[k]&&CHAR_INFO[k].what)||ch.desc||''}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
+  stageShow(S.randChar?'__rand':c?S.char:null);
+  $('d-chars').innerHTML=`<button class="opt char-opt rand" data-char="random" aria-pressed="${!!S.randChar}" title="Random: a surprise fighter every match"><span class="rq" aria-hidden="true">?</span><span class="t">Random</span></button>`+CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${!S.randChar&&k===S.char}" title="${ch.name}: ${(CHAR_INFO[k]&&CHAR_INFO[k].what)||ch.desc||''}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
   $('d-gungrp').hidden=$('d-secrow').hidden=ru;$('d-rinfo').hidden=!ru;
   $('d-maps').innerHTML=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode)).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('')+`<button class="opt map-opt rand" data-map="random" aria-pressed="${!!S.randMap}" title="Random map"><span class="thumb"><b aria-hidden="true">?</b></span><span class="mt"><span class="t">Random</span><span class="b">A surprise map every match</span></span></button>`+[].filter(m=>m.modes.includes(S.mode)).map(m=>`<button class="opt map-opt soon" aria-disabled="true" tabindex="-1" title="Coming soon"><span class="thumb"><img src="${m.thumb}" alt=""><em>Coming soon</em></span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp" src="${PREV['g_'+k]||''}" alt=""${HERO[k]?` style="background:radial-gradient(70% 90% at 50% 55%,${HERO[k].bg[2]} 0%,${HERO[k].bg[1]} 45%,${HERO[k].bg[0]} 100%)"`:''}><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
@@ -8474,6 +8487,7 @@ function setDuelMode(m){const prev=S.mode;S.mode=m==='rumble'?'rumble':'duel';st
 D.setDuelMode=setDuelMode;
 $('d-maps').addEventListener('click',e=>{const b=e.target.closest('[data-map]');if(!b)return;if(b.dataset.map==='random'){S.randMap=true;renderDuelMenu();return;}S.randMap=false;S.map=b.dataset.map;renderDuelMenu();buildMap(S.map);enterMenu();});
 // random map: rolled fresh at the start of every match (rematches too), never the same one twice in a row when there's a choice
+function rollChar(){const l=CHAR_IDS.filter(k=>CHARS[k]);if(!l.length)return;const pool=l.length>1?l.filter(k=>k!==S.lastChar):l;S.char=pool[(Math.random()*pool.length)|0];S.lastChar=S.char;}
 function rollMap(){const l=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).map(([k])=>k);if(!l.length)return;const pool=l.length>1?l.filter(k=>k!==S.lastRand):l;S.map=pool[(Math.random()*pool.length)|0];S.lastRand=S.map;}
 D.rollMap=rollMap;
 $('d-guns').addEventListener('click',e=>{const b=e.target.closest('[data-gun]');if(!b)return;S.gun=b.dataset.gun;renderDuelMenu();});
@@ -8484,7 +8498,7 @@ setDuelMode(S.mode);
   const close=()=>pops.forEach(([b,p])=>{$(p).hidden=true;$(b).setAttribute('aria-expanded','false');});
   pops.forEach(([b,p])=>$(b).addEventListener('click',e=>{e.stopPropagation();const open=$(p).hidden;close();$(p).hidden=!open;$(b).setAttribute('aria-expanded',String(open));if(open){const f=$(p).querySelector('input,button');f&&f.focus();}}));
   document.addEventListener('click',e=>{if(!e.target.closest('.mpop'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});}
-$('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
+$('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;if(b.dataset.char==='random'){S.randChar=true;renderDuelMenu();return;}S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 
 $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);renderDuelMenu();setTag();});
 $('d-ffan').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;S.ffaN=+b.dataset.n;store.set('duel:ffan',S.ffaN);renderDuelMenu();setTag();});

@@ -3764,8 +3764,28 @@ function playroom(){const X=44,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};tyBlkN=0;
   M.shopAt=[{x:0,z:-44.5},{x:0,z:44.5}];
   const sp=[[-14,47],[14,48],[-34,43],[36,45],[0,33]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
+// ---------- Arena: a plain square floor with a handful of tall pillars to duck behind ----------
+function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  floor(-120,120,-120,120,'#8f969e','asphalt',-.02,1);floor(-X,X,-Z,Z,'#d9dce1','tile',0,4);
+  // markings: centre circle, halfway line and a coloured band at each end
+  {const t=canvasTex(512,512,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(w/2,h/2,w/2-10,0,TAU);g.stroke();});
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(16,16),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(0,.015,0);M.group.add(m);}
+  floor(-X,X,-.15,.15,'#ffffff',null,.012);
+  for(const [s,c] of [[1,'#e8463a'],[-1,'#2f7fe0']]){floor(-X,X,s>0?Z-6:-Z,s>0?Z:-Z+6,c,'tile',.01,4);floor(-X,X,s>0?Z-6.3:-Z+6,s>0?Z-6:-Z+6.3,'#ffffff',null,.012);}
+  // walls round the edge
+  for(const [x0,z0,x1,z1] of [[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]])fence(x0,z0,x1,z1,3.2,'#5b6070');
+  // pillars: tall enough that nobody stands on top, square with a base and a cap, an end-colour band
+  const pillar=(x,z,s,band)=>{box(x,0,z,s,9,s,'#eef0f3',{extra:{roughness:.55}});box(x,0,z,s+.5,.5,s+.5,'#9aa0a8',{solid:false});box(x,8.6,z,s+.5,.6,s+.5,'#9aa0a8',{solid:false});
+    box(x,2.6,z,s+.06,.5,s+.06,band,{solid:false,edges:false});};
+  pillar(0,0,4,'#f4c22b');
+  for(const sx of [-1,1])for(const sz of [-1,1])pillar(sx*12,sz*13,3,sz>0?'#e8463a':'#2f7fe0');
+  for(const sz of [-1,1])pillar(0,sz*23,3,sz>0?'#e8463a':'#2f7fe0');
+  M.shopAt=[{x:0,z:-33.5},{x:0,z:33.5}];
+  const sp=[[-8,34],[8,35],[-22,32],[22,33],[0,28]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+
 const MAPS={
  toys:{modes:['duel'],name:'Playtime',desc:'Toy-sized fights on a bedroom floor: book towers, a toy chest, blocks and board games',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
+ arena:{modes:['duel'],name:'Arena',desc:'A plain open floor with a few pillars',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
   // a square plot (104 x 104 m) instead of a long strip
   const X=52,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};

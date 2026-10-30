@@ -4093,8 +4093,8 @@ const GUNS={
   burst:{name:'FAMAS',base:'ar',dmg:18,head:1.9,rate:.42,burst:3,burstGap:.065,mag:24,reload:2.0,spread:1.8,adsSpread:.15,ads:.21,pellets:1,fall:[42,105],zoom:40,auto:false,kick:.009,bloom:.08,color:'#6c3bff',note:'3-round burst bullpup: lethal on headshots'},
   smg:{name:'MP5',dmg:13,head:1.6,rate:.065,mag:18,reload:1.5,spread:1.6,adsSpread:.9,ads:.13,pellets:1,fall:[8,26],zoom:48,auto:true,kick:.006,bloom:.15,color:'#a05ad6',note:'Shreds up close, falls off fast'},
   hornet:{name:'Uzi',base:'smg',sec:true,dmg:16,head:1.7,rate:.085,mag:24,reload:1.9,spread:1.5,adsSpread:.75,ads:.14,pellets:1,fall:[10,30],zoom:46,auto:true,kick:.008,bloom:.11,color:'#ffd21f',note:'Punchy close-range SMG'},
-  shotgun:{sec:true,name:'SPAS-12',dmg:8,head:1.3,rate:.8,mag:6,reload:2.0,spread:3.6,adsSpread:2.2,ads:.22,pellets:9,fall:[9,26],zoom:50,auto:false,kick:.05,bloom:0,color:'#e85d22',note:'Heavy pump: two shots down anyone up close'},
-  autoshot:{sec:true,name:'AA-12',base:'shotgun',dmg:6,head:1.5,rate:.22,mag:10,reload:2.8,spread:4.2,adsSpread:2.8,ads:.26,pellets:6,fall:[8,22],zoom:48,auto:true,kick:.032,bloom:.12,color:'#19bce6',note:'Full-auto drum shotgun: three hits to down up close'},
+  shotgun:{sec:true,name:'SPAS-12',dmg:8,head:1.3,rate:.8,mag:6,reload:2.0,spread:3.6,adsSpread:2.2,ads:.22,pellets:9,fall:[9,26],zoom:50,auto:false,kick:.05,bloom:0,color:'#e85d22',note:'Heavy pump: one shot downs point-blank, otherwise up to 75% of their health'},
+  autoshot:{sec:true,name:'AA-12',base:'shotgun',dmg:6,head:1.5,rate:.22,mag:10,reload:2.8,spread:4.2,adsSpread:2.8,ads:.26,pellets:6,fall:[8,22],zoom:48,auto:true,kick:.032,bloom:.12,color:'#19bce6',note:'Full-auto drum shotgun: one shot downs point-blank; three hits to down up close'},
   m60:{name:'M60',base:'mg',dmg:17,head:1.6,rate:.12,mag:50,reload:4.0,spread:2.2,adsSpread:.45,ads:.38,pellets:1,fall:[32,80],zoom:44,auto:true,kick:.014,bloom:.14,color:'#ff3fa4',note:'Heavy LMG: harder hits, slower fire'},
   mg:{name:'LMG',dmg:12,head:1.6,rate:.075,mag:40,reload:3.2,spread:2.6,adsSpread:.55,ads:.34,pellets:1,fall:[28,70],zoom:46,auto:true,kick:.008,bloom:.18,color:'#e8463a',note:'Big belt, slow reload'},
   rocket:{name:'Rocket Launcher',sec:true,type:'proj',dmg:45,direct:100,radius:4.5,head:1,rate:1,mag:1,reload:6.8,spread:.35,adsSpread:0,speed:30,maxSpeed:58,accel:90,grav:0,zoom:42,auto:false,kick:.07,bloom:0,ads:.42,color:'#3bb54a',note:'Direct hit 100, splash up to 45'},
@@ -5297,6 +5297,7 @@ function punch(f){if(f.fireT>0)return;f.fireT=.6;f.swingT=.25;const e=eyeOf(f,ne
   for(const foe of foesOf(f).sort(byDist(f))){if(foe.finishing)continue;const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
   if(dist<2.4&&Math.abs(foe.pos.y-f.pos.y)<1.9&&ang<1.2&&los(e,new V3(foe.pos.x,foe.pos.y+.8,foe.pos.z))){emit(foe.pos.x,foe.pos.y+1,foe.pos.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});
     if(f===ME){S.stats.hits++;S.stats.dmg+=5;hitMarker(5>=foe.hp);dmgNumber(foe,5,false);}sfx('punch',foe,{vol:.6,rate:1.15});damage(foe,5,f,false,'punch');return;}}}
+const SG_POINT_BLANK=3,SG_MAX_FRAC=.75;
 function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='crossbow'){f.shotT=S.t;S.lastShooter=f;f.shotP=f.pos.clone();}
 
   if(g.type==='melee'){f.fireT=g.rate;f.kick=1;sfx('swing',f,{rate:id==='fists'?1.3:1});if(f===ME)S.stats.shots++;melee(f);return;}
@@ -5312,7 +5313,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
   for(let p=0;p<g.pellets;p++){const d=spreadDir(dir,spr);const pen=rayPen(origin,d,400),hb=pen.hit;const hf=rayFoes(origin,d,f);
     let end;if(hf&&(!hb||hf.t<hb.t)){end=origin.clone().addScaledVector(d,hf.t);const dist=hf.t;let dm=g.dmg*(hf.part==='head'?g.head:1)*Math.pow(.7,pen.woods.filter(w=>w.t<hf.t).length);
       if(g.fall){dm*=dist<=g.fall[0]?1:dist>=g.fall[1]?.45:lerp(1,.45,(dist-g.fall[0])/(g.fall[1]-g.fall[0]));}
-      const hr=hits.get(hf.who)||{t:0,h:false};hr.t+=dm;if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;emit(end.x,end.y,end.z,{n:4,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});}
+      const hr=hits.get(hf.who)||{t:0,h:false,n:0,d:1e9};hr.t+=dm;hr.n++;hr.d=Math.min(hr.d,dist);if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;emit(end.x,end.y,end.z,{n:4,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});}
     else if(hb){end=origin.clone().addScaledVector(d,hb.t);const w=brickOf(hb.box);if(p===0)sfx('impact',end,{range:9,rate:w?.85:1});
       emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:w?5:3,speed:3,up:1,size:.1,life:.4,colors:w?[w.wall.color,'#ffffff']:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
       if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end);} // walls go down twice as fast to gunfire
@@ -5321,7 +5322,10 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
-  if(anyHit){for(const [foe,hr] of hits){const total=Math.round(hr.t);if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(total,100);dmgNumber(foe,total,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
+  if(anyHit){const sg=id==='shotgun'||g.base==='shotgun';for(const [foe,hr] of hits){let total=Math.round(hr.t),shown=total;
+      // shotguns: a blast only downs in one shot point-blank (most of the pellets landing from right next to them); anywhere else one blast tops out at 75% of their health
+      if(sg){if(hr.d<=SG_POINT_BLANK&&hr.n>=Math.ceil(g.pellets/2)){shown=Math.max(1,Math.round(foe.downed?foe.dhp:foe.hp+(foe.armor||0)));total=Math.ceil(shown/((foe.shieldT>0?.35:1)*(foe.thornT>0&&!foe.downed?.7:1)))+1;}else total=shown=Math.min(total,Math.round(foe.hpMax*SG_MAX_FRAC));}
+      if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(shown,100);dmgNumber(foe,shown,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
   if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(GR()-.5)*g.kick*.4;}
   f.bloom=Math.min(f.bloom+g.bloom,3);}
 function damage(f,dmg,src,head,gun){if(f.thornT>0&&!f.downed&&src&&src!==f&&gun!=='thorns'&&f.alive&&S.state==='fight'&&!f.finishing){dmg*=.7;const r=damage0(f,dmg,src,head,gun);

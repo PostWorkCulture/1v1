@@ -4862,7 +4862,7 @@ function rayFoes(o,d,f){let best=null;for(const v of foesOf(f)){const h=rayFight
 const nm=f=>f===ME?'You':(f&&f.name)||'Bot';
 const tg=f=>`<span class="${f===ME||(S.players!=='ffa'&&f.team===ME.team)?'y':'o'}">${nm(f)}</span>`;
 // finisher call-outs ('Roasted!' etc.): small, high up and gone after about a second so they don't block the view
-function say(a,v,big,winSub,loseSub,toFeed=true){const quick=()=>{clearTimeout(say.t);say.t=setTimeout(()=>{if($('d-big').textContent===big)center('','');},1100);};if(a===ME){center(big,winSub,'win sm');quick();}else if(v===ME){center(big,loseSub,'lose sm');quick();}else if(toFeed)feedMsg(`${tg(a)}<em>${big}</em>${tg(v)}`);}
+function say(a,v,big,winSub,loseSub,toFeed=true){if(v&&v.finishing&&v.finishing.banner&&(a===ME||v===ME)){center('Eliminated',a===ME?big+' · You finished '+nm(v):big+' · '+loseSub,(a===ME?'win':'lose')+' top');return;}const quick=()=>{clearTimeout(say.t);say.t=setTimeout(()=>{if($('d-big').textContent===big)center('','');},1100);};if(a===ME){center(big,winSub,'win sm');quick();}else if(v===ME){center(big,loseSub,'lose sm');quick();}else if(toFeed)feedMsg(`${tg(a)}<em>${big}</em>${tg(v)}`);}
 function finishable(a){return FS.find(v=>isFoe(a,v)&&canFinish(a,v));}
 function setupRoster(){const P=S.players,n=P==='ffa'?ffaN():0;if(n)ensureBots(n-1);FS=P==='2v2'?[ME,B2,BOT,B3]:P==='ffa'?[ME,...BOTS.slice(0,n-1)]:[ME,BOT];
   ME.team=0;if(P==='2v2'){B2.team=0;BOT.team=1;B3.team=1;}else BOTS.forEach((b,i)=>b.team=i+1);
@@ -5459,7 +5459,13 @@ function finish(a,v,force){const fx=force||moveFor(a,v);release(a);const dur=MOV
   a.yaw=Math.atan2(v.finishing.v0.x-v.finishing.a0.x,v.finishing.v0.z-v.finishing.a0.z);v.yaw=a.yaw+Math.PI;{const F=v.finishing;F.yaw0=a.yaw;F.fwd=new V3(Math.sin(a.yaw),0,Math.cos(a.yaw));}
   if(fx==='Home run'){const b=bat();scene.add(b);v.finishing.obj.push(b);}
   if(fx==='Axe drop'){const x=axe();scene.add(x);v.finishing.obj.push(x);}
-  if(a===ME)S.fxUsed=fx;say(a,v,fx,'You finished '+nm(v),nm(a)+' finished you',false);slowMo(.2,a,v);}
+  if(a===ME)S.fxUsed=fx;elimStart(a,v,fx);slowMo(.2,a,v);}
+// the moment a finisher starts, "Eliminated" goes up at the top and stays for the whole move; if the move ends the round, the round-end
+// wait is counted from here so nobody sits through a second pop-up afterwards
+function elimStart(a,v,fx){clearTimeout(say.t);clearTimeout(eliminated.ct);const F=v.finishing;
+  if(!isDM()&&S.state==='fight'){const left=new Set(FS.filter(m=>m!==v&&m.alive&&!(m.team===v.team&&m.downed)).map(m=>m.team));if(left.size<=1)S.elimT0=S.t;}
+  if(a===ME||v===ME){F.banner=1;center('Eliminated',a===ME?fx+' · You finished '+nm(v):fx+' · '+nm(a)+' finished you',(a===ME?'win':'lose')+' top');}
+  else feedMsg(`${tg(a)}<em>${fx}</em>${tg(v)}`);}
 /* ---------- shatter: a fighter breaks into cubes of its own colours ---------- */
 const SHG=new THREE.BoxGeometry(1,1,1),shMats={},texAvg=new WeakMap();
 const shMat=hex=>shMats[hex]||(shMats[hex]=new THREE.MeshStandardMaterial({color:hex,roughness:.7}));
@@ -5953,7 +5959,7 @@ function updMove(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=new V3(Math.sin(a.yaw
       const kb=hp.clone().sub(mz).normalize();debris.push({o:hc,v:new V3(kb.x*9,10,kb.z*9),w:new V3(rnd(-12,12),rnd(-12,12),rnd(-12,12)),t:0,ttl:6});
       emit(hp.x,hp.y,hp.z,{n:60,speed:8,size:.25,life:.8,grav:6,colors:['#c8102e','#ff4a3d','#8b0000','#ffffff']});say(a,v,'Headshot!','Execution','You got executed',false);}
     if(F.done){r.rotation.x=damp(r.rotation.x,-1.45,5,dt);if(Math.random()<.4){const hp=new V3(v.pos.x,v.pos.y+.5,v.pos.z);emit(hp.x,hp.y,hp.z,{n:1,speed:1.5,up:2,size:.15,life:.5,colors:['#c8102e']});}}}}
-function cancelFinish(v){const F=v.finishing;if(!F||F.gone||F.done)return;if(F.v0)v.pos.copy(F.v0);v.cv=0;if(F.by)F.by.cv=0;for(const o of F.obj)scene.remove(o);v.finishing=null;v.alive=true;v.downed=true;v.revive=Math.max(v.revive||0,.25);v.bleed=Math.max(v.bleed||0,10);v.dhp=Math.max(v.dhp||0,15);v.burnT=0;v.thrownT=0;v.tumble=false;v.dangle=false;v.skyHeld=false;
+function cancelFinish(v){const F=v.finishing;if(!F||F.gone||F.done)return;if(F.banner&&$('d-big').textContent==='Eliminated')center('','');S.elimT0=null;if(F.v0)v.pos.copy(F.v0);v.cv=0;if(F.by)F.by.cv=0;for(const o of F.obj)scene.remove(o);v.finishing=null;v.alive=true;v.downed=true;v.revive=Math.max(v.revive||0,.25);v.bleed=Math.max(v.bleed||0,10);v.dhp=Math.max(v.dhp||0,15);v.burnT=0;v.thrownT=0;v.tumble=false;v.dangle=false;v.skyHeld=false;
   const r=v.ch.root;r.visible=true;r.scale.setScalar(v.scale||SC);r.rotation.x=0;r.rotation.z=0;untintLook(v);setGhost(v,1);v.ghostShown=null;if(v.ch.headG)v.ch.headG.visible=true;v.pose=null;v.vel.set(0,0,0);v.grounded=false;
   const a=F.by;if(a){a.finishT=0;a.pose=null;a.vel.set(0,Math.min(a.vel.y,0),0);a.grounded=false;a.ch.root.rotation.x=0;a.ch.root.rotation.z=0;for(const k in a.guns)a.guns[k].visible=k===gunOf(a);}
   hemi.color.set('#ffffff');S.slowT=0;S.ts=1;if(a===ME)center('Interrupted!','Your finisher was stopped','lose sm');else if(v===ME)center('Saved!','The finisher was stopped','win sm');if(a===ME||v===ME)setTimeout(()=>{const b=$('d-big');if(b&&(b.textContent==='Interrupted!'||b.textContent==='Saved!'))center('','');},1300);feedMsg(`${tg(a)}<em>finisher interrupted</em>${tg(v)}`);}
@@ -5994,7 +6000,7 @@ function updFinish(dt){for(const v of FS){const F=v.finishing;if(!F)continue;
   else if(F.fx==='Spirit'){setGhost(v,Math.max(.02,1-t));v.ghostShown=null;if(Math.random()<.8)emit(v.pos.x+rnd(-.5,.5),v.pos.y+rnd(0,2.4),v.pos.z+rnd(-.5,.5),{n:1,speed:.4,up:2,size:.2,life:.7,grav:-1,colors:['#ffffff','#dfe9f2','#9fd3f0']});if(t>1.5&&!F.done){F.done=1;r.visible=false;}}
   else if(F.fx==='Fall'){v.downed=false;if(t>.15&&!F.done){F.done=1;bloodBits(v);}}
   else{if(t>.25&&!F.done){F.done=1;burst(v,v.bot?['#d8322b','#ffffff','#ffc61a']:['#71401d','#3a6cad','#ffffff']);}}
-  if(t>(F.dur||1.7)){for(const o of F.obj)scene.remove(o);if(F.move&&F.by)F.by.vel.set(0,0,0);v.lastFin={fx:F.fx,finisher:!!F.finisher,head:!!F.head};v.finishing=null;v.alive=false;v.downed=false;r.visible=F.fx==='Fall';hemi.color.set('#ffffff');
+  if(t>(F.dur||1.7)){for(const o of F.obj)scene.remove(o);if(F.move&&F.by)F.by.vel.set(0,0,0);v.lastFin={fx:F.fx,finisher:!!F.finisher,head:!!F.head,banner:!!F.banner};v.finishing=null;v.alive=false;v.downed=false;r.visible=F.fx==='Fall';hemi.color.set('#ffffff');
     const how=F.finisher?'finisher':F.gun==='bleed'?'bled out':(GUNS[F.gun]?GUNS[F.gun].name:(ABIL_KILL[F.gun]||''));
     const by=F.by&&F.by!==v?F.by:null;feedMsg((by?`${tg(by)}<em>${how}</em>${tg(v)}`:`${tg(v)}<em>${how||'out'}</em>`)+(F.fx==='Fall'?'':`<span class="hs">${F.fx.toUpperCase()}</span>`));
     eliminated(v,by);
@@ -6486,7 +6492,7 @@ window.addEventListener('keydown',e=>{if(!D.active||S.state==='menu'||S.state===
 },true);
 window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
-canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){mouseL=true;} // snipers fire straight from the hip on left click (right click scopes); the hold-to-scope quick-scope stays on the touch fire buttonif(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
+canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){mouseL=true;}/* snipers fire straight from the hip on left click (right click scopes); the hold-to-scope quick-scope stays on the touch fire button */if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
   const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads)*(gunOf(ME)==='sniper'?.3:.65):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
@@ -6819,14 +6825,15 @@ function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x
     const rest=sp.filter(q=>!used.includes(q)).sort((p,q)=>(d(p,s)-.5*d(p,other))-(d(q,s)-.5*d(q,other)));const m=rest[0]||s;used.push(m);return m;};
   return[a,mate(a,c),c,mate(c,a)];}
 function clearFx(){for(const f of allFighters()){if(f.finishing){for(const o of f.finishing.obj)scene.remove(o);f.finishing=null;}}hemi.color.set('#ffffff');}
-function startRound(){resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS)f.armor=0;FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
+function startRound(){S.elimT0=null;resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS)f.armor=0;FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
   for(const n of nums)n.el.remove();nums.length=0;center('3','Round '+S.round);}
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}if(by&&by!==v&&isFoe(by,v))by.k=(by.k||0)+1;v.d=(v.d||0)+1;if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==by&&src!==v&&isFoe(src,v)&&S.t-t<15)src.as=(src.as||0)+1;v.hitBy=null;lbDirty=1;
   if(by===ME&&v!==ME&&S.stats)S.stats.elims++;
   S.deathMarks=(S.deathMarks||[]).filter(m=>S.t-m.t<3);S.deathMarks.push({x:v.pos.x,z:v.pos.z,t:S.t});
   if(isDM()){for(const f of FS)S.score[f.team]=f.k||0;if(by&&by!==v&&(by.k||0)>=DM_KILLS){dmWin(by);return;}v.respawnT=3;if(v===ME)center('Eliminated',by&&by!==v?'by '+nm(by):'','lose');return;}
-  if(v===ME&&S.state==='fight'&&teamsAlive().size>1){center('Eliminated','','lose');clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if(!ME.alive&&S.state==='fight')center('','');},1600);}}
+  if(v.lastFin&&v.lastFin.banner&&S.state==='fight'&&teamsAlive().size>1){v.lastFin.banner=false;center('','');}
+  else if(v===ME&&S.state==='fight'&&teamsAlive().size>1){center('Eliminated','','lose');clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if(!ME.alive&&S.state==='fight')center('','');},1600);}}
 function checkRound(head){if(NET.role==='client'&&!NET.replay)return;if(S.state!=='fight'||isDM())return;const t=[...teamsAlive()];if(t.length>1)return;endRound(t.length?t[0]:-1,head);}
 const teamName=t=>t===ME.team?(S.players==='2v2'?'Your team':'You'):S.players==='ffa'?nm(FS.find(f=>f.team===t)):S.players==='2v2'?'Enemy team':'Bot';
 function scoreLine(){if(S.players==='ffa')return `You ${S.score[ME.team]} · best bot ${Math.max(...S.score.filter((v,i)=>i!==ME.team&&v!=null))}`;return `${S.score[ME.team]} – ${S.score[1-ME.team]}`;}
@@ -7049,9 +7056,11 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
   if(!won&&winner>=0)setTimeout(()=>sfx('lose'),450);
-  if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
+  const pre=S.elimT0!=null&&!done&&$('d-big').textContent==='Eliminated',elT=S.elimT0!=null?S.t-S.elimT0:0;S.elimT0=null;
+  if(pre)center('Eliminated',(won?'Round won · ':S.players==='ffa'&&winner>=0?teamName(winner)+' takes the round · ':'Round lost · ')+sc,(won?'win':'lose')+' top');
+  else if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
+  S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;if(elT>0&&!done)S.t0=Math.max(RP.round.length?2:1.2,S.t0-elT);showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?f.hp/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}

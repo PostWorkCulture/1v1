@@ -552,7 +552,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #duel-hud.touch .d-blcol{top:calc(env(safe-area-inset-top,0px) + 10px);bottom:auto}
 #duel-hud.touch .d-br{right:auto;bottom:auto;text-align:left}
 #duel-hud.touch #d-prompt{bottom:calc(env(safe-area-inset-bottom,0px) + 170px)}
-#duel-hud.rumble .gun-k{display:none}
+#duel-hud.rumble .gun-k,#duel-hud.rumble #dt-e,#duel-hud.rumble #dt-g,#duel-hud.rumble #dt-q,#duel-hud.rumble #dt-t{display:none!important}
 .dt-row{justify-content:space-between}
 .dt-row .seg{flex:0 0 180px;display:flex}.dt-row .seg button{flex:1}
 @media (max-height:500px){.dt-b{width:50px;height:50px;font-size:10px}.dt-fire{width:72px;height:72px}.dt-jump{width:60px;height:60px}.dt-stick{width:112px;height:112px}}
@@ -854,7 +854,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
             <div class="d-guns sec" id="d-secs"></div>
             <div class="wdet" id="d-sdet"></div>
           </div>
-          <div class="rumble-info" id="d-rinfo" hidden><b>Fists only</b><span>No weapons to pick in Rumble. 15 damage a punch. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
+          <div class="rumble-info" id="d-rinfo" hidden><b>Fists only</b><span>Just your fists in Rumble: no guns, lethals, abilities, walls or shop. 15 damage a punch. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
         </section>
         <section class="mcol dcol4" id="col4">
           <h3 class="mstep"><i>4</i>Lethals</h3>
@@ -1051,11 +1051,11 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
           <span class="gun-k"><kbd>R</kbd></span><em class="gun-k">Reload early (empty guns reload on their own)</em>
           <span class="gun-k"><kbd>1</kbd> <kbd>2</kbd></span><em class="gun-k">Primary / secondary</em>
           <span class="rumble-k">Falling punch</span><em class="rumble-k">20 damage, both knocked back, they're stunned 1s</em>
-          <span><kbd>Q</kbd></span><em>Build a wall (4 per round)</em>
-          <span><kbd>E</kbd></span><em>Character ability</em>
-          <span><kbd>G</kbd></span><em>Use your lethal (hold to aim a throwable, release to throw; lays a mine)</em>
-          <span>Shop</span><em>Walk up to the kiosk in the middle, press 1–4 to pick (30s cooldown)</em>
-          <span><kbd>T</kbd></span><em>Throw a grenade from the shop</em>
+          <span class="gun-k"><kbd>Q</kbd></span><em class="gun-k">Build a wall (4 per round)</em>
+          <span class="gun-k"><kbd>E</kbd></span><em class="gun-k">Character ability</em>
+          <span class="gun-k"><kbd>G</kbd></span><em class="gun-k">Use your lethal (hold to aim a throwable, release to throw; lays a mine)</em>
+          <span class="gun-k">Shop</span><em class="gun-k">Walk up to the kiosk in the middle, press 1–4 to pick (30s cooldown)</em>
+          <span class="gun-k"><kbd>T</kbd></span><em class="gun-k">Throw a grenade from the shop</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">When you're downed</div><div class="pause-keys">
           <span>Crawl</span><em>Slowly; you take full damage while down</em>
@@ -3907,7 +3907,8 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
   return true;}
 function buildMap(id){clearMap();OPEN_STAIRS=false;M.id=id;MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
-function placeShop(){M.shop=null;M.shops=[];if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
+function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: fists only, no shop */
+  if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
   const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
@@ -6007,7 +6008,7 @@ function updFinish(dt){for(const v of FS){const F=v.finishing;if(!F)continue;
     // finishing one member of a team when every teammate is also down takes the whole team out
     if(F.finisher&&S.players!=='ffa'){const mates=FS.filter(m=>m!==v&&m.team===v.team&&m.alive);if(mates.length&&mates.every(m=>m.downed&&!m.finishing)){for(const m of mates)kill(m,by||m.lastBy||m,false,'bleed');feedMsg(`${tg(v)}<em>team wiped out</em>`);}}
     checkRound(!!F.head);}}}
-function useAbility(f,aimDir){if(!f.alive||f.downed||f.finishing||f.abilT>0||S.state!=='fight')return false;const C=CHARS[f.char],fw=dirOf(f.yaw,0,new V3());
+function useAbility(f,aimDir){if(S.mode==='rumble'||!f.alive||f.downed||f.finishing||f.abilT>0||S.state!=='fight')return false;const C=CHARS[f.char],fw=dirOf(f.yaw,0,new V3());
   const aimFrom=mz=>{let d=aimDir;if(!d){d=new V3();camera.getWorldDirection(d);const cam=camera.position.clone();const hb=rayBoxes(cam,d,200),hf=rayFoes(cam,d,f);let t=150;if(hb)t=Math.min(t,hb.t);if(hf)t=Math.min(t,hf.t);d=cam.addScaledVector(d,t).sub(mz).normalize();}return d;};
   if(f.char==='brute'){f.vel.y=15;f.vel.x+=fw.x*9;f.vel.z+=fw.z*9;f.grounded=false;f.smashT=.01;S.shake=Math.max(S.shake,f===ME?.2:0);emit(f.pos.x,f.pos.y+.1,f.pos.z,{n:30,speed:7,size:.28,life:.45,grav:4,colors:['#8a7466','#c9b8a4',C.color]});}
   else if(f.char==='frost'){S.shake=Math.max(S.shake,f===ME?.15:0);
@@ -6138,7 +6139,7 @@ const SHOP_ITEMS=[
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.stamBoost=false;f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.nadeT=0;f.speedT=0;}
 const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.1&&Math.abs(f.pos.y-s.y)<1.6);
-const canShopNow=()=>ME.alive&&!ME.downed&&!ME.finishing&&!ME.carriedBy&&!ME.skySlam&&!ME.carrying&&(S.state==='fight'||S.state==='countdown');
+const canShopNow=()=>S.mode!=='rumble'&&ME.alive&&!ME.downed&&!ME.finishing&&!ME.carriedBy&&!ME.skySlam&&!ME.carrying&&(S.state==='fight'||S.state==='countdown');
 function openShop(){if(S.shopOpen)return;S.shopOpen=true;$('d-hint').classList.add('fade');$('d-shop').hidden=false;renderShop(true);}
 function closeShop(){if(!S.shopOpen)return;S.shopOpen=false;$('d-shop').hidden=true;}
 function renderShop(force){const L=shopList(),sig=L.map(it=>it.can(ME)?1:0).join('');if(!force&&sig===renderShop.sig)return;renderShop.sig=sig;
@@ -6213,7 +6214,7 @@ function updScorch(dt){for(let i=scorches.length-1;i>=0;i--){const d=scorches[i]
 const BRICK_HP=34,BCOLS=6,BROWS=5;const brickGeo=new THREE.BoxGeometry(1,1,1);const brickEdge=new THREE.EdgesGeometry(brickGeo);
 // patches of the nav grid waiting to be rebuilt (kept separate: one big box round walls at opposite ends of the map would mean rebuilding everything)
 let gridDirty=0,gridRg=[];const dirtyGrid=(o,t)=>{for(const r of gridRg)if(o.x0<r.x1+1&&o.x1>r.x0-1&&o.z0<r.z1+1&&o.z1>r.z0-1){r.x0=Math.min(r.x0,o.x0);r.x1=Math.max(r.x1,o.x1);r.z0=Math.min(r.z0,o.z0);r.z1=Math.max(r.z1,o.z1);gridDirty=gridDirty||t;return;}gridRg.push({x0:o.x0,x1:o.x1,z0:o.z0,z1:o.z1});gridDirty=gridDirty||t;};
-function buildWall(f){if(f.walls<=0||f.buildT>0||!f.alive||f.downed||S.state!=='fight')return false;
+function buildWall(f){if(S.mode==='rumble'||f.walls<=0||f.buildT>0||!f.alive||f.downed||S.state!=='fight')return false;
   const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),alongZ=Math.abs(fx)>Math.abs(fz);const cx=f.pos.x+fx*2.3,cz=f.pos.z+fz*2.3;
   const W=3.6,T=.5,Hh=3.1;const x0=cx-(alongZ?T:W)/2,x1=cx+(alongZ?T:W)/2,z0=cz-(alongZ?W:T)/2,z1=cz+(alongZ?W:T)/2;
   const bd=M.bounds;if(cx<bd.x0+1||cx>bd.x1-1||cz<bd.z0+1||cz>bd.z1-1)return false;
@@ -6675,10 +6676,10 @@ const ICON={
   wall:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="#e8463a" stroke="#14161c" stroke-width="1.6"/><path d="M3 10h18M3 15h18M9 5v5M15 10v5M9 15v4" stroke="#14161c" stroke-width="1.4"/></svg>',
   boots:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="#f08a24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
-  const ab=ME.abilT>0;L.push(['ability','E',ab?Math.ceil(ME.abilT)+'s':'',ab]);
+  const ru=S.mode==='rumble',ab=ME.abilT>0;if(!ru)L.push(['ability','E',ab?Math.ceil(ME.abilT)+'s':'',ab]);
   const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',cc.passive?'':'G',cc.passive?String(Math.ceil(ME.armor||0)):cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),cc.passive?false:!rd]);}
   if(ME.nades>0&&!merge)L.push(['grenade','T',String(ME.nades),ME.nadeT>0]);
-  L.push(['wall','Q',String(ME.walls),ME.walls<=0]);
+  if(!ru)L.push(['wall','Q',String(ME.walls),ME.walls<=0]);
   if(ME.speedT>0)L.push(['boots','',Math.ceil(ME.speedT)+'s',false]);
   const sig=L.map(x=>x.join(',')).join('|');if(sig===renderItems.sig)return;renderItems.sig=sig;
   $('d-items').innerHTML=L.map(([ic,k,n,dim])=>`<span class="it${dim?' dim':k?' glow':''}">${ICON[ic]}${k?`<kbd>${k}</kbd>`:''}<b>${n}</b></span>`).join('');}

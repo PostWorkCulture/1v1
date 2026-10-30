@@ -748,7 +748,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(3,84px);align-content:start;overflow-y:auto;min-height:0;padding:3px;margin:-3px;flex:none}
 #menu .mfull.duels[data-step="lobby"] .d-lob .stage{height:100%;min-height:320px}
 @media (max-width:900px){#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(2,84px)}}
-@media (max-width:720px){#menu .mfull.duels[data-step="lobby"] .d-lob{grid-template-columns:1fr}#menu .mfull.duels[data-step="lobby"] .d-lob .stage{order:-1;height:clamp(300px,52vh,520px)}.st-fig,.st-floor,.st-wave{left:50%!important}.st-fig{height:68%}.st-info{max-width:none}.st-name{font-size:34px}.st-desc{display:none}#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));overflow:visible}}
+@media (max-width:720px){#menu .mfull.duels[data-step="lobby"] .d-lob{grid-template-columns:1fr}#menu .mfull.duels[data-step="lobby"] .d-lob .stage{order:-1;height:clamp(300px,52vh,520px)}.st-fig,.st-floor,.st-wave{left:50%!important}.st-fig{height:68%}.st-info{max-width:none}.st-name{font-size:34px}.st-desc{font-size:12px;max-width:62%}.st-stats span{font-size:12px;padding:5px 8px}.st-stats em{min-width:58px}#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));overflow:visible}}
 .stage{--cc:#ff6a1a;position:relative;overflow:hidden;isolation:isolate;border-radius:var(--radius);background:#06070c;min-height:300px;color:#fff;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cc) 40%,#000),0 0 0 1.5px var(--edge)}
 .stage>*{position:absolute;pointer-events:none}
 .st-bg{inset:0;z-index:0;background:radial-gradient(40% 36% at 50% 58%,color-mix(in srgb,var(--cc) 46%,transparent),transparent 72%),radial-gradient(90% 55% at 50% 108%,color-mix(in srgb,var(--cc) 38%,#000),transparent 70%),radial-gradient(70% 50% at 50% -12%,#232a44,transparent 70%),linear-gradient(#0b0e19,#04050a)}
@@ -792,7 +792,14 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 .st-abil:empty{display:none}
 .st-abil kbd{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:7px;background:var(--cc);color:#0b0c12;font:800 12px/1 var(--f-body);box-shadow:none;border:0}
 .st-hp{opacity:.7;margin-left:2px}
-.st-desc{margin-top:9px;max-width:280px;font:500 13px/1.35 var(--f-body);color:rgba(255,255,255,.72)}
+.st-desc{margin-top:10px;max-width:300px;font:500 13.5px/1.4 var(--f-body);color:rgba(255,255,255,.82);text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.st-desc p{margin:0}
+.st-stats{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:12px}
+.st-stats span{display:inline-flex;align-items:baseline;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(8,10,18,.66);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);font:700 13px/1 var(--f-body);color:#fff;text-shadow:none}
+.st-stats em{font:700 10px/1 var(--f-body);font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55);min-width:66px}
+.st-stats .st-dmg{box-shadow:inset 0 0 0 1.5px var(--cc);background:color-mix(in srgb,var(--cc) 22%,rgba(8,10,18,.75))}
+.st-stats .st-dmg em{color:color-mix(in srgb,var(--cc) 70%,#fff)}
+.st-stats .st-nodmg{color:rgba(255,255,255,.6)}
 .stage.go .st-in{animation:stIn .65s cubic-bezier(.2,.9,.25,1.12) both}
 .stage.go .st-flash{animation:stFlash .6s ease-out}
 .stage.go .st-wave{animation:stWave .75s ease-out}
@@ -8390,6 +8397,23 @@ const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a 
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a primary');if(!S.sec)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
 /* ===== lobby character stage: cut-out portrait under coloured stage lights, embers and a floor ring ===== */
 const STAGE_CC={angel:'#ffd76a',antihero:'#ff3b3b',blaze:'#ff7a1a',blink:'#b46bff',brute:'#ff5a2a',crusty:'#ffcc33',frost:'#59e1ff',ghost:'#3fd4ff',isaac:'#ffae4a',jet:'#3d7dff',patch:'#2af0dc',tank:'#ffc21a',thor:'#6cc4ff',thorn:'#6bff3a',wednesday:'#ff2a4a'};
+/* what each ability does and how much it hurts, read from useAbility / smashLand / explode (fireball dmg already includes the +20% weapon boost) */
+const CHAR_INFO={
+  blaze:{what:'Throws a fireball that explodes on impact and sets anyone caught in it on fire.',dmg:'Up to 54 + 20 burn'},
+  brute:{what:'Leaps forward and smashes the ground, launching and stunning anyone nearby. Tough but a little slower.',dmg:'23 to 48 (closer hurts more)'},
+  jet:{what:'Hold jump or E to fire the jetpack and boost up onto the rooftops.',dmg:null},
+  blink:{what:'Teleports up to 9 m straight ahead, stopping short of walls.',dmg:null},
+  tank:{what:'Throws up a shield bubble for 4 s that cuts damage taken by 65%. Tough but a little slower.',dmg:null},
+  ghost:{what:'Turns almost invisible for 5 s.',dmg:null},
+  frost:{what:'Frost nova hits everyone within 9 m and slows them for 3 s.',dmg:'12 to everyone close'},
+  patch:{what:'Pulls out a med kit and heals 48 HP straight away.',dmg:null},
+  thorn:{what:'Thorn armour for 5 s: takes 30% less damage and hits attackers back with 60% of what it takes.',dmg:'Reflects 60% of damage taken'},
+  angel:{what:'Leaps high on her wings, then glides down slowly for up to 3 s.',dmg:null},
+  crusty:{what:'Honks a blast that knocks back everyone within 7 m and stuns them for a moment.',dmg:'20 to everyone close'},
+  wednesday:{what:'The fastest runner, and her sprint makes her even faster for 3 s. Less health than most.',dmg:null},
+  antihero:{what:'Fires a grapple and swings to wherever you aim, up to 32 m away.',dmg:null},
+  thor:{what:'Shoots a lightning bolt that strikes up to 45 m away.',dmg:'36 (48 headshot)'},
+  isaac:{what:'Instantly refills the magazines on both guns.',dmg:null}};
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';
@@ -8403,7 +8427,7 @@ function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelect
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
   STG.tag.textContent='Ready for battle';STG.name.textContent=c.name;
-  STG.abil.innerHTML=`<kbd>E</kbd>${c.abil}${c.hp!==100?`<span class="st-hp">· ${c.hp} HP</span>`:''}`;STG.desc.textContent=c.desc||'';
+  STG.abil.innerHTML=`<kbd>E</kbd>${c.abil}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span><span><em>Health</em>${c.hp} HP</span></div>`;
   void el.offsetWidth;el.classList.add('go');STG.burst=1;}
 function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');let last=0;
   const tick=t=>{if(STG!==G)return;requestAnimationFrame(tick);const cv=G.cv;
@@ -8426,7 +8450,7 @@ function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble';
   const c=S.char&&CHARS[S.char];
   stageShow(c?S.char:null);
-  $('d-chars').innerHTML=CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${k===S.char}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
+  $('d-chars').innerHTML=CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${k===S.char}" title="${ch.name}: ${(CHAR_INFO[k]&&CHAR_INFO[k].what)||ch.desc||''}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
   $('d-gungrp').hidden=$('d-secrow').hidden=ru;$('d-rinfo').hidden=!ru;
   $('d-maps').innerHTML=Object.entries(MAPS).filter(([k,m])=>m.modes.includes(S.mode)).sort((a,b)=>(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode)).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('')+`<button class="opt map-opt rand" data-map="random" aria-pressed="${!!S.randMap}" title="Random map"><span class="thumb"><b aria-hidden="true">?</b></span><span class="mt"><span class="t">Random</span><span class="b">A surprise map every match</span></span></button>`+[].filter(m=>m.modes.includes(S.mode)).map(m=>`<button class="opt map-opt soon" aria-disabled="true" tabindex="-1" title="Coming soon"><span class="thumb"><img src="${m.thumb}" alt=""><em>Coming soon</em></span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp" src="${PREV['g_'+k]||''}" alt=""${HERO[k]?` style="background:radial-gradient(70% 90% at 50% 55%,${HERO[k].bg[2]} 0%,${HERO[k].bg[1]} 45%,${HERO[k].bg[0]} 100%)"`:''}><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};

@@ -1130,7 +1130,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
         </div></div>
         <div class="pk-g"><div class="eyebrow">When you're downed</div><div class="pause-keys">
           <span>Crawl</span><em>Slowly; you take full damage while down</em>
-          <span>Revive</span><em>Automatic after 4 seconds, back up at 10% health</em>
+          <span>Revive</span><em>Automatic after 2.5 seconds, back up at 10% health</em>
           <span>Left click</span><em>Tag an enemy: red outline for 3s</em>
           <span>2v2</span><em>If your teammate is out while you're down, you're out too</em>
         </div></div>
@@ -4967,7 +4967,7 @@ function ladderStep(f,dt,wx,wz,jump){for(const L of M.ladders){if(L.ruin&&L.ruin
   f.onLadder=null;return false;}
 const JET_BURN=1.6,JET_VMAX=13.5,JET_ACC=26;
 function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladDir){wx=f.onLadder.nx*f._ladDir;wz=f.onLadder.nz*f._ladDir;jump=false;}
-  if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.25;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
+  if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.12;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.zipT>0)speed*=1.6;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}if(f.carrying){speed*=.8;jump=false;}
   const acc=f.thrownT>0?0:f.stunT>0?8:f.hookT>0?5:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
@@ -6219,7 +6219,7 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
     if(f.burnTick<=0){f.burnTick=.5;damage(f,4,f.burnBy||f,false,'fireball');}}
   // a teammate standing over you revives you twice as fast, and you glow green while they do
   {const help=f.downed&&f.alive&&!f.finishing&&FS.some(m=>m!==f&&m.alive&&!m.downed&&!m.finishing&&!isFoe(m,f)&&Math.hypot(m.pos.x-f.pos.x,m.pos.z-f.pos.z)<1.7&&Math.abs(m.pos.y-f.pos.y)<1.5);f.helped=help;glowLook(f,help);}
-  if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/4*(f.helped?2:1);if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
+  if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/2.5*(f.helped?2:1);if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
     if(f.revive>=1){f.downed=false;RP.marks=RP.marks.filter(m=>m.v!==f);f.hp=Math.max(1,Math.round(f.dhp));f.lastHurt=S.t;f.revive=0; /* get back up with whatever downed health you had left (30, less any hits you took while down); regen waits the usual 5 s */emit(f.pos.x,f.pos.y+1,f.pos.z,{n:40,speed:5,up:3,size:.22,life:.7,colors:['#3bb54a','#b6ff3b','#ffffff']});feedMsg(`${tg(f)}<em>revived</em>`);}
     else if(f.bleed<=0)kill(f,f.lastBy||f,false,'bleed');}}
 function smashLand(f){sfx('smash',f,{range:22});const near=Math.hypot(ME.pos.x-f.pos.x,ME.pos.z-f.pos.z)<14;S.shake=Math.max(S.shake,f===ME||near?.45:.15);

@@ -4208,7 +4208,7 @@ const OPTIC_GUNS=['ar','gar','burst','shotgun','autoshot','mg','m60','smg','horn
 const XHAIR={m60:'#ff3fa4',duals:'#f4f6ff',sniper:'#ffffff',scout:'#c9d1dc',ar:'#4d8dff',gar:'#ffd23f',burst:'#c47dff',shotgun:'#ff6a2f',autoshot:'#36f3ff',revolver:'#ff2a55',crossbow:'#3bff7a',thumper:'#ffae1f',mg:'#ff3b2f',smg:'#c062ff',hornet:'#ffd21f',rocket:'#22e0cc',stars:'#bfe6ff',sword:'#ffd23f'};
 const GUNS={
   sniper:{name:'HDR',dmg:60,head:2,rate:1.3,mag:3,reload:2.4,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',note:'Long-range sniper: headshot downs in one, 2 body shots'},
-  scout:{name:'Kar98',dmg:45,head:2.2,rate:.7,mag:5,reload:2.0,spread:2.6,adsSpread:.15,pellets:1,fall:[30,80],zoom:34,auto:false,kick:.04,bloom:0,color:'#7a8f3d',note:'Short-range sniper: quick bolt, light scope'},
+  scout:{name:'Kar98',dmg:45,head:2.2,rate:.7,mag:5,reload:2.0,spread:2.6,adsSpread:.15,pellets:1,fall:[30,80],zoom:34,auto:false,kick:.04,bloom:0,color:'#6b717c',note:'Short-range sniper: quick bolt, light scope'},
   ar:{name:'AKM',dmg:22,head:1.8,rate:.17,mag:20,reload:1.9,spread:2.2,adsSpread:.25,ads:.24,pellets:1,fall:[40,100],zoom:42,auto:true,kick:.01,bloom:.12,color:'#f08a24',note:'Hard-hitting, steady at range; slow up close'},
   gar:{name:'M4',base:'ar',dmg:25,head:1.8,rate:.2,mag:25,reload:2.2,spread:2.1,adsSpread:.2,ads:.26,pellets:1,fall:[45,110],zoom:40,auto:true,kick:.012,bloom:.1,color:'#ffc23d',note:'Gold M4: hardest-hitting AR, slowest fire'},
   burst:{name:'FAMAS',base:'ar',dmg:18,head:1.9,rate:.42,burst:3,burstGap:.065,mag:24,reload:2.0,spread:1.8,adsSpread:.15,ads:.21,pellets:1,fall:[42,105],zoom:40,auto:false,kick:.009,bloom:.08,color:'#6c3bff',note:'3-round burst bullpup: lethal on headshots'},
@@ -4235,7 +4235,7 @@ const GUNS={
 };
 for(const k in GUNS)if(GUNS[k].reload)GUNS[k].reload*=.5; // reloads are 50% quicker
 for(const k in GUNS)if(GUNS[k].dmg)GUNS[k].dmg=Math.round(GUNS[k].dmg*1.2); // every weapon and ability hits 20% harder (fireball included) // every weapon hits 20% harder (shorter time to kill)
-const PRIMARIES=['sniper','scout','ar','gar','burst','crossbow','mg','m60'];
+const PRIMARIES=['gar','ar','burst','crossbow','mg','m60','sniper','scout'];
 let FLASH_TEX=null;function flashTex(){if(FLASH_TEX)return FLASH_TEX;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
   const gr=g.createRadialGradient(32,32,0,32,32,30);gr.addColorStop(0,'rgba(255,255,240,1)');gr.addColorStop(.25,'rgba(255,214,110,.85)');gr.addColorStop(.6,'rgba(255,150,40,.25)');gr.addColorStop(1,'rgba(255,120,20,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
   g.globalCompositeOperation='lighter';g.fillStyle='rgba(255,220,140,.55)';for(let i=0;i<5;i++){const a=i/5*Math.PI*2;g.save();g.translate(32,32);g.rotate(a);g.beginPath();g.moveTo(0,-2.5);g.lineTo(29,0);g.lineTo(0,2.5);g.closePath();g.fill();g.restore();}
@@ -4252,7 +4252,8 @@ function gunModel(id){const g=new THREE.Group();const sh=GUNS[id].base||id;const
   else if(sh==='rocket'){P(.27,.27,1.5,0,.13,.25,acc);P(.33,.33,.16,0,.13,1.0,dark);P(.33,.33,.16,0,.13,-.5,dark);P(.08,.22,.1,0,-.1,0,dark);P(.08,.08,.24,.16,.22,.3,mid);L=1.05;}
   else if(sh==='stars'){const sm=mat('#c9ced8',null,{roughness:.25,metalness:.8});const a=P(.42,.03,.1,0,0,.14,sm);a.rotation.y=Math.PI/4;const b=P(.42,.03,.1,0,0,.14,sm);b.rotation.y=-Math.PI/4;L=.15;}
   else if(sh==='fists'){L=.1;}
-  else if(sh==='sword'){const sm=mat('#dfe3ea',null,{roughness:.2,metalness:.85});P(.09,.035,1.45,0,0,.9,sm);P(.4,.07,.09,0,0,.14,mat('#ffc61a',null,{metalness:.6,roughness:.3}));P(.07,.07,.32,0,0,-.05,mat('#5b3a22'));L=1.6;}
+  else if(sh==='sword'){const n0=g.children.length,sm=mat('#dfe3ea',null,{roughness:.2,metalness:.85});P(.09,.035,1.45,0,0,.9,sm);P(.4,.07,.09,0,0,.14,mat('#ffc61a',null,{metalness:.6,roughness:.3}));P(.07,.07,.32,0,0,-.05,mat('#5b3a22'));L=1.6;
+    const fb=g.children.slice(n0),put=()=>{for(const c of fb)g.remove(c);const me=new THREE.Mesh(DSWORD.geo,DSWORD.mat);me.scale.setScalar(.83);me.position.z=.07;me.castShadow=true;g.add(me);};if(DSWORD.geo)put();else DSWORD.wait.push(put);}
   else if(sh==='revolver'){P(.1,.13,.34,0,.02,.1,mid);P(.16,.16,.16,0,.0,.02,dark);P(.05,.05,.32,0,.05,.36,dark);P(.09,.22,.12,0,-.14,-.06,acc);L=.52;}
   else if(sh==='crossbow'){P(.12,.14,.82,0,0,.2,dark);P(.76,.05,.12,0,.04,.55,acc);P(.03,.03,.7,0,.09,.45,mid);P(.06,.16,.1,0,-.13,-.05,dark);L=.65;}
   else if(sh==='thumper'){P(.14,.17,.36,0,0,.04,acc);P(.18,.18,.68,0,.05,.48,dark);P(.12,.2,.38,0,-.08,-.28,mid);P(.06,.16,.1,0,-.14,-.04,dark);L=.84;}
@@ -4381,6 +4382,23 @@ function loadPartsGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(u
       g.setAttribute('position',new THREE.BufferAttribute(acc(p.attributes.POSITION),3));g.setAttribute('normal',new THREE.BufferAttribute(acc(p.attributes.NORMAL),3));
       g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeBoundingSphere();parts[n.name]=g;}
     return {parts,piv,mat};});});}
+/* Dragon Sword: a Tripo model baked offline (about 19k triangles, 512px colour, metal/roughness and normal maps, blade along +z, grip near the origin).
+   Fetched once shortly after start-up; until it arrives the sword is the simple built-in blade, and every sword already built is swapped over when it lands.
+   Its menu card is a pre-rendered picture (models/dragon_sword_card.webp). */
+const DSWORD={geo:null,mat:null,wait:[]};
+function loadDragonSword(){return fetch('models/dragon_sword.glb').then(r=>{if(!r.ok)throw new Error('sword '+r.status);return r.arrayBuffer();}).then(buf=>{
+  const dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
+  const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
+  const acc=i=>{const a=J.accessors[i],v=J.bufferViews[a.bufferView],C=T[a.componentType],o=bo+(v.byteOffset||0)+(a.byteOffset||0);return new C(buf.slice(o,o+a.count*NC[a.type]*C.BYTES_PER_ELEMENT));};
+  const tex=(i,srgb)=>{const im=J.images[J.textures[i].source],v=J.bufferViews[im.bufferView];const u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
+    return new Promise((ok,no)=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.needsUpdate=true;ok(t);},undefined,no);});};
+  const Mt=J.materials[0],pb=Mt.pbrMetallicRoughness,p=J.meshes[0].primitives[0];
+  return Promise.all([tex(pb.baseColorTexture.index,true),tex(pb.metallicRoughnessTexture.index,false),tex(Mt.normalTexture.index,false)]).then(([map,mr,nm])=>{
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(acc(p.attributes.POSITION),3));g.setAttribute('normal',new THREE.BufferAttribute(acc(p.attributes.NORMAL),3));
+    g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeBoundingSphere();
+    DSWORD.geo=g;DSWORD.mat=new THREE.MeshStandardMaterial({map,metalnessMap:mr,roughnessMap:mr,normalMap:nm,metalness:1,roughness:1});
+    const w=DSWORD.wait.splice(0);for(const f of w){try{f();}catch(e){}}});});}
+setTimeout(()=>{loadDragonSword().catch(e=>console.warn(e));},1200);
 /* Sculpted character models (made in Tripo, split into the six moving parts offline, each carrying its own shoulder and hip pivots).
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
@@ -5080,7 +5098,7 @@ const SHARED_MOVES=['Gone fishing','Piledriver','Shadow grab','Overgrown'];
 const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',blink:'Sawn in half',tank:'Knockout',ghost:'Heartbreaker',patch:'Clear!',thorn:'Dog pile',angel:'Shadow grab',crusty:'Piledriver',wednesday:'Blur rush',antihero:'Hot potato',thor:'Overcharge',isaac:'Gone fishing'};
 const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'sniper',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:true,randChar:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:true,randChar:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -6890,7 +6908,7 @@ function updCamera(dt){
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){if(S.randMap)rollMap();if(S.randChar)rollChar();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='sniper';if(!S.sec||!GUNS[S.sec])S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){if(S.randMap)rollMap();if(S.randChar)rollChar();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='blaze';if(!S.cons)S.cons='grenade';if(!S.gun)S.gun='gar';if(!S.sec||!GUNS[S.sec])S.sec='smg';if(!S.map||!MAPS[S.map].modes.includes(S.mode))S.map=mapsFor(S.mode)[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'grenade');if(S.mode==='rumble')ME.primary=ME.secondary='fists';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -7320,7 +7338,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b
 function renderRecord(){const el=$('d-record');if(!el)return;let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}el.textContent=`${w}–${l}`;}
 function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapsFor(S.mode)[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.carrying=b.carriedBy=null;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
-  setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'sniper');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
+  setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;S.mstep='lobby';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 function setMode(m){if(m!=='duels'&&m!=='rumble')m='duels';document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
@@ -7725,8 +7743,8 @@ function heroModelV2(id,RB,vm){
     scope(.08,.34,.82,.085,black,chrome,glow('#dff4ff',1.2));rail(-.25,.45,.205,.08,gun);
     sling(-.09,.0,-1.0,steel);sling(-.09,.0,.7,steel);
   }
-  else if(id==='scout'){ // Kar98k: black stock with silver inlays to the muzzle, round Mauser receiver, turned-down bolt, barrel bands, ZF scope
-    const wd=M('#1b1d22',{roughness:.4,metalness:.15}),grain=M('#c9d1dc',{metalness:.9,roughness:.2}),wd2=M('#2a2d34',{roughness:.4,metalness:.2}),accent=M('#b9c2ce',{metalness:.9,roughness:.25}),glw=glow('#e9f2ff',.8);
+  else if(id==='scout'){ // Kar98k: gunmetal grey stock with black inlay stripes to the muzzle, round Mauser receiver, turned-down bolt, barrel bands, ZF scope
+    const wd=M('#6b717c',{roughness:.32,metalness:.6}),grain=M('#0f1013',{metalness:.3,roughness:.42}),wd2=M('#575d68',{roughness:.34,metalness:.62}),accent=M('#16171b',{metalness:.35,roughness:.4}),glw=M('#0b0c0f',{roughness:.28,metalness:.45});
     // butt stock with comb and pistol wrist, grain lines, steel butt plate, sling slot and disassembly disc
     ext([[-1.0,.04],[-.62,.035],[-.42,.02],[-.3,.02],[-.24,-.04],[-.22,-.16],[-.3,-.2],[-.38,-.1],[-.62,-.13],[-1.0,-.2]],.12,wd,0,.018);
     for(const [y0,y1] of [[.0,-.03],[-.05,-.07],[-.1,-.11],[-.15,-.13]]){const L=.6,b=box(.126,.01,L,0,(y0+y1)/2,-.72,grain,.002);b.rotation.x=(y0-y1)/L;}
@@ -7770,7 +7788,7 @@ function lethalModel(id,RB,lite){
   const g=new THREE.Group();
   const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:0},o||{}));
   const black=M('#16181d',{roughness:.55,metalness:.2}),gun=M('#3a3f49',{metalness:.8,roughness:.36}),steel=M('#2a2e36',{metalness:.9,roughness:.28}),
-    chrome=M('#e8edf5',{metalness:1,roughness:.12}),lever=M('#b9c0cb',{metalness:.95,roughness:.26}),gold=M('#ffc23d',{metalness:1,roughness:.22}),
+    chrome=M('#e8edf5',{metalness:1,roughness:.12}),lever=M('#b9c0cb',{metalness:.95,roughness:.26}),gold=M('#ffc23d',{metalness:1,roughness:.22}),brassM=M('#d9a441',{metalness:1,roughness:.3}),
     glow=(c,i=2.2)=>M(c,{emissive:c,emissiveIntensity:i,roughness:.2});
   const add=(geo,m,x,y,z,p)=>{const me=new THREE.Mesh(geo,m);me.position.set(x||0,y||0,z||0);(p||g).add(me);return me;};
   const box=(w,h,d,x,y,z,m,r=.01)=>add(RB(w,h,d,Math.max(.001,Math.min(r,w/2-.002,h/2-.002,d/2-.002)),3),m,x,y,z);
@@ -7785,8 +7803,8 @@ function lethalModel(id,RB,lite){
   const extF=(pts,d,m,z=0,b=.01,holes)=>{const s=new THREE.Shape();s.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)s.lineTo(pts[i][0],pts[i][1]);if(holes)for(const h of holes)s.holes.push(h);
     const ge=new THREE.ExtrudeGeometry(s,{depth:Math.max(.002,d-2*b),bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelSegments:2,curveSegments:12});ge.translate(0,0,-(d-2*b)/2);return add(ge,m,0,0,z);};
   // a strip that follows a (z,y) path with thickness t (outward = +z side), for spoons and handles
-  const strip=(path,t,w,m)=>{const out=[],inn=[];for(let i=0;i<path.length;i++){const a=path[Math.max(0,i-1)],b=path[Math.min(path.length-1,i+1)];let dz=b[0]-a[0],dy=b[1]-a[1];const L=Math.hypot(dz,dy)||1;dz/=L;dy/=L;
-    out.push([path[i][0]+dy*t,path[i][1]-dz*t]);inn.push(path[i]);}return ext(inn.concat(out.reverse()),w,m,0,.003);};
+  const strip=(path,t,w,m,x=0)=>{const out=[],inn=[];for(let i=0;i<path.length;i++){const a=path[Math.max(0,i-1)],b=path[Math.min(path.length-1,i+1)];let dz=b[0]-a[0],dy=b[1]-a[1];const L=Math.hypot(dz,dy)||1;dz/=L;dy/=L;
+    out.push([path[i][0]+dy*t,path[i][1]-dz*t]);inn.push(path[i]);}return ext(inn.concat(out.reverse()),w,m,x,.003);};
   // a printed band wrapped round a cylinder (canvas texture); transparent so the outline pass skips it
   const band=(r,h,y,tex,m0)=>{const ge=new THREE.CylinderGeometry(r,r,h,48,1,true);const m=new THREE.MeshStandardMaterial(Object.assign({map:tex,roughness:.5,transparent:true,side:THREE.FrontSide},m0||{}));return add(ge,m,0,y,0);};
   const stencil=(key,bg,fg,lines,stripe)=>lethTex(key,512,96,(c,w,h)=>{c.fillStyle=bg;c.fillRect(0,0,w,h);if(stripe){c.fillStyle=stripe;for(let x=-h;x<w;x+=36){c.beginPath();c.moveTo(x,h);c.lineTo(x+18,h);c.lineTo(x+18+h,0);c.lineTo(x+h,0);c.fill();}}
@@ -7800,11 +7818,17 @@ function lethalModel(id,RB,lite){
     fa(new THREE.CylinderGeometry(.068,.072,.03,28),steel,0,.012,0);for(let i=0;i<3;i++)fa(new THREE.TorusGeometry(.07,.004,6,32),gun,0,.004+i*.009,0).rotation.x=Math.PI/2; // threads
     fa(new THREE.LatheGeometry([[0,.028],[.082,.028],[.088,.04],[.088,.11],[.08,.125],[.06,.135],[.03,.14],[0,.141]].map(([r,y])=>new THREE.Vector2(r,y)),32),gun,0,0,0); // fuze body + domed cap
     fa(RB(.074,.1,.06,.012,3),gun,0,.085,.07); // striker housing
+    fa(new THREE.TorusGeometry(.086,.006,8,40),steel,0,.03,0).rotation.x=Math.PI/2; /* crimp ring where the fuze seats */
+    if(!lite){for(let i=0;i<12;i++){const a=i/12*Math.PI*2;const k=fa(RB(.006,.05,.012,.002,1),steel,Math.cos(a)*.089,.075,Math.sin(a)*.089);k.rotation.y=-a;} /* knurled fuze body */
+      fa(new THREE.CylinderGeometry(.022,.026,.012,16),brassM,0,.143,0);fa(new THREE.SphereGeometry(.014,12,8,0,Math.PI*2,0,Math.PI/2),brassM,0,.148,0);} /* primer cap */
     for(const s of [-1,1])fa(RB(.012,.05,.05,.004,2),steel,s*.042,.11,.085); // hinge ears
     if(!lite)fa(new THREE.CylinderGeometry(.009,.009,.1,10).rotateZ(Math.PI/2),chrome,0,.11,.095); // hinge pin
     // spoon (lever)
     const sp=strip([[.07,.145],[.1,.14],...spoonPath],.016,.064,lever);sp.position.y=top;
-    if(!lite){const rib=strip([[.075,.152],[.1,.148],...spoonPath.slice(0,-1)],.006,.02,lever);rib.position.y=top;rib.position.z=.012;}
+    if(!lite){const rib=strip([[.075,.152],[.1,.148],...spoonPath.slice(0,-1)],.006,.02,lever);rib.position.y=top;rib.position.z=.012;
+      for(const s2 of [-1,1]){const fl=strip([[.072,.15],[.1,.146],...spoonPath],.026,.008,lever,s2*.03);fl.position.y=top;} /* spoon edge flanges */
+      const sp1=spoonPath[1]||spoonPath[0];fa(new THREE.CylinderGeometry(.011,.011,.008,12).rotateX(Math.PI/2).rotateY(Math.PI/2),chrome,0,sp1[1]-.005,sp1[0]+.02); /* spoon rivet */
+      for(const s2 of [-1,1]){const lg=fa(new THREE.CylinderGeometry(.005,.005,.05,8),chrome,.115,.075+s2*.012,.04);lg.rotation.z=s2*.9;} /* split cotter legs */}
     // safety pin through the fuze, ring on the -x side
     fa(new THREE.CylinderGeometry(.007,.007,.25,10).rotateZ(Math.PI/2),chrome,-.02,.075,.04);
     fa(new THREE.TorusGeometry(.018,.006,8,20),chrome,-.15,.075,.04).rotation.y=Math.PI/2; // pin eye
@@ -7812,14 +7836,24 @@ function lethalModel(id,RB,lite){
     if(!lite){const clip=fa(new THREE.TorusGeometry(.05,.005,8,24,Math.PI*1.2),chrome,.04,.06,.1);clip.rotation.set(0,Math.PI/2,-.3);} // jungle clip over the spoon
     return F;};
 
-  if(id==='c_grenade'){ // M67 frag: smooth steel ball body, yellow HE band, seam
-    const olive=M('#5f8f2a',{roughness:.48,metalness:.18}),dk=M('#36521a',{roughness:.6,metalness:.1}),yl=M('#ffd21f',{roughness:.4});
-    const R=.25,pts=[];for(let i=0;i<=24;i++){const a=-Math.PI/2+i/24*(Math.PI/2+1.27);pts.push([R*Math.cos(a),R*1.04*Math.sin(a)]);}pts.unshift([0,-R*1.04]);pts.push([.08,.255],[.075,.262],[0,.262]);
-    lathe(pts,olive,48);
-    tor(R*1.0+.002,.006,0,-.02,0,dk,Math.PI*2,64).rotation.x=Math.PI/2; // body seam
-    {const a0=.78,a1=.96,bp=[];for(let i=0;i<=6;i++){const a=a0+(a1-a0)*i/6;bp.push([R*Math.cos(a)+.004,R*1.04*Math.sin(a)]);}lathe(bp,yl,48);} // yellow marking band
-    if(!lite){tor(.05,.006,0,-R*1.04+.006,0,dk,Math.PI*2,24).rotation.x=Math.PI/2;
-}
+  if(id==='c_grenade'){ /* M67 frag: cast steel ball in worn olive paint (speckle, chips and scuffs), yellow HE band and stencilled markings, raised neck collar, base plug */
+    const skin=lethTex('m67skin',1024,512,(c,w,h)=>{let sd=11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
+      c.fillStyle='#507a24';c.fillRect(0,0,w,h);
+      const gr=c.createLinearGradient(0,0,0,h);gr.addColorStop(0,'rgba(255,255,220,.10)');gr.addColorStop(.55,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(18,28,6,.4)');c.fillStyle=gr;c.fillRect(0,0,w,h);
+      for(let i=0;i<14000;i++){const x=r()*w,y=r()*h,q=r()*1.8+.4;c.fillStyle=r()<.55?'rgba(28,44,10,.32)':'rgba(160,200,95,.2)';c.fillRect(x,y,q,q);}
+      for(let i=0;i<60;i++){const x=r()*w,y=h*(.28+r()*.68),q=1.2+r()*4.5;c.fillStyle='rgba(58,60,56,.92)';c.beginPath();c.ellipse(x,y,q*1.7,q,r()*3,0,7);c.fill();c.fillStyle='rgba(190,195,186,.5)';c.beginPath();c.ellipse(x-.6,y-.6,q*.8,q*.45,0,0,7);c.fill();}
+      c.lineWidth=1.2;for(let i=0;i<40;i++){const x=r()*w,y=h*(.3+r()*.66);c.strokeStyle=`rgba(175,180,170,${.18+r()*.3})`;c.beginPath();c.moveTo(x,y);c.lineTo(x+18+r()*70,y+(r()-.5)*12);c.stroke();}
+      c.fillStyle='#ffd21f';c.fillRect(0,h*.205,w,h*.05);c.fillStyle='rgba(0,0,0,.18)';for(let i=0;i<300;i++)c.fillRect(r()*w,h*.205+r()*h*.05,2,2);
+      c.fillStyle='#ffd21f';c.textAlign='center';c.textBaseline='middle';
+      for(const u of [.25,.75]){c.font='bold 25px Arial, Helvetica, sans-serif';c.fillText('GRENADE, HAND',w*u,h*.335);c.fillText('FRAG  M67',w*u,h*.395);c.font='bold 15px Arial, Helvetica, sans-serif';c.fillText('LOT  MA-24K017-114',w*u,h*.465);}});
+    const bump=lethTex('m67bump',512,256,(c,w,h)=>{let sd=5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;c.fillStyle='#808080';c.fillRect(0,0,w,h);for(let i=0;i<9000;i++){const v=110+r()*60|0;c.fillStyle=`rgb(${v},${v},${v})`;c.fillRect(r()*w,r()*h,1+r()*2,1+r()*2);}});
+    const olive=new THREE.MeshStandardMaterial({map:skin,bumpMap:bump,bumpScale:.6,roughness:.55,metalness:.2}),dk=M('#36521a',{roughness:.6,metalness:.1}),od=M('#4d7522',{roughness:.5,metalness:.25});
+    const R=.25,pts=[[0,-R*1.04]];for(let i=1;i<=24;i++){const a=-Math.PI/2+i/24*(Math.PI/2+1.27);pts.push([R*Math.cos(a),R*1.04*Math.sin(a)]);}pts.push([.08,.255],[.075,.262],[0,.262]);
+    lathe(pts,olive,64);
+    tor(R*1.0+.002,.005,0,-.02,0,dk,Math.PI*2,72).rotation.x=Math.PI/2; /* casting seam */
+    lathe([[.07,.236],[.094,.238],[.1,.246],[.098,.258],[.084,.264],[.075,.264]],od,48); /* raised neck collar */
+    lathe([[0,-.262],[.045,-.262],[.05,-.256],[.046,-.25],[0,-.25]],od,32); /* base plug */
+    if(!lite)tor(.05,.004,0,-.254,0,dk,Math.PI*2,28).rotation.x=Math.PI/2;
     const sp=[];for(let i=0;i<=8;i++){const a=1.25-i*.17;sp.push([R*Math.cos(a)+.03,R*1.04*Math.sin(a)+.012]);}
     fuze(.255,sp);
   }
@@ -7941,6 +7975,7 @@ function lethalModel(id,RB,lite){
   }
   return g;}
 function heroModel(id,RB,vm){
+  if(id==='sword'&&DSWORD.geo){const g=new THREE.Group();g.add(new THREE.Mesh(DSWORD.geo,DSWORD.mat));return g;}
   {const v2=heroModelV2(id,RB,vm);if(v2)return v2;}
   {const lm=lethalModel(id,RB);if(lm)return lm;}
   const g=new THREE.Group();
@@ -8421,7 +8456,7 @@ function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.pa
   {const on=f.flashT>.02;for(const fl of ud.flash){fl.material.opacity=on?.55:0;fl.rotation.z=Math.random()*3;fl.scale.setScalar(.7+Math.random()*.5);}}}
 function renderVM(){if(!VM.cur||!VM.cur.visible||VM.raise<=0)return;VM.cam.aspect=innerWidth/innerHeight;VM.cam.updateProjectionMatrix();
   const ac=renderer.autoClear;renderer.autoClear=false;renderer.clearDepth();renderer.render(VM.scene,VM.cam);renderer.autoClear=ac;}
-const PREV={};const setCharPrev=()=>{for(const id of CHAR_IDS){PREV['p_'+id]=`chars/${id}_p.webp`;PREV['c_'+id]=`chars/${id}_c.webp`;}};setCharPrev();let previewsMade=false;
+const PREV={};const setCharPrev=()=>{PREV.g_sword='models/dragon_sword_card.webp';for(const id of CHAR_IDS){PREV['p_'+id]=`chars/${id}_p.webp`;PREV['c_'+id]=`chars/${id}_c.webp`;}};setCharPrev();let previewsMade=false;
 function previewTasks(){const T=[];
   const PS=new THREE.Scene();PS.background=new THREE.Color('#e9edf2');PS.add(new THREE.HemisphereLight('#ffffff','#b9c2cf',1.1));const dl=new THREE.DirectionalLight('#ffffff',1.6);dl.position.set(3,5,6);PS.add(dl);
   const PC=new THREE.PerspectiveCamera(28,1,.05,100);const W=renderer.domElement.width,H=renderer.domElement.height;PC.aspect=W/H;PC.updateProjectionMatrix();
@@ -8430,8 +8465,8 @@ function previewTasks(){const T=[];
     PC.position.set(c.x+dv.x*dist,ty+dv.y*dist,c.z+dv.z*dist);PC.lookAt(c.x,ty,c.z);renderer.render(PS,PC);
     const cv=document.createElement('canvas');cv.width=tw;cv.height=th;const g=cv.getContext('2d');const ar=tw/th;let sw=H*ar,sh=H;if(sw>W){sw=W;sh=W/ar;}
     g.drawImage(renderer.domElement,(W-sw)/2,(H-sh)/2,sw,sh,0,0,tw,th);PS.remove(obj);try{return cv.toDataURL('image/jpeg',.9);}catch(e){return '';}};
-  T.push(()=>{const HS=heroShots([...PRIMARIES,...SECONDARIES],B.roundedBox);
-  for(const id of [...PRIMARIES,...SECONDARIES]){if(HS[id]){PREV['g_'+id]=HS[id];continue;}const g=gunModel(id);for(const fm of (g.userData.flash||[]))fm.parent&&fm.parent.remove(fm);g.rotation.y=-Math.PI/2;const wrap=new THREE.Group();wrap.add(g);PREV['g_'+id]=snap(wrap,320,160,sz=>Math.max(sz.x*1.08,sz.y*2.3),null,new THREE.Vector3(.05,.18,1));}});
+  T.push(()=>{const HS=heroShots([...PRIMARIES,...SECONDARIES].filter(k=>k!=='sword'),B.roundedBox);
+  for(const id of [...PRIMARIES,...SECONDARIES]){if(id==='sword')continue;if(HS[id]){PREV['g_'+id]=HS[id];continue;}const g=gunModel(id);for(const fm of (g.userData.flash||[]))fm.parent&&fm.parent.remove(fm);g.rotation.y=-Math.PI/2;const wrap=new THREE.Group();wrap.add(g);PREV['g_'+id]=snap(wrap,320,160,sz=>Math.max(sz.x*1.08,sz.y*2.3),null,new THREE.Vector3(.05,.18,1));}});
   T.push(()=>{const HC=heroShots(CONS_IDS.map(k=>'c_'+k),B.roundedBox,420,280);for(const k in HC)PREV['g_'+k]=HC[k];});
   T.push(()=>{renderer.setRenderTarget(null);previewsMade=true;});return T;}
 /* menu pictures (characters, guns, lethals, map thumbnails) used to be drawn all at once before the menu appeared, every visit.

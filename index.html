@@ -3693,7 +3693,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   const t1=railTrain(-3.5,1,[['loco','#f4c22b'],['box','#a63a2a'],['flat',null,'box'],['tank','#e9ecef'],['hopper','#6b5a3a'],['box','#2f7fe0'],['flat']],{speed:11,gap:16,ph:0});
   const t2=railTrain(3.5,-1,[['loco','#2f63c8'],['hopper','#3a3d45'],['box','#3bb54a'],['flat'],['box','#e8463a'],['tank','#16171c']],{speed:10,gap:22,ph:21});
   railTrainInit(t1);railTrainInit(t2);
-  M.shopAt=[{x:23,z:-14}];
+  M.shopAt=[{x:0,z:0,k:.8}];
   M.spawns=[[-44,-50],[44,50],[-44,48],[44,-50],[-45,-14],[45,14],[-24,-31],[24,26],[-36,16],[36,-16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 // ---------- Playtime: fight at toy size across a kid's bedroom floor. Giant books, a toy chest, blocks, dominoes, dice and a checkers board ----------
@@ -4090,7 +4090,7 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
 function buildMap(id){clearMap();OPEN_STAIRS=false;M.id=id;MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: fists only, no shop */
-  if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
+  if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
   const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
@@ -4104,26 +4104,27 @@ function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.inc
   // one shop per map, on the most open ground near the middle
   const A=spot(c.x,c.z);
   for(const best of [A]){if(!best)continue;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy);}}
-function buildShop(x,z,gy){
+// k < 1 builds a narrower kiosk (the roof, awning, sign and glow shrink; the counter stays the same) for tight spots such as between the Railed tracks
+function buildShop(x,z,gy,k=1){
   box(x,gy,z,1.5,1.05,1.5,'#f4efe6');box(x,gy+.62,z,1.56,.34,1.56,'#ffc61a',{solid:false});
   const goods=['#3bb54a','#2f7fe0','#a05ad6','#3f6b3a'];goods.forEach((g,i)=>box(x+(i%2?.35:-.35),gy+1.05,z+(i<2?.35:-.35),.34,.34,.34,g,{solid:false}));
   // one slim post up from the middle of the counter holds the roof (the four corner poles got in the way)
   box(x,gy+1.05,z,.14,1.8,.14,'#f4efe6');
-  box(x,gy+2.85,z,3.9,.14,3.9,'#d8d4cc');
+  box(x,gy+2.85,z,3.9*k,.14,3.9*k,'#d8d4cc');
   // striped awning skirt on all four sides
-  for(let i=0;i<6;i++){const o=-1.62+i*.65,col=i%2?'#ffffff':'#e8463a';box(x+o,gy+2.55,z+1.95,.65,.3,.08,col,{solid:false});box(x+o,gy+2.55,z-1.95,.65,.3,.08,col,{solid:false});box(x+1.95,gy+2.55,z+o,.08,.3,.65,col,{solid:false});box(x-1.95,gy+2.55,z+o,.08,.3,.65,col,{solid:false});}
+  for(let i=0;i<6;i++){const o=(-1.62+i*.65)*k,W=.65*k,A=1.95*k,col=i%2?'#ffffff':'#e8463a';box(x+o,gy+2.55,z+A,W,.3,.08,col,{solid:false});box(x+o,gy+2.55,z-A,W,.3,.08,col,{solid:false});box(x+A,gy+2.55,z+o,.08,.3,W,col,{solid:false});box(x-A,gy+2.55,z+o,.08,.3,W,col,{solid:false});}
   // four-sided SHOP sign so it reads from every angle
   const cv=document.createElement('canvas');cv.width=512;cv.height=144;const g=cv.getContext('2d');g.fillStyle='#ffc61a';g.fillRect(0,0,512,144);g.lineWidth=14;g.strokeStyle='#14161c';g.strokeRect(7,7,498,130);
   g.fillStyle='#14161c';g.font='bold 96px Bungee, Impact, "Arial Black", sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('SHOP',256,78);
   const tex=new THREE.CanvasTexture(cv);if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;const sm=new THREE.MeshBasicMaterial({map:tex,toneMapped:false}),gm=new THREE.MeshBasicMaterial({color:'#ffc61a',toneMapped:false});
-  const sign=new THREE.Mesh(new THREE.BoxGeometry(2.6,.74,2.6),[sm,sm,gm,gm,sm,sm]);sign.position.set(x,gy+3.42,z);M.group.add(sign);
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(2.6*k,.74,2.6*k),[sm,sm,gm,gm,sm,sm]);sign.position.set(x,gy+3.42,z);M.group.add(sign);
   // glowing edges round the top of the kiosk so you can spot it from anywhere
   const glm=new THREE.MeshBasicMaterial({color:'#ffd23f',toneMapped:false}),hm=new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
-  const glow=[];const ry=gy+2.92,E=1.98,yt=gy+3.79,Es=1.32;
+  const glow=[];const ry=gy+2.92,E=1.98*k,yt=gy+3.79,Es=1.32*k;
   for(const [w,d,ox,oz,y] of [[2*E+.14,.14,0,E,ry],[2*E+.14,.14,0,-E,ry],[.14,2*E+.14,E,0,ry],[.14,2*E+.14,-E,0,ry],[2*Es+.1,.1,0,Es,yt],[2*Es+.1,.1,0,-Es,yt],[.1,2*Es+.1,Es,0,yt],[.1,2*Es+.1,-Es,0,yt]]){
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),glm);m.position.set(x+ox,y,z+oz);m.userData.dyn=1;M.group.add(m);
-    const h=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.5,d+.5),hm);h.position.copy(m.position);h.userData.dyn=1;M.group.add(h);glow.push(h);}
-  const pad=new THREE.Mesh(new THREE.RingGeometry(1.15,3,40),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);M.group.add(pad);
+    const h=new THREE.Mesh(new THREE.BoxGeometry(w+.5*k,.5,d+.5*k),hm);h.position.copy(m.position);h.userData.dyn=1;M.group.add(h);glow.push(h);}
+  const pad=new THREE.Mesh(new THREE.RingGeometry(1.15*k,3*k,40),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);M.group.add(pad);
   const sh={x,z,y:gy,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;}
 
 /* ================= nav grid ================= */

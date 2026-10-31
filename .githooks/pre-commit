@@ -1,0 +1,5 @@
+#!/bin/sh
+# imok 1v1: refuse the commit if any script in index.html (or sw.js) has a syntax error.
+# Turned on once per clone with: git config core.hooksPath .githooks
+if ! command -v node >/dev/null 2>&1; then echo "pre-commit: node not found, skipping the syntax check" >&2; exit 0; fi
+node "$(git rev-parse --show-toplevel)/tools/check.js" >/dev/null || { node "$(git rev-parse --show-toplevel)/tools/check.js"; echo "Commit blocked: fix the errors above." >&2; exit 1; }

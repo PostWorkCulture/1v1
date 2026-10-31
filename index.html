@@ -5508,7 +5508,7 @@ function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&cfg.g
     if(src===ME&&o!==ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,src,false,cfg.gun);if(cfg.burn){o.burnT=2.5;o.burnBy=src;}}
   splashBricks(at,Rr,cfg.wall||120);blastProps(at,Rr,src);
   for(let i=mines.length-1;i>=0;i--){const m=mines[i];if(i<mines.length&&Math.hypot(m.x-at.x,m.y-at.y,m.z-at.z)<Math.min(Rr,3)&&Math.hypot(m.x-at.x,m.z-at.z)>.05)boomMine(m,i);}}
-function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
+function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='fists'){f.punchT=.26;f.punchL=!f.punchL;}const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
   const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());for(let k=0;k<10;k++){const a=f.yaw+(k/9-.5)*1.6;emit(f.pos.x+Math.sin(a)*1.7,e.y-.6,f.pos.z+Math.cos(a)*1.7,{n:1,speed:.3,size:.16,life:.25,grav:0,colors:['#ffffff','#ffe9a8']});}
   for(const foe of foesOf(f).sort(byDist(f))){const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dy=foe.pos.y-f.pos.y,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
     if(dist<g.reach+(aerial?.5:0)&&(Math.abs(dy)<1.9||(aerial&&dy<0&&dy>-3.2))&&ang<g.arc&&los(e,new V3(foe.pos.x,foe.pos.y+1.2*SC,foe.pos.z))){const dm=aerial?20:g.dmg;
@@ -6940,6 +6940,13 @@ function animFighter(f,dt,menu){const ch=f.ch;
   f.swingT=Math.max(0,(f.swingT||0)-dt);const sg=f.swingT>0?Math.sin((1-f.swingT/.32)*Math.PI):0;
   const p=(menu?-.15:f.pitch)-relo-sw;const k=f.kick*.12;
   ch.aR.p.rotation.set(-Math.PI/2-p-k+sg*.9,-.08-sg*1.4,0);ch.aL.p.rotation.set(-Math.PI/2-p+.1-k,.62,0);
+  {/* fists: boxing guard with both fists up, and each punch shoots one arm straight out at the target (alternating), shoulder turned into it */
+   const A=ch.aR.p,L=ch.aL.p;A.userData.z0??=A.position.z;L.userData.z0??=L.position.z;
+   if(gunOf(f)==='fists'&&f.alive&&!f.downed){f.punchT=Math.max(0,(f.punchT||0)-dt);const t=f.punchT>0?1-f.punchT/.26:1,u=f.punchT>0?(t<.35?t/.35:Math.max(0,1-(t-.35)/.65)):0,e=u*u*(3-2*u);
+    const bob=Math.sin(S.t*6+(f.phase||0))*.05,gx=-1.75-p*.4+bob,jab=-Math.PI/2-p,r=f.punchL?0:e,l=f.punchL?e:0;
+    A.rotation.set(gx+(jab-gx)*r,-.5+.44*r,.05);L.rotation.set(gx-bob*2+(jab-gx)*l,.5-.44*l,-.05);
+    A.position.z=A.userData.z0+.35*r;L.position.z=L.userData.z0+.35*l;ch.root.rotation.y+=(l-r)*.28;}
+   else{A.position.z=A.userData.z0;L.position.z=L.userData.z0;}}
   ch.headG.rotation.x=-clamp(f.pitch,-.6,.6)*.6;
   {const dg=f.guns.duals;if(dg&&dg.userData.twin){const tw=dg.userData.twin;tw.visible=dg.visible;if(dg.visible)ch.aL.p.rotation.set(-Math.PI/2-p-k*(f.dualL?1:0),.06,0);for(const m of tw.userData.flash)m.material.opacity=f.flashT>0&&f.dualL?1:0;}}
   const fl=f.guns[gunOf(f)].userData.flash;f.flashT-=dt;{const on=f.flashT>0&&!(gunOf(f)==='duals'&&f.dualL)&&!(f===ME&&VM.raise>.3);const sc=.75+Math.random()*.5;for(const m of fl){m.material.opacity=on?.85:0;m.rotation.z=Math.random()*3;m.scale.setScalar(sc);}}

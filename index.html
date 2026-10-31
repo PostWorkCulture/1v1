@@ -3910,6 +3910,42 @@ function playroom(){const X=44,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};tyBlkN=0;
   M.shopAt=[{x:0,z:-44.5},{x:0,z:44.5}];
   const sp=[[-14,47],[14,48],[-34,43],[36,45],[0,33]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
+// cross ramp in the middle of Arena: a raised square deck with four ramps running down to the floor, each in its own colour, curbs with glowing strips along both sides
+function arenaCross(){const C=3.25,H=2,L=8,n=8,cw=.3,cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'],glows=[];
+  const dark=c=>{const v=new THREE.Color(c);v.multiplyScalar(.62);return '#'+v.getHexString();};
+  // centre deck
+  collider(-C,C,0,H,-C,C);box(0,0,0,2*C,H-.2,2*C,'#2b2f3a',{solid:false});box(0,H-.2,0,2*C,.2,2*C,'#f4c22b',{solid:false,extra:{roughness:.4}});
+  {const t=canvasTex(512,512,(g,w,h)=>{g.fillStyle='#f4c22b';g.fillRect(0,0,w,h);g.translate(w/2,h/2);for(let i=0;i<16;i++){g.fillStyle=i%2?'#ffd96a':'#f7b416';g.beginPath();g.moveTo(0,0);g.arc(0,0,400,i*TAU/16,(i+1)*TAU/16);g.fill();}
+      g.fillStyle='#ffffff';g.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?62:150;i?g.lineTo(Math.cos(a)*r,Math.sin(a)*r):g.moveTo(Math.cos(a)*r,Math.sin(a)*r);}g.fill();
+      g.strokeStyle='#1d1f27';g.lineWidth=18;g.strokeRect(-w/2+9,-h/2+9,w-18,h-18);});
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(2*C,2*C),new THREE.MeshStandardMaterial({map:t,roughness:.45}));m.rotation.x=-Math.PI/2;m.position.set(0,H+.006,0);M.group.add(m);}
+  const ang=Math.atan2(H,L),len=Math.hypot(H,L);
+  const chev=canvasTex(256,512,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.9)';for(const y of [60,220,380]){g.beginPath();g.moveTo(20,y+110);g.lineTo(w/2,y);g.lineTo(w-20,y+110);g.lineTo(w-20,y+160);g.lineTo(w/2,y+50);g.lineTo(20,y+160);g.closePath();g.fill();}});
+  // arms: k=0 +x, 1 +z, 2 -x, 3 -z
+  [[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dz],k)=>{const col=cols[k],ry=Math.atan2(-dz,dx);
+    // walkable steps (0.25 m each) and the curbs either side, all axis-aligned
+    const Wbox=(u0,u1,w0,w1,y0,y1)=>{const xs=[dx*u0+dz*w0,dx*u1+dz*w1,dx*u0+dz*w1,dx*u1+dz*w0],zs=[dz*u0-dx*w0,dz*u1-dx*w1,dz*u0-dx*w1,dz*u1-dx*w0];collider(Math.min(...xs),Math.max(...xs),y0,y1,Math.min(...zs),Math.max(...zs));};
+    for(let i=0;i<n;i++){const u0=C+i*L/n,u1=u0+L/n,top=H*(1-i/n);Wbox(u0,u1,-C+cw,C-cw,0,top);for(const s of [-1,1])Wbox(u0,u1,s>0?C-cw:-C,s>0?C:-C+cw,0,top+.6);}
+    // the look: a group laid out along +u then turned to face its direction
+    const g=new THREE.Group();g.rotation.y=ry;M.group.add(g);const add=(geo,m,x,y,z,rz)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);if(rz)o.rotation.z=rz;o.castShadow=true;o.receiveShadow=true;g.add(o);return o;};
+    const um=C+L/2,top=new THREE.MeshStandardMaterial({color:col,roughness:.35});
+    add(new THREE.BoxGeometry(len,.2,2*C),top,um,H/2-.1,0,-ang);
+    const ch=add(new THREE.PlaneGeometry(L*.55,2*C*.5),new THREE.MeshBasicMaterial({map:chev,transparent:true,depthWrite:false}),um,H/2+.015,0,0);ch.rotation.set(-Math.PI/2,0,Math.PI/2);ch.rotateOnWorldAxis?0:0;ch.rotation.order='YXZ';ch.rotation.set(-Math.PI/2+0,0,0);
+    {const p=new THREE.Object3D();p.rotation.z=-ang;p.position.set(um,H/2+.02,0);g.add(p);g.remove(ch);ch.position.set(0,0,0);ch.rotation.set(-Math.PI/2,0,Math.PI/2);p.add(ch);}
+    // solid wedge underneath in a darker shade
+    {const sh=new THREE.Shape();sh.moveTo(C,0);sh.lineTo(C+L,0);sh.lineTo(C,H-.2);sh.closePath();const eg=new THREE.ExtrudeGeometry(sh,{depth:2*C-.02,bevelEnabled:false});eg.translate(0,0,-C+.01);add(eg,new THREE.MeshStandardMaterial({color:dark(col),roughness:.6}),0,0,0);}
+    // curbs with a glowing strip on top
+    const cm=new THREE.MeshStandardMaterial({color:'#f4f5f7',roughness:.4}),gm=new THREE.MeshBasicMaterial({color:col,toneMapped:false});glows.push(gm);
+    for(const s of [-1,1]){add(new THREE.BoxGeometry(len,.6,cw),cm,um,H/2+.3,s*(C-cw/2),-ang);add(new THREE.BoxGeometry(len,.08,cw+.04),gm,um,H/2+.64,s*(C-cw/2),-ang);
+      add(new THREE.BoxGeometry(.3,.6+.02,cw),cm,C+L-.15,.3,s*(C-cw/2));}});
+  // rounded posts where the curbs meet at the corners of the deck
+  for(const sx of [-1,1])for(const sz of [-1,1]){const p=deco(gC(.32,.32,H+.6,16),mat('#f4f5f7',null,{roughness:.4}),sx*(C-.15),(H+.6)/2,sz*(C-.15));const b=deco(gC(.34,.34,.1,16),new THREE.MeshBasicMaterial({color:'#f4c22b',toneMapped:false}),sx*(C-.15),H+.62,sz*(C-.15));}
+  // a ring of light turning slowly over the deck, and the glow strips breathing
+  {const rg=new THREE.Group();rg.userData.dyn=1;rg.position.y=7;M.group.add(rg);const rm=new THREE.MeshBasicMaterial({color:'#ffffff',toneMapped:false,transparent:true,opacity:.85});
+    cols.forEach((c,i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(2.6,.09,8,48,TAU/4-.15),new THREE.MeshBasicMaterial({color:c,toneMapped:false}));t.rotation.x=Math.PI/2;t.rotation.z=i*TAU/4;rg.add(t);});
+    const inner=new THREE.Mesh(new THREE.TorusGeometry(1.7,.05,8,48),rm);inner.rotation.x=Math.PI/2;rg.add(inner);
+    const base=glows.map(m=>m.color.clone());
+    M.life.push(t=>{rg.rotation.y=t*.8;rg.position.y=7+Math.sin(t*1.4)*.35;inner.rotation.y=Math.sin(t)*.3;const k=.7+.3*Math.sin(t*3);glows.forEach((m,i)=>m.color.copy(base[i]).multiplyScalar(.75+.4*Math.sin(t*3+i*1.57)));});}}
 // ---------- Arena: a plain square floor with a handful of tall pillars to duck behind ----------
 function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-120,120,-120,120,'#8f969e','asphalt',-.02,1);floor(-X,X,-Z,Z,'#d9dce1','tile',0,4);
@@ -3923,7 +3959,7 @@ function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   // pillars: tall enough that nobody stands on top, square with a base and a cap, an end-colour band
   const pillar=(x,z,s,band)=>{box(x,0,z,s,9,s,'#eef0f3',{extra:{roughness:.55}});box(x,0,z,s+.5,.5,s+.5,'#9aa0a8',{solid:false});box(x,8.6,z,s+.5,.6,s+.5,'#9aa0a8',{solid:false});
     box(x,2.6,z,s+.06,.5,s+.06,band,{solid:false,edges:false});};
-  pillar(0,0,4,'#f4c22b');
+  arenaCross();
   for(const sx of [-1,1])for(const sz of [-1,1])pillar(sx*12,sz*13,3,sz>0?'#e8463a':'#2f7fe0');
   for(const sz of [-1,1])pillar(0,sz*23,3,sz>0?'#e8463a':'#2f7fe0');
   M.shopAt=[{x:0,z:-33.5},{x:0,z:33.5}];
@@ -3931,7 +3967,7 @@ function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
 
 const MAPS={
  toys:{modes:['duel'],name:'Playtime',desc:'Toy-sized fights on a bedroom floor: book towers, a toy chest, blocks and board games',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
- arena:{modes:['duel'],name:'Arena',desc:'A plain open floor with a few pillars',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap();}},
+ arena:{modes:['duel'],name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
   // a square plot (104 x 104 m) instead of a long strip
   const X=52,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};

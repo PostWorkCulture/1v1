@@ -5706,6 +5706,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
     spawnProj(f,id,mz,d2);if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick,-1.3,1.3);}f.bloom=Math.min(f.bloom+g.bloom,3);if(id==='grenade'&&f.ammo[id]<=0&&f.bot)equip(f,0);return;}if(!fromBurst){f.fireT=g.rate;if(g.burst){f.burstN=g.burst-1;f.burstT=g.burstGap;}}f.ammo[id]--;f.flashT=.05;f.kick=1;{const gs=GSND[id];if(gs)sfx(gs[0],f,{rate:gs[1],range:id==='sniper'||id==='scout'?30:16});}
   if(id==='duals')f.dualL=!f.dualL;let mz=(id==='duals'&&f.dualL?f.guns.duals.userData.twin:f.guns[id]).userData.muzzle.getWorldPosition(new V3());if(f===ME&&VM.raise>.5)mz=origin.clone().addScaledVector(dir,.9).add(new V3(0,-.09,0));const spr=curSpread(f);let anyHit=false,killed=false,head=false;const hits=new Map();
   for(let p=0;p<g.pellets;p++){const d=spreadDir(dir,spr);const pen=rayPen(origin,d,400),hb=pen.hit;const hf=rayFoes(origin,d,f);
+    if(mines.length){const mh=rayMine(origin,d,Math.min(hb?hb.t:400,hf?hf.t:400));if(mh){if(NET.role!=='client')popMine(mh.m.x,mh.m.z);if(p<3)tracer(mz,origin.clone().addScaledVector(d,mh.t),f===ME?'#fff3b0':'#ffd0c0',.045);continue;}}
     let end;if(hf&&(!hb||hf.t<hb.t)){end=origin.clone().addScaledVector(d,hf.t);const dist=hf.t;let dm=g.dmg*(hf.part==='head'?g.head:1)*Math.pow(.7,pen.woods.filter(w=>w.t<hf.t).length);
       if(g.fall){dm*=dist<=g.fall[0]?1:dist>=g.fall[1]?.45:lerp(1,.45,(dist-g.fall[0])/(g.fall[1]-g.fall[0]));}
       const hr=hits.get(hf.who)||{t:0,h:false,n:0,d:1e9};hr.t+=dm;hr.n++;hr.d=Math.min(hr.d,dist);if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;emit(end.x,end.y,end.z,{n:4,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});}
@@ -6480,6 +6481,10 @@ function boomMine(m,i){scene.remove(m.mesh);mines.splice(i,1);explode(m.f,new V3
 function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];m.t+=dt;if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
   if(!m.f||S.state!=='fight')continue;if(FS.some(o=>o.alive&&isFoe(m.f,o)&&!o.finishing&&Math.hypot(o.pos.x-m.x,o.pos.z-m.z)<1.7&&Math.abs(o.pos.y-m.y)<1.1)){sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10});boomMine(m,i);}}}
 function clearMines(){for(const m of mines)scene.remove(m.mesh);mines.length=0;}
+/* shooting a mine breaks it harmlessly: no blast, no damage. The host decides and mirrors popMine to the friend */
+function rayMine(o,d,maxT){let best=null;for(const m of mines){const cx=m.x-o.x,cy=m.y+.12-o.y,cz=m.z-o.z,t=cx*d.x+cy*d.y+cz*d.z;if(t<0||t>maxT||(best&&t>=best.t))continue;const q=cx*cx+cy*cy+cz*cz-t*t;if(q<.16)best={m,t};}return best;}
+function popMine(x,z){let bi=-1,bd=.6;for(let i=0;i<mines.length;i++){const dd=Math.hypot(mines[i].x-x,mines[i].z-z);if(dd<bd){bd=dd;bi=i;}}if(bi<0)return;const m=mines[bi];scene.remove(m.mesh);mines.splice(bi,1);
+  emit(m.x,m.y+.15,m.z,{n:14,speed:4,up:2,size:.1,life:.45,colors:['#9aa0a8','#3a3d45','#ffd23f','#ffffff']});emit(m.x,m.y+.2,m.z,{n:6,speed:1,up:1.5,size:.22,life:.7,grav:-1,colors:['#6b717c','#8a8f99']});sfx('impact',{x:m.x,y:m.y,z:m.z},{range:12,rate:.8});sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10,rate:1.3});}
 function stunBlast(src,at){blastMarks(at,null,GUNS.stun.radius*.45);sfx('stun',at,{range:20});emit(at.x,at.y,at.z,{n:60,speed:11,size:.24,life:.45,grav:0,colors:['#ffffff','#dff0ff','#7fc4ff']});emit(at.x,at.y,at.z,{n:14,speed:2,size:.6,life:.9,grav:-.5,colors:['#e8ecf2','#c9ced8']});
   const R=GUNS.stun.radius;let hitAny=false;for(const f of FS){if(!f.alive||f.finishing||(f!==src&&!isFoe(src,f)))continue;const c=new V3(f.pos.x,f.pos.y+1.4*(f.scale||1),f.pos.z),d=c.distanceTo(at);if(d>R||!los(at,c))continue;
     const k=1-d/R;if(f!==src)hitAny=true;f.dazeT=Math.max(f.dazeT||0,f===src?1.5:3);if(f.ads)f.ads=false;
@@ -8892,7 +8897,7 @@ function deser(v){if(v==null||typeof v!=='object')return v;if(Array.isArray(v))r
 const MIRROR={};
 for(const [name,get,set] of [['startRound',()=>startRound,f=>startRound=f],['endRound',()=>endRound,f=>endRound=f],['matchEnd',()=>matchEnd,f=>matchEnd=f],['dmWin',()=>dmWin,f=>dmWin=f],
   ['down',()=>down,f=>down=f],['kill',()=>kill,f=>kill=f],['finish',()=>finish,f=>finish=f],['fire',()=>fire,f=>fire=f],['useAbility',()=>useAbility,f=>useAbility=f],
-  ['useCons',()=>useCons,f=>useCons=f],['throwNade',()=>throwNade,f=>throwNade=f],['buildWall',()=>buildWall,f=>buildWall=f]]){
+  ['useCons',()=>useCons,f=>useCons=f],['popMine',()=>popMine,f=>popMine=f],['throwNade',()=>throwNade,f=>throwNade=f],['buildWall',()=>buildWall,f=>buildWall=f]]){
   const orig=get();MIRROR[name]=orig;set(function(...a){const r=orig.apply(this,a);
     if(NET.role==='host'&&NET.live&&!(name==='fire'&&NET.fromRemote))NET.ev.push([name,a.map(ser)]);
     if(name==='startRound'&&NET.role==='host'&&NET.R)netApplyLoad(NET.R);return r;});}

@@ -756,7 +756,9 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .d-lob{display:contents}
 #menu .mfull.duels[data-step="lobby"] .m3{grid-template-columns:minmax(270px,.9fr) minmax(440px,1.55fr)}
 #menu .mfull.duels[data-step="lobby"] .d-lob{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;flex:1 1 auto;min-height:0}
-#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(3,84px);align-content:start;overflow-y:auto;min-height:0;padding:3px;margin:-3px;flex:none}
+#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(4,84px);align-content:start;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;min-height:0;padding:3px;margin:-3px;flex:none}
+#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars::-webkit-scrollbar{display:none}
+@media (max-width:1180px){#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(3,84px)}}
 #menu .mfull.duels[data-step="lobby"] .d-lob .stage{height:100%;min-height:320px}
 @media (max-width:900px){#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(2,84px)}}
 @media (max-width:720px){#menu .mfull.duels[data-step="lobby"] .d-lob{grid-template-columns:1fr}#menu .mfull.duels[data-step="lobby"] .d-lob .stage{order:-1;height:clamp(300px,52vh,520px)}.st-fig,.st-floor,.st-wave{left:50%!important}.st-fig{height:68%}.st-info{max-width:none}.st-name{font-size:34px}.st-desc{font-size:12px;max-width:62%}.st-stats span{font-size:12px;padding:5px 8px}.st-stats em{min-width:58px}#menu .mfull.duels[data-step="lobby"] .d-lob .d-chars{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));overflow:visible}}
@@ -930,13 +932,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
             <div class="seg mode" role="radiogroup" aria-label="Game mode" id="mode">
               <button role="radio" data-mode="duels" aria-checked="true">Duels</button>
               <button role="radio" data-mode="rumble" aria-checked="false">Rumble</button>
-              <button role="radio" data-mode="one" aria-checked="false">1v1</button>
             </div>
-            <div id="d-rulesrow" hidden><div class="msub">1v1 rules</div>
-            <div class="seg" role="radiogroup" aria-label="1v1 rules" id="d-rules">
-              <button role="radio" data-rules="simple" aria-checked="false">Simple</button>
-              <button role="radio" data-rules="normal" aria-checked="true">Normal</button>
-            </div></div>
             <p class="tag" hidden>First to five rounds against a bot.</p>
             <div class="msub" id="d-teamlbl">Players</div>
             <div class="seg" role="radiogroup" aria-label="Players" id="d-team">
@@ -944,6 +940,11 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
               <button role="radio" data-team="2v2" aria-checked="false">2v2</button>
               <button role="radio" data-team="ffa" aria-checked="false">Free for all</button>
             </div>
+            <div id="d-rulesrow" hidden><div class="msub">1v1 rules</div>
+            <div class="seg" role="radiogroup" aria-label="1v1 rules" id="d-rules">
+              <button role="radio" data-rules="normal" aria-checked="true">Normal</button>
+              <button role="radio" data-rules="simple" aria-checked="false">Simple</button>
+            </div></div>
             <div id="d-ffanrow" hidden><div class="msub">Free for all size</div>
             <div class="seg" role="radiogroup" aria-label="Number of players in free for all" id="d-ffan">
               <button role="radio" data-n="2" aria-checked="false">2</button>
@@ -5352,8 +5353,8 @@ const SIG={brute:'Pancake',frost:'Ice sculpture',jet:'Sky drop',blaze:'Roast',bl
 const MOVES=[...new Set([...Object.values(SIG),...SHARED_MOVES])];
 const mapsFor=m=>Object.keys(MAPS).filter(k=>MAPS[k].modes.includes(m));
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const mapOK=m=>!!m&&(S.one?(S.simple?!!m.one:m.normal!==false&&(!!m.one||m.modes.includes('duel'))):m.modes.includes(S.mode)&&!m.one),oneTop=e=>!!e[1].one||(!S.simple&&e[0]==='arena'),mapRank=(a,b)=>(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:false,randChar:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const mapOK=m=>!!m&&(S.one?(S.simple?!!m.one:m.normal!==false&&(!!m.one||m.modes.includes('duel'))):m.modes.includes(S.mode)&&!m.one),oneTop=e=>!!e[1].one||(!S.simple&&e[0]==='arena'),mapRank=(a,b)=>((a[0]==='toys')-(b[0]==='toys'))||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'grenade',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:store.get('duel:ffan',4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:true,randChar:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -7605,13 +7606,15 @@ function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.sta
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':S.simple?SIMPLE_KIT.primary:(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;S.mstep='lobby';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
-function setMode(m){if(m==='simple'){m='one';S.rules='simple';store.set('duel:rules','simple');}if(m!=='duels'&&m!=='rumble'&&m!=='one')m='duels';S.one=m==='one';S.simple=S.one&&S.rules==='simple';if(S.one)S.players='1v1';else{S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));if(m==='duels'&&S.players==='1v1')S.players='2v2';}document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
-  const du=m==='duels'||m==='rumble'||m==='one';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',m);
+/* 1v1 rules (Normal or Simple) apply to Duels with 1v1 picked under Players */
+function syncOne(){S.one=S.mode==='duel'&&S.players==='1v1';S.simple=S.one&&S.rules==='simple';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;}
+function setMode(m){if(m==='simple'||m==='one'){if(m==='simple'){S.rules='simple';store.set('duel:rules','simple');}m='duels';store.set('duel:players','1v1');}if(m!=='duels'&&m!=='rumble')m='duels';S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));S.one=m==='duels'&&S.players==='1v1';S.simple=S.one&&S.rules==='simple';document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
+  const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',m);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
   if(du)setDuelMode(m==='rumble'?'rumble':'duel');
   setTag();
   if(du)enterMenu();else{D.active=false;B.G.state='menu';}}
-function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';if(m==='one'){document.querySelector('.tag').textContent=S.simple?'First to five rounds against a bot. Everyone has an M4, a sword and grenades, and no abilities.':'First to five rounds against a bot, with your own loadout, abilities and the shop.';return;}
+function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';if(S.one){document.querySelector('.tag').textContent=S.simple?'First to five rounds against a bot. Everyone has an M4, a sword and grenades, and no abilities.':'First to five rounds against a bot, with your own loadout, abilities and the shop.';return;}
   const who=P==='2v2'?'You and a bot teammate against two bots. First team to five rounds.':P==='ffa'?(ffaN()===2?'Deathmatch against one bot: respawns on, first to 10 kills wins.':`${['','','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][ffaN()]}-way deathmatch against ${ffaN()-1} bots: everyone respawns, first to 10 kills wins.`):'First to five rounds against a bot.';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 function barHTML(v){return `<u><s style="width:${v*20}%"></s></u>`;}
@@ -8815,8 +8818,8 @@ function renderDuelMenu(){
   const c=S.char&&CHARS[S.char];
   stageShow(S.randChar?'__rand':c?S.char:null);
   $('d-chars').innerHTML=`<button class="opt char-opt rand" data-char="random" aria-pressed="${!!S.randChar}" title="Random: a surprise fighter every match"><span class="rq" aria-hidden="true">?</span><span class="t">Random</span></button>`+CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${!S.randChar&&k===S.char}" title="${ch.name}: ${(CHAR_INFO[k]&&CHAR_INFO[k].what)||ch.desc||''}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join('');
-  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-team').hidden=$('d-teamlbl').hidden=!!S.one;{const b=document.querySelector('#d-team [data-team="1v1"]');if(b)b.hidden=S.mode==='duel'&&!S.one;}$('d-rulesrow').hidden=!S.one;document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
-  const mlist=Object.entries(MAPS).filter(([k,m])=>mapOK(m));$('d-maps').innerHTML=mlist.sort(mapRank).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('')+(mlist.length<2?'':`<button class="opt map-opt rand" data-map="random" aria-pressed="${!!S.randMap}" title="Random map"><span class="thumb"><b aria-hidden="true">?</b></span><span class="mt"><span class="t">Random</span><span class="b">A surprise map every match</span></span></button>`);
+  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-rulesrow').hidden=!S.one;document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
+  const mlist=Object.entries(MAPS).filter(([k,m])=>mapOK(m));$('d-maps').innerHTML=(mlist.length<2?'':`<button class="opt map-opt rand" data-map="random" aria-pressed="${!!S.randMap}" title="Random map"><span class="thumb"><b aria-hidden="true">?</b></span><span class="mt"><span class="t">Random</span><span class="b">A surprise map every match</span></span></button>`)+mlist.sort(mapRank).map(([k,m])=>`<button class="opt map-opt" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}"><span class="thumb">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}</span><span class="mt"><span class="t">${m.name}</span><span class="b">${m.desc}</span></span></button>`).join('');
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp" src="${PREV['g_'+k]||''}" alt=""${HERO[k]?` style="background:radial-gradient(70% 90% at 50% 55%,${HERO[k].bg[2]} 0%,${HERO[k].bg[1]} 45%,${HERO[k].bg[0]} 100%)"`:''}><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
   $('d-guns').innerHTML=PRIMARIES.map(k=>card(k,S.gun,'data-gun')).join('');
   $('d-secs').innerHTML=SECONDARIES.map(k=>card(k,S.sec,'data-sec')).join('');
@@ -8851,8 +8854,8 @@ setDuelMode(S.mode);
   document.addEventListener('click',e=>{if(!e.target.closest('.mpop'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});}
 $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;if(b.dataset.char==='random'){S.randChar=true;renderDuelMenu();return;}S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 
-$('d-rules').addEventListener('click',e=>{const b=e.target.closest('[data-rules]');if(!b)return;S.rules=b.dataset.rules==='simple'?'simple':'normal';store.set('duel:rules',S.rules);S.simple=S.one&&S.rules==='simple';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;renderDuelMenu();setTag();if(S.state==='menu')enterMenu();});
-$('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);renderDuelMenu();setTag();});
+$('d-rules').addEventListener('click',e=>{const b=e.target.closest('[data-rules]');if(!b)return;S.rules=b.dataset.rules==='simple'?'simple':'normal';store.set('duel:rules',S.rules);syncOne();renderDuelMenu();setTag();if(S.state==='menu')enterMenu();});
+$('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);const was=S.map;syncOne();renderDuelMenu();setTag();if(S.state==='menu'&&S.map!==was)enterMenu();});
 $('d-ffan').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;S.ffaN=+b.dataset.n;store.set('duel:ffan',S.ffaN);renderDuelMenu();setTag();});
 $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]');if(!b)return;S.diff=b.dataset.diff;store.set('duel:diff',S.diff);renderDuelMenu();});
 const flagNeed=need=>{const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col4'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}};

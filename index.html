@@ -5342,9 +5342,8 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 const DIFF={easy:{name:'Easy',react:1.5,err:7,head:.01,turn:2.6,strafe:.25,build:.15,settle:.7,sway:1.1,flinch:8,recoil:2.8,lead:0,tol:.2,rof:1.6,burst:3,pause:[.9,1.6],hes:.4,miss:.6},
   normal:{name:'Normal',react:.8,err:3.6,head:.08,turn:5.2,strafe:.5,build:.3,settle:1.2,sway:.65,flinch:4,recoil:1.4,lead:.35,tol:.12,rof:1.4,burst:5,pause:[.5,1],hes:.2,miss:.35},
   hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15}};
-// your bot team-mates aim one level better than the enemies; when you're the last one left on your team against two or more, the enemies ease off a little
-const DIFF_UP={easy:'normal',normal:'hard',hard:'hard'};
-function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return DIFF[DIFF_UP[S.diff]]||base;
+/* your bot team-mates play at the same level as the enemies; when you're the last one left on your team against two or more, the enemies ease off a little */
+function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 // spare finishers, built but not assigned to anyone yet
@@ -5435,7 +5434,7 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
     else if(p.id==='fireball')explode(p.f,at,hit&&hit.b?hit.b.n:null,{dmg:g.dmg,radius:g.radius,wall:90,gun:'fireball',burn:true,colors:['#ffd23f','#ff7a1f','#ff3b1f','#ffb347']});
     else if(hit&&hit.f){const head=hit.f.part==='head',dm=Math.round(g.dmg*(head?g.head:1));if(p.f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(dm,100);hitMarker(head);dmgNumber(foe,dm,head);}
       emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,p.id);}
-    else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60);damageWood(hit.b.box,p.id==='crossbow'?70:40,at);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
+    else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);damageWood(hit.b.box,p.id==='crossbow'?70:40,at);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
     continue;}
   if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));}}
   p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));const fl=p.mesh.userData.flame;if(fl)fl.scale.set(1,1,.7+Math.random()*.6);p.age=(p.age||0)+dt;if(p.f!==ME||p.age>.15)emit(p.pos.x-d.x*.6,p.pos.y-d.y*.6,p.pos.z-d.z*.6,{n:2,speed:.5,size:.2,life:.7,grav:-1.2,colors:['#d8dbe0','#a9adb5','#f4f4f4']});if(Math.random()<.5)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:1,speed:.8,size:.14,life:.18,grav:0,colors:['#ffb347','#ffd23f']});}
@@ -5686,7 +5685,7 @@ function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='fists'){
       if(aerial){const nx=dx/(dist||1),nz=dz/(dist||1);foe.vel.x+=nx*11;foe.vel.z+=nz*11;foe.vel.y=Math.max(foe.vel.y,5);foe.grounded=false;f.vel.x=-nx*7;f.vel.z=-nz*7;f.vel.y=Math.max(f.vel.y,6);foe.stunT=1;
         S.shake=Math.max(S.shake,.5);emit(foe.pos.x,foe.pos.y+1.6,foe.pos.z,{n:30,speed:8,size:.22,life:.5,colors:['#ffd23f','#ffffff','#ff4a3d']});if(f===ME)center('Air strike!','20 damage · stunned','win');}emit(foe.pos.x,foe.pos.y+1.4,foe.pos.z,{n:14,speed:6,size:.14,colors:['#ff4a3d','#ffffff']});
       if(f===ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=foe.hp);dmgNumber(foe,dm,false);}if(!aerial){foe.vel.x+=dx/(dist||1)*5;foe.vel.z+=dz/(dist||1)*5;}sfx('punch',foe,{rate:gid==='sword'?.9:1.05});damage(foe,dm,f,false,gid);return;}}
-  const hb=rayBoxes(e,fw,g.reach);if(hb)damageBrick(brickOf(hb.box),60);}
+  const hb=rayBoxes(e,fw,g.reach);if(hb)damageBrick(brickOf(hb.box),60,fw);}
 function punch(f){if(f.fireT>0)return;f.fireT=.6;f.swingT=.25;const e=eyeOf(f,new V3());
   emit(f.pos.x+Math.sin(f.yaw)*.9,e.y,f.pos.z+Math.cos(f.yaw)*.9,{n:5,speed:1.5,size:.12,life:.2,grav:0,colors:['#ffffff','#ffe9a8']});
   for(const foe of foesOf(f).sort(byDist(f))){if(foe.finishing)continue;const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
@@ -5712,7 +5711,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       const hr=hits.get(hf.who)||{t:0,h:false,n:0,d:1e9};hr.t+=dm;hr.n++;hr.d=Math.min(hr.d,dist);if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;emit(end.x,end.y,end.z,{n:4,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});}
     else if(hb){end=origin.clone().addScaledVector(d,hb.t);const w=brickOf(hb.box);if(p===0)sfx('impact',end,{range:9,rate:w?.85:1});
       emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:w?5:3,speed:3,up:1,size:.1,life:.4,colors:w?[w.wall.color,'#ffffff']:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
-      if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end);} // walls go down twice as fast to gunfire
+      if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2,d);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
     {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
@@ -6590,7 +6589,7 @@ function updScorch(dt){for(let i=scorches.length-1;i>=0;i--){const d=scorches[i]
   if(d.br&&!d.br.alive){scene.remove(d.o);scorches.splice(i,1);continue;}if(d.t>40){const a=Math.max(0,1-(d.t-40)/5);d.o.material.opacity=a;if(a<=0){scene.remove(d.o);scorches.splice(i,1);}}}}
 
 /* ---------- walls: built from bricks that break off one at a time ---------- */
-const BRICK_HP=34,BCOLS=6,BROWS=5;const brickGeo=new THREE.BoxGeometry(1,1,1);const brickEdge=new THREE.EdgesGeometry(brickGeo);
+const BRICK_HP=24,BCOLS=6,BROWS=5;const brickGeo=new THREE.BoxGeometry(1,1,1);const brickEdge=new THREE.EdgesGeometry(brickGeo);
 // patches of the nav grid waiting to be rebuilt (kept separate: one big box round walls at opposite ends of the map would mean rebuilding everything)
 let gridDirty=0,gridRg=[];const dirtyGrid=(o,t)=>{for(const r of gridRg)if(o.x0<r.x1+1&&o.x1>r.x0-1&&o.z0<r.z1+1&&o.z1>r.z0-1){r.x0=Math.min(r.x0,o.x0);r.x1=Math.max(r.x1,o.x1);r.z0=Math.min(r.z0,o.z0);r.z1=Math.max(r.z1,o.z1);gridDirty=gridDirty||t;return;}gridRg.push({x0:o.x0,x1:o.x1,z0:o.z0,z1:o.z1});gridDirty=gridDirty||t;};
 function buildWall(f){if(S.mode==='rumble'||f.walls<=0||f.buildT>0||!f.alive||f.downed||S.state!=='fight')return false;
@@ -6604,19 +6603,35 @@ function buildWall(f){if(S.mode==='rumble'||f.walls<=0||f.buildT>0||!f.alive||f.
   function mk(r,c,a0,a1){if(a1-a0<.05)return;const m=new THREE.Mesh(brickGeo,mat('#'+base.clone().offsetHSL(0,0,(Math.random()-.5)*.08).getHexString(),'stud'));m.castShadow=true;m.receiveShadow=true;
     m.add(new THREE.LineSegments(brickEdge,EDGE));const g=.03;
     const bx=alongZ?{x0,x1,z0:cz+a0+g,z1:cz+a1-g}:{x0:cx+a0+g,x1:cx+a1-g,z0,z1};const b={...bx,y0:w.y0+r*bh,y1:w.y0+(r+1)*bh-g};
-    const br={b,mesh:m,hp:BRICK_HP,alive:true,wall:w,col:(a0+a1)/2,row:r,ty:b.y0};b.brick=br;b.mesh=m;
+    const br={b,mesh:m,hp:BRICK_HP,alive:true,wall:w,col:(a0+a1)/2,wd:a1-a0,row:r,ty:b.y0};b.brick=br;b.mesh=m;
     m.scale.set(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0);m.position.set((b.x0+b.x1)/2,(b.y0+b.y1)/2,(b.z0+b.z1)/2);w.group.add(m);w.bricks.push(br);}
   w.group.scale.y=.05;w.group.position.y=w.y0*(1-.05);M.walls.push(w);f.walls--;f.buildT=.6;dirtyGrid({x0,x1,z0,z1},.01);
   emit(cx,f.pos.y+.2,cz,{n:18,speed:4,up:2,size:.2,life:.5,colors:[color,'#ffffff']});if(f===ME)S.stats.walls++;sfx('wall',{x:cx,y:f.pos.y,z:cz});return true;}
-function damageBrick(br,dm){if(!br||!br.alive)return;br.hp-=dm;br.mesh.material=br.mesh.material;br.mesh.scale.multiplyScalar(1);
-  if(br.hp>0){br.mesh.position.x+=(Math.random()-.5)*.04;return;}
-  br.alive=false;br.wall.group.remove(br.mesh);const b=br.b,cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,cz=(b.z0+b.z1)/2;if(S.t-(S.brickSnd||-9)>.15){S.brickSnd=S.t;sfx('brick',{x:cx,y:cy,z:cz},{range:14});}
-  const chunk=br.mesh.clone();chunk.position.set(cx,cy,cz);scene.add(chunk);debris.push({o:chunk,v:new V3(rnd(-3,3),rnd(2,6),rnd(-3,3)),w:new V3(rnd(-6,6),rnd(-6,6),rnd(-6,6)),t:0,ttl:2.5});
-  emit(cx,cy,cz,{n:8,speed:4,up:2,size:.16,life:.5,colors:[br.wall.color,'#ffffff','#9aa0a8']});
-  // bricks above in the same column settle down a row
-  const w=br.wall,bh=(b.y1-b.y0)+.03;for(const o of w.bricks)if(o.alive&&o.row>br.row&&Math.abs(o.col-br.col)<.45){o.row--;o.b.y0-=bh;o.b.y1-=bh;}
-  if(!w.bricks.some(o=>o.alive)){w.alive=false;M.group.remove(w.group);}dirtyGrid(br.b,.4);}
-function splashBricks(at,Rr,dmg){for(const w of M.walls)for(const br of w.bricks){if(!br.alive)continue;const b=br.b;const q=new V3(clamp(at.x,b.x0,b.x1),clamp(at.y,b.y0,b.y1),clamp(at.z,b.z0,b.z1));const dd=q.distanceTo(at);if(dd<Rr)damageBrick(br,dmg*(1-dd/Rr)+10);}}
+/* Shot bricks: a hit nudges the brick out along the shot; a broken brick is knocked out, drops and bursts when it lands.
+   Bricks need support: a brick with nothing left under it falls too, and losing two bricks from the bottom row brings the whole wall down. */
+function damageBrick(br,dm,dir){if(!br||!br.alive)return;const w=br.wall;br.hp-=dm;const hd=dir?new V3(dir.x,0,dir.z):null;if(hd&&hd.lengthSq()>1e-6)hd.normalize();
+  if(br.hp>0){if(hd){const k=Math.min(.16,.05+dm*.003);br.mesh.position.x+=hd.x*k;br.mesh.position.z+=hd.z*k;}else br.mesh.position.x+=(Math.random()-.5)*.04;return;}
+  if(hd&&hd.lengthSq()>.5)w.hitDir=hd;popBrick(br,hd,1);
+  if(S.t-(S.brickSnd||-9)>.15){const b=br.b;S.brickSnd=S.t;sfx('brick',{x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,z:(b.z0+b.z1)/2},{range:14});}
+  wallSupport(w);}
+function popBrick(br,dir,k,vx){br.alive=false;const w=br.wall,b=br.b,m=br.mesh;w.group.remove(m);
+  const chunk=m.clone();chunk.position.set(m.position.x,(b.y0+b.y1)/2,m.position.z);chunk.quaternion.copy(m.quaternion);scene.add(chunk);
+  const d=dir&&dir.lengthSq()>.5?dir:new V3(rnd(-1,1),0,rnd(-1,1)).normalize();const v=vx||new V3(d.x*rnd(2.5,4.5)*k+rnd(-.6,.6),rnd(1,3)*k,d.z*rnd(2.5,4.5)*k+rnd(-.6,.6));
+  const fl=w.y0+(b.y1-b.y0)*.5,col=w.color;
+  debris.push({o:chunk,v,w:new V3(rnd(-7,7),rnd(-3,3),rnd(-7,7)),t:0,ttl:4,fx:(q,dt)=>{if(q.done)return;q.v.y-=26*dt;q.o.position.addScaledVector(q.v,dt);q.o.rotation.x+=q.w.x*dt;q.o.rotation.y+=q.w.y*dt;q.o.rotation.z+=q.w.z*dt;
+    if(q.o.position.y<=fl&&q.v.y<0){q.done=1;const p=q.o.position;scene.remove(q.o);q.t=q.ttl;
+      emit(p.x,p.y,p.z,{n:10,speed:4.5,up:2.5,size:.16,life:.55,grav:8,colors:[col,'#ffffff','#9aa0a8']});flashBall(new V3(p.x,p.y+.1,p.z),col,.9);
+      if(S.t-(S.brickPop||-9)>.08){S.brickPop=S.t;sfx('brick',p,{range:12,vol:.6,rate:rnd(.9,1.2)});}}}});
+  dirtyGrid(b,.4);}
+function wallSupport(w){if(!w.alive)return;
+  if(w.bricks.filter(o=>o.row===0&&!o.alive).length>=2){toppleWall(w);return;}
+  for(let r=1;r<BROWS;r++)for(const br of w.bricks){if(!br.alive||br.row!==r)continue;
+    const held=w.bricks.some(o=>o.alive&&o.row===r-1&&Math.abs(o.col-br.col)<(o.wd+br.wd)/2-.06);if(!held)popBrick(br,w.hitDir,.45);}
+  if(!w.bricks.some(o=>o.alive)){w.alive=false;M.group.remove(w.group);}}
+function toppleWall(w){const d=w.hitDir||new V3(rnd(-1,1),0,rnd(-1,1)).normalize();
+  for(const br of w.bricks){if(!br.alive)continue;const h=(br.b.y0+br.b.y1)/2-w.y0;popBrick(br,d,1,new V3(d.x*(1.2+h*2.2)+rnd(-.5,.5),rnd(.3,1.5)+h*.4,d.z*(1.2+h*2.2)+rnd(-.5,.5)));}
+  w.alive=false;M.group.remove(w.group);const b=w.bb;sfx('brick',{x:(b.x0+b.x1)/2,y:w.y0+1,z:(b.z0+b.z1)/2},{range:18});S.shake=Math.max(S.shake||0,.12);dirtyGrid(b,.05);}
+function splashBricks(at,Rr,dmg){for(const w of M.walls)for(const br of w.bricks){if(!br.alive)continue;const b=br.b;const q=new V3(clamp(at.x,b.x0,b.x1),clamp(at.y,b.y0,b.y1),clamp(at.z,b.z0,b.z1));const dd=q.distanceTo(at);if(dd<Rr)damageBrick(br,dmg*(1-dd/Rr)+10,q.clone().sub(at));}}
 const WALL_LIFE=6; // built walls crumble away after 6 seconds
 /* proximity ambience: car engines, horns when you're close, birds overhead, gulls, the sea and boats on Wreck Cove */
 const ambV=new V3();
@@ -7576,7 +7591,7 @@ function rpWorker(){if(RP.w0!==undefined)return RP.w0;try{if(!window.OffscreenCa
       postMessage({t:d.t,bl:await c.convertToBlob({type:'image/jpeg',quality:d.q})});}catch(err){postMessage({t:d.t,bl:null});}};`;
     const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
     w.onmessage=e=>{RP.busy=Math.max(0,RP.busy-1);const {t,bl}=e.data;if(!bl)return;RP.ring.push({t,bl});RP.ring.sort((a,b)=>a.t-b.t);trimRing();};RP.w0=w;}catch(e){RP.w0=null;}return RP.w0;}
-D.__RP=RP;D.__projs=()=>projs;D.__RV=()=>RV;
+D.__RP=RP;D.__walls={build:f=>buildWall(f),hit:(br,dm,dir)=>damageBrick(br,dm,dir)};D.__projs=()=>projs;D.__RV=()=>RV;
 const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4a3d" stroke="#14161c" stroke-width="1.8"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg>';
 const HOME_SVG='<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="#fff"/></svg>';
 function rpButtons(list,keys){return list.map((c,i)=>`<button class="rp-b" data-rp="${RP.clips.indexOf(c)}">${keys&&i<9?`<kbd>${i+1}</kbd>`:''}${PLAY_SVG}${c.label}</button>`).join('');}

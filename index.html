@@ -291,7 +291,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 @keyframes cdIn{0%{opacity:0;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
 /* in-game XP is shown on the menu and end screen only */
 #duel-hud .d-xpbar{display:none}
-/* mini leaderboard */
+/* mini leaderboard (free for all shows only the top 3) */
 .d-lb{zoom:calc(var(--z-lb,1)*var(--tb-lb,1));position:absolute;left:calc(max(16px,env(safe-area-inset-left,0px)) + 52px);top:calc(env(safe-area-inset-top,0px) + 14px);padding:6px 8px;font:600 11px/1 var(--f-body);min-width:150px}
 .d-lb table{border-collapse:collapse;width:100%}.d-lb th{font:800 9px/1 var(--f-body);letter-spacing:.1em;color:var(--muted);text-align:right;padding:0 0 4px 8px}.d-lb th:first-child{text-align:left;padding-left:0}
 .d-lb td{padding:2px 0 2px 8px;text-align:right;font-variant-numeric:tabular-nums}.d-lb td:first-child{text-align:left;padding-left:0;white-space:nowrap}
@@ -7232,7 +7232,7 @@ function tagFor(f){if(f._tag)return f._tag;let t;if(f===BOT){t=$('d-tag');t._b=$
 let lbDirty=1;
 function updLB(){const rows=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(b.d||0));const sig=rows.map(f=>[f.name,f.k,f.as,f.d,f.alive?1:0].join(',')).join('|');if(!lbDirty&&sig===updLB.sig)return;updLB.sig=sig;lbDirty=0;
   const col=f=>f===ME?'#2f7fe0':S.players==='2v2'&&!isFoe(ME,f)?'#7fb2f0':'#e8463a';
-  $('d-lb').innerHTML='<table><tr><th>'+(S.players==='2v2'?'Teams':'Players')+'</th><th>K</th><th>A</th><th>D</th></tr>'+rows.map(f=>`<tr class="${f===ME?'me':''}${f.alive?'':' out'}"><td><i style="background:${col(f)}"></i>${f===ME?'You':f.name}</td><td>${f.k||0}</td><td>${f.as||0}</td><td>${f.d||0}</td></tr>`).join('')+'</table>';}
+  $('d-lb').innerHTML='<table><tr><th>'+(S.players==='2v2'?'Teams':'Players')+'</th><th>K</th><th>A</th><th>D</th></tr>'+(S.players==='ffa'?rows.slice(0,3):rows).map(f=>`<tr class="${f===ME?'me':''}${f.alive?'':' out'}"><td><i style="background:${col(f)}"></i>${f===ME?'You':f.name}</td><td>${f.k||0}</td><td>${f.as||0}</td><td>${f.d||0}</td></tr>`).join('')+'</table>';}
 /* minimap: map layout around you, turning with you; enemies only show as a tiny red dot where they last fired */
 const MM={layer:null,id:null,k:2,range:42};
 function mmLayer(){if(MM.id===M.id&&MM.layer)return MM.layer;const b=M.bounds,k=MM.k,cv=document.createElement('canvas');cv.width=Math.ceil((b.x1-b.x0)*k);cv.height=Math.ceil((b.z1-b.z0)*k);const g=cv.getContext('2d');

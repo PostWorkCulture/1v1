@@ -2691,7 +2691,7 @@ function vehAttach(C,kind){const go=()=>{const V=VEHM[kind];if(!V||C.model||M.gr
    Each is sat on the ground, centred, turned to face +z (r0) and scaled to its height h (house furniture is 1.6x real size and the people 1.25x, to suit the game's chunky characters). Untextured ones get a flat colour (tint). */
 const FURN_CFG={greysofa:{h:1.34,tint:'#9aa0a8'},pinksofa:{h:1.6},whitesofa:{h:1.68},greychair:{h:1.52},officechair:{h:1.68,tint:'#e9eaee'},plasticchair:{h:1.36},
   plant:{h:2.08},greyplant:{h:1.76,tint:'#d9dde3'},redplant:{h:1.44},wfhman:{h:1.81,r0:Math.PI/2},
-  doctor:{h:2.27},nurse:{h:2.12},bed1:{h:2.27,r0:Math.PI/2},bed2:{h:1.68,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:1.52,r0:Math.PI/2},alien:{h:1.88},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8},shop:{h:2.8}},FURNM={},FURN_P={},FURN_WAIT=[];
+  doctor:{h:2.27},nurse:{h:2.12},bed1:{h:2.27,r0:Math.PI/2},bed2:{h:1.68,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:1.52,r0:Math.PI/2},alien:{h:1.88},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8}},FURNM={},FURN_P={},FURN_WAIT=[];
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/home/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -3972,7 +3972,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   const t1=railTrain(-3.5,1,[['loco','#f4c22b'],['box','#a63a2a'],['flat',null,'box'],['tank','#e9ecef'],['hopper','#6b5a3a'],['box','#2f7fe0'],['flat']],{speed:11,gap:16,ph:0});
   const t2=railTrain(3.5,-1,[['loco','#2f63c8'],['hopper','#3a3d45'],['box','#3bb54a'],['flat'],['box','#e8463a'],['tank','#16171c']],{speed:10,gap:22,ph:21});
   railTrainInit(t1);railTrainInit(t2);
-  M.shopAt=[{x:0,z:0,k:.55}];/* between the two train lines: 1.1x the original stall, the most that clears the trains */
+  M.shopAt=[{x:0,z:0,k:.8}];
   M.spawns=[[-44,-50],[44,50],[-44,48],[44,-50],[-45,-14],[45,14],[-24,-31],[24,26],[-36,16],[36,-16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 // ---------- Playtime: fight at toy size across a kid's bedroom floor. Giant books, a toy chest, blocks, dominoes, dice and a checkers board ----------
@@ -4356,13 +4356,13 @@ function lagoonMap(){const X=17,Z=21,WY=-2.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};co
   for(const [x,z,w,d] of [[0,22.6,37.4,.4],[0,-22.6,37.4,.4],[18.6,0,.4,45.4],[-18.6,0,.4,45.4]])deco(new THREE.BoxGeometry(w,.55,d),mat('#4a2f1a'),x,-.2,z);
   {const st=mat('#6e4a2c'),fm=mat('#ffffff',null,{transparent:true,opacity:.45,depthWrite:false});for(let x=-18;x<=18.01;x+=4.5)for(let z=-22;z<=22.01;z+=4.4){deco(gC(.22,.25,6,8),st,x,WY-1.4,z);const f=deco(new THREE.RingGeometry(.3,.75,16),fm,x,WY+.03,z);f.rotation.x=-Math.PI/2;f.castShadow=false;}}
   deckRail(X,Z,'rope');
-  /* tiki deck in the middle: a raised platform with steps on all four sides and a big thatched roof over the shop (raised to clear the double-size shop) */
+  /* tiki deck in the middle: a raised platform with steps on all four sides and a big thatched roof over the shop */
   const T=4.25,TH=.9;box(0,0,0,2*T,TH,2*T,'#9a6a3a',{tx:'wood',wood:false});
   [[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dz])=>{for(let i=0;i<2;i++){const u=T+.25+i*.5;box(dx*u,0,dz*u,dx?.5:3.5,TH-.3*(i+1),dz?.5:3.5,'#a8743f',{tx:'wood',wood:false,edges:false});}});
-  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a');for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*3.75,z=sz*3.75;box(x,TH,z,.3,6.2,.3,'#c8a060',{mat:bam,edges:false});for(let y=TH+.5;y<6.8;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
-    const th=mat('#d4ad62',null,{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(6.6,24),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),0,TH+6.22,0);u.rotation.x=Math.PI/2;u.castShadow=false;}deco(new THREE.CylinderGeometry(0,6.6,3.1,12),th,0,TH+6.2+1.45,0);deco(new THREE.CylinderGeometry(6.6,6.9,.6,24,1,true),mat('#b88c46',null,{side:2,flatShading:true}),0,TH+6.25,0);
-    deco(new THREE.SphereGeometry(.4,8,6),mat('#b88c46'),0,TH+9.6,0);
-    for(let k=0;k<12;k++){const a=k/12*TAU;const b=deco(new THREE.BoxGeometry(.12,.12,6.4),mat('#7a5428'),Math.cos(a)*3.1,TH+7.7,Math.sin(a)*3.1);b.rotation.y=-a+Math.PI/2;b.rotation.x=0;b.castShadow=false;b.lookAt(0,TH+9.4,0);}}
+  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a');for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*3.75,z=sz*3.75;box(x,TH,z,.3,4.8,.3,'#c8a060',{mat:bam,edges:false});for(let y=TH+.5;y<5.4;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
+    const th=mat('#d4ad62',null,{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(6.6,24),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),0,TH+4.82,0);u.rotation.x=Math.PI/2;u.castShadow=false;}deco(new THREE.CylinderGeometry(0,6.6,3.1,12),th,0,TH+4.8+1.45,0);deco(new THREE.CylinderGeometry(6.6,6.9,.6,24,1,true),mat('#b88c46',null,{side:2,flatShading:true}),0,TH+4.85,0);
+    deco(new THREE.SphereGeometry(.4,8,6),mat('#b88c46'),0,TH+8.2,0);
+    for(let k=0;k<12;k++){const a=k/12*TAU;const b=deco(new THREE.BoxGeometry(.12,.12,6.4),mat('#7a5428'),Math.cos(a)*3.1,TH+6.3,Math.sin(a)*3.1);b.rotation.y=-a+Math.PI/2;b.rotation.x=0;b.castShadow=false;b.lookAt(0,TH+8,0);}}
   M.shopAt=[{x:0,z:0,y:TH}];
   /* tiki torches round the deck */
   const flames=[];{const pole=mat('#7a5a32'),cup=mat('#5a3a1e'),fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4});
@@ -4536,26 +4536,20 @@ function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.inc
   if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
-  const openR=(x,z)=>{let r=9;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
+  const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
   const alongX=b.x1-b.x0>b.z1-b.z0,ext=(alongX?b.x1-b.x0:b.z1-b.z0)/2;
   const spot=(tx,tz,avoid)=>{let best=null,bs=1e9;
-    for(const [lim,need] of [[half*.4,5.6],[half*.7,4.8],[half*.4,3.4],[half*.7,2.8],[half,2.2]]){
+    for(const [lim,need] of [[half*.4,3.4],[half*.7,2.8],[half,2.2]]){
       for(let x=Math.ceil((tx-lim)*2)/2;x<=tx+lim;x+=.5)for(let z=Math.ceil((tz-lim)*2)/2;z<=tz+lim;z+=.5){const d=Math.hypot(x-tx,z-tz);if(d>lim||d*.8>=bs)continue;
         if(x-need<b.x0||x+need>b.x1||z-need<b.z0||z+need>b.z1)continue;if(M.shopOK&&!M.shopOK(x,z))continue;if(sp.some(s=>Math.hypot(s.x-x,s.z-z)<3))continue;if(avoid&&Math.hypot(avoid.x-x,avoid.z-z)<ext)continue;
         const r=openR(x,z);if(r<need)continue;const sc=d-.35*Math.min(r,6);if(sc<bs){bs=sc;best={x,z,r};}}
       if(best)break;}return best;};
   // one shop per map, on the most open ground near the middle
   const A=spot(c.x,c.z);
-  for(const best of [A]){if(!best)continue;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy,Math.min(1,Math.max(.5,(best.r-.6)/(1.95*SHOP_K))));}}
-/* the shop: the Tripo market stall (models/home/shop, a shopkeeper behind a counter under a striped awning and a Shop sign) turned to face the middle of
-   the map, on a glowing pad; k < 1 shrinks it for tight spots such as between the Railed tracks. Until the model has loaded the old kiosk stands in. */
-const SHOP_K=2;/* every shop is twice its original size; a map can ask for less (k) where space is tight */
-function buildShop(x,z,gy,k=1){k*=SHOP_K;const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=Math.hypot(dx,dz)<1?0:Math.round(Math.atan2(dx,dz)/(Math.PI/2)),ry=q*Math.PI/2,ax=q%2!==0;
-  const W=3.5*k,D=2.5*k,col=box(x,gy,z,ax?D:W,2.55*k,ax?W:D,'#c99a5b',{mat:INVIS,edges:false,shadow:false});
-  const kiosk=buildKiosk(x,z,gy,k),grp=M.group;kiosk.meshes.forEach(m=>m.userData.dyn=1);kiosk.solid.forEach(b=>{const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);});
-  const go=()=>{const F=FURNM.shop;if(!F||M.group!==grp)return;for(const m of kiosk.meshes)m.visible=false;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
-    g.position.set(x,gy,z);g.rotation.y=ry;g.scale.setScalar(k);g.userData.dyn=1;M.group.add(g);};
-  if(FURNM.shop)go();else{FURN_WAIT.push(go);loadFurn('shop').catch(()=>{});}}
+  for(const best of [A]){if(!best)continue;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy);}}
+/* the shop: the kiosk (counter, striped awning, four-sided SHOP sign, glowing roof edges) on a glowing pad. k < 1 builds a narrower kiosk
+   (the roof, awning, sign and glow shrink; the counter stays the same) for tight spots such as between the Railed tracks */
+function buildShop(x,z,gy,k=1){buildKiosk(x,z,gy,k);}
 function buildKiosk(x,z,gy,k=1){const n0=M.group.children.length,b0=M.boxes.length;
   box(x,gy,z,1.5,1.05,1.5,'#f4efe6');box(x,gy+.62,z,1.56,.34,1.56,'#ffc61a',{solid:false});
   const goods=['#3bb54a','#2f7fe0','#a05ad6','#3f6b3a'];goods.forEach((g,i)=>box(x+(i%2?.35:-.35),gy+1.05,z+(i<2?.35:-.35),.34,.34,.34,g,{solid:false}));
@@ -4576,7 +4570,7 @@ function buildKiosk(x,z,gy,k=1){const n0=M.group.children.length,b0=M.boxes.leng
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),glm);m.position.set(x+ox,y,z+oz);m.userData.dyn=1;M.group.add(m);
     const h=new THREE.Mesh(new THREE.BoxGeometry(w+.5*k,.5,d+.5*k),hm);h.position.copy(m.position);h.userData.dyn=1;M.group.add(h);glow.push(h);}
   const pad=new THREE.Mesh(new THREE.RingGeometry(1.15*k,3*k,40),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);M.group.add(pad);
-  const sh={x,z,y:gy,k,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;
+  const sh={x,z,y:gy,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;
   return {meshes:M.group.children.slice(n0).filter(m=>m!==pad),solid:M.boxes.slice(b0)};}
 
 /* ================= nav grid ================= */
@@ -6759,7 +6753,7 @@ const SHOP_ITEMS=[
   {id:'speed',name:'Speed',desc:'+25% for 30s',col:'#f08a24',ic:'»',rumble:1,can:f=>(f.speedT||0)<45,buy:f=>{f.speedT=(f.speedT||0)+30;}}];
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.stamBoost=false;f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.nadeT=0;f.speedT=0;}
-const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<1.6+1.5*(s.k||1)&&Math.abs(f.pos.y-s.y)<1.6);
+const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.1&&Math.abs(f.pos.y-s.y)<1.6);
 const canShopNow=()=>S.mode!=='rumble'&&ME.alive&&!ME.downed&&!ME.finishing&&(S.state==='fight'||S.state==='countdown');
 function openShop(){if(S.shopOpen)return;S.shopOpen=true;$('d-hint').classList.add('fade');$('d-shop').hidden=false;renderShop(true);}
 function closeShop(){if(!S.shopOpen)return;S.shopOpen=false;$('d-shop').hidden=true;}

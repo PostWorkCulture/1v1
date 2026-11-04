@@ -2406,7 +2406,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat'];
   const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={rifle:.5,m4:.58,hdr:.62,kar:.58,shotboom:.3,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.22,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
+  const MIX={rifle:.5,m4:.58,hdr:.62,kar:.58,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.22,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,thumper:.62};
   const MAXV=6; // voices per sound
@@ -2426,8 +2426,12 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
     const s=ctx.createBufferSource();s.buffer=buf[n];const j=o.jitter==null?.04:o.jitter;s.playbackRate.value=(o.rate||1)*(1+(Math.random()*2-1)*j);
     const gn=ctx.createGain();gn.gain.value=g;let out=gn;s.connect(gn);
     if(o.pan&&ctx.createStereoPanner){const p=ctx.createStereoPanner();p.pan.value=Math.max(-1,Math.min(1,o.pan));gn.connect(p);out=p;}
-    out.connect(master);const off=Math.max(0,Math.min(o.offset||0,buf[n].duration-.05));s.start(0,off);
+    out.connect(master);if(o.verb)reverb(out,o.verb);const off=Math.max(0,Math.min(o.offset||0,buf[n].duration-.05));s.start(0,off);
     const v={s,g:gn};list.push(v);s.onended=()=>{const i=list.indexOf(v);if(i>=0)list.splice(i,1);};return v;}
+  /* short room reverb (made once from decaying noise) so shots fired indoors boom round the room */
+  let verbN=null;function reverb(src,amt){if(!verbN){const sr=ctx.sampleRate,len=Math.floor(sr*.75),ib=ctx.createBuffer(2,len,sr);for(let c=0;c<2;c++){const d=ib.getChannelData(c);for(let i=0;i<len;i++)d[i]=i<sr*.006?0:(Math.random()*2-1)*Math.pow(1-i/len,3);}
+    verbN=ctx.createConvolver();verbN.buffer=ib;const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;verbN.connect(lp);lp.connect(master);}
+    const g=ctx.createGain();g.gain.value=amt;src.connect(g);g.connect(verbN);}
   // looping bed whose level and pan the game sets every frame (cars, sea, boats)
   const loops={};
   function bed(n,v,pan){if(!ctx||!buf[n])return;let L=loops[n];if(!L){if(v<=.002)return;const s=ctx.createBufferSource();s.buffer=buf[n];s.loop=true;const g=ctx.createGain();g.gain.value=0;
@@ -2499,6 +2503,8 @@ function sfx(n,at,o){const X=window.SFX;if(!X)return null;o=Object.assign({},o);
   if(at&&at!==ME){const p=at.pos||at,c=camera.position,dx=p.x-c.x,dz=p.z-c.z,dy=(p.y||0)-c.y,d=Math.hypot(dx,dy,dz);
     o.vol=(o.vol==null?1:o.vol)/(1+Math.max(0,d-2)/(o.range||14));camera.getWorldDirection(SFXv);const h=Math.hypot(dx,dz)||1;o.pan=(dx*-SFXv.z+dz*SFXv.x)/h*.7;}
   return X.play(n,o);}
+/* true when there's a roof or floor above the fighter (inside a building), checked at most every 0.3 s */
+function underRoof(f){const now=performance.now();if(f._roofT>now)return f._roof;f._roofT=now+300;f._roof=!!rayBoxes(new V3(f.pos.x,f.pos.y+1.7,f.pos.z),new V3(0,1,0),14);return f._roof;}
 const GSND={sniper:['hdr',1],scout:['kar',1],ar:['rifle',1],gar:['m4',.94],burst:['rifle',1.12],smg:['smgnova',1],hornet:['smgnova',.9],shotgun:['shotboom',1],autoshot:['shotboom',1.08],mg:['lmg',1],m60:['lmg',.86],pistol:['pistol',1],duals:['pistol',1.08],revolver:['revolver',1],crossbow:['crossbow',1],thumper:['glboom',1]};
 
 /* ================= scene ================= */
@@ -6022,7 +6028,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
     if(id==='rocket'||id==='thumper'){if(f===ME&&VM.raise>.5){const q=mz.clone().addScaledVector(d2,1.2);emit(q.x,q.y,q.z,{n:5,speed:1.5,size:.08,life:.18,grav:0,colors:['#ffd23f','#ffb347']});}else emit(mz.x,mz.y,mz.z,{n:10,speed:2.5,size:.18,life:.4,grav:-1,colors:['#f4f4f4','#ffb347']});}
 
 
-    spawnProj(f,id,mz,d2);if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick,-1.3,1.3);}f.bloom=Math.min(f.bloom+g.bloom,3);if(id==='grenade'&&f.ammo[id]<=0&&f.bot)equip(f,0);return;}if(!fromBurst){f.fireT=g.rate;if(g.burst){f.burstN=g.burst-1;f.burstT=g.burstGap;}}f.ammo[id]--;f.flashT=.05;f.kick=1;{const gs=GSND[id];if(gs)sfx(gs[0],f,{rate:gs[1],range:id==='sniper'||id==='scout'?30:16});}
+    spawnProj(f,id,mz,d2);if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick,-1.3,1.3);}f.bloom=Math.min(f.bloom+g.bloom,3);if(id==='grenade'&&f.ammo[id]<=0&&f.bot)equip(f,0);return;}if(!fromBurst){f.fireT=g.rate;if(g.burst){f.burstN=g.burst-1;f.burstT=g.burstGap;}}f.ammo[id]--;f.flashT=.05;f.kick=1;{const gs=GSND[id];if(gs){const sg=id==='shotgun'||id==='autoshot',ins=sg&&underRoof(f);sfx(gs[0],f,{rate:gs[1],range:id==='sniper'||id==='scout'?30:sg?24:16,vol:ins?1.45:1,verb:ins?.6:sg?.12:0});}}
   if(id==='duals')f.dualL=!f.dualL;let mz=(id==='duals'&&f.dualL?f.guns.duals.userData.twin:f.guns[id]).userData.muzzle.getWorldPosition(new V3());if(f===ME&&VM.raise>.5)mz=origin.clone().addScaledVector(dir,.9).add(new V3(0,-.09,0));const spr=curSpread(f);let anyHit=false,killed=false,head=false;const hits=new Map();
   for(let p=0;p<g.pellets;p++){const d=spreadDir(dir,spr);const pen=rayPen(origin,d,400),hb=pen.hit;const hf=rayFoes(origin,d,f);
     if(mines.length){const mh=rayMine(origin,d,Math.min(hb?hb.t:400,hf?hf.t:400));if(mh){if(NET.role!=='client')popMine(mh.m.x,mh.m.z);if(p<3)tracer(mz,origin.clone().addScaledVector(d,mh.t),f===ME?'#fff3b0':'#ffd0c0',.045);continue;}}

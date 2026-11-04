@@ -278,6 +278,11 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #d-sub{font:700 14px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#fff;background:#101114;padding:7px 12px;border-radius:var(--radius)}
 #d-sub:empty{display:none}
 #d-center.sm{top:15%;gap:6px}#d-center.top{top:96px;gap:6px}#d-center.top #d-big{font-size:clamp(28px,4vw,48px)}#d-big.sm{font-size:clamp(22px,3.2vw,36px);text-shadow:0 3px 0 #101114,2px 2px 0 #101114,-2px 2px 0 #101114,2px -2px 0 #101114,-2px -2px 0 #101114}#d-center.sm #d-sub{font-size:11px;padding:5px 9px}
+/* round countdown (3, 2, 1, Fight): smaller and red; the 1 dissolves away before Fight pops in */
+#d-big.cd{font-size:clamp(28px,4.6vw,60px);color:#ff2a3a;text-shadow:0 4px 0 #101114,2px 2px 0 #101114,-2px 2px 0 #101114,2px -2px 0 #101114,-2px -2px 0 #101114}
+#d-big.cd.out{animation:cdOut .4s ease-out forwards}#d-big.cd.go{animation:cdIn .28s cubic-bezier(.2,.9,.25,1.4) both}
+@keyframes cdOut{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);letter-spacing:0}100%{opacity:0;filter:blur(12px);transform:translateY(-14px) scale(1.5);letter-spacing:.3em}}
+@keyframes cdIn{0%{opacity:0;transform:scale(.55)}100%{opacity:1;transform:scale(1)}}
 /* in-game XP is shown on the menu and end screen only */
 #duel-hud .d-xpbar{display:none}
 /* mini leaderboard */
@@ -7125,6 +7130,8 @@ function feedMsg(html){const el=document.createElement('div');el.className='pane
 function feed(you,gun,head){const el=document.createElement('div');el.className='panel feed';
   el.innerHTML=you?`<span class="y">You</span><em>${gun}</em><span class="o">Bot</span>`:`<span class="o">Bot</span><em>${gun}</em><span class="y">You</span>`;
   if(head)el.innerHTML+='<span class="hs">HEADSHOT</span>';const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
+/* end of the countdown: the 1 dissolves, then Fight pops in for a moment */
+function cdGo(){const b=$('d-big');$('d-sub').textContent='';b.className='cd out';clearTimeout(cdGo.t);cdGo.t=setTimeout(()=>{if(S.state!=='fight')return;center('Fight','','cd go');cdGo.t=setTimeout(()=>{if(S.state==='fight'&&$('d-big').textContent==='Fight')center('','');},700);},380);}
 function center(big,sub,cls){const b=$('d-big');b.textContent=big||'';b.className=cls||'';$('d-sub').textContent=sub||'';$('d-center').classList.toggle('sm',/\bsm\b/.test(cls||''));$('d-center').classList.toggle('top',/\btop\b/.test(cls||''));}
 const proj=new V3();
 function toScreen(p){proj.copy(p).project(camera);if(proj.z>1)return null;return[(proj.x*.5+.5)*innerWidth,(-proj.y*.5+.5)*innerHeight];}
@@ -7649,8 +7656,8 @@ function xpBar(prefix){const x=S.xp||0,nu=nextUnlock(),i=FX_XP.indexOf(nu);$(pre
 function step(rdt){pfBudget=24000;
   if(S.paused||S.replayOpen){render();return;}
   if(S.slowT>0){S.slowT-=rdt;S.ts=damp(S.ts,.25,18,rdt);}else S.ts=damp(S.ts,1,5,rdt);const dt=rdt*S.ts;S.t+=dt;
-  if(NET.role==='client'){if(S.state==='countdown'){const c=Math.ceil(S.t0);if(c>0)center(String(c),'Round '+S.round);}}
-  else if(S.state==='countdown'){S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');center('Fight','');setTimeout(()=>{if(S.state==='fight')center('','');},700);}else center(String(Math.ceil(S.t0)),'Round '+S.round);}
+  if(NET.role==='client'){if(S.state==='countdown'){const c=Math.ceil(S.t0);if(c>0)center(String(c),'Round '+S.round,'cd');}}
+  else if(S.state==='countdown'){S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');cdGo();}else center(String(Math.ceil(S.t0)),'Round '+S.round,'cd');}
   else if(S.state==='fight'){S.timer-=dt;if(S.timer<=0)timeUp();}
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';

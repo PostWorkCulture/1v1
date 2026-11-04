@@ -2587,7 +2587,7 @@ function car(x,z,rot,color,kind){if(kind&&!rot)return carModel(x,z,kind);const a
    everything else is detail that moves with them. */
 function carModel(x,z,kind){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.1,y0:.3,bh:.55,ch:.55,cl:2.2,cw:1.7,co:-.25,wb:1.45,r:.4},
     truck:{c:'#f4f5f7',L:6.4,W:2.2,y0:.45,bh:.75,ch:1.42,cl:4.3,cw:2.2,co:-1.0,wb:2.2,r:.5},
-    lambo:{c:'#f4b400',L:4.6,W:2.15,y0:.25,bh:.45,ch:.35,cl:1.9,cw:1.6,co:0,wb:1.42,r:.39},
+    lambo:{c:'#232428',L:4.6,W:2.15,y0:.25,bh:.45,ch:.35,cl:1.9,cw:1.6,co:0,wb:1.42,r:.39},
     porsche:{c:'#2a5bd7',L:4.5,W:1.95,y0:.3,bh:.5,ch:.55,cl:2.0,cw:1.55,co:-.2,wb:1.35,r:.38}}[kind];
   const {c,L,W,y0,bh,ch,cl,cw,co,wb,r}=K,top=y0+bh;
   const b1=box(x,y0,z,W,bh,L,c,{extra:{roughness:.3,metalness:.3}});const b2=box(x,top,z+co,cw,ch,cl,kind==='truck'?c:'#1d2430',{extra:kind==='truck'?{roughness:.3,metalness:.3}:{roughness:.12,metalness:.5}});
@@ -2631,7 +2631,7 @@ function carModel(x,z,kind){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.1,y0:.3,bh:.55,c
 /* Street Life's cars: the Tripo models from the project's images/Vehicles folder, baked offline into models/cars/<kind>.glb (15k-35k triangles, 256-512 px colour
    maps; the truck keeps its 27 parts). Normals are rebuilt on load, each model is turned nose to +z, sat on the ground and scaled to its length. The body and cabin
    boxes stay as the solid parts (cover, what bullets hit, what's left as the burnt shell); until a model has landed the car shows its built-in shape. */
-const VEH_CFG={gtr:{L:4.7},lambo:{L:4.6,tint:'#f4b400'},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
+const VEH_CFG={gtr:{L:4.7},lambo:{L:4.6},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
 function loadVehicle(kind){if(VEH_P[kind])return VEH_P[kind];return VEH_P[kind]=fetch('models/cars/'+kind+'.glb').then(r=>{if(!r.ok)throw new Error('car '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=VEH_CFG[kind],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -2648,7 +2648,7 @@ function loadVehicle(kind){if(VEH_P[kind])return VEH_P[kind];return VEH_P[kind]=
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));if(p.attributes.TEXCOORD_0!=null)g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));
     g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeVertexNormals();g.computeBoundingSphere();
     const Mt=J.materials[p.material??0]||{},pb=Mt.pbrMetallicRoughness||{};
-    if(!pb.baseColorTexture){/* an uncoloured model (the Lambo): paint the body, dark tyres low down at the wheel arches, tinted glass and roof up top */
+    if(!pb.baseColorTexture){/* an uncoloured model: paint the body, dark tyres low down at the wheel arches, tinted glass and roof up top */
       const col=new Float32Array(a.length),bc=new THREE.Color(cfg.tint||'#cccccc'),dk=new THREE.Color('#1c1d22'),gl=new THREE.Color('#1d2430'),wz=cfg.L*.31;
       for(let k=0;k<a.length;k+=3){const x=a[k],y=a[k+1],z=a[k+2];let c=bc;if(y<H*.42&&Math.abs(x)>Wd*.36&&(Math.abs(z-wz)<cfg.L*.11||Math.abs(z+wz)<cfg.L*.11))c=dk;else if(y>H*.78&&Math.abs(x)<Wd*.33&&Math.abs(z)<cfg.L*.25)c=gl;col[k]=c.r;col[k+1]=c.g;col[k+2]=c.b;}
       g.setAttribute('color',new THREE.BufferAttribute(col,3));return {geo:g,mat:new THREE.MeshStandardMaterial({vertexColors:true,roughness:.35,metalness:.35})};}

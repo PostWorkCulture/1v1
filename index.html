@@ -143,7 +143,10 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #duel-done .ddh .dd-side{display:flex;flex-direction:column;gap:4px;min-width:200px}#duel-done .ddh .dd-side .newbest:empty{display:none}
 #duel-done .ddh .btns{flex-direction:row;gap:8px;flex-basis:100%;justify-content:center;align-items:center;position:relative}
 #duel-done .dd-auto{position:absolute;right:0;font:600 12px/1 var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}#duel-done .ddh .btns .btn{padding:9px 16px;width:auto;font-size:15px}
-#duel-done .ddh .dd-rp{flex-basis:100%;justify-content:flex-start}
+#duel-done .ddh .dd-rp{flex-basis:100%;justify-content:center}
+#duel-done .ddh .btns .btn.dd-vid{position:relative;width:46px;height:42px;padding:0;display:grid;place-items:center;animation:vidPop .5s .35s cubic-bezier(.2,.9,.25,1.4) both}#duel-done .dd-vid[hidden]{display:none}
+#duel-done .dd-vid svg{width:24px;height:24px}#duel-done .dd-vid b{position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:#ff3d7f;color:#fff;font:800 11px/19px var(--f-body);text-align:center}
+@keyframes vidPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
 #duel-hud.rend #d-feed{opacity:0!important}
 .card{width:min(420px,100%);padding:24px;display:flex;flex-direction:column;gap:16px;text-align:center}
 .card h2{margin:0;font:400 clamp(30px,6vw,44px)/1 var(--f-display);text-wrap:balance}
@@ -1220,7 +1223,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
         <div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div></div>
       <div class="btns">
         <button class="btn primary" id="dd-again">Rematch</button>
-        <button class="btn" id="dd-clips">View Clips</button><span class="dd-auto" id="dd-auto"></span>
+        <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
       </div>
       <div class="dd-rp" id="dd-rp" hidden></div>
     </div>
@@ -7464,11 +7467,11 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
   if(pre)center('Eliminated',(won?'Round won · ':S.players==='ffa'&&winner>=0?teamName(winner)+' takes the round · ':'Round lost · ')+sc,(won?'win':'lose')+' top');
   else if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(RP.round.length)S.t0=4.5;if(elT>0&&!done)S.t0=Math.max(RP.round.length?2:1.2,S.t0-elT);showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
+  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(1.2,S.t0-elT);showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?(f.hp+(f.armor||0))/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
-function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.disabled=!RP.clips.length;b.textContent=RP.clips.length?`View Clips (${RP.clips.length})`:'No clips this game';}if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=(isDM()?DM_KILLS:5);
+function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.hidden=!RP.clips.length;b.setAttribute('aria-expanded','false');$('dd-clipn').textContent=RP.clips.length;}if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=(isDM()?DM_KILLS:5);
   const rk=S.players==='1v1'?S.diff:S.diff+':'+S.players;const r=S.record[rk]||[0,0];r[won?0:1]++;S.record[rk]=r;store.set('duel:record',S.record);
   const wt=S.score.findIndex(v=>v>=(isDM()?DM_KILLS:5)),ld=f=>`${CHARS[f.char].name} (${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
   $('dd-title').textContent=won?(S.players==='2v2'?'Your team wins':'You win'):teamName(wt)+(S.players==='1v1'?' wins':' wins');$('dd-score').textContent=scoreLine();
@@ -7596,7 +7599,8 @@ const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f
 const HOME_SVG='<svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z" fill="#fff"/></svg>';
 function rpButtons(list,keys){return list.map((c,i)=>`<button class="rp-b" data-rp="${RP.clips.indexOf(c)}">${keys&&i<9?`<kbd>${i+1}</kbd>`:''}${PLAY_SVG}${c.label}</button>`).join('');}
 // the round-end bar never releases the mouse (that used to leave mouse-look dead in the next round): use 1-9 for replays and H for home, or click if the cursor is free
-function showRoundEndBar(){const el=$('d-rend');RP.bar=RP.round.filter(c=>RP.clips.includes(c));el.innerHTML=rpButtons(RP.bar,!S.touch);el.hidden=!RP.bar.length;}
+/* clips are only offered at the end of the match (the video icon on the results bar), never between rounds */
+function showRoundEndBar(){$('d-rend').hidden=true;RP.bar=[];}
 const RV={clip:null,imgs:[],i:0,acc:0,play:true,rec:null};
 async function openReplay(i){const c=RP.clips[i];if(!c)return;S.replayOpen=true;mouseL=mouseR=false;if(document.pointerLockElement)document.exitPointerLock();
   $('d-replay').hidden=false;$('rv-title').textContent=c.label;
@@ -7615,7 +7619,7 @@ function saveReplay(){if(!RV.clip||RV.rec||$('rv-save').textContent==='Recording
     a.download=`imok-replay-${RV.clip?RV.clip.label.replace(/[^a-z0-9]+/gi,'-').toLowerCase():'clip'}.${(rec.mimeType||'').includes('mp4')?'mp4':'webm'}`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);$('rv-save').textContent='Saved';setTimeout(()=>$('rv-save').textContent='Save video',1500);};
   RV.i=0;RV.acc=0;RV.play=false;rvDraw();$('rv-play').textContent='Pause';$('rv-save').textContent='Recording…';rec.start(200);setTimeout(()=>{RV.rec=rec;RV.i=0;RV.acc=0;RV.play=true;},250);}
 $('rv-close').addEventListener('click',closeReplay);
-$('dd-clips').addEventListener('click',()=>{const r=$('dd-rp');r.hidden=!r.hidden;$('dd-clips').textContent=r.hidden?`View Clips (${RP.clips.length})`:'Hide Clips';});$('rv-save').addEventListener('click',saveReplay);
+$('dd-clips').addEventListener('click',()=>{const r=$('dd-rp');r.hidden=!r.hidden;$('dd-clips').setAttribute('aria-expanded',String(!r.hidden));});$('rv-save').addEventListener('click',saveReplay);
 $('rv-play').addEventListener('click',()=>{RV.play=!RV.play;if(RV.play&&RV.i>=RV.imgs.length-1)RV.i=0;$('rv-play').textContent=RV.play?'Pause':'Play';});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b){e.preventDefault();openReplay(+b.dataset.rp);return;}if(e.target.closest('#rp-home')){$('d-rend').hidden=true;leave();}});
 

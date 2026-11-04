@@ -2843,6 +2843,10 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     const dk=Bx(.35,5.0,F,2.4,.78,.85,'#8a5a34');monitor(.2,5.0,F+.78,'v-');register(.95,4.95,F+.78,'v-');chair(.3,4.0,F,'#2b2d33',face['v-']);
   }
 }
+/* white metal ladder against a wall: (x,z) is the line of the rungs, (nx,nz) points into the wall; you climb from y0 to y1 and step off onto the floor there */
+function wLadder(x,z,y0,y1,nx,nz,len=1.1){const lm=mat('#eef0f3',null,{metalness:.35,roughness:.4}),ax=nx!==0;for(const s of [-len/2,len/2])deco(B.boxGeo(.08,y1+1-y0,.08),lm,x+(ax?0:s),(y1+1+y0)/2,z+(ax?s:0));
+  for(let yy=y0+.3;yy<y1+.8;yy+=.35)deco(B.boxGeo(ax?.06:len,.06,ax?len:.06),lm,x,yy,z);
+  (M.ladders||(M.ladders=[])).push({x0:x-(ax?.4:len/2),x1:x+(ax?.4:len/2),z0:z-(ax?len/2:.4),z1:z+(ax?len/2:.4),y0,y1,nx,nz,rung:ax?x:z});}
 // two-storey house; balcony over the porch, optional attic loft that opens onto a rooftop terrace
 function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip,k),H=4.1,F=4.4,T=8,L=8.3,inner='#f3efe6';
   const FL={garage:['#9a9da3',null],hospital:['#e4ecef','tile'],store:['#ece5d6','tile']}[th]||['#c99a5b','wood'];S.floor(-5.85,5.85,-5.35,5.35,.02,FL[0],FL[1]);
@@ -2863,10 +2867,9 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,F,T,[BW(-2.5,2.6,F,T),BW(3,2.2,F,T)],wall);
   // climbing route on both sides: a ledge under the window, then an air-con unit to jump onto the roof / terrace
   // hop-up: a bin and two crates against one side wall step up onto the window ledge, then in through the upstairs window (clear of the stairwell)
-  if(hop){const o=-5.65,d=m=>o-m/k;S.stairs(3.15,-1,d(1.6),o,0,9,(F+.4)/9,.4,'#8a5a34');S.box(-1.1,-.45,d(1.6),o,0,F+.4,'#8a5a34');}
+  if(hop)wLadder(S.X(-2.5),S.Z(-5.65)-flip*.1,0,F+.42,0,flip);
 
-  for(const sv of [-1,1]){const a=sv*5.65,b=sv*7.05;S.box(-5.4,-1.1,a,b,F+.1,F+.4,trim);S.box(-5.4,-4,a,b,F+.4,F+1.6,'#9aa0a8');S.box(-5.2,-4.2,sv*6.9,sv*7.06,F+.6,F+1.4,'#5b6070');
-    S.box(-5.4,-4.6,a,b,F+1.6,F+2.6,'#9aa0a8');S.box(-5.3,-4.7,sv*6.9,sv*7.06,F+1.75,F+2.45,'#5b6070');}
+  for(const sv of [-1,1])wLadder(S.X(-4.75),S.Z(sv*5.65)+sv*flip*.1,0,T+.3,0,-sv*flip);
   const pu=-6-2.05/k;S.slab(pu,-6.15,-4,4,H,F,trim);for(const v of [-3.75,3.75])S.box(pu+.1/k,pu+.6/k,v-.25/k,v+.25/k,0,H,trim);
   S.box(pu,pu+.25/k,-4,4,F,F+1,'#ffffff');for(const v of [-4,4])S.box(pu,-6.15,v-.12/k,v+.12/k,F,F+1,'#ffffff');
   if(th)dressHouse(th,S,k,flip,cx,cz,H,F,loft);else{S.box(-5.6,-3.4,1.6,4.8,F,F+.7,'#8ecae6');S.box(-5.7,-4.9,-5.3,-4.5,F,F+1.1,'#3bb54a');}
@@ -2879,7 +2882,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],wall);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
-  for(const sv of [-1,1]){const v0=sv*4.1,v1=sv*5.3,w0=sv*4.4;S.box(-2.6,-.4,v0,v1,L,L+1.4,'#b07a4a');S.box(-1.9,-.9,w0,v1,L+1.4,L+2.7,'#c99a5b');}
+  for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.1,S.Z(sv*4.7),L,R2+1.05,flip,0);
   S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
 // single-storey house with a flat roof deck reached by outside stairs
 function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F=4.4,inner='#f3efe6';
@@ -4137,8 +4140,8 @@ const MAPS={
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
  toys:{modes:['duel'],name:'Playtime',desc:'Toy-sized fights on a bedroom floor: book towers, a toy chest, blocks and board games',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
-  // a square plot (104 x 104 m) instead of a long strip
-  const X=52,Z=52;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  /* 92 x 72 m: two big houses a side with an open middle between them */
+  const X=46,Z=36,ZH=17;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-100,100,-110,110,'#5fb24b','grass',-.02,1);
   floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
@@ -4149,21 +4152,21 @@ const MAPS={
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f8f3a',null,null,'#c8322b','#c9ced6','#2f63c8'];
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
-  const L=[[-1,-32,'A',RC[0],0,'garage'],[-1,0,'B',RC[1],1],[-1,32,'C',RC[2],2,'home'],[1,-32,'C',RC[5],3,'hospital'],[1,0,'B',RC[6],4],[1,32,'A',RC[7],5,'store']];
+  const L=[[-1,-ZH,'A',RC[0],0,'garage'],[-1,ZH,'C',RC[2],2,'home'],[1,-ZH,'C',RC[5],3,'hospital'],[1,ZH,'A',RC[7],5,'store']];
   for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?1.6:1,cx=side*(19+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
     if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,cols[(ci*2+k)%cols.length],rc,trims[ci%4],kind==='C',hk,true,th);
     // one tree beside each end house, out of the way; mailboxes beside the path, not on it
-    if(Math.abs(z)===32)tree(side*13,z+Math.sign(z)*(hw+3),.9);
+    if(Math.abs(z)===ZH)tree(side*13,z+Math.sign(z)*(hw+3),.9);
     box(side*10.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*10.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
-  for(const side of [-1,1])for(const z of [-16,16])box(side*26,0,z,6,1.4,1,'#3f8f3a',{tx:'grass'});
-  const cars=[car(3.4,-30,false,'#e8463a'),car(-3.4,-17,false,'#2f7fe0'),car(3.4,-4,false,'#f4c22b'),car(-3.4,9,false,'#ffffff'),car(3.4,22,false,'#3bb54a'),car(-3.4,33,false,'#a05ad6')];
-  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:34});
+  for(const side of [-1,1])box(side*26,0,0,6,1.4,1,'#3f8f3a',{tx:'grass'});
+  const cars=[car(3.4,-26,false,'#e8463a'),car(-3.4,-15,false,'#2f7fe0'),car(3.4,-4,false,'#f4c22b'),car(-3.4,7,false,'#ffffff'),car(3.4,18,false,'#3bb54a'),car(-3.4,27,false,'#a05ad6')];
+  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:30});
   // the shop goes beside the road near the middle, clear of the cars
   M.shopOK=(x,z)=>Math.abs(x)>10;
-  for(const z of [-49,49])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[-12,48],[12,-48],[-46,46],[46,-46],[46,46],[-46,-46],[-46,-16],[46,16],[-7.6,-16],[7.6,16]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  for(const z of [-33,33])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
+  M.spawns=[[-12,32],[12,-32],[-40,31],[40,-31],[40,31],[-40,-31],[-40,-3],[40,3],[-7.6,-11],[7.6,11]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Freight yard with live trains running through the middle',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A wide open tropical beach with boats, rocks and a Tiki Bar',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){

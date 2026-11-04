@@ -4509,15 +4509,16 @@ function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=M
   const fw=fw0,fx=fx0,wy0=wy00+.12,wh=wh0;for(const [bw,bh,bx,by] of [[fw+.12,.06,fx,wy0+wh+.03],[fw+.12,.06,fx,wy0-.03],[.06,wh,fx-fw/2-.03,wy0+wh/2],[.06,wh,fx+fw/2+.03,wy0+wh/2]])mesh(new THREE.BoxGeometry(bw,bh,.06),dark,bx,by,D/2+.01);
   mesh(new THREE.PlaneGeometry(fw,wh),new THREE.MeshBasicMaterial({map:T.back,toneMapped:false}),fx,wy0+wh/2,D/2-RD+.01).castShadow=false;
   const sideM=new THREE.MeshStandardMaterial({color:'#f2eee8',roughness:.6});for(const sx of [-1,1])mesh(new THREE.BoxGeometry(.03,wh,.5),sideM,fx+sx*fw/2,wy0+wh/2,D/2-.22);
-  const shelfM=new THREE.MeshStandardMaterial({color:'#dfe3e8',roughness:.3,metalness:.6}),tagC=['#2fbf4a','#2f7fe0','#3f6b3a','#8e5bd8'];
+  const shelfM=new THREE.MeshStandardMaterial({color:'#dfe3e8',roughness:.3,metalness:.6}),tagC=['#ffc61a','#2f7fe0','#3f6b3a'];
   const medM=new THREE.MeshStandardMaterial({map:T.med,roughness:.5}),armM=new THREE.MeshStandardMaterial({color:'#2f7fe0',roughness:.3,metalness:.4}),armRim=new THREE.MeshStandardMaterial({color:'#9fd0ff',roughness:.3,metalness:.5}),
     nadeM=new THREE.MeshStandardMaterial({color:'#3f6b3a',roughness:.55}),pinM=new THREE.MeshStandardMaterial({color:'#b9bec6',roughness:.3,metalness:.8}),canM=new THREE.MeshStandardMaterial({map:T.can,roughness:.35,metalness:.3}),canTop=new THREE.MeshStandardMaterial({color:'#cfd3da',roughness:.25,metalness:.8}),goldM=new THREE.MeshStandardMaterial({color:'#ffc61a',metalness:.9,roughness:.2,emissive:'#6a4000',emissiveIntensity:.5});
-  const rows=4,rh=wh/rows,cols=4,cw=(fw-.1)/cols;
+  const rows=3,rh=wh/rows,cols=4,cw=(fw-.1)/cols,ROWK=['gold','armor','nades'];
   for(let r=0;r<rows;r++){const y=wy0+wh-(r+1)*rh+.04;mesh(new THREE.BoxGeometry(fw-.04,.035,.48),shelfM,fx,y,D/2-.22);mesh(new THREE.BoxGeometry(fw-.04,.06,.02),new THREE.MeshBasicMaterial({color:tagC[r],toneMapped:false}),fx,y+.03,D/2-.02).castShadow=false;
     for(let i=0;i<cols;i++){const ix=fx-fw/2+.05+cw*(i+.5),iz=D/2-.22,iy=y+.035;
-      if(r===0){mesh(RB(.32,.26,.24,.04),medM,ix,iy+.13,iz);}
-      else if(r===1){const p=mesh(RB(.3,.36,.08,.03),armM,ix,iy+.2,iz);p.rotation.x=-.12;mesh(RB(.34,.06,.1,.02),armRim,ix,iy+.39,iz-.01);}
-      else if(r===2){mesh(new THREE.SphereGeometry(.13,14,10),i===cols-1?goldM:nadeM,ix,iy+.14,iz);mesh(new THREE.CylinderGeometry(.04,.05,.08,8),pinM,ix,iy+.29,iz);const ring=mesh(new THREE.TorusGeometry(.045,.012,6,12),pinM,ix+.06,iy+.3,iz);ring.rotation.y=Math.PI/2;}
+      const kind=ROWK[r];
+      if(kind==='gold'){mesh(new THREE.SphereGeometry(.14,16,12),goldM,ix,iy+.15,iz);mesh(new THREE.CylinderGeometry(.04,.05,.08,8),pinM,ix,iy+.31,iz);const ring=mesh(new THREE.TorusGeometry(.045,.012,6,12),pinM,ix+.06,iy+.32,iz);ring.rotation.y=Math.PI/2;}
+      else if(kind==='armor'){const p=mesh(RB(.3,.36,.08,.03),armM,ix,iy+.2,iz);p.rotation.x=-.12;mesh(RB(.34,.06,.1,.02),armRim,ix,iy+.39,iz-.01);}
+      else if(kind==='nades'){mesh(new THREE.SphereGeometry(.13,14,10),nadeM,ix,iy+.14,iz);mesh(new THREE.CylinderGeometry(.04,.05,.08,8),pinM,ix,iy+.29,iz);const ring=mesh(new THREE.TorusGeometry(.045,.012,6,12),pinM,ix+.06,iy+.3,iz);ring.rotation.y=Math.PI/2;}
       else{mesh(new THREE.CylinderGeometry(.09,.09,.32,16),canM,ix,iy+.16,iz);mesh(new THREE.CylinderGeometry(.085,.09,.02,16),canTop,ix,iy+.33,iz);}
       /* the spiral coil each item sits in */const coil=mesh(new THREE.TorusGeometry(.13,.012,5,16),pinM,ix,iy+.04,iz+.02);coil.rotation.x=Math.PI/2;coil.castShadow=false;}}
   const glass=new THREE.Mesh(new THREE.PlaneGeometry(fw,wh),new THREE.MeshPhysicalMaterial({color:'#dff3ff',transparent:true,opacity:.18,roughness:.04,metalness:0,clearcoat:1,depthWrite:false}));glass.position.set(fx,wy0+wh/2,D/2+.045);root.add(glass);
@@ -4525,7 +4526,7 @@ function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=M
   /* control panel: screen, four glowing buttons (one per item), coin slot */
   const px=W/2-.12-(W-fw-.36)/2,pw=W-fw-.36;mesh(RB(pw,wh,.08,.03),dark,px,wy0+wh/2,D/2+.02);
   mesh(new THREE.PlaneGeometry(pw*.8,.26),new THREE.MeshBasicMaterial({map:T.lcd,toneMapped:false}),px,wy0+wh-.25,D/2+.065).castShadow=false;
-  const BTN=[['health','#2fbf4a'],['armor','#2f7fe0'],['nades','#3f6b3a'],['stamina','#8e5bd8'],['gold','#ffc61a']],btns={};BTN.forEach(([id,cc],i)=>{const by=wy0+wh-.6-i*.3,m=new THREE.MeshBasicMaterial({color:cc,toneMapped:false});const b=mesh(new THREE.CylinderGeometry(.1,.1,.06,20),m,px,by,D/2+.07);b.rotation.x=Math.PI/2;
+  const BTN=[['gold','#ffc61a'],['armor','#2f7fe0'],['nades','#3f6b3a']],btns={};BTN.forEach(([id,cc],i)=>{const by=wy0+wh-.65-i*.42,m=new THREE.MeshBasicMaterial({color:cc,toneMapped:false});const b=mesh(new THREE.CylinderGeometry(.1,.1,.06,20),m,px,by,D/2+.07);b.rotation.x=Math.PI/2;
     const rim=mesh(new THREE.TorusGeometry(.11,.016,8,20),chrome,px,by,D/2+.075);rim.castShadow=false;btns[id]={b,m,c:new THREE.Color(cc),z:D/2+.07,y:by};});
   mesh(new THREE.BoxGeometry(.16,.22,.04),chrome,px,wy0+.16,D/2+.07);mesh(new THREE.BoxGeometry(.03,.14,.05),dark,px,wy0+.16,D/2+.09);
   /* pick-up tray with a flap */
@@ -6699,11 +6700,9 @@ const stimMul=f=>(f.stimT>0?1.45:1)*(f.speedT>0?1.25:1);
 // walk up to the kiosk and the menu pops up; pick one item, then the shop is on a 30s cooldown for you
 const SHOP_CD=30;
 const SHOP_ITEMS=[
-  {id:'health',name:'Health',desc:'+50 HP',col:'#3bb54a',ic:'+',can:f=>f.hp<f.hpMax,buy:f=>{f.hp=Math.min(f.hpMax,f.hp+50);}},
+  {id:'gold',name:'Gold Grenade',desc:'1 grenade · double damage · T',col:'#ffc61a',ic:'★',guns:1,can:f=>!(f.goldNade>0),buy:f=>{f.goldNade=1;}},
   {id:'armor',name:'Armour',desc:'Blocks 50 damage',col:'#2f7fe0',ic:'A',can:f=>(f.armor||0)<100,buy:f=>{f.armor=Math.min(100,(f.armor||0)+50);}},
   {id:'nades',name:'Grenades',desc:'3 grenades · T',col:'#3f6b3a',ic:'G',guns:1,can:f=>(f.nades||0)<6,buy:f=>{f.nades=Math.min(6,(f.nades||0)+3);}},
-  {id:'stamina',name:'Stamina',desc:'Refills 2x faster · kept while you win rounds',col:'#8e5bd8',ic:'S',can:f=>!f.stamBoost,buy:f=>{f.stamBoost=true;}},
-  {id:'gold',name:'Gold Grenade',desc:'1 grenade · double damage · T',col:'#ffc61a',ic:'★',guns:1,can:f=>!(f.goldNade>0),buy:f=>{f.goldNade=1;}},
   {id:'speed',name:'Speed',desc:'+25% for 30s',col:'#f08a24',ic:'»',rumble:1,can:f=>(f.speedT||0)<45,buy:f=>{f.speedT=(f.speedT||0)+30;}}];
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.stamBoost=false;f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.goldNade=0;f.nadeT=0;f.speedT=0;}

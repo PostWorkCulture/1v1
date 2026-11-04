@@ -4962,8 +4962,15 @@ function glbTree(id,x,z,h,ry=0,tw=.7){collider(x-tw/2,x+tw/2,0,Math.min(3,h*.35)
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
    their next setLook. */
 const MODELS={},MODEL_LOAD={},MODEL_IDS=['blaze','blink','brute','frost','ghost','jet','patch','tank','thorn','angel','crusty','wednesday','antihero','thor'];
+/* Height levelling: every model was baked to the same overall height including hats, horns and hair, so characters with tall headgear
+   (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero, Murda Medic) tall. MODEL_EYE is each model's measured eye level;
+   on load the model is scaled about the feet so every character's eyes sit at the same height (looks only: hitboxes don't change). */
+const MODEL_EYE={blaze:2.39,brute:2.54,jet:2.47,blink:2.29,tank:2.29,ghost:2.34,frost:2.38,patch:2.57,thorn:2.5,angel:2.38,crusty:2.29,wednesday:2.43,antihero:2.57,thor:2.24},EYE_TARGET=2.4;
+function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
+  for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
+  for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
 function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))return MODEL_LOAD[id];
-  return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>{MODELS[id]=m;try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
+  return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>{MODELS[id]=levelModel(m,id);try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
     .catch(e=>{console.warn('model',id,e);delete MODEL_LOAD[id];});}
 function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
 setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const p=needModel(MODEL_IDS[i++]);(p||Promise.resolve()).then(next,next);};next();},2500);

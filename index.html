@@ -2558,7 +2558,7 @@ function windowPane(x,y,z,w,h,face){const g=new THREE.PlaneGeometry(w,h);const m
 function tree(x,z,s=1){box(x,0,z,.7*s,2.6*s,.7*s,'#7a4c2a');const lm=mat('#3a9a3c');
   const a=deco(B.boxGeo(3.6*s,1.8*s,3.6*s),lm,x,2.6*s+.9*s,z),b=deco(B.boxGeo(2.4*s,1.3*s,2.4*s),lm,x,2.6*s+2.3*s,z);a.userData.dyn=b.userData.dyn=1;
   if(M.life){const ph=x*.7+z*.3;M.life.push(t=>{const w=Math.sin(t*1.3+ph)*.03+Math.sin(t*2.9+ph*2)*.012;a.rotation.z=w;b.rotation.z=w*1.6;b.rotation.x=w*.8;});}}
-function car(x,z,rot,color){const along=rot?'x':'z';const L=4.4,W=2.0;const w=along==='x'?L:W,d=along==='x'?W:L;
+function car(x,z,rot,color,kind){if(kind&&!rot)return carModel(x,z,kind);const along=rot?'x':'z';const L=4.4,W=2.0;const w=along==='x'?L:W,d=along==='x'?W:L;
   const b1=box(x,.35,z,w,1.05,d,color,{extra:{roughness:.35,metalness:.25}});
   const cw=along==='x'?2.4:1.8,cd=along==='x'?1.8:2.4;const b2=box(x,1.4,z,cw,.85,cd,'#cfe6f3',{extra:{roughness:.15,metalness:.4}});
   const C={boxes:[b1,b2],parts:[b1.mesh,b2.mesh],wheels:[],x,z,color};
@@ -2574,6 +2574,52 @@ function car(x,z,rot,color){const along=rot?'x':'z';const L=4.4,W=2.0;const w=al
       if(along==='x')sp.rotation.z=k*Math.PI/3;else sp.rotation.x=k*Math.PI/3;m.add(sp);}
     const mark=new THREE.Mesh(new THREE.BoxGeometry(along==='x'?.12:.32,.07,along==='x'?.32:.12),tm);mark.position.set(0,.39,0);m.add(mark);
     const bl=disc(.43,.02,blurM);bl.position.copy(out).multiplyScalar(.2);m.add(bl);
+    C.parts.push(m);C.wheels.push(m);}
+  for(const m of C.parts)m.userData.dyn=1;for(const b of C.boxes)b.car=C;return C;}
+/* Street Life's four cars, each its own shape (all parked or driving along z, nose to +z): a white GT-R style coupe with a big wing, a white pickup truck,
+   a low wedge supercar and a blue rear-engined sports car. The body and cabin are the two solid boxes (what you hit, take cover behind and what burns);
+   everything else is detail that moves with them. */
+function carModel(x,z,kind){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.0,y0:.32,bh:.78,ch:.55,cl:2.1,cw:1.66,co:-.25,wb:1.45,r:.4},
+    truck:{c:'#f4f5f7',L:5.4,W:2.12,y0:.5,bh:.85,ch:.92,cl:1.9,cw:1.9,co:.95,wb:1.75,r:.5},
+    lambo:{c:'#f4b400',L:4.6,W:2.1,y0:.26,bh:.62,ch:.46,cl:1.7,cw:1.6,co:.05,wb:1.42,r:.39},
+    porsche:{c:'#2a5bd7',L:4.4,W:1.9,y0:.3,bh:.72,ch:.55,cl:1.95,cw:1.56,co:-.2,wb:1.3,r:.38}}[kind];
+  const {c,L,W,y0,bh,ch,cl,cw,co,wb,r}=K,top=y0+bh;
+  const b1=box(x,y0,z,W,bh,L,c,{extra:{roughness:.3,metalness:.3}});const b2=box(x,top,z+co,cw,ch,cl,kind==='truck'?c:'#1d2430',{extra:kind==='truck'?{roughness:.3,metalness:.3}:{roughness:.12,metalness:.5}});
+  const C={boxes:[b1,b2],parts:[b1.mesh,b2.mesh],wheels:[],x,z,color:c,kind};
+  const P=(geo,m,px,py,pz,rx,ry,rz)=>{const o=deco(geo,typeof m==='string'?mat(m,null,{roughness:.35,metalness:.2}):m,px,py,pz);if(rx)o.rotation.x=rx;if(ry)o.rotation.y=ry;if(rz)o.rotation.z=rz;C.parts.push(o);return o;};
+  const glowM=(col,i=2)=>new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:i,roughness:.4});
+  const body=mat(c,null,{roughness:.3,metalness:.3}),blk='#16181d',chrome=mat('#d9dde3',null,{roughness:.2,metalness:.85});
+  /* lights: headlights at the front (+z), red tail lights at the back */
+  const front=z+L/2,back=z-L/2;
+  if(kind==='gtr'){/* roof panel over the glass, long bonnet with a vent, black grille, a tall rear wing, four round tail lights */
+    P(gB(cw-.1,.06,cl-.5),body,x,top+ch+.01,z+co);P(gB(W*.92,.05,1.5),body,x,top+.02,z+1.3);P(gB(.6,.03,.5),blk,x,top+.05,z+1.3);
+    P(gB(1.3,.28,.05),blk,x,y0+.38,front+.01);for(const s of [-1,1]){P(gB(.42,.12,.06),glowM('#eef6ff'),x+s*.68,y0+.6,front+.02);}
+    for(const s of [-1,1]){P(gB(.08,.32,.12),blk,x+s*.62,top+.16,back+.25);for(const o of [.32,.62])P(gC(.1,.1,.05,14),glowM('#ff2a2a',2.5),x+s*o,y0+.55,back-.02,Math.PI/2);}
+    P(gB(1.9,.06,.4),body,x,top+.34,back+.25);P(gB(W+.02,.1,L*.6),blk,x,y0-.02,z);}
+  else if(kind==='truck'){/* tall cab up front, open bed behind with rails, chrome grille and bumpers, an amber light bar on the roof */
+    const bedL=L-cl-.35,bz=back+bedL/2+.05;P(gB(W,.5,bedL),body,x,top+.25,bz);P(gB(W-.24,.06,bedL-.2),'#3a3d45',x,top+.03,bz);
+    for(const s of [-1,1])P(gB(.12,.5,bedL),body,x+s*(W/2-.06),top+.25,bz);P(gB(W,.5,.12),body,x,top+.25,back+.06);
+    P(gB(W+.06,.16,.2),chrome,x,y0+.15,front+.05);P(gB(W+.06,.16,.2),chrome,x,y0+.15,back-.05);P(gB(1.5,.5,.05),chrome,x,y0+.5,front+.01);
+    for(const s of [-1,1]){P(gB(.4,.2,.06),glowM('#eef6ff'),x+s*.72,y0+.62,front+.02);P(gB(.16,.42,.06),glowM('#ff2a2a',2.5),x+s*(W/2-.12),top+.1,back-.02);}
+    {const gl=mat('#1d2430',null,{roughness:.12,metalness:.5}),cf=z+co+cl/2,cb=z+co-cl/2;P(gB(cw-.25,ch*.5,.04),gl,x,top+ch*.62,cf+.02);P(gB(cw-.3,ch*.4,.04),gl,x,top+ch*.62,cb-.02);for(const s of [-1,1])P(gB(.04,ch*.48,cl*.72),gl,x+s*(cw/2+.02),top+ch*.62,z+co);}
+    P(gB(cw-.2,.12,.35),blk,x,top+ch+.06,z+co+.2);P(gB(1.2,.1,.18),glowM('#ffb400',1.6),x,top+ch+.17,z+co+.2);
+    for(const s of [-1,1])P(gB(.08,.22,.3),blk,x+s*(W/2+.06),top+.45,z+co+.9);}
+  else if(kind==='lambo'){/* a wedge: the nose sweeps down in front of the cabin, sharp side intakes, slim lights, a low rear spoiler */
+    const nl=L/2-cl/2-co-.1,nz=z+co+cl/2+nl/2;const wg=P(gB(W*.96,.12,nl+.1),body,x,top-.03,nz,.16);P(gB(cw-.1,.05,cl-.25),body,x,top+ch+.01,z+co-.05);
+    for(const s of [-1,1]){P(gB(.06,.3,.9),blk,x+s*(W/2+.01),y0+.38,z-.5);P(gB(.5,.06,.06),glowM('#eef6ff'),x+s*.6,y0+.42,front+.02);P(gB(.55,.07,.06),glowM('#ff2a2a',2.5),x+s*.55,y0+.48,back-.02);}
+    P(gB(1.6,.05,.32),blk,x,top+.18,back+.22);for(const s of [-1,1])P(gB(.06,.18,.08),blk,x+s*.6,top+.07,back+.22);P(gB(1.0,.22,.05),blk,x,y0+.2,back-.01);}
+  else if(kind==='porsche'){/* rounded roof and long sloping rear, round headlights on the front wings, a ducktail spoiler, a light bar across the tail */
+    const rf=P(new THREE.SphereGeometry(1,18,8,0,Math.PI*2,0,Math.PI/2),body,x,top+ch-.12,z+co);rf.scale.set(cw/2+.02,.28,cl/2);
+    P(gB(cw,.3,1.1),body,x,top+.1,back+.75,-.28);for(const s of [-1,1]){P(gC(.17,.17,.06,16),glowM('#eef6ff'),x+s*.62,top-.02,front-.05,Math.PI/2);P(gB(W*.3,.2,.5),body,x+s*.62,top-.1,front-.3);}
+    P(gB(1.4,.05,.25),body,x,top+.12,back+.12,.2);P(gB(1.6,.07,.05),glowM('#ff2a2a',2.5),x,y0+.55,back-.02);P(gB(1.1,.18,.05),blk,x,y0+.22,front+.01);}
+  /* wheels on an axle across the car (same pieces as the town cars: hubcap, spokes and a tread mark that turn, a blur disc with speed) */
+  const wm=mat('#1c1d22'),hm=mat(kind==='gtr'?'#2b2d33':kind==='lambo'?'#1c1d22':'#d9dde3',null,{roughness:.3,metalness:.6}),sm=mat(kind==='gtr'?'#c9a24a':'#5b6070'),tm=mat('#f4c22b');
+  const blurM=new THREE.MeshBasicMaterial({color:'#cfd4dc',transparent:true,opacity:0,depthWrite:false});C.blur=blurM;
+  for(const a of [-1,1])for(const s of [-1,1]){const g=new THREE.CylinderGeometry(r,r,.3,18);g.rotateZ(Math.PI/2);const m=deco(g,wm,x+s*(W/2-.02),r,z+a*wb);
+    const out=new V3(s,0,0),disc=(rr,th,mt)=>{const d=new THREE.CylinderGeometry(rr,rr,th,18);d.rotateZ(Math.PI/2);return new THREE.Mesh(d,mt);};
+    const hub=disc(r*.66,.04,hm);hub.position.copy(out).multiplyScalar(.16);m.add(hub);
+    for(let k=0;k<3;k++){const sp=new THREE.Mesh(new THREE.BoxGeometry(.035,r*1.2,.07),sm);sp.position.copy(out).multiplyScalar(.185);sp.rotation.x=k*Math.PI/3;m.add(sp);}
+    const mark=new THREE.Mesh(new THREE.BoxGeometry(.32,.07,.12),tm);mark.position.set(0,r-.03,0);m.add(mark);const bl=disc(r+.01,.02,blurM);bl.position.copy(out).multiplyScalar(.2);m.add(bl);
     C.parts.push(m);C.wheels.push(m);}
   for(const m of C.parts)m.userData.dyn=1;for(const b of C.boxes)b.car=C;return C;}
 // ---- ambient town life: cars that pull out now and then, birds, clouds, butterflies, swaying trees ----
@@ -2745,12 +2791,6 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
   }
   if(th==='hospital'){
     fascia('CLINIC','#f4f5f7','#c8322b',{cross:'#c8322b',stripe:'#c8322b'});
-    // ambulance at the kerb
-    const amb=parkVehicle(car(cx-f*(6*k+4.8),cz+9.6,false,'#f4f5f7'));
-    for(const s of [-1,1]){const g=new THREE.Mesh(new THREE.BoxGeometry(.02,.22,4.42),mat('#c8322b'));g.position.set(amb.x+s*1.01,.95,amb.z);g.userData.dyn=1;M.group.add(g);amb.parts.push(g);}
-    for(const [dx,c] of [[-.35,'#e8463a'],[.35,'#2f7fe0']]){const g=new THREE.Mesh(new THREE.BoxGeometry(.6,.16,.3),new THREE.MeshBasicMaterial({color:c}));g.position.set(amb.x+dx,2.33,amb.z-.6);g.userData.dyn=1;M.group.add(g);amb.parts.push(g);}
-    {const t=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#f4f5f7';g.fillRect(0,0,w,h);g.fillStyle='#c8322b';g.fillRect(44,14,40,100);g.fillRect(14,44,100,40);});
-      const g=new THREE.Mesh(new THREE.PlaneGeometry(.7,.7),new THREE.MeshBasicMaterial({map:t}));g.position.set(amb.x,1.95,amb.z);g.rotation.x=-Math.PI/2;g.userData.dyn=1;M.group.add(g);amb.parts.push(g);}
     // reception desk, waiting chairs, water cooler
     const rd=Bx(-3.1,4.1,0,.95,1.1,3.7,'#f4f5f7',{chip:true,hp:160});kid(rd,gB(.97,.08,3.72),'#2f63c8',-3.1,4.1,1.12);kid(rd,gB(.02,.2,3.6),'#c8322b',-3.4,4.1,.8);
     monitor(-3.0,4.6,1.1,'u+');N(-3.0,3.5,1.1,.22,.1,.18,'#1c1d22');N(-3.05,3.0,1.1,.3,.06,.24,'#f4c22b');N(-3.05,3.05,1.16,.3,.06,.24,'#ffffff');
@@ -4189,8 +4229,9 @@ const MAPS={
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
  toys:{modes:['duel'],name:'Playtime',desc:'Toy-sized fights on a bedroom floor: book towers, a toy chest, blocks and board games',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
-  /* 100 x 68 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses, on opposite sides and ends of the road */
-  const X=50,Z=34,ZH=12;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  /* 92 x 60 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,
+     either side of the road near the middle (a little off-centre, one towards each end) */
+  const X=46,Z=30;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-100,100,-110,110,'#5fb24b','grass',-.02,1);
   floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
@@ -4201,21 +4242,23 @@ const MAPS={
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f8f3a',null,null,'#c8322b','#c9ced6','#2f63c8'];
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
-  const L=[[-1,ZH,'C',RC[2],2,'home'],[1,-ZH,'C',RC[5],3,'hospital']];
-  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1,cx=side*(15+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
+  const L=[[-1,9,'C',RC[2],2,'home'],[1,-7,'C',RC[5],3,'hospital']];
+  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1,cx=side*(12.5+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
     if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f3e3c6':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#ffffff':trims[ci%4],kind==='C',hk,true,th);
-    // one tree beside each end house, out of the way; mailboxes beside the path, not on it
-    if(Math.abs(z)===ZH)tree(side*13,z+Math.sign(z)*(hw+3),.9);
+    /* a mailbox beside the path, not on it */
     box(side*10.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*10.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
-  for(const side of [-1,1]){box(side*26,0,side*20,6,1.4,1,'#3f8f3a',{tx:'grass'});box(side*36,0,side*14,1,1.4,6,'#3f8f3a',{tx:'grass'});tree(side*30,side*27,.9);}
-  const cars=[car(3.4,-24,false,'#e8463a'),car(-3.4,-14,false,'#2f7fe0'),car(3.4,-4,false,'#f4c22b'),car(-3.4,6,false,'#ffffff'),car(3.4,16,false,'#3bb54a'),car(-3.4,25,false,'#a05ad6')];
-  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:28});
+  /* the Tripo trees out on the open lawns and behind the buildings (no hedges or bushes) */
+  for(const [x,z,id,h,ry,tw] of [[20,17,'oak',7.5,.4],[35,21,'purple',7.5,1.3],[29,10,'pine',8.5,2.2],[13,25,'blossom',6,3.1],[42,-25,'tall',9,5.2],
+    [-20,-17,'block',7,3.5,1.2],[-35,-21,'bonsai',7.5,4.4],[-29,-10,'pine',8,5.3],[-13,-25,'blossom',6,.1],[-42,25,'oak',8,2]])glbTree(id,x,z,h,ry,tw);
+  /* four cars: a wrecked car stays a burnt-out shell until the next round */
+  const cars=[car(3.4,-19,false,'','gtr'),car(-3.4,-7,false,'','truck'),car(3.4,6,false,'','lambo'),car(-3.4,18,false,'','porsche')];
+  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:23});
   // the shop goes beside the road near the middle, clear of the cars
   M.shopOK=(x,z)=>Math.abs(x)>10;
-  for(const z of [-31,31])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[12,30],[-12,-30],[42,28],[-42,-28],[44,-30],[-44,30],[7.6,14],[-7.6,-14],[24,12],[-24,-12]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  for(const z of [-27,27])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
+  M.spawns=[[10,22],[-10,-22],[40,26],[-40,-26],[43,-17],[-43,17],[7.6,12],[-7.6,-12],[24,13],[-24,-13]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Freight yard with live trains running through the middle',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A wide open tropical beach with boats, rocks and a Tiki Bar',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
@@ -4703,6 +4746,28 @@ function loadDragonSword(){return fetch('models/dragon_sword.glb').then(r=>{if(!
     DSWORD.geo=g;DSWORD.mat=new THREE.MeshStandardMaterial({map,metalnessMap:mr,roughnessMap:mr,normalMap:nm,metalness:1,roughness:1});
     const w=DSWORD.wait.splice(0);for(const f of w){try{f();}catch(e){}}});});}
 setTimeout(()=>{loadDragonSword().catch(e=>console.warn(e));},1200);
+/* Landscape trees (Street Life): the Tripo models from the project's Landscape folder, baked offline into models/trees/<id>.glb (the 'Green trees' set split into
+   five separate trees), one mesh of 2k-10k triangles with a 512 px colour map,
+   base at the origin and 1 m tall. They're fetched shortly after start-up; a tree placed before its model has landed appears as soon as it arrives.
+   Each one stands on a solid trunk so you can take cover behind it. */
+const TREE_IDS=['oak','pine','tall','bonsai','blossom','purple','block'],TREEM={},TREE_P={},TREE_WAIT=[];
+function loadTree(id){if(TREE_P[id])return TREE_P[id];return TREE_P[id]=fetch('models/trees/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('tree '+r.status);return r.arrayBuffer();}).then(buf=>{
+  const dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
+  const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
+  /* vertex attributes may be interleaved (byteStride), so copy them out element by element */
+  const acc=i=>{const a=J.accessors[i],v=J.bufferViews[a.bufferView],C=T[a.componentType],n=NC[a.type],es=n*C.BYTES_PER_ELEMENT,st=v.byteStride||es,o=bo+(v.byteOffset||0)+(a.byteOffset||0);
+    if(st===es)return new C(buf.slice(o,o+a.count*es));const out=new C(a.count*n),src=new DataView(buf);for(let k=0;k<a.count;k++)for(let c=0;c<n;c++){const q=o+k*st+c*C.BYTES_PER_ELEMENT;out[k*n+c]=C===Float32Array?src.getFloat32(q,true):C===Uint32Array?src.getUint32(q,true):src.getUint16(q,true);}return out;};
+  const p=J.meshes[0].primitives[0],Mt=J.materials[0],pb=Mt.pbrMetallicRoughness||{},g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(acc(p.attributes.POSITION),3));if(p.attributes.NORMAL!=null)g.setAttribute('normal',new THREE.BufferAttribute(acc(p.attributes.NORMAL),3));
+  if(p.attributes.TEXCOORD_0!=null)g.setAttribute('uv',new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0),2));g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));if(p.attributes.NORMAL==null)g.computeVertexNormals();g.computeBoundingSphere();
+  const done=map=>{TREEM[id]={geo:g,mat:new THREE.MeshStandardMaterial({map,color:map?'#ffffff':'#4f9a45',roughness:.9,metalness:0})};for(const f of TREE_WAIT.splice(0))try{f();}catch(e){}};
+  if(!pb.baseColorTexture)return done(null);const im=J.images[J.textures[pb.baseColorTexture.index].source],v=J.bufferViews[im.bufferView],u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
+  return new Promise(ok=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;done(t);ok();},undefined,()=>{done(null);ok();});});});}
+setTimeout(()=>{for(const id of TREE_IDS)loadTree(id).catch(e=>console.warn(e));},900);
+/* a tree h metres tall, turned ry, with a trunk collider tw metres wide */
+function glbTree(id,x,z,h,ry=0,tw=.7){collider(x-tw/2,x+tw/2,0,Math.min(3,h*.35),z-tw/2,z+tw/2);const grp=M.group;
+  const put=()=>{const t=TREEM[id];if(!t||M.group!==grp)return;const m=new THREE.Mesh(t.geo,t.mat);m.position.set(x,0,z);m.rotation.y=ry;m.scale.setScalar(h);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;grp.add(m);};
+  if(TREEM[id])put();else{TREE_WAIT.push(put);loadTree(id).catch(()=>{});}}
 /* Sculpted character models (made in Tripo, split into the six moving parts offline, each carrying its own shoulder and hip pivots).
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at

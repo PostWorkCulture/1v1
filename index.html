@@ -6211,7 +6211,7 @@ function handW(f,left){f.ch.root.updateMatrixWorld(true);return (left?f.ch.aL:f.
 function freeLine(F,sgn){const k=sgn>0?'fb':'ff';if(F[k]!=null)return F[k];let m=12;for(const y of [.35,1.2,2.0]){const o=new V3(F.v0.x,F.v0.y+y,F.v0.z),d=new V3(-F.fwd.x*sgn,0,-F.fwd.z*sgn);const h=rayBoxes(o,d,12);if(h&&h.box.y1-F.v0.y>STEP)m=Math.min(m,h.t-R-.05);}return F[k]=Math.max(0,m);}
 function setAtt(a,F,dist,dt){dist=dist>=0?Math.min(dist,freeLine(F,1)):-Math.min(-dist,freeLine(F,-1));const x=F.v0.x-F.fwd.x*dist,z=F.v0.z-F.fwd.z*dist;const vx=(x-a.pos.x)/Math.max(dt,1e-3),vz=(z-a.pos.z)/Math.max(dt,1e-3);
   a.pos.x=x;a.pos.z=z;a.pos.y=F.v0.y;a.vel.set(vx,0,vz);a.grounded=true;}
-const MOVE_DUR={'Roast':4.4,'Sawn in half':3.9,'Piledriver':3.6,'Shadow grab':3.6,'Clear!':4.0,'Overcharge':2.8,'Blur rush':3.2,'Hot potato':3.4,'Gone fishing':4.2,'Overgrown':3.8,'Knockout':4.1,'Heartbreaker':5.2,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Pancake':3.6};
+const MOVE_DUR={'Roast':2.6,'Sawn in half':3.9,'Piledriver':3.6,'Shadow grab':3.6,'Clear!':4.0,'Overcharge':2.8,'Blur rush':3.2,'Hot potato':3.4,'Gone fishing':4.2,'Overgrown':3.8,'Knockout':4.1,'Heartbreaker':5.2,'Ice sculpture':2.9,'Dog pile':3.9,'Sky drop':3.5,'Pancake':3.6};
 function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,0),fx=F.fx,yawA=F.yaw0;
   const side=new V3(Math.cos(yawA),0,-Math.sin(yawA));// attacker's local +X
   const dA=Math.hypot(F.a0.x-F.v0.x,F.a0.z-F.v0.z);
@@ -6371,21 +6371,21 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     const blast=t>.4&&t<.85;a.pose={ar:blast?[-1.55,0,-.1]:t>1.0?[-1.25,0,.6]:[-.3,0,0],al:t>1.0?[-1.25,0,-.6]:[-.3,0,0]};
     if(blast){const h=handW(a,false),tg=new V3(v.pos.x,v.pos.y+1.3*SC,v.pos.z);for(let i=0;i<4;i++){const u=Math.random(),p=h.clone().lerp(tg,u);emit(p.x,p.y,p.z,{n:1,speed:1.2,size:.12+.22*(1-u*.5),life:.3,grav:-2,colors:['#ff3b1f','#ff7a1f','#ffb347','#ffe08a']});}}
     if(!F.done){
-      if(t>=.6){charLook(v,.92*segT(t,.7,2.5));const hp=new V3(v.pos.x,v.pos.y+2.1*SC,v.pos.z);
+      if(t>=.6){charLook(v,.92*segT(t,.6,1.6));const hp=new V3(v.pos.x,v.pos.y+2.1*SC,v.pos.z);
         for(let i=0;i<2;i++)emit(hp.x+rnd(-.25,.25),hp.y+rnd(0,.3),hp.z+rnd(-.25,.25),{n:1,speed:.6,up:3,size:.3,life:.45,grav:-3,colors:['#ff3b1f','#ff7a1f','#ffb347','#ffe08a']});
         if(Math.random()<.6)emit(v.pos.x+rnd(-.4,.4),v.pos.y+rnd(.2,1.8)*SC,v.pos.z+rnd(-.4,.4),{n:1,speed:.4,up:2,size:.2,life:.4,grav:-2,colors:['#ff7a1f','#ffb347']});
         if(Math.random()<.25)emit(hp.x,hp.y+.5,hp.z,{n:1,speed:.3,up:1.5,size:.35,life:1,grav:-1,colors:['#4a4d55','#6b6f78']});}
       if(t<.75)v.pose=t>.45?{ar:[-1.4,0,.4],al:[-1.4,0,-.4],head:-.2}:undefined;
-      else if(t<2.75){// flee away from Blaze in a panic, picking the clearest way out
+      else if(t<1.35){// two panicked running steps away from Blaze, picking the clearest way out
         if(F.fd==null){const away=Math.atan2(fw.x,fw.z),o=new V3(v.pos.x,v.pos.y+.9,v.pos.z);let best=null;
           for(const da of [0,.35,-.35,.7,-.7,1.05,-1.05,1.4,-1.4]){const y=away+da,d=new V3(Math.sin(y),0,Math.cos(y)),h=rayBoxes(o,d,10),L=h?h.t-.9:10;if(!best||L>best.L+.4)best={y,L};}
-          F.fd=best.y;F.fL=Math.max(2.5,Math.min(8,best.L));F.fs=v.pos.clone();}
-        const u=segT(t,.75,2.75),d=F.fL*u,zig=Math.sin(u*14)*.55*Math.min(1,u*3),dir=new V3(Math.sin(F.fd),0,Math.cos(F.fd)),perp=new V3(dir.z,0,-dir.x);
+          F.fd=best.y;F.fL=Math.max(1,Math.min(1.8,best.L));F.fs=v.pos.clone();}
+        const u=segT(t,.75,1.35),d=F.fL*u,zig=Math.sin(u*6)*.25*Math.min(1,u*3),dir=new V3(Math.sin(F.fd),0,Math.cos(F.fd)),perp=new V3(dir.z,0,-dir.x);
         const nx=F.fs.x+dir.x*d+perp.x*zig,nz=F.fs.z+dir.z*d+perp.z*zig,ny=groundAt(nx,nz,v.pos.y+.6);
         v.vel.set((nx-v.pos.x)/Math.max(dt,1e-3),0,(nz-v.pos.z)/Math.max(dt,1e-3));v.pos.set(nx,Math.max(ny,F.v0.y-3),nz);v.grounded=true;v.yaw=Math.atan2(v.vel.x,v.vel.z);
         const k=S.t*14;v.pose={ar:[-2.8+Math.sin(k)*.5,0,.4],al:[-2.8-Math.sin(k)*.5,0,-.4],head:Math.sin(k*.7)*.2};}
-      else{v.vel.set(0,0,0);const u=easeIn(segT(t,2.85,3.15)),w=t<2.85?Math.sin(t*30)*.12:0;v.pose={root:[1.45*u,v.yaw,w],ar:[-.3,0,.3],al:[-.3,0,-.3],head:.4};
-        if(t>=3.2){F.done=1;F.gone=1;F.ash=v.pos.clone().addScaledVector(new V3(Math.sin(v.yaw),0,Math.cos(v.yaw)),1.1*SC);
+      else{v.vel.set(0,0,0);const u=easeIn(segT(t,1.4,1.65)),w=t<1.4?Math.sin(t*30)*.12:0;v.pose={root:[1.45*u,v.yaw,w],ar:[-.3,0,.3],al:[-.3,0,-.3],head:.4};
+        if(t>=1.7){F.done=1;F.gone=1;F.ash=v.pos.clone().addScaledVector(new V3(Math.sin(v.yaw),0,Math.cos(v.yaw)),1.1*SC);
           shatter(v,{power:1.3,up:1.2,floor:v.pos.y,from:new V3(v.pos.x,v.pos.y+3,v.pos.z),size:.15});S.shake=Math.max(S.shake,.4);
           emit(F.ash.x,v.pos.y+.3,F.ash.z,{n:30,speed:2,up:2,size:.35,life:1.2,grav:-1,colors:['#4a4d55','#6b6f78','#2b2d33']});say(a,v,'Roasted!','Roast','You got roasted',false);}}}
     else if(Math.random()<.5)emit(F.ash.x+rnd(-.6,.6),v.pos.y+.2,F.ash.z+rnd(-.6,.6),{n:1,speed:.3,up:1.2,size:.3,life:1,grav:-1,colors:['#6b6f78','#4a4d55','#ff7a1f']});
@@ -6754,7 +6754,7 @@ const SHOP_ITEMS=[
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.stamBoost=false;f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.nadeT=0;f.speedT=0;}
 const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.1&&Math.abs(f.pos.y-s.y)<1.6);
-const canShopNow=()=>S.mode!=='rumble'&&ME.alive&&!ME.downed&&!ME.finishing&&(S.state==='fight'||S.state==='countdown');
+const canShopNow=()=>S.mode!=='rumble'&&ME.alive&&!ME.downed&&!ME.finishing&&!(ME.finishT>0)&&(S.state==='fight'||S.state==='countdown');
 function openShop(){if(S.shopOpen)return;S.shopOpen=true;$('d-hint').classList.add('fade');$('d-shop').hidden=false;renderShop(true);}
 function closeShop(){if(!S.shopOpen)return;S.shopOpen=false;$('d-shop').hidden=true;}
 function renderShop(force){const L=shopList(),sig=L.map(it=>it.can(ME)?1:0).join('');if(!force&&sig===renderShop.sig)return;renderShop.sig=sig;
@@ -7717,11 +7717,11 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
   if(!won&&winner>=0)setTimeout(()=>sfx('lose'),450);
-  const pre=S.elimT0!=null&&!done&&$('d-big').textContent==='Eliminated',elT=S.elimT0!=null?S.t-S.elimT0:0;S.elimT0=null;
+  const byFin=S.elimT0!=null,pre=byFin&&!done&&$('d-big').textContent==='Eliminated',elT=S.elimT0!=null?S.t-S.elimT0:0;S.elimT0=null;
   if(pre)center('Eliminated',(won?'Round won · ':S.players==='ffa'&&winner>=0?teamName(winner)+' takes the round · ':'Round lost · ')+sc,(won?'win':'lose')+' top');
   else if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(1.2,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
+  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(.8,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else if(!byFin)celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?(f.hp+(f.armor||0))/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}

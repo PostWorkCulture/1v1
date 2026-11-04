@@ -4977,7 +4977,8 @@ function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))re
 function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
 setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const p=needModel(MODEL_IDS[i++]);(p||Promise.resolve()).then(next,next);};next();},2500);
 function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
-  add(P.torso,ch.body);add(P.head,ch.headG);add(P.armL,ch.aL.p);add(P.armR,ch.aR.p);add(P.legL,ch.lL.p);add(P.legR,ch.lR.p);ch.model=true;
+  add(P.torso,ch.body);add(P.head,ch.headG);add(P.armL,ch.aL.p);add(P.armR,ch.aR.p);ch.model=true;
+  legKnees(ch,M,add);
   for(const [k,o] of [['armL',ch.aL.p],['armR',ch.aR.p],['legL',ch.lL.p],['legR',ch.lR.p]])if(M.piv[k])o.position.fromArray(M.piv[k]);
   if(!P.armR.boundingBox)P.armR.computeBoundingBox();ch.handY=Math.min(-.7,P.armR.boundingBox.min.y+.14);
   if(id==='jet'){const g=new THREE.Group(),fm=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,toneMapped:false}),fl=[];
@@ -4986,6 +4987,24 @@ function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=ne
   // Jet's helmet is an open shell: fill the back of his head and neck so you don't see into it from above
   if(id==='jet'){const f=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),new THREE.MeshStandardMaterial({color:'#22348a',roughness:.6}));f.scale.set(.3,.24,.26);f.position.set(0,.38,-.02);f.castShadow=true;ch.headG.add(f);}
   ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};}
+/* Knees: each model leg is cut in two at the knee (thigh stays on the hip, shin hangs from a knee joint) so crouching can kneel properly
+   instead of sitting with stiff legs. The cut is made once per model and shared; a small cap, coloured from the leg's own texture at the
+   knee, hides the seam when the knee bends. CROUCH works out the kneeling stance from each model's hip height and leg length. */
+function splitLeg(g){g.computeBoundingBox();const P=g.attributes.position,I=g.index.array,len=-g.boundingBox.min.y,ky=-len*.5,top=[],bot=[];
+  for(let t=0;t<I.length;t+=3){const a=I[t],b=I[t+1],c=I[t+2],cy=(P.getY(a)+P.getY(b)+P.getY(c))/3;(cy>ky?top:bot).push(a,b,c);}
+  const mk=ix=>{const q=new THREE.BufferGeometry();for(const n in g.attributes)q.setAttribute(n,g.attributes[n]);q.setIndex(ix);q.computeBoundingSphere();return q;};
+  let sx=0,sz=0,n=0,best=-1,bz=-9;for(let i=0;i<P.count;i++)if(Math.abs(P.getY(i)-ky)<len*.04){sx+=P.getX(i);sz+=P.getZ(i);n++;if(P.getZ(i)>bz){bz=P.getZ(i);best=i;}}
+  const cx=n?sx/n:0,cz=n?sz/n:0;let r=0;for(let i=0;i<P.count;i++)if(Math.abs(P.getY(i)-ky)<len*.04)r+=Math.hypot(P.getX(i)-cx,P.getZ(i)-cz);r=n?r/n:len*.12;
+  const cap=new THREE.SphereGeometry(r*.92,14,10),uv=cap.attributes.uv;if(best>=0&&g.attributes.uv)for(let i=0;i<uv.count;i++)uv.setXY(i,g.attributes.uv.getX(best),g.attributes.uv.getY(best));
+  return{thigh:mk(top),shin:mk(bot),ky,len,cx,cz,cap};}
+function legKnees(ch,M,add){M.knee??={L:splitLeg(M.parts.legL),R:splitLeg(M.parts.legR)};const K=M.knee;
+  for(const [s,o] of [['L',ch.lL],['R',ch.lR]]){const k=K[s];add(k.thigh,o.p);const j=new THREE.Group();j.position.set(0,k.ky,0);o.p.add(j);
+    const sh=add(k.shin,j);sh.position.y=-k.ky;const cp=add(k.cap,j);cp.position.set(k.cx,0,k.cz);o.k=j;}
+  const hip=(M.piv.legL||[0,1,0])[1],len=K.L.len,th=len*.5,eye=typeof EYE_TARGET==='number'?EYE_TARGET:2.4,R=eye-hip,lean=.22,
+    drop=Math.max(.2,2.35*.27-R*(1-Math.cos(lean))),h=hip-drop;
+  ch.knee={lean,drop,hip,back:R*Math.sin(lean)*.6,
+    fT:-Math.acos(clamp((h-th)/th,-1,1)),rT:Math.acos(clamp(h/th,0,1))};
+  ch.knee.fK=-ch.knee.fT;ch.knee.rK=Math.PI/2+.05-ch.knee.rT;}
 function piece(parent,geo,m,x,y,z,o){const me=new THREE.Mesh(geo,m);me.position.set(x,y,z);me.castShadow=true;parent.add(me);
   if(!o||o.outline!==false){const ol=new THREE.Mesh(geo,OUTL);ol.scale.setScalar(o&&o.ol||1.06);me.add(ol);}
   if(o&&o.rot)me.rotation.set(...o.rot);return me;}
@@ -7442,8 +7461,15 @@ function animFighter(f,dt,menu){const ch=f.ch;
   {const v=f.visY??f.pos.y,d=f.pos.y-v;f.visY=f.grounded&&Math.abs(d)<.8&&!f.finishing&&!menu?v+d*(1-Math.exp(-20*dt)):f.pos.y;}
   ch.root.position.copy(f.pos);ch.root.position.y=f.visY+(f.celLift||0);if(!f.finishing||f.finishing.fx!=='Disco')ch.root.rotation.y=f.yaw;if(!(f.finishing&&f.finishing.move&&f.finishing.done))ch.root.rotation.x=damp(ch.root.rotation.x,f.downed&&!f.dangle?1.3:f.corpse&&!f.alive||f.finishing&&f.finishing.fx==='Fall'?1.5:0,f.corpse?11:8,dt);if(f.downed||f.corpse&&(!f.alive||f.finishing&&f.finishing.fx==='Fall'))ch.root.position.y+=.32;const sp=Math.hypot(f.vel.x,f.vel.z);
   if(f.grounded){f.phase+=sp*dt*1.15;if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;sfx('step'+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
-  const cv=f.cv||0;ch.body.position.y=-1.25-.62*cv;
-  ch.lL.p.rotation.x=damp(ch.lL.p.rotation.x,(f.grounded?s*(1-cv*.6):.5)-1.25*cv,16,dt);ch.lR.p.rotation.x=damp(ch.lR.p.rotation.x,(f.grounded?-s*(1-cv*.6):-.3)+.25*cv,16,dt);
+  const cv=f.cv||0,KN=ch.knee,lean=KN?KN.lean*cv:0;
+  if(KN){/* crouch = a ready kneel: front foot planted with the shin upright, back knee on the ground, chest leaning a little into the gun.
+      The body pivots about the hips (so the lean doesn't slide them) and sits back a touch so the head stays over the hitbox. */
+    ch.body.rotation.x=lean;ch.body.position.y=-1.25-KN.drop*cv+KN.hip*(1-Math.cos(lean));ch.body.position.z=-KN.hip*Math.sin(lean)-KN.back*cv;
+    const g=f.grounded,sw=g?s*(1-cv*.65):0,run=g?clamp(sp/9,0,1)*(1-cv):0;
+    ch.lL.p.rotation.x=damp(ch.lL.p.rotation.x,(g?sw:.5*(1-cv))+KN.fT*cv-lean,16,dt);ch.lR.p.rotation.x=damp(ch.lR.p.rotation.x,(g?-sw:-.3*(1-cv))+KN.rT*cv-lean,16,dt);
+    ch.lL.k.rotation.x=damp(ch.lL.k.rotation.x,KN.fK*cv+(g?Math.max(0,s)*.7*run:.6*(1-cv)),16,dt);ch.lR.k.rotation.x=damp(ch.lR.k.rotation.x,KN.rK*cv+(g?Math.max(0,-s)*.7*run:.3*(1-cv)),16,dt);}
+  else{ch.body.position.y=-1.25-.62*cv;
+  ch.lL.p.rotation.x=damp(ch.lL.p.rotation.x,(f.grounded?s*(1-cv*.6):.5)-1.25*cv,16,dt);ch.lR.p.rotation.x=damp(ch.lR.p.rotation.x,(f.grounded?-s*(1-cv*.6):-.3)+.25*cv,16,dt);}
   f.kick=Math.max(0,f.kick-dt*9);const relo=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI)*.7:0;const sw=f.switchT>0?f.switchT*2:0;
   f.swingT=Math.max(0,(f.swingT||0)-dt);const sg=f.swingT>0?Math.sin((1-f.swingT/.32)*Math.PI):0;
   const p=(menu?-.15:f.pitch)-relo-sw;const k=f.kick*.12;
@@ -7458,13 +7484,14 @@ function animFighter(f,dt,menu){const ch=f.ch;
   ch.headG.rotation.x=-clamp(f.pitch,-.6,.6)*.6;
   {const dg=f.guns.duals;if(dg&&dg.userData.twin){const tw=dg.userData.twin;tw.visible=dg.visible;if(dg.visible)ch.aL.p.rotation.set(-Math.PI/2-p-k*(f.dualL?1:0),.06,0);for(const m of tw.userData.flash)m.material.opacity=f.flashT>0&&f.dualL?1:0;}}
   const fl=f.guns[gunOf(f)].userData.flash;f.flashT-=dt;{const on=f.flashT>0&&!(gunOf(f)==='duals'&&f.dualL)&&!(f===ME&&VM.raise>.3);const sc=.75+Math.random()*.5;for(const m of fl){m.material.opacity=on?.85:0;m.rotation.z=Math.random()*3;m.scale.setScalar(sc);}}
-  if(f.pose){const P=f.pose;if(P.root)ch.root.rotation.set(P.root[0],P.root[1],P.root[2]);if(P.ar)ch.aR.p.rotation.set(P.ar[0],P.ar[1],P.ar[2]);if(P.al)ch.aL.p.rotation.set(P.al[0],P.al[1],P.al[2]);if(P.lr!=null)ch.lR.p.rotation.x=P.lr;if(P.ll!=null)ch.lL.p.rotation.x=P.ll;if(P.head!=null)ch.headG.rotation.x=P.head;f.pose=null;}
+  if(lean){ch.aR.p.rotation.x-=lean;ch.aL.p.rotation.x-=lean;ch.headG.rotation.x-=lean;}
+  if(f.pose){const P=f.pose;if(P.root)ch.root.rotation.set(P.root[0],P.root[1],P.root[2]);if(P.ar)ch.aR.p.rotation.set(P.ar[0],P.ar[1],P.ar[2]);if(P.al)ch.aL.p.rotation.set(P.al[0],P.al[1],P.al[2]);if(P.lr!=null)ch.lR.p.rotation.x=P.lr;if(P.ll!=null)ch.lL.p.rotation.x=P.ll;if(ch.knee&&(P.lr!=null||P.ll!=null)){ch.lL.k.rotation.x=ch.lR.k.rotation.x=0;ch.body.rotation.x=0;ch.body.position.z=0;}if(P.head!=null)ch.headG.rotation.x=P.head;f.pose=null;}
   // climbing a ladder: the body turns to face the rungs, the gun goes away, and hands and feet take turns reaching for the next rung as you move
   {const L=f.alive&&!f.downed&&!f.finishing&&!f.carriedBy?f.onLadder:null;f.ladK=damp(f.ladK||0,L?1:0,10,dt);if(L)f.ladL=L;
     if(f.ladK>.01&&f.ladL){const La=f.ladL,face=Math.atan2(La.nx,La.nz);let d=face-f.yaw;d=((d+Math.PI)%TAU+TAU)%TAU-Math.PI;ch.root.rotation.y=f.yaw+d*f.ladK;ch.root.rotation.x=0;
       const cp=(f.pos.y-La.y0)/.35*Math.PI,a=Math.sin(cp),K=f.ladK,mix=(o,t)=>o+(t-o)*K;
       ch.aR.p.rotation.set(mix(ch.aR.p.rotation.x,-2.75+.55*a),mix(ch.aR.p.rotation.y,0),mix(ch.aR.p.rotation.z,-.08));ch.aL.p.rotation.set(mix(ch.aL.p.rotation.x,-2.75-.55*a),mix(ch.aL.p.rotation.y,0),mix(ch.aL.p.rotation.z,.08));
-      ch.lL.p.rotation.x=mix(ch.lL.p.rotation.x,-.95*(.5+.5*a));ch.lR.p.rotation.x=mix(ch.lR.p.rotation.x,-.95*(.5-.5*a));ch.headG.rotation.x=mix(ch.headG.rotation.x,-.18);ch.body.position.y=-1.25;}
+      ch.lL.p.rotation.x=mix(ch.lL.p.rotation.x,-.95*(.5+.5*a));ch.lR.p.rotation.x=mix(ch.lR.p.rotation.x,-.95*(.5-.5*a));ch.headG.rotation.x=mix(ch.headG.rotation.x,-.18);ch.body.position.y=-1.25;ch.body.rotation.x=0;ch.body.position.z=0;if(ch.knee){ch.lL.k.rotation.x=ch.lR.k.rotation.x=.25*a+.25;}}
     if(L){f.ladHid=1;for(const k in f.guns)f.guns[k].visible=false;}else if(f.ladHid){f.ladHid=0;const g=f.guns[gunOf(f)];if(g&&!f.finishing&&!f.dangle)g.visible=true;}}
   if(ch.anim)ch.anim(dt,S.t);
   if(f.skySlam&&f.skyPh===1){ch.aR.p.rotation.set(-2.75+Math.sin(S.t*3.1)*.05,0,.15);}
@@ -7739,7 +7766,7 @@ function updCrown(dt){const R=CR.run;if(!R)return;if(S.state==='fight'||S.state=
 function poseCrown(){const R=CR.run,t=R.t,T=THREE,V=V3;const ease=u=>u*u*(3-2*u),seg=(a,b)=>clamp((t-a)/(b-a),0,1);
   const cuts=R.n>1?[3.7,5.5,7.3]:[3.7,5.6];let shot=-1;if(t>=cuts[0]&&t<cuts[cuts.length-1])shot=t<cuts[1]?0:1;
   R.who.forEach((f,i)=>{const st=R.seats[i],ch=f.ch,r=ch.root,sit=ease(seg(.35,1.15));CR.thrones[i].userData.plate.material.opacity=ease(seg(1.15,1.6));
-    r.visible=true;r.rotation.set(0,0,0);ch.flip.rotation.set(0,0,0);ch.body.rotation.set(0,0,0);
+    r.visible=true;r.rotation.set(0,0,0);ch.flip.rotation.set(0,0,0);ch.body.rotation.set(0,0,0);ch.body.position.z=0;if(ch.knee){ch.lL.k.rotation.x=ch.lR.k.rotation.x=0;}
     if(st.fly){const up=ease(seg(.2,1.6)),bob=Math.sin(t*1.7)*.09*st.k;r.position.set(st.x,.3+(1.25*up)*st.k+bob*up,lerp(.75*st.k,-.1*st.k,up));
       ch.lL.p.rotation.set(.12*up,0,.05);ch.lR.p.rotation.set(-.08*up,0,-.05);ch.aL.p.rotation.set(-.25*up,0,-.35*up);ch.aR.p.rotation.set(-.25*up,0,.35*up);
       const H=CR.halo&&CR.halo[i];if(H){H.visible=true;const p=.8+Math.sin(t*2.3)*.2;H.userData.beams.forEach((b,j)=>{b.material.opacity=(.10+.05*Math.sin(t*1.3+j))*up;b.rotation.y=t*.25+j;});H.userData.glow.intensity=6*up*p;H.userData.ring.material.opacity=.35*up;H.userData.ring.rotation.z=t*.4;}}

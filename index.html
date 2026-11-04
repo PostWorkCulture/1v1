@@ -2518,7 +2518,7 @@ const ENV0={top:'#2f8fd8',mid:'#86cbe8',bot:'#d6f1f4',ex:.6,fog:['#a9d8ea',90,32
 function applyEnv(e){ENV=Object.assign({},ENV0,e||{});const u=sky.material.uniforms;u.top.value.set(ENV.top);u.mid.value.set(ENV.mid);u.bot.value.set(ENV.bot);u.ex.value=ENV.ex;
   scene.fog.color.set(ENV.fog[0]);scene.fog.near=ENV.fog[1];scene.fog.far=ENV.fog[2];hemi.color.set(ENV.hemi[0]);hemi.groundColor.set(ENV.hemi[1]);hemi.intensity=ENV.hemi[2];sun.color.set(ENV.sun[0]);sun.intensity=ENV.sun[1];fillL.intensity=ENV.fill;
   u.sd.value.set(...ENV.sunOff).normalize();u.sc.value.set(ENV.glow?ENV.glow[0]:'#000000');u.sa.value=ENV.glow?ENV.glow[1]:0;u.dc.value.set(ENV.disc?ENV.disc[0]:'#000000');u.ds.value=ENV.disc?Math.cos(ENV.disc[1]):1.01;
-  const cl=ENV.clouds;for(const g of CLOUDS.g)g.visible=!!cl;if(cl){CLOUDS.cm.color.set(cl[0]);CLOUDS.cm2.color.set(cl[1]);}}
+  const cl=ENV.clouds;for(const g of CLOUDS.g)g.visible=!!cl;if(cl){CLOUDS.cm.color.set(cl[0]);CLOUDS.cm2.color.set(cl[1]);if(typeof CLOUD_MATS!=='undefined')for(const mt of CLOUD_MATS)mt.color.set(cl[0]);}}
 function placeSun(c){const o=ENV.sunOff;sun.position.set(c.x+o[0],(c.y||0)+o[1],c.z+o[2]);sun.target.position.set(c.x,0,c.z-4*Math.sign(o[2]||1));}
 
 /* ================= textures / materials ================= */
@@ -2531,6 +2531,13 @@ tex('stud',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);
   for(let i=0;i<2;i++)for(let j=0;j<2;j++){const x=i*64,y=j*64;g.fillStyle='rgba(0,0,0,.10)';B.rrect(g,x+11,y+13,42,42,11);g.fill();
     g.fillStyle='#fff';B.rrect(g,x+11,y+11,42,42,11);g.fill();g.strokeStyle='rgba(30,34,44,.24)';g.lineWidth=3;B.rrect(g,x+11,y+11,42,42,11);g.stroke();}});
 tex('grass',128,128,(g,w,h)=>speck(g,w,h,'#ffffff',['rgba(0,60,0,.10)','rgba(255,255,255,.35)','rgba(0,40,0,.16)'],420,3));
+/* Street Life's lawn: mowed stripes, 2 m light and dark bands with fine blade marks and soft patches (one tile covers 8 m) */
+tex('lawn',1024,1024,(g,w,h)=>{let a=12345;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};for(let b=0;b<4;b++){g.fillStyle=b%2?'#5aae46':'#6cc152';g.fillRect(0,b*h/4,w,h/4);}
+  const cols=['rgba(30,90,25,.35)','rgba(150,220,110,.35)','rgba(40,110,30,.3)'];for(let i=0;i<9000;i++){const x=R()*w,y=R()*h,l=9*(.5+R()),an=-Math.PI/2+(R()-.5)*.9;g.strokeStyle=cols[Math.floor(R()*3)];g.lineWidth=2*(.6+R()*.8);g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(an)*l,y+Math.sin(an)*l);g.stroke();}
+  const N=6,v=[];for(let i=0;i<=N;i++){v[i]=[];for(let j=0;j<=N;j++)v[i][j]=R();}for(let i=0;i<=N;i++){v[i][N]=v[i][0];v[N]=v[0];}
+  const img=g.getImageData(0,0,w,h),D=img.data,sm=t=>t*t*(3-2*t);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const fx=x/w*N,fy=y/h*N,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy);
+    const p=v[ix][iy]+(v[ix+1][iy]-v[ix][iy])*tx,q=v[ix][iy+1]+(v[ix+1][iy+1]-v[ix][iy+1])*tx,k=1+(p+(q-p)*ty-.5)*.18,o=(y*w+x)*4;D[o]=Math.min(255,D[o]*k);D[o+1]=Math.min(255,D[o+1]*k);D[o+2]=Math.min(255,D[o+2]*k);}
+  g.putImageData(img,0,0);});
 tex('asphalt',128,128,(g,w,h)=>speck(g,w,h,'#ffffff',['rgba(0,0,0,.12)','rgba(255,255,255,.25)','rgba(0,0,0,.2)'],600,2));
 tex('wood',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let y=0;y<4;y++){g.fillStyle=`rgba(90,50,20,${.04+.05*(y%2)})`;g.fillRect(0,y*32,w,32);
   g.fillStyle='rgba(60,30,10,.35)';g.fillRect(0,y*32,w,2);g.fillRect(((y*53)%128),y*32,2,32);}});
@@ -2671,7 +2678,7 @@ function vehAttach(C,kind){const go=()=>{const V=VEHM[kind];if(!V||C.model||M.gr
    Each is sat on the ground, centred, turned to face +z (r0) and scaled to its height h. Untextured ones get a flat colour (tint). */
 const FURN_CFG={greysofa:{h:.84,tint:'#9aa0a8'},pinksofa:{h:1.0},whitesofa:{h:1.05},greychair:{h:.95},officechair:{h:1.05,tint:'#e9eaee'},plasticchair:{h:.85},
   plant:{h:1.3},greyplant:{h:1.1,tint:'#d9dde3'},redplant:{h:.9},wfhman:{h:1.45,r0:Math.PI/2},
-  doctor:{h:1.82},nurse:{h:1.7},bed1:{h:1.42,r0:Math.PI/2},bed2:{h:1.05,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:.95,r0:Math.PI/2},alien:{h:1.5}},FURNM={},FURN_P={},FURN_WAIT=[];
+  doctor:{h:1.82},nurse:{h:1.7},bed1:{h:1.42,r0:Math.PI/2},bed2:{h:1.05,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:.95,r0:Math.PI/2},alien:{h:1.5},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8},shop:{h:2.8}},FURNM={},FURN_P={},FURN_WAIT=[];
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/home/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -2692,6 +2699,28 @@ setTimeout(()=>{for(const k of Object.keys(FURN_CFG))loadFurn(k).catch(e=>consol
 /* put a furniture model into an object (a prop box or a knock item) at world (x,y,z) turned ry; it shows up as soon as its model has loaded */
 function furnInto(id,host,x,y,z,ry){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp||!host)return;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
     host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;host.add(g);};
+  if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
+/* Tripo clouds (a single puff and a bank of puffs): every cloud, the far ones round the sky and the ones drifting over the maps, swaps its blocks for one of
+   the two models (same width, a random turn) as soon as they've loaded; until then it shows its blocks */
+var CLOUD_MATS=[];
+function cloudModel(g,sky){const id=g.userData.cid||(g.userData.cid=Math.random()<.6?'cloud1':'cloud2');const go=()=>{const F=FURNM[id];if(!F||g.userData.swapped)return;
+    const bb=new THREE.Box3();for(const c of g.children){c.updateMatrix();const b=new THREE.Box3().setFromBufferAttribute(c.geometry.attributes.position).applyMatrix4(c.matrix);bb.union(b);}
+    const w=Math.max(bb.max.x-bb.min.x,bb.max.z-bb.min.z),cy=(bb.min.y+bb.max.y)/2,s=w/F.w*(sky?1:1.1);for(const c of g.children.slice())g.remove(c);
+    for(const p of F.parts){const m=new THREE.Mesh(p.geo,(p.cm||(p.cm={})).sky&&sky?p.cm.sky:!sky&&p.cm.map?p.cm.map:(()=>{const mt=new THREE.MeshLambertMaterial({map:p.mat.map,color:'#ffffff',emissive:'#c9d6e6',emissiveIntensity:sky?.55:.35,fog:!sky,transparent:!sky,opacity:sky?1:.95});
+      if(sky){p.cm.sky=mt;CLOUD_MATS.push(mt);}else p.cm.map=mt;return mt;})());m.scale.setScalar(s);m.position.y=cy-s*.5;g.add(m);}
+    g.rotation.y=Math.random()*Math.PI*2;g.userData.swapped=1;if(sky&&ENV.clouds)for(const mt of CLOUD_MATS)mt.color.set(ENV.clouds[0]);};
+  if(FURNM[id])go();else loadFurn(id).then(go).catch(()=>{});}
+setTimeout(()=>{for(const g of CLOUDS.g)cloudModel(g,true);},1200);
+/* a run of fence panels along straight lines, the panels stretched a little so each line takes a whole number of them; all panels are merged into one mesh
+   per material, so a whole boundary costs a handful of draw calls */
+function modelFence(segs,id){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp)return;const per=F.parts.map(()=>({P:[],U:[],I:[],n:0}));
+    const mx=new THREE.Matrix4(),qt=new THREE.Quaternion(),up=new V3(0,1,0),at=new V3(),sc=new V3(),v=new V3();
+    for(const [x0,z0,x1,z1] of segs){const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/F.w));qt.setFromAxisAngle(up,Math.abs(x1-x0)>=Math.abs(z1-z0)?0:Math.PI/2);sc.set(L/n/F.w,1,1);
+      for(let i=0;i<n;i++){const t=(i+.5)/n;mx.compose(at.set(x0+(x1-x0)*t,0,z0+(z1-z0)*t),qt,sc);
+        F.parts.forEach((p,k)=>{const o=per[k],pos=p.geo.attributes.position,uv=p.geo.attributes.uv,ix=p.geo.index;for(let j=0;j<pos.count;j++){v.fromBufferAttribute(pos,j).applyMatrix4(mx);o.P.push(v.x,v.y,v.z);if(uv)o.U.push(uv.getX(j),uv.getY(j));}
+          for(let j=0;j<ix.count;j++)o.I.push(ix.getX(j)+o.n);o.n+=pos.count;});}}
+    per.forEach((o,k)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(o.P,3));if(o.U.length)g.setAttribute('uv',new THREE.Float32BufferAttribute(o.U,2));
+      g.setIndex(o.I);g.computeVertexNormals();const m=new THREE.Mesh(g,F.parts[k].mat);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;M.group.add(m);});};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
 // ---- ambient town life: cars that pull out now and then, birds, clouds, butterflies, swaying trees ----
 function updLife(dt){if(!M.life||!M.life.length)return;M.lifeT=(M.lifeT||0)+dt;for(const f of M.life)f(M.lifeT,dt);}
@@ -2717,7 +2746,7 @@ function townLife(cars,o){const R=Math.random;
   // drifting blocky clouds
   const cm=new THREE.MeshLambertMaterial({color:'#ffffff',transparent:true,opacity:.92}),clouds=[];
   for(let i=0;i<9;i++){const g=new THREE.Group();const n=3+Math.floor(R()*3);for(let k=0;k<n;k++){const s=6+R()*8;const m=new THREE.Mesh(new THREE.BoxGeometry(s*1.6,s*.45,s),cm);m.position.set((k-n/2)*s*.8,R()*2,(R()-.5)*s*.6);g.add(m);}
-    g.position.set(-160+R()*320,70+R()*25,-160+R()*320);g.userData.v=1.2+R()*1.6;M.group.add(g);clouds.push(g);}
+    g.position.set(-160+R()*320,70+R()*25,-160+R()*320);g.userData.v=1.2+R()*1.6;M.group.add(g);clouds.push(g);cloudModel(g);}
   M.life.push((t,dt)=>{for(const g of clouds){g.position.x+=g.userData.v*dt;if(g.position.x>180)g.position.x=-180;}});
   // birds: every so often a small flock crosses the sky, flapping
   const bm=new THREE.MeshLambertMaterial({color:'#2b2d33'}),flocks=[];let next=4+R()*8;(M.flockLists=M.flockLists||[]).push(flocks);
@@ -3138,8 +3167,8 @@ function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F
     S.box(3.4,4.6,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(3.4,4.6,-4.6,-3.4,F+1.2,F+2.4,'#b9895a',cr);S.box(2.2,3.4,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(-5.2,-4,3.6,4.8,F,F+1.2,'#c99a5b',cr);}
   S.stairs(5.8,-1,5.65,8.45,0,9,F/9,.5,'#9aa0a8');S.box(-.2,1.3,5.65,8.45,F-.3,F,'#9aa0a8');S.box(-.2,1.3,8.3,8.45,F,F+1,'#ffffff');S.box(-.35,-.2,5.65,8.45,F,F+1,'#ffffff');S.box(-.3,.1,7.9,8.4,0,F-.3,'#9aa0a8');
   S.box(-5.6,-4.6,2.8,5.2,0,.9,'#3bb54a');S.box(-3.4,-2.2,3.8,5.2,0,.75,'#7a4c2a');S.box(.5,4,-5.3,-4.3,0,1.05,'#ffffff');S.box(3,5.6,3,5.2,0,.7,'#ff8fab');}
-function fence(x0,z0,x1,z1,h,color,gap){const L=Math.hypot(x1-x0,z1-z0),alongX=Math.abs(x1-x0)>Math.abs(z1-z0);
-  const seg=(a,b)=>{const cx=alongX?(a+b)/2:x0,cz=alongX?z0:(a+b)/2,len=b-a;if(len<.2)return;box(cx,0,cz,alongX?len:.25,h,alongX?.25:len,color,{edges:false});};
+function fence(x0,z0,x1,z1,h,color,gap,o){const L=Math.hypot(x1-x0,z1-z0),alongX=Math.abs(x1-x0)>Math.abs(z1-z0);
+  const seg=(a,b)=>{const cx=alongX?(a+b)/2:x0,cz=alongX?z0:(a+b)/2,len=b-a;if(len<.2)return;box(cx,0,cz,alongX?len:.25,h,alongX?.25:len,color,Object.assign({edges:false},o||{}));};
   const a0=alongX?Math.min(x0,x1):Math.min(z0,z1),a1=alongX?Math.max(x0,x1):Math.max(z0,z1);
   if(gap){seg(a0,gap[0]);seg(gap[1],a1);}else seg(a0,a1);}
 /* static batching: the map is ~1000 separate boxes, each with its own outline object, which meant thousands of draw calls a frame
@@ -3655,7 +3684,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   /* ---------- life: gulls, crabs, the lot ---------- */
   wcBirds('#f4f5f7',{wing:'#c9ced6',every:7,circle:[{x:-4,z:12,y:22,r:9,sp:.35},{x:-3,z:-14,y:19,r:12,sp:-.28},{x:30,z:44,y:14,r:7,sp:.4}]});
   {const cl=new THREE.MeshLambertMaterial({color:'#ffffff',transparent:true,opacity:.92}),clouds=[];for(let i=0;i<8;i++){const g=new THREE.Group();const n=3+Math.floor(R()*3);
-      for(let k=0;k<n;k++){const s=6+R()*8;const m=new THREE.Mesh(new THREE.BoxGeometry(s*1.6,s*.45,s),cl);m.position.set((k-n/2)*s*.8,R()*2,(R()-.5)*s*.6);g.add(m);}g.position.set(-160+R()*320,72+R()*25,-160+R()*320);g.userData.v=1+R()*1.5;M.group.add(g);clouds.push(g);}
+      for(let k=0;k<n;k++){const s=6+R()*8;const m=new THREE.Mesh(new THREE.BoxGeometry(s*1.6,s*.45,s),cl);m.position.set((k-n/2)*s*.8,R()*2,(R()-.5)*s*.6);g.add(m);}g.position.set(-160+R()*320,72+R()*25,-160+R()*320);g.userData.v=1+R()*1.5;M.group.add(g);clouds.push(g);cloudModel(g);}
     M.life.push((t,dt)=>{for(const g of clouds){g.position.z+=g.userData.v*dt;if(g.position.z>180)g.position.z=-180;}});}
   {const cm=mat('#e8563a'),crabs=[];for(let i=0;i<7;i++){const g=new THREE.Group();const b=new THREE.Mesh(B.boxGeo(.42,.16,.32),cm);b.position.y=.12;g.add(b);
       for(const s of [-1,1]){const cw=new THREE.Mesh(B.boxGeo(.14,.12,.14),cm);cw.position.set(s*.28,.16,.2);g.add(cw);for(let k=0;k<3;k++){const l=new THREE.Mesh(B.boxGeo(.18,.04,.04),cm);l.position.set(s*.26,.06,-.1+k*.1);g.add(l);}}
@@ -4383,7 +4412,7 @@ const MAPS={
   /* 92 x 60 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,
      either side of the road near the middle (a little off-centre, one towards each end) */
   const X=46,Z=30;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  floor(-100,100,-110,110,'#5fb24b','grass',-.02,1);
+  floor(-100,100,-110,110,'#ffffff','lawn',-.02,8);
   floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
   for(let z=-Z+2;z<Z;z+=6)floor(-.15,.15,z,z+3,'#ffffff',null,.02);
@@ -4398,8 +4427,9 @@ const MAPS={
     if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f3e3c6':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':trims[ci%4],kind==='C',hk,true,th);
     /* a mailbox beside the path, not on it */
     box(side*10.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*10.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
-  for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}
-  fence(-X,-Z,X,-Z,2.8,'#b07a4a');fence(-X,Z,X,Z,2.8,'#b07a4a');
+  /* the boundary is the Tripo tall wooden fence (models/home/fence_tall) on an invisible wall of the same height */
+  {const iv={mat:INVIS,shadow:false};for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a',null,iv);}
+  fence(-X,-Z,X,-Z,2.8,'#b07a4a',null,iv);fence(-X,Z,X,Z,2.8,'#b07a4a',null,iv);modelFence([[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]],'fence_tall');}
   /* the Tripo trees out on the open lawns and behind the buildings (no hedges or bushes) */
   for(const [x,z,id,h,ry,tw] of [[20,17,'oak',7.5,.4],[35,21,'purple',7.5,1.3],[29,10,'pine',8.5,2.2],[13,25,'blossom',6,3.1],[42,-25,'tall',9,5.2],
     [-20,-17,'block',7,3.5,1.2],[-35,-21,'bonsai',7.5,4.4],[-29,-10,'pine',8,5.3],[-13,-25,'blossom',6,.1],[-42,25,'oak',8,2]])glbTree(id,x,z,h,ry,tw);
@@ -4518,8 +4548,15 @@ function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.inc
   // one shop per map, on the most open ground near the middle
   const A=spot(c.x,c.z);
   for(const best of [A]){if(!best)continue;let gy=0;for(const o of low)if(o.x0<best.x+1.8&&o.x1>best.x-1.8&&o.z0<best.z+1.8&&o.z1>best.z-1.8)gy=Math.max(gy,o.y1);buildShop(best.x,best.z,gy);}}
-/* k < 1 builds a narrower kiosk (the roof, awning, sign and glow shrink; the counter stays the same) for tight spots such as between the Railed tracks */
-function buildShop(x,z,gy,k=1){
+/* the shop: the Tripo market stall (models/home/shop, a shopkeeper behind a counter under a striped awning and a Shop sign) turned to face the middle of
+   the map, on a glowing pad; k < 1 shrinks it for tight spots such as between the Railed tracks. Until the model has loaded the old kiosk stands in. */
+function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=Math.hypot(dx,dz)<1?0:Math.round(Math.atan2(dx,dz)/(Math.PI/2)),ry=q*Math.PI/2,ax=q%2!==0;
+  const W=3.5*k,D=2.5*k,col=box(x,gy,z,ax?D:W,2.55*k,ax?W:D,'#c99a5b',{mat:INVIS,edges:false,shadow:false});
+  const kiosk=buildKiosk(x,z,gy,k),grp=M.group;kiosk.meshes.forEach(m=>m.userData.dyn=1);kiosk.solid.forEach(b=>{const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);});
+  const go=()=>{const F=FURNM.shop;if(!F||M.group!==grp)return;for(const m of kiosk.meshes)m.visible=false;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
+    g.position.set(x,gy,z);g.rotation.y=ry;g.scale.setScalar(k);g.userData.dyn=1;M.group.add(g);};
+  if(FURNM.shop)go();else{FURN_WAIT.push(go);loadFurn('shop').catch(()=>{});}}
+function buildKiosk(x,z,gy,k=1){const n0=M.group.children.length,b0=M.boxes.length;
   box(x,gy,z,1.5,1.05,1.5,'#f4efe6');box(x,gy+.62,z,1.56,.34,1.56,'#ffc61a',{solid:false});
   const goods=['#3bb54a','#2f7fe0','#a05ad6','#3f6b3a'];goods.forEach((g,i)=>box(x+(i%2?.35:-.35),gy+1.05,z+(i<2?.35:-.35),.34,.34,.34,g,{solid:false}));
   // one slim post up from the middle of the counter holds the roof (the four corner poles got in the way)
@@ -4539,7 +4576,8 @@ function buildShop(x,z,gy,k=1){
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),glm);m.position.set(x+ox,y,z+oz);m.userData.dyn=1;M.group.add(m);
     const h=new THREE.Mesh(new THREE.BoxGeometry(w+.5*k,.5,d+.5*k),hm);h.position.copy(m.position);h.userData.dyn=1;M.group.add(h);glow.push(h);}
   const pad=new THREE.Mesh(new THREE.RingGeometry(1.15*k,3*k,40),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);M.group.add(pad);
-  const sh={x,z,y:gy,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;}
+  const sh={x,z,y:gy,pad,sign,glowMat:hm};(M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;
+  return {meshes:M.group.children.slice(n0).filter(m=>m!==pad),solid:M.boxes.slice(b0)};}
 
 /* ================= nav grid ================= */
 const CS=.5,CLR=.47,NL=6,NAV_H=2.25; // CLR a touch more than the body radius, so a walkable cell is one a body really fits in

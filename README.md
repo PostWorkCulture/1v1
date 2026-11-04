@@ -98,7 +98,7 @@ Under the hood the match runs on a fixed 60-ticks-a-second clock on every device
 It's a single static `index.html` (three.js and fonts load from CDNs), served by GitHub Pages. To play locally, open `index.html` in a browser.
 
 ## Audio credits
-- Sound effects: generated with ElevenLabs Sound Effects (`sfx/`).
+- Sound effects: generated with ElevenLabs Sound Effects (`sfx/`). The M4 has its own shot (`sfx/m4.mp3`, a punchy close-up crack); the other rifles share `rifle.mp3`.
 - Music (`music/`), via Pixabay under the Pixabay Content Licence:
   - Menu: "Dramatic background hip hop music. This day" by White_Records
   - Between rounds: "Dark Trap Beat Atmosphere" by echoes_of_lumen

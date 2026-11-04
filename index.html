@@ -2670,7 +2670,8 @@ function vehAttach(C,kind){const go=()=>{const V=VEHM[kind];if(!V||C.model||M.gr
 /* Home furnishings and the work-from-home man (Street Life's home): Tripo models from the project's images folders, baked offline into models/home/<id>.glb.
    Each is sat on the ground, centred, turned to face +z (r0) and scaled to its height h. Untextured ones get a flat colour (tint). */
 const FURN_CFG={greysofa:{h:.84,tint:'#9aa0a8'},pinksofa:{h:1.0},whitesofa:{h:1.05},greychair:{h:.95},officechair:{h:1.05,tint:'#e9eaee'},plasticchair:{h:.85},
-  plant:{h:1.3},greyplant:{h:1.1,tint:'#d9dde3'},redplant:{h:.9},wfhman:{h:1.45,r0:Math.PI/2}},FURNM={},FURN_P={},FURN_WAIT=[];
+  plant:{h:1.3},greyplant:{h:1.1,tint:'#d9dde3'},redplant:{h:.9},wfhman:{h:1.45,r0:Math.PI/2},
+  doctor:{h:1.82},nurse:{h:1.7},bed1:{h:1.42,r0:Math.PI/2},bed2:{h:1.05,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:.95,r0:Math.PI/2},alien:{h:1.5}},FURNM={},FURN_P={},FURN_WAIT=[];
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/home/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -2775,7 +2776,7 @@ function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
     X,Z};return S;}
 const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=4.2)=>({c,w,y0:0,y1:3.2});
 function windowGlassFrames(){}
-// ---- house personalities on Maple Street: garage, clinic, family home, corner shop ----
+// ---- house personalities on Maple Street: garage, hospital, family home, corner shop ----
 const INVIS=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});
 const GEO=new Map();function gC(r0,r1,h,seg=10){const k='c'+r0+'|'+r1+'|'+h+'|'+seg;if(!GEO.has(k))GEO.set(k,new THREE.CylinderGeometry(r0,r1,h,seg));return GEO.get(k);}
 function gB(w,h,d,dy=0){const k='b'+w+'|'+h+'|'+d+'|'+dy;if(!GEO.has(k)){const g=new THREE.BoxGeometry(w,h,d);if(dy)g.translate(0,dy,0);GEO.set(k,g);}return GEO.get(k);}
@@ -2814,11 +2815,11 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
   const chair=(u,v,y,c,ry)=>N(u,v,y,.46,.9,.46,c,{ry,geo:gB(.46,.06,.46,-.45+.45),parts:[[gB(.46,.45,.05),c,0,.25,-.2],[gB(.04,.45,.04),'#3a3d45',.19,-.22,.19],[gB(.04,.45,.04),'#3a3d45',-.19,-.22,.19],[gB(.04,.45,.04),'#3a3d45',.19,-.22,-.19],[gB(.04,.45,.04),'#3a3d45',-.19,-.22,-.19]]});
   const cone=(u,v)=>N(u,v,0,.42,.72,.42,'#ff7a1f',{cyl:1,top:.12,geo:gC(.03,.17,.68,10).clone().translate(0,.02,0),parts:[[gC(.11,.13,.12,10),'#ffffff',0,.04,0],[gB(.42,.04,.42),'#ff7a1f',0,-.34,0]]});
   const box2=(u,v,y,w=.42,h=.32,d=.34,c='#c9a36b')=>N(u,v,y,w,h,d,c,{parts:[[gB(w+.005,.05,d*.3),'#e0c38f',0,h/2-.02,0]]});
-  const ivStand=(u,v)=>N(u,v,0,.45,1.9,.45,'#d9dde3',{geo:gC(.022,.022,1.9,6),parts:[[gB(.48,.04,.06),'#9aa0a8',0,-.93,0],[gB(.06,.04,.48),'#9aa0a8',0,-.93,0],[gB(.3,.02,.02),'#d9dde3',0,.9,0],
+  const ivStand=(u,v,y=0)=>N(u,v,y,.45,1.9,.45,'#d9dde3',{geo:gC(.022,.022,1.9,6),parts:[[gB(.48,.04,.06),'#9aa0a8',0,-.93,0],[gB(.06,.04,.48),'#9aa0a8',0,-.93,0],[gB(.3,.02,.02),'#d9dde3',0,.9,0],
     [gB(.14,.22,.06),new THREE.MeshLambertMaterial({color:'#bfe3ff',transparent:true,opacity:.75}),.12,.72,0],[gC(.006,.006,.9,4),'#e6f4ff',.12,.17,0]]});
   const ecg=canvasTex(128,64,(g,w,h)=>{g.fillStyle='#06140c';g.fillRect(0,0,w,h);g.strokeStyle='#3dff7a';g.lineWidth=3;g.beginPath();let x=0;g.moveTo(0,40);
     for(const [a,b] of [[20,40],[26,34],[30,40],[38,40],[42,10],[46,54],[50,40],[70,40],[76,34],[80,40],[88,40],[92,10],[96,54],[100,40],[128,40]])g.lineTo(a,b);g.stroke();g.fillStyle='#3dff7a';g.font='bold 16px monospace';g.fillText('72',100,18);});
-  const heartMon=(u,v,dir)=>N(u,v,0,.5,1.25,.45,'#d9dde3',{ry:face[dir],geo:gB(.5,.08,.45,-.2),parts:[[gB(.04,.9,.04),'#9aa0a8',0,-.25,0],[gB(.46,.34,.12),'#eef2f5',0,.42,0],[gB(.38,.24,.01),new THREE.MeshBasicMaterial({map:ecg}),0,.44,.065],[gB(.4,.04,.4),'#9aa0a8',0,-.6,0]]});
+  const heartMon=(u,v,dir,y=0)=>N(u,v,y,.5,1.25,.45,'#d9dde3',{ry:face[dir],geo:gB(.5,.08,.45,-.2),parts:[[gB(.04,.9,.04),'#9aa0a8',0,-.25,0],[gB(.46,.34,.12),'#eef2f5',0,.42,0],[gB(.38,.24,.01),new THREE.MeshBasicMaterial({map:ecg}),0,.44,.065],[gB(.4,.04,.4),'#9aa0a8',0,-.6,0]]});
   const wheelchair=(u,v,ry)=>N(u,v,0,.66,.95,.7,'#2b2d33',{ry,geo:gB(.5,.06,.5,-.03),parts:[[gB(.5,.5,.05),'#2f63c8',0,.25,-.24],[gB(.48,.08,.48),'#2f63c8',0,.02,0],
     [new THREE.CylinderGeometry(.3,.3,.03,16).rotateZ(Math.PI/2),'#3a3d45',.3,-.18,-.04],[new THREE.CylinderGeometry(.3,.3,.03,16).rotateZ(Math.PI/2),'#3a3d45',-.3,-.18,-.04],[gB(.06,.12,.06),'#1c1d22',.2,-.4,.26],[gB(.06,.12,.06),'#1c1d22',-.2,-.4,.26]]});
   const trolley=(u,v,ry)=>N(u,v,0,.6,1.0,.9,'#c9ced6',{ry,geo:gB(.56,.42,.82,.12),mat:new THREE.MeshLambertMaterial({color:'#c9ced6',transparent:true,opacity:.55}),parts:[[gB(.6,.04,.04),'#e8463a',0,.5,-.45],[gB(.5,.03,.8),'#9aa0a8',0,-.35,0],
@@ -2860,7 +2861,76 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     for(const [u,v,y] of [[-5.3,-5.0,F],[-4.75,-5.0,F],[-5.3,-5.0,F+.6]])Bx(u,v,y,.8,.6,.8,'#c99a5b',{tx:'wood',prop:'crate',hp:50});
   }
   if(th==='hospital'){
-    fascia('CLINIC','#f4f5f7','#c8322b',{cross:'#c8322b',stripe:'#c8322b'});
+    const T=8,L=8.3;
+    /* the Tripo hospital models (models/home): ward beds and a trolley bed that break apart when shot, doctors and nurses who stand their ground, a wheelchair you can knock about */
+    const HD={doctor:[1.59,.54],nurse:[.6,.31],bed1:[.95,2.1],bed2:[.87,2.12],wheelchair:[.7,.95],alien:[.93,.59]};
+    const hm=(id,u,v,y,dir,hp)=>{const [w0,d0]=HD[id],ax=dir[0]==='u',w=ax?d0:w0,d=ax?w0:d0,h=FURN_CFG[id].h,ry=face[dir],o={mat:INVIS,edges:false,shadow:false};
+      if(id==='wheelchair'){const K=N(u,v,y,w,h,d,'#2b2d33',{mat:INVIS});furnInto(id,K.m,X(u),y,Z(v),ry);return K;}
+      const b=Bx(u,v,y,w,h,d,'#d9dde3',hp?Object.assign({prop:'crate',hp},o):o);if(b){b.mesh.userData.dyn=1;furnInto(id,b.mesh,X(u),y,Z(v),ry);}return b;};
+    /* signs and red trim: a big HOSPITAL board hung under the porch roof, the name again high on the front, glowing red crosses on the front corners
+       (sticking out so they read from up and down the street), on both side walls, on the loft wall and standing on the loft ridge, red belts round the storeys */
+    {const RD='#c8322b',redM=new THREE.MeshLambertMaterial({color:'#e3241a',emissive:'#6a0b06'}),D={solid:false,edges:false},Dm=Object.assign({mat:redM},D);
+      const sb=(u0,u1,v0,v1,y0,y1,c,o)=>S.box(Math.min(u0,u1),Math.max(u0,u1),Math.min(v0,v1),Math.max(v0,v1),y0,y1,c,o||D);
+      // a cross centred on (u,v,y), s metres across, flat on a wall facing along 'u' or 'v' (t metres thick)
+      const cross=(u,v,y,s,ax,t=.12)=>{const a=s*.34;if(ax==='u'){sb(u-u2(t/2),u+u2(t/2),v-u2(a/2),v+u2(a/2),y-s/2,y+s/2,null,Dm);sb(u-u2(t/2),u+u2(t/2),v-u2(s/2),v+u2(s/2),y-a/2,y+a/2,null,Dm);}
+        else{sb(u-u2(a/2),u+u2(a/2),v-u2(t/2),v+u2(t/2),y-s/2,y+s/2,null,Dm);sb(u-u2(s/2),u+u2(s/2),v-u2(t/2),v+u2(t/2),y-a/2,y+a/2,null,Dm);}};
+      const big=canvasTex(2048,176,(g,w,h)=>{g.fillStyle='#ffffff';g.fillRect(0,0,w,h);g.fillStyle=RD;g.fillRect(0,0,w,14);g.fillRect(0,h-14,w,14);
+        for(const cx of [110,w-110]){g.fillRect(cx-22,h/2-62,44,124);g.fillRect(cx-62,h/2-22,124,44);}
+        g.font='bold 132px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';if('letterSpacing' in g)g.letterSpacing='18px';g.fillText('HOSPITAL',w/2,h/2+6);});
+      const pu=-6-2.05/k,sy0=H-1.45;
+      // the board: red frame, white face, hung from the porch roof between the pillars on two red rods
+      sb(pu+u2(.02),pu+u2(.16),-3.45,3.45,sy0,H,RD,{solid:false});panel(pu+u2(.01),0,sy0+.725,6.9*k-.3,1.3,new THREE.MeshBasicMaterial({map:big}),'u-');
+      // the name again high on the front wall
+      panel(-6.17,0,7.75,3.4*k,.48,signTex('HOSPITAL','#ffffff',RD,{cross:RD,stripe:RD}),'u-');
+      // blade crosses on the front corners: a white square with a glowing red cross on both faces, on a bracket off the wall
+      for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=F+2.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});
+        sb(uo-u2(.95),uo+u2(.95),v-u2(.06),v+u2(.06),y-.95,y+.95,'#ffffff',{solid:false});cross(uo,v,y,1.6,'v',.24);}
+      // a big cross on each side wall between the upstairs windows, and two on the loft wall over the terrace
+      for(const sv of [-1,1]){cross(.35,sv*(5.65+u2(.06)),F+1.95,2.8,'v');cross(-.15-u2(.06),sv*4.55,L+1.95,2.4,'u');}
+      // a tall glowing cross standing on the front end of the loft ridge
+      {const ry=8.3+3.6+.3+2.6;sb(.35-u2(.06),.35+u2(.06),-u2(.07),u2(.07),ry-.2,ry+.35,'#9aa0a8');cross(.35,0,ry+1.75,2.8,'u',.3);}
+      // red belts round the building at each floor line, red corner posts, red caps on the porch rail; the porch roof keeps a white tiled floor
+      for(const sv of [-1,1]){sb(-6,6,sv*5.35,sv*5.69,H,F,RD);sb(-6,6,sv*5.35,sv*5.69,T,L,RD);for(const su of [-1,1])sb(su*(6.15+u2(.06)),su*(6.15-u2(.3)),sv*(5.65+u2(.06)),sv*(5.65-u2(.3)),0,T,RD);}
+      sb(pu-u2(.02),pu+u2(.27),-4.02,4.02,F+1,F+1.1,RD);for(const v of [-4,4])sb(pu,-6.15,v-u2(.14),v+u2(.14),F+1,F+1.1,RD);S.floor(pu,-6.15,-4,4,F+.02,'#f7f8fa','tile');}
+    /* more hospital kit: operating theatre, crash carts, bedside monitors, drips, oxygen bottles, sharps bins, x-ray light boxes and syringes left lying about */
+    {const ecgM=new THREE.MeshBasicMaterial({map:ecg}),glass=new THREE.MeshLambertMaterial({color:'#bfe3ff',transparent:true,opacity:.7}),steel='#c9ced6';
+      const sBarrel=new THREE.CylinderGeometry(.02,.02,.16,6).rotateZ(Math.PI/2),sNeedle=new THREE.CylinderGeometry(.003,.003,.08,4).rotateZ(Math.PI/2),sPlunger=new THREE.CylinderGeometry(.008,.008,.08,4).rotateZ(Math.PI/2),
+        sCap=new THREE.CylinderGeometry(.024,.024,.012,8).rotateZ(Math.PI/2);
+      // a syringe lying on its side: clear barrel, orange plunger cap, needle
+      const syringe=(u,v,y,ry)=>N(u,v,y,.36,.04,.05,'#ffffff',{ry,geo:sBarrel,mat:glass,parts:[[sNeedle,'#e6eaef',.12,0,0],[sPlunger,'#ffffff',-.11,0,0],[sCap,'#ff7a1f',-.155,0,0],[new THREE.CylinderGeometry(.008,.008,.11,6).rotateZ(Math.PI/2),'#e8463a',.02,0,0]]});
+      const bedMon=(u,v,y,dir)=>N(u,v,y,.36,.3,.16,'#eef2f5',{ry:face[dir],geo:gB(.34,.24,.12,.03),parts:[[gB(.28,.18,.01),ecgM,0,.04,.065],[gB(.16,.04,.12),'#9aa0a8',0,-.1,0],[gC(.012,.012,.02,6),'#3dff7a',.13,-.02,.065]]});
+      const cab=(u,v,y)=>Bx(u,v,y,.5,.7,.5,'#f4f5f7',{chip:true,hp:90});
+      const o2=(u,v,y)=>N(u,v,y,.24,1.25,.24,'#3a9a5b',{cyl:1,top:.92,parts:[[gC(.105,.11,.25,10),'#ffffff',0,.5,0],[gC(.03,.03,.12,6),'#9aa0a8',0,.68,0]]});
+      const sharps=(u,v,y)=>N(u,v,y,.28,.32,.22,'#f4c22b',{parts:[[gB(.29,.06,.23),'#c8322b',0,.17,0]]});
+      const pills=(u,v,y)=>N(u,v,y,.06,.1,.06,'#ff9a3c',{cyl:1,parts:[[gC(.032,.032,.025),'#ffffff',0,.06,0]]});
+      const gloves=(u,v,y)=>N(u,v,y,.24,.1,.12,'#8ecae6',{parts:[[gB(.1,.01,.05),'#2f63c8',0,.051,0]]});
+      const tray=(u,v,y)=>{N(u,v,y,.5,.03,.34,steel);syringe(u,v-u2(.06),y+.03,.2);syringe(u+u2(.05),v+u2(.08),y+.03,-.3);};
+      // crash cart: red drawers, a defibrillator on top
+      const crash=(u,v,y)=>{const c=Bx(u,v,y,.6,.95,.5,'#c8322b',{chip:true,hp:110});for(const dy of [.25,.5,.75])kid(c,gB(.62,.02,.52),'#8f1f1a',u,v,y+dy);
+        N(u,v,y+.95,.36,.14,.28,'#f4c22b',{parts:[[gB(.2,.08,.01),ecgM,0,.02,.145],[gB(.06,.05,.06),'#1c1d22',.12,.09,-.06],[gB(.06,.05,.06),'#1c1d22',.12,.09,.06]]});syringe(u,v-u2(.12),y+.95,1.2);};
+      // operating table on a steel column, an overhead twin surgical light hung from the ceiling, and its kit round it
+      const lampM=new THREE.MeshBasicMaterial({color:'#fffbe8'}),ceil=(y)=>y<F?H:T;
+      const opTable=(u,v,y,dir)=>{const ax=dir[0]==='u',w=ax?2.0:.72,d=ax?.72:2.0,t=Bx(u,v,y,ax?.9:.36,.78,ax?.36:.9,'#9aa0a8',{chip:true,hp:160});
+        kid(t,gB(w+.04,.06,d+.04),'#c9ced6',u,v,y+.78);kid(t,gB(w,.1,d),'#2f9e96',u,v,y+.86);kid(t,gB(ax?.4:w*.8,.08,ax?d*.8:.4),'#2f9e96',ax?u+u2(dir==='u+'?.75:-.75):u,ax?v:v+u2(dir==='v+'?.75:-.75),y+.96);
+        kid(t,gB(ax?1.0:.7,.04,ax?.7:1.0),'#e9f6ff',u,v,y+.92);
+        const cy=ceil(y);for(const o of [-.45,.45]){const hu=ax?u+u2(o):u,hv=ax?v:v+u2(o);const pole=new THREE.Mesh(gC(.03,.03,cy-(y+2.35),6),mat('#d9dde3'));pole.position.set(X(hu),(cy+y+2.35)/2,Z(hv));M.group.add(pole);
+          const hd=new THREE.Mesh(gC(.42,.3,.16,16),mat('#eef2f5'));hd.position.set(X(hu),y+2.3,Z(hv));M.group.add(hd);const gl=new THREE.Mesh(gC(.34,.34,.02,16),lampM);gl.position.set(X(hu),y+2.21,Z(hv));M.group.add(gl);}};
+      // ground floor: a triage bay in reception with a trolley bed, a crash cart and a drip; monitors and cabinets by the ward beds; oxygen, sharps and x-rays in the back
+      hm('bed1',-3.25,-4.2,0,'v+',120);hm('nurse',2.85,.95,0,'v+');
+      ivStand(-2.75,-4.9);crash(-2.2,-5.0,0);syringe(-2.4,-3.6,0,.8);syringe(-3.3,-3.3,0,2.1);gloves(-3.0,3.7,1.1);syringe(-3.0,4.25,1.12,.4);
+      for(const [u,v] of [[.7,2.35],[3.85,2.35],[3.85,5.1]]){cab(u,v,0);bedMon(u,v,.7,'u+');}
+      for(const [u,v] of [[5.62,-1.4],[5.62,-1.15],[5.45,-1.28]])o2(u,v,0);sharps(5.55,-3.6,0);pills(5.6,-4.4,1.9);pills(5.6,-4.85,1.9);pills(5.6,-4.6,1.9);
+      for(const v of [-2.0,-.6])panel(5.84,v,1.9,1.0,.75,canvasTex(96,72,(g,w,h)=>{g.fillStyle='#cfe8ff';g.fillRect(0,0,w,h);g.fillStyle='#1d2a3a';g.fillRect(6,6,w-12,h-12);g.strokeStyle='#e6f2ff';g.lineWidth=3;
+        for(let i=0;i<5;i++){g.beginPath();g.ellipse(w/2,18+i*9,16-i,3,0,0,7);g.stroke();}g.beginPath();g.moveTo(w/2,12);g.lineTo(w/2,62);g.stroke();}),'u-');
+      syringe(2.85,3.1,0,-.5);syringe(3.2,.6,0,1.9);syringe(1.0,-1.0,0,.3);syringe(4.9,3.3,0,2.6);
+      // upstairs: the operating theatre at the back (table, lights, anaesthetic monitor, drips, instrument trays) and a second smaller one at the front
+      opTable(3.0,-.3,F,'v+');hm('doctor',3.0,-.3+u2(1.55),F,'v-');hm('bed1',5.3,0,F,'v+',120);heartMon(3.0+u2(.95),-.3+u2(.55),'u-',F);ivStand(3.0-u2(.75),-.3+u2(.55),F);ivStand(3.0+u2(.8),-.3-u2(.7),F);
+      Bx(3.0-u2(.95),-.3-u2(.45),F,.55,.85,.45,steel,{chip:true,hp:80});tray(3.0-u2(.95),-.3-u2(.45),F+.85);o2(4.0,-.3,F);sharps(4.0,.35,F);gloves(3.0-u2(.95),-.3-u2(.05),F+.85);
+      crash(5.4,1.4,F);
+      opTable(-2.6,-3.7,F,'v+');ivStand(-2.6+u2(.75),-3.7+u2(.6),F);bedMon(-2.6-u2(.75),-3.7+u2(.25),F+.7,'u+');cab(-2.6-u2(.75),-3.7+u2(.25),F);
+      Bx(-2.6+u2(.8),-3.7-u2(.55),F,.55,.85,.45,steel,{chip:true,hp:80});tray(-2.6+u2(.8),-3.7-u2(.55),F+.85);
+      bedMon(-4.6+u2(.85),3.2+u2(.7),F+.7,'u-');cab(-4.6+u2(.85),3.2+u2(.7),F);
+      syringe(-1.6,-2.4,F,.6);syringe(1.7,-1.2,F,2.4);syringe(-3.6,1.6,F,1.1);syringe(.4,1.7,F,-.4);syringe(5.0,-.9,F,1.6);}
     // reception desk, waiting chairs, water cooler
     const rd=Bx(-3.1,4.1,0,.95,1.1,3.7,'#f4f5f7',{chip:true,hp:160});kid(rd,gB(.97,.08,3.72),'#2f63c8',-3.1,4.1,1.12);kid(rd,gB(.02,.2,3.6),'#c8322b',-3.4,4.1,.8);
     monitor(-3.0,4.6,1.1,'u+');N(-3.0,3.5,1.1,.22,.1,.18,'#1c1d22');N(-3.05,3.0,1.1,.3,.06,.24,'#f4c22b');N(-3.05,3.05,1.16,.3,.06,.24,'#ffffff');
@@ -2868,21 +2938,23 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     for(let i=0;i<8;i++)chair(-5.5,-5.0+i*.3,0,'#2f7fe0',face['u+']);
     Bx(-4.5,-4.2,0,1.0,.45,.7,'#d9dde3',{chip:true});N(-4.5,-4.3,.45,.3,.03,.22,'#e8463a');N(-4.45,-4.0,.45,.3,.03,.22,'#2f7fe0');
     N(-5.45,5.0,0,.36,1.3,.36,'#f4f5f7',{geo:gB(.34,.95,.34,-.17),parts:[[gC(.15,.15,.36,12),new THREE.MeshLambertMaterial({color:'#7fc4ff',transparent:true,opacity:.75}),0,.48,0]]});
-    plant(-5.4,3.05,0);wheelchair(-1.3,4.7,face['u-']);
+    plant(-5.4,3.05,0);hm('wheelchair',-1.3,4.7,0,'u-');hm('nurse',-2.4,3.55,0,'u-');
     // wayfinding stripes on the floor from the door to the ward
     decal(-3,0,6*k*.95,.18,'#2f7fe0',1,.035);decal(-3,.18,6*k*.95,.18,'#3bb54a',1,.035);
     // ward: two beds with drips and a monitor, a privacy curtain, the medicine cabinet
     const bed=(u,v)=>{const b=Bx(u,v,0,1.0,.72,2.1,'#d9dde3',{chip:true,hp:150});kid(b,gB(.96,.14,2.0),'#ffffff',u,v,.78);kid(b,gB(.94,.06,1.4),'#8ecae6',u,v-.2,.87);kid(b,gB(.6,.12,.35),'#ffffff',u,v+.75,.89);kid(b,gB(1.0,.5,.06),'#9aa0a8',u,v+u2(1.02),.97);};
-    bed(1.3,4.65);bed(4.45,4.65);bed(1.3,1.9);bed(4.45,1.9);ivStand(1.95,2.25);ivStand(5.1,2.2);ivStand(1.95,5.0);ivStand(5.1,4.95);heartMon(.55,4.9,'v-');
+    for(const [u,v] of [[1.3,4.65],[4.45,4.65],[1.3,1.9],[4.45,1.9]])hm('bed2',u,v,0,'v-',150);ivStand(1.95,2.25);ivStand(5.1,2.2);ivStand(1.95,5.0);ivStand(5.1,4.95);heartMon(.55,4.9,'v-');
     const cm=new THREE.MeshLambertMaterial({color:'#9fd8c9',transparent:true,opacity:.85,side:THREE.DoubleSide});panel(2.85,4.6,1.3,2.2,2.0,cm,'u-');S.box(2.82,2.88,3.8,5.35,2.3,2.36,'#d9dde3',{solid:false,edges:false});
     const mc=Bx(5.6,-4.6,0,.45,1.9,1.4,'#f4f5f7',{chip:true,hp:150});kid(mc,gB(.02,.4,.4),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g)=>{g.fillStyle='#fff';g.fillRect(0,0,64,64);g.fillStyle='#c8322b';g.fillRect(24,8,16,48);g.fillRect(8,24,48,16);})}),5.6-u2(.24),-4.6,1.5);
     // upstairs: a recovery bed and supplies
-    const ub=Bx(-4.6,3.2,F,1.0,.72,2.1,'#d9dde3',{chip:true,hp:150});kid(ub,gB(.96,.14,2.0),'#ffffff',-4.6,3.2,F+.78);kid(ub,gB(.94,.06,1.4),'#f3b8b0',-4.6,3.0,F+.87);ivStand(-3.8,4.4);
+    hm('bed2',-4.6,3.2,F,'v-',150);hm('nurse',-3.9,2.55,F,'u-');hm('wheelchair',-1.4,4.6,F,'u-');ivStand(-3.8,4.4,F);
     for(const [u,v,y] of [[-5.3,-5.0,F],[-4.75,-5.0,F],[-5.3,-5.0,F+.6]])Bx(u,v,y,.8,.6,.8,'#e9e4d8',{prop:'crate',hp:50});
     N(-5.2,-3.7,F,.5,.9,.4,'#f4f5f7',{parts:[[gB(.5,.03,.4),'#9aa0a8',0,0,0]]});
     // the loft terrace is a helipad
     if(loft){const hp=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(128,128,112,0,7);g.stroke();g.fillStyle='#ffffff';g.fillRect(80,56,26,144);g.fillRect(150,56,26,144);g.fillRect(80,115,96,26);});
-      const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2),new THREE.MeshBasicMaterial({map:hp,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=face['u-'];m.position.set(X(-3),8.3+.02,Z(-1.2));M.group.add(m);}
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2),new THREE.MeshBasicMaterial({map:hp,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=face['u-'];m.position.set(X(-3),8.3+.02,Z(-1.2));M.group.add(m);
+      /* a hospital bed out on the terrace where the red block used to be, and its patient (an alien in a gown with its drip) up and about beside it */
+      hm('bed2',-4.0,3.2,8.3,'v-',150);hm('alien',-3.3,3.05,8.3,'u-');}
   }
   if(th==='home'){
     /* chimney on the back wall with smoke curling out of it; a fire in the hearth */
@@ -3051,7 +3123,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
   for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.1,S.Z(sv*4.7),L,R2+1.05,flip,0);
-  S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
+  if(!WH)S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
 // single-storey house with a flat roof deck reached by outside stairs
 function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F=4.4,inner='#f3efe6';
   S.floor(-5.85,5.85,-5.35,5.35,.02,'#d6c3a5','wood');
@@ -4323,7 +4395,7 @@ const MAPS={
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
   const L=[[-1,9,'C',RC[2],2,'home'],[1,-7,'C',RC[5],3,'hospital']];
   for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1,cx=side*(12.5+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
-    if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f3e3c6':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#ffffff':trims[ci%4],kind==='C',hk,true,th);
+    if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f3e3c6':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':trims[ci%4],kind==='C',hk,true,th);
     /* a mailbox beside the path, not on it */
     box(side*10.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*10.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a');}

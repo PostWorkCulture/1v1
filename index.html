@@ -7841,6 +7841,10 @@ function updTouchLabels(){if(!S.touch)return;const c=$('dt-c'),f=$('dt-f');const
   set($('dt-q'),`Wall<small>${ME.walls|0}</small>`,ME.walls<=0,false);
   const cc=CONS[ME.cons],merge=ME.cons==='grenade',n=cc&&cc.uses?(ME.consN||0)+(merge?ME.nades||0:0):0;
   set($('dt-g'),cc&&cc.uses?`Item<small>${n}</small>`:ME.consT>0?`Item<small>${Math.ceil(ME.consT)}s</small>`:'Item',cc&&!consReady(ME),!cc||cc.passive||(cc.uses&&n<=0));}
+/* name tag colour: the player's team colour, or in free for all the colour of their character (lifted so it reads on dark backgrounds) */
+const tagColC=new THREE.Color(),tagColH={};
+function tagCol(f){const raw=S.players==='ffa'?(typeof stageCC==='function'?stageCC(f.char):null)||TEAMC[f.team]:TEAMC[f.team]||'#ffffff';const k=raw;if(tagColH[k])return tagColH[k];
+  tagColC.set(raw);const h={};tagColC.getHSL(h);tagColC.setHSL(h.h,Math.max(h.s,.55),Math.min(.72,Math.max(h.l,.58)));return tagColH[k]='#'+tagColC.getHexString();}
 function tagFor(f){if(f._tag)return f._tag;let t;if(f===BOT){t=$('d-tag');t._b=$('d-tag-hp');t._n=$('d-tag-name');}
   else{t=$('d-tag').cloneNode(true);t.removeAttribute('id');t.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));t._b=t.querySelector('b');t._n=t.querySelector('span');$('d-tag').after(t);}t.style.opacity=0;return f._tag=t;}
 let lbDirty=1;
@@ -7981,7 +7985,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='
   for(const f of FS){if(f===ME)continue;const tag=tagFor(f),foe=isFoe(ME,f);const tp=f.alive?toScreen(new V3(f.pos.x,f.pos.y+3.15*SC,f.pos.z)):null;
     const vis=tp&&S.state!=='menu'&&(!foe||los(camera.position,new V3(f.pos.x,f.pos.y+2.4*SC,f.pos.z)))&&!(foe&&f.ghostT>0);
     tag.style.opacity=vis?1:0;if(tp)tag.style.transform=`translate(${tp[0]}px,${tp[1]}px) translate(-50%,-100%)`;tag._b.style.width=(f.downed?f.dhp/60*100:f.hp/f.hpMax*100)+'%';
-    const n=f.downed?'DOWNED':(foe?'Bot · ':'Ally · ')+f.name;if(tag._n.textContent!==n)tag._n.textContent=n;tag.classList.toggle('ally',!foe);}
+    const n=f.downed?'DOWNED':f.name;if(tag._n.textContent!==n)tag._n.textContent=n;tag.classList.toggle('ally',!foe);{const c=tagCol(f);if(tag._c!==c){tag._c=c;tag._n.style.color=c;}}}
 }
 
 /* ================= animation / camera ================= */

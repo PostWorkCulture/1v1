@@ -2451,16 +2451,23 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat'];
   const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={rifle:.5,m4:.58,hdr:.62,kar:.58,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.22,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
+  const MIX={rifle:.5,m4:.58,hdr:.62,kar:.58,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.22,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,thumper:.62};
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1;
   try{const v=JSON.parse(localStorage.getItem('blockrush:vol')||'null');if(typeof v==='number')vol=Math.max(0,Math.min(1,v));}catch(e){}
+  /* flamethrower roar: a seamless 2.4 s loop of deep rumbling noise with a gusty flutter and the odd crackle, made here rather than loaded */
+  function flameLoop(){const sr=ctx.sampleRate,n=Math.floor(sr*2.4),m=Math.floor(sr*.25),raw=new Float32Array(n+m);let br=0,lp=0;
+    for(let i=0;i<n+m;i++){const w=Math.random()*2-1;br=(br+.02*w)/1.02;lp+=(w-lp)*.12;raw[i]=br*3.5+lp*.5+(Math.random()<.0012?(Math.random()*2-1)*1.4:0);}
+    const b=ctx.createBuffer(1,n,sr),d=b.getChannelData(0);let pk=0;
+    for(let i=0;i<n;i++){let v=raw[i];if(i<m){const a=i/m;v=raw[i]*a+raw[n+i]*(1-a);}const t=i/sr;v*=.82+.12*Math.sin(t*Math.PI*2*5/2.4)+.06*Math.sin(t*Math.PI*2*13/2.4);d[i]=v;pk=Math.max(pk,Math.abs(v));}
+    for(let i=0;i<n;i++)d[i]*=.9/pk;return b;}
   function init(){if(ctx)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
     ctx=new AC();const comp=ctx.createDynamicsCompressor();comp.threshold.value=-14;comp.knee.value=10;comp.ratio.value=4;comp.attack.value=.002;comp.release.value=.18;
     master=ctx.createGain();master.gain.value=Math.pow(vol,2.5);master.connect(comp);comp.connect(ctx.destination);
     for(const n of NAMES)fetch('sfx/'+n+(LOOPS[n]?'.wav':'.mp3')).then(r=>r.arrayBuffer()).then(a=>ctx.decodeAudioData(a)).then(b=>{buf[n]=b;}).catch(()=>{});
+    try{buf.flame=flameLoop();}catch(e){}
     {const sr=ctx.sampleRate,cb=ctx.createBuffer(1,Math.floor(sr*.24),sr),cd=cb.getChannelData(0);for(let i=0;i<cd.length;i++){const t=i/sr,f=68+95*Math.exp(-t*22);cd[i]=(Math.sin(t*f*6.283)+.45*Math.sin(t*f*12.566))*Math.exp(-t*18)*.65+(Math.random()*2-1)*Math.exp(-t*85)*.55;}buf.crossbow=cb;
      const tb=ctx.createBuffer(1,Math.floor(sr*.32),sr),td=tb.getChannelData(0);let ph=0;for(let i=0;i<td.length;i++){const t=i/sr,f=t<.045?85+t/.045*125:210*Math.exp(-(t-.045)*9)+48;ph+=f/sr*6.283;td[i]=(Math.sin(ph)+.3*Math.sin(ph*2))*Math.exp(-t*10)*.75+(Math.random()*2-1)*Math.exp(-t*55)*.45;}buf.thumper=tb;}}
   const unlock=()=>{init();if(ctx&&ctx.state==='suspended')ctx.resume();};
@@ -4565,10 +4572,10 @@ function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=M
   const fw=fw0,fx=fx0,wy0=wy00+.12,wh=wh0;for(const [bw,bh,bx,by] of [[fw+.12,.06,fx,wy0+wh+.03],[fw+.12,.06,fx,wy0-.03],[.06,wh,fx-fw/2-.03,wy0+wh/2],[.06,wh,fx+fw/2+.03,wy0+wh/2]])mesh(new THREE.BoxGeometry(bw,bh,.06),dark,bx,by,D/2+.01);
   mesh(new THREE.PlaneGeometry(fw,wh),new THREE.MeshBasicMaterial({map:T.back,toneMapped:false}),fx,wy0+wh/2,D/2-RD+.01).castShadow=false;
   const sideM=new THREE.MeshStandardMaterial({color:'#f2eee8',roughness:.6});for(const sx of [-1,1])mesh(new THREE.BoxGeometry(.03,wh,.5),sideM,fx+sx*fw/2,wy0+wh/2,D/2-.22);
-  const shelfM=new THREE.MeshStandardMaterial({color:'#dfe3e8',roughness:.3,metalness:.6}),tagC=['#ffc61a','#2f7fe0','#3f6b3a','#e8641a'];
+  const shelfM=new THREE.MeshStandardMaterial({color:'#dfe3e8',roughness:.3,metalness:.6}),tagC=['#ffc61a','#2f7fe0','#3f6b3a','#e8641a','#ff5a1a'];
   const medM=new THREE.MeshStandardMaterial({map:T.med,roughness:.5}),armM=new THREE.MeshStandardMaterial({color:'#2f7fe0',roughness:.3,metalness:.4}),armRim=new THREE.MeshStandardMaterial({color:'#9fd0ff',roughness:.3,metalness:.5}),
     nadeM=new THREE.MeshStandardMaterial({color:'#3f6b3a',roughness:.55}),pinM=new THREE.MeshStandardMaterial({color:'#b9bec6',roughness:.3,metalness:.8}),canM=new THREE.MeshStandardMaterial({map:T.can,roughness:.35,metalness:.3}),canTop=new THREE.MeshStandardMaterial({color:'#cfd3da',roughness:.25,metalness:.8}),goldM=new THREE.MeshStandardMaterial({color:'#ffc61a',metalness:.9,roughness:.2,emissive:'#6a4000',emissiveIntensity:.5});
-  const rows=4,rh=wh/rows,cols=4,cw=(fw-.1)/cols,ROWK=['gold','armor','nades','turret'],turY=new THREE.MeshStandardMaterial({color:'#ffc61a',roughness:.38,metalness:.25}),turG=new THREE.MeshStandardMaterial({color:'#2b2d33',roughness:.42,metalness:.65}),turL=new THREE.MeshBasicMaterial({color:'#ff2a3a',toneMapped:false});
+  const rows=5,rh=wh/rows,cols=4,cw=(fw-.1)/cols,ROWK=['gold','armor','nades','turret','flamer'],turY=new THREE.MeshStandardMaterial({color:'#ffc61a',roughness:.38,metalness:.25}),turG=new THREE.MeshStandardMaterial({color:'#2b2d33',roughness:.42,metalness:.65}),turL=new THREE.MeshBasicMaterial({color:'#ff2a3a',toneMapped:false}),flRed=new THREE.MeshStandardMaterial({color:'#d8311c',roughness:.3,metalness:.25}),flCu=new THREE.MeshStandardMaterial({color:'#c8743c',roughness:.25,metalness:.9}),flPil=new THREE.MeshBasicMaterial({color:'#5fc8ff',toneMapped:false});
   for(let r=0;r<rows;r++){const y=wy0+wh-(r+1)*rh+.04;mesh(new THREE.BoxGeometry(fw-.04,.035,.48),shelfM,fx,y,D/2-.22);mesh(new THREE.BoxGeometry(fw-.04,.06,.02),new THREE.MeshBasicMaterial({color:tagC[r],toneMapped:false}),fx,y+.03,D/2-.02).castShadow=false;
     for(let i=0;i<cols;i++){const ix=fx-fw/2+.05+cw*(i+.5),iz=D/2-.22,iy=y+.035;
       const kind=ROWK[r];
@@ -4576,6 +4583,7 @@ function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=M
       else if(kind==='armor'){const p=mesh(RB(.3,.36,.08,.03),armM,ix,iy+.2,iz);p.rotation.x=-.12;mesh(RB(.34,.06,.1,.02),armRim,ix,iy+.39,iz-.01);}
       else if(kind==='turret'){/* boxed mini sentry: tripod, yellow head, twin barrels poking out at you */for(let l=0;l<3;l++){const a=l/3*Math.PI*2+Math.PI/6,lg=mesh(new THREE.BoxGeometry(.022,.2,.022),turG,ix+Math.cos(a)*.06,iy+.09,iz+Math.sin(a)*.06);lg.rotation.set(Math.sin(a)*.45,0,-Math.cos(a)*.45);lg.castShadow=false;}
         mesh(new THREE.CylinderGeometry(.04,.045,.05,10),turG,ix,iy+.19,iz);mesh(RB(.17,.11,.16,.025),turY,ix,iy+.27,iz);mesh(new THREE.BoxGeometry(.18,.025,.17),turG,ix,iy+.33,iz);for(const sx of [-.035,.035]){const br=mesh(new THREE.CylinderGeometry(.017,.017,.16,8),turG,ix+sx,iy+.26,iz+.15);br.rotation.x=Math.PI/2;br.castShadow=false;}mesh(new THREE.SphereGeometry(.018,8,6),turL,ix,iy+.31,iz+.085).castShadow=false;}
+      else if(kind==='flamer'){/* boxed mini flamethrower: red tank, black body, copper nozzle with a blue pilot */const tk=mesh(new THREE.CylinderGeometry(.065,.065,.2,14),flRed,ix,iy+.08,iz);tk.rotation.x=Math.PI/2;tk.castShadow=false;mesh(RB(.09,.08,.24,.02),turG,ix,iy+.19,iz-.02);const wd=mesh(new THREE.CylinderGeometry(.018,.018,.2,8),pinM,ix,iy+.2,iz+.17);wd.rotation.x=Math.PI/2;wd.castShadow=false;const nz=mesh(new THREE.CylinderGeometry(.024,.03,.04,10),flCu,ix,iy+.2,iz+.28);nz.rotation.x=Math.PI/2;mesh(new THREE.SphereGeometry(.012,8,6),flPil,ix,iy+.17,iz+.3).castShadow=false;}
       else if(kind==='nades'){mesh(new THREE.SphereGeometry(.13,14,10),nadeM,ix,iy+.14,iz);mesh(new THREE.CylinderGeometry(.04,.05,.08,8),pinM,ix,iy+.29,iz);const ring=mesh(new THREE.TorusGeometry(.045,.012,6,12),pinM,ix+.06,iy+.3,iz);ring.rotation.y=Math.PI/2;}
       else{mesh(new THREE.CylinderGeometry(.09,.09,.32,16),canM,ix,iy+.16,iz);mesh(new THREE.CylinderGeometry(.085,.09,.02,16),canTop,ix,iy+.33,iz);}
       /* the spiral coil each item sits in */const coil=mesh(new THREE.TorusGeometry(.13,.012,5,16),pinM,ix,iy+.04,iz+.02);coil.rotation.x=Math.PI/2;coil.castShadow=false;}}
@@ -4584,7 +4592,7 @@ function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=M
   /* control panel: screen, four glowing buttons (one per item), coin slot */
   const px=W/2-.12-(W-fw-.36)/2,pw=W-fw-.36;mesh(RB(pw,wh,.08,.03),dark,px,wy0+wh/2,D/2+.02);
   mesh(new THREE.PlaneGeometry(pw*.8,.26),new THREE.MeshBasicMaterial({map:T.lcd,toneMapped:false}),px,wy0+wh-.25,D/2+.065).castShadow=false;
-  const BTN=[['gold','#ffc61a'],['armor','#2f7fe0'],['nades','#3f6b3a'],['turret','#e8641a']],btns={};BTN.forEach(([id,cc],i)=>{const by=wy0+wh-.65-i*.34,m=new THREE.MeshBasicMaterial({color:cc,toneMapped:false});const b=mesh(new THREE.CylinderGeometry(.1,.1,.06,20),m,px,by,D/2+.07);b.rotation.x=Math.PI/2;
+  const BTN=[['gold','#ffc61a'],['armor','#2f7fe0'],['nades','#3f6b3a'],['turret','#e8641a'],['flamer','#ff5a1a']],btns={};BTN.forEach(([id,cc],i)=>{const by=wy0+wh-.62-i*.28,m=new THREE.MeshBasicMaterial({color:cc,toneMapped:false});const b=mesh(new THREE.CylinderGeometry(.1,.1,.06,20),m,px,by,D/2+.07);b.rotation.x=Math.PI/2;
     const rim=mesh(new THREE.TorusGeometry(.11,.016,8,20),chrome,px,by,D/2+.075);rim.castShadow=false;btns[id]={b,m,c:new THREE.Color(cc),z:D/2+.07,y:by};});
   mesh(new THREE.BoxGeometry(.16,.22,.04),chrome,px,wy0+.16,D/2+.07);mesh(new THREE.BoxGeometry(.03,.14,.05),dark,px,wy0+.16,D/2+.09);
   /* pick-up tray with a flap */
@@ -4798,7 +4806,7 @@ function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Mat
 
 /* ================= weapons ================= */
 const OPTIC_GUNS=['ar','gar','burst','shotgun','autoshot','mg','m60','smg','hornet','vector','p90'];const holoOn=f=>f===ME&&f.ads&&f.alive&&(!!f.scopeKit||!!D.S.optic)&&OPTIC_GUNS.includes(gunOf(f));
-const XHAIR={m60:'#ff3fa4',duals:'#f4f6ff',sniper:'#ffffff',scout:'#c9d1dc',ar:'#4d8dff',gar:'#ffd23f',burst:'#c47dff',shotgun:'#ff6a2f',autoshot:'#36f3ff',revolver:'#ff2a55',crossbow:'#3bff7a',thumper:'#ffae1f',mg:'#ff3b2f',smg:'#c062ff',hornet:'#ffd21f',vector:'#7ff0ff',p90:'#eaff4f',rocket:'#22e0cc',stars:'#bfe6ff',sword:'#ffd23f'};
+const XHAIR={m60:'#ff3fa4',duals:'#f4f6ff',sniper:'#ffffff',scout:'#c9d1dc',ar:'#4d8dff',gar:'#ffd23f',burst:'#c47dff',shotgun:'#ff6a2f',autoshot:'#36f3ff',revolver:'#ff2a55',crossbow:'#3bff7a',thumper:'#ffae1f',mg:'#ff3b2f',smg:'#c062ff',flamer:'#ff6a1a',hornet:'#ffd21f',vector:'#7ff0ff',p90:'#eaff4f',rocket:'#22e0cc',stars:'#bfe6ff',sword:'#ffd23f'};
 const GUNS={
   sniper:{name:'HDR',dmg:60,head:2,rate:1.3,mag:3,reload:2.4,spread:5,adsSpread:0,pellets:1,fall:null,zoom:20,auto:false,kick:.06,bloom:0,color:'#3d6b46',note:'Long-range sniper: headshot downs in one, 2 body shots'},
   scout:{name:'Kar98',dmg:45,head:2.2,rate:.7,mag:5,reload:2.0,spread:3.5,adsSpread:.15,pellets:1,fall:[30,80],zoom:34,auto:false,kick:.04,bloom:0,color:'#6b717c',note:'Short-range sniper: quick bolt, light scope'},
@@ -4813,6 +4821,7 @@ const GUNS={
   autoshot:{name:'Shotty Horror',base:'shotgun',dmg:8,head:1.3,rate:.26,mag:2,reload:2.4,spread:3.2,adsSpread:2.6,ads:.24,pellets:10,pb:5,fall:[7,20],zoom:48,auto:false,kick:.075,bloom:0,color:'#19bce6',note:'Double-barrel: two huge blasts back to back, then reload. One shell downs from up to 5 m'},
   m60:{name:'M60',base:'mg',dmg:17,head:1.6,rate:.13,mag:50,reload:4.0,spread:2.2,adsSpread:.45,ads:.38,pellets:1,fall:[32,80],zoom:44,auto:true,kick:.014,bloom:.14,color:'#ff3fa4',note:'Heavy LMG: harder hits, slower fire'},
   mg:{name:'LMG',dmg:12,head:1.6,rate:.08,mag:40,reload:3.2,spread:2.6,adsSpread:.55,ads:.34,pellets:1,fall:[28,70],zoom:46,auto:true,kick:.008,bloom:.18,color:'#e8463a',note:'Big belt, slow reload'},
+  flamer:{name:'Flamethrower',type:'flame',dmg:2,head:1,rate:.05,mag:80,reload:0,noReload:true,range:13,spread:0,adsSpread:0,ads:.2,pellets:1,zoom:58,auto:true,kick:0,bloom:0,color:'#ff6a1a',note:'Shop only: a 13 m jet of fire that sets people alight; about 4 s of fuel'},
   rocket:{name:'Rocket Launcher',sec:true,type:'proj',dmg:45,direct:100,radius:4.5,head:1,rate:1,mag:1,reload:6.8,spread:.35,adsSpread:0,speed:30,maxSpeed:58,accel:90,grav:0,zoom:42,auto:false,kick:.07,bloom:0,ads:.42,color:'#3bb54a',note:'Direct hit 100, splash up to 45'},
   stars:{name:'Ninja Stars',type:'proj',dmg:25,head:2,rate:.3,mag:4,reload:1.6,spread:1.2,adsSpread:.3,speed:52,grav:7,zoom:50,auto:false,kick:.01,bloom:.2,color:'#c9ced8',note:'Thrown, 2× on headshots'},
   fists:{name:'Fists',type:'melee',dmg:15,head:1,rate:.42,mag:Infinity,reload:0,reach:2.7,arc:1.15,lunge:3,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#e0ac69',note:'Punch'},
@@ -4844,6 +4853,7 @@ function gunModel(id){const g=new THREE.Group();const sh=GUNS[id].base||id;const
   else if(sh==='shotgun'){P(.15,.17,.8,0,0,.2,dark);P(.1,.1,.6,0,.04,.85,mid);P(.13,.11,.36,0,-.07,.74,acc);P(.13,.21,.46,0,-.05,-.36,acc);P(.06,.16,.1,0,-.14,.02,dark);L=1.16;}
   else if(sh==='mg'){P(.2,.24,1.0,0,0,.25,dark);P(.09,.09,.75,0,.03,1.1,mid);P(.24,.26,.26,0,-.22,.22,acc);P(.15,.22,.42,0,-.04,-.4,dark);P(.04,.3,.04,.08,-.2,1.1,mid);P(.04,.3,.04,-.08,-.2,1.1,mid);L=1.48;}
   else if(sh==='ar'){P(.14,.17,.86,0,0,.2,dark);P(.06,.06,.5,0,.02,.86,mid);if(id==='burst'){P(.08,.07,.65,0,.15,.08,acc);P(.09,.28,.13,0,-.2,-.22,acc);}else P(.09,.28,.13,0,-.2,.24,acc);P(.12,.19,.4,0,-.03,-.36,acc);P(.05,.07,.26,0,.12,.14,mid);P(.06,.16,.1,0,-.14,-.05,dark);L=1.12;}
+  else if(id==='flamer'){P(.13,.18,.7,0,.06,-.06,dark);P(.22,.22,.6,0,-.15,.25,acc);P(.1,.1,.9,0,.07,.7,mid);P(.12,.12,.12,0,.07,1.15,acc);P(.06,.2,.1,0,-.14,-.22,dark);P(.06,.22,.08,0,-.1,.78,dark);L=1.22;}
   else if(id==='vector'){P(.1,.1,.76,0,.09,.07,dark);P(.11,.14,.6,0,.0,.07,acc);P(.06,.36,.11,0,-.37,.2,dark);P(.09,.26,.1,0,-.2,-.08,dark);P(.035,.035,.3,0,.09,.6,mid);P(.04,.18,.44,0,.05,-.55,dark);L=.77;}
   else if(id==='p90'){P(.12,.34,1.0,0,-.1,-.01,dark);P(.125,.06,.9,0,0,-.07,acc);P(.1,.07,.72,0,.105,.0,mid);P(.035,.035,.3,0,-.005,.62,mid);L=.77;}
   else if(sh==='smg'){P(.13,.16,.6,0,0,.12,dark);P(.06,.06,.3,0,.02,.55,mid);P(.08,.28,.1,0,-.2,.16,acc);P(.06,.15,.1,0,-.13,-.08,dark);P(.1,.12,.22,0,-.02,-.28,acc);L=.72;}
@@ -4877,6 +4887,63 @@ const tracers=[];const trGeo=new THREE.BoxGeometry(1,1,1);trGeo.translate(0,0,.5
 for(let i=0;i<40;i++){const m=new THREE.Mesh(trGeo,new THREE.MeshBasicMaterial({color:'#fff3b0',transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}));m.visible=false;scene.add(m);tracers.push({m,t:0});}
 let trI=0;function tracer(a,b,col,w){const tr=tracers[trI];trI=(trI+1)%tracers.length;const L=a.distanceTo(b);tr.m.position.copy(a);tr.m.lookAt(b);tr.m.scale.set(w||.045,w||.045,L);tr.m.material.color.set(col||'#fff3b0');tr.m.material.opacity=.95;tr.m.visible=true;tr.t=.07;}
 function updTracers(dt){for(const t of tracers){if(!t.m.visible)continue;t.t-=dt;t.m.material.opacity=Math.max(0,t.t/.07)*.95;if(t.t<=0)t.m.visible=false;}}
+/* ================= flamethrower fire =================
+   The jet is drawn as soft fire puffs (one shader point each) that fly out along the aim, slow down, swell, curl upward and burn out
+   from a blue-white root through yellow and orange to deep red; a second layer of dark smoke drifts up off the end. Puffs that reach a wall splash along it.
+   The fire blends premultiplied (glows like light where it's thin, stays rich orange against a bright sky where it's thick).
+   A flickering orange light rides along the jet. Burning people get little licks of the same fire. */
+const FLAME=(()=>{const NF=1600,NS=600;
+  const puffTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+    for(let i=0;i<40;i++){const a=Math.random()*TAU,r=Math.pow(Math.random(),.7)*34,x=64+Math.cos(a)*r,y=64+Math.sin(a)*r,R=8+Math.random()*22;const gr=g.createRadialGradient(x,y,0,x,y,R);gr.addColorStop(0,'rgba(255,255,255,.3)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);}
+    const gr=g.createRadialGradient(64,64,0,64,64,60);gr.addColorStop(0,'rgba(255,255,255,.35)');gr.addColorStop(.5,'rgba(255,255,255,.1)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);
+    const id=g.getImageData(0,0,128,128),d=id.data;for(let y=0;y<128;y++)for(let x=0;x<128;x++){const k=(y*128+x)*4,r=Math.hypot(x-64,y-64)/64;d[k+3]=Math.min(255,d[k+3]*(1.15-r*.4))*(r>.95?0:1);}g.putImageData(id,0,0);
+    return new THREE.CanvasTexture(c);})();
+  const VS=`attribute vec4 d;varying vec4 vD;uniform float scale;void main(){vD=d;vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=d.w>.5?d.y*scale/max(.15,-mv.z):0.;}`;
+  const ROT=`float an=vD.z*6.2831+vD.x*2.4;vec2 c=gl_PointCoord-.5;c=mat2(cos(an),-sin(an),sin(an),cos(an))*c;vec4 tx=texture2D(map,c+.5);`;
+  const fireM=new THREE.ShaderMaterial({uniforms:{map:{value:puffTex},scale:{value:500}},vertexShader:VS,transparent:true,depthWrite:false,blending:THREE.CustomBlending,blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,toneMapped:false,
+    fragmentShader:`uniform sampler2D map;varying vec4 vD;void main(){${ROT}float t=vD.x;
+      vec3 c0=vec3(.5,.7,1.),c1=vec3(1.,.8,.36),c2=vec3(1.,.45,.06),c3=vec3(.8,.15,.02),c4=vec3(.22,.03,.01);
+      vec3 col=t<.04?mix(c0,c1,t/.04):t<.16?mix(c1,c2,(t-.04)/.12):t<.45?mix(c2,c3,(t-.16)/.29):mix(c3,c4,(t-.45)/.55);
+      float al=tx.a*smoothstep(0.,.03,t)*(1.-smoothstep(.5,1.,t))*.62;gl_FragColor=vec4(col*al*1.25,al*.6);}`});
+  const smokeM=new THREE.ShaderMaterial({uniforms:{map:{value:puffTex},scale:{value:500}},vertexShader:VS,transparent:true,depthWrite:false,
+    fragmentShader:`uniform sampler2D map;varying vec4 vD;void main(){${ROT}float t=vD.x;float al=tx.a*smoothstep(0.,.2,t)*(1.-t)*.32;gl_FragColor=vec4(vec3(.16,.15,.15)+vec3(.18)*t,al);}`});
+  const mk=(n,m,ro)=>{const g=new THREE.BufferGeometry(),p=new Float32Array(n*3),d=new Float32Array(n*4);g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('d',new THREE.BufferAttribute(d,4));
+    const o=new THREE.Points(g,m);o.frustumCulled=false;o.renderOrder=ro;return{o,p,d,v:new Float32Array(n*3),L:new Float32Array(n*6),n,i:0,live:0};};
+  const F=mk(NF,fireM,3),Sm=mk(NS,smokeM,2);
+  const light=new THREE.PointLight('#ff7a22',0,14,1.6);let lightW=0;const lp=new THREE.Vector3();let added=false;
+  function addTo(sc){if(added)return;sc.add(F.o);sc.add(Sm.o);sc.add(light);added=true;}
+  /* L per puff: life, max life, start size, growth, distance travelled, distance to the wall */
+  function spawn(P,x,y,z,vx,vy,vz,max,s0,grow,stop){const i=P.i;P.i=(P.i+1)%P.n;P.p[i*3]=x;P.p[i*3+1]=y;P.p[i*3+2]=z;P.v[i*3]=vx;P.v[i*3+1]=vy;P.v[i*3+2]=vz;
+    const L=P.L;L[i*6]=0;L[i*6+1]=max;L[i*6+2]=s0;L[i*6+3]=grow;L[i*6+4]=0;L[i*6+5]=stop;P.d[i*4]=0;P.d[i*4+1]=s0;P.d[i*4+2]=Math.random();P.d[i*4+3]=1;P.live=1.5;}
+  const u=new THREE.Vector3(),w=new THREE.Vector3();
+  /* one burst of the jet: from = nozzle, dir = unit aim, stop = distance to the first wall (or the range), n puffs, speed */
+  function jet(from,dir,stop,n=16,speed=25){u.set(0,1,0);if(Math.abs(dir.y)>.9)u.set(1,0,0);w.crossVectors(dir,u).normalize();u.crossVectors(w,dir).normalize();
+    for(let k=0;k<n;k++){const sp=speed*(.82+Math.random()*.3),a=Math.random()*TAU,r=Math.random()*.1,age=Math.random()*.05;
+      const vx=dir.x*sp+(w.x*Math.cos(a)+u.x*Math.sin(a))*r*sp,vy=dir.y*sp+(w.y*Math.cos(a)+u.y*Math.sin(a))*r*sp,vz=dir.z*sp+(w.z*Math.cos(a)+u.z*Math.sin(a))*r*sp,j=sp*age*.9;
+      spawn(F,from.x+dir.x*j,from.y+dir.y*j,from.z+dir.z*j,vx,vy,vz,.55+Math.random()*.3,.05+Math.random()*.05,1.5+Math.random()*1.1,stop);F.L[((F.i-1+F.n)%F.n)*6]=age;}
+    lp.copy(from).addScaledVector(dir,Math.min(stop,7)*.55);lightW=1;}
+  /* a small lick of flame (burning people) */
+  function lick(x,y,z,s=1){spawn(F,x,y,z,(Math.random()-.5)*.8,1.2+Math.random()*1.2,(Math.random()-.5)*.8,.35+Math.random()*.25,.14*s,.5*s,99);}
+  function upd(dt,cam,H){if(F.live<=0&&Sm.live<=0&&lightW<=0)return;F.live-=dt;Sm.live-=dt;fireM.uniforms.scale.value=smokeM.uniforms.scale.value=H/(2*Math.tan(cam.fov*Math.PI/360));
+    const kd=Math.exp(-2.6*dt);
+    for(let i=0;i<F.n;i++){if(F.d[i*4+3]<.5)continue;const L=F.L,v=F.v,p=F.p;L[i*6]+=dt;const t=L[i*6]/L[i*6+1];
+      if(t>=1){F.d[i*4+3]=0;if(Math.random()<.1)spawn(Sm,p[i*3],p[i*3+1],p[i*3+2],v[i*3]*.3,.8+Math.random()*.8,v[i*3+2]*.3,1.2+Math.random()*.8,.4,2.2,99);continue;}
+      const ox=p[i*3],oy=p[i*3+1],oz=p[i*3+2];v[i*3]*=kd;v[i*3+2]*=kd;v[i*3+1]=v[i*3+1]*kd+(t<.15?-2:7*t)*dt;
+      const tb=(3+18*t*t)*dt;v[i*3]+=(Math.random()-.5)*tb*2;v[i*3+1]+=(Math.random()-.5)*tb*2;v[i*3+2]+=(Math.random()-.5)*tb*2;
+      p[i*3]+=v[i*3]*dt;p[i*3+1]+=v[i*3+1]*dt;p[i*3+2]+=v[i*3+2]*dt;L[i*6+4]+=Math.hypot(p[i*3]-ox,p[i*3+1]-oy,p[i*3+2]-oz);
+      if(L[i*6+4]>L[i*6+5]){const s=Math.hypot(v[i*3],v[i*3+1],v[i*3+2]),a=Math.random()*TAU;v[i*3]=Math.cos(a)*s*.35;v[i*3+2]=Math.sin(a)*s*.35;v[i*3+1]=Math.abs(v[i*3+1])*.3+s*.18;p[i*3]=ox;p[i*3+2]=oz;L[i*6+5]=1e9;L[i*6+3]*=1.25;}
+      if(p[i*3+1]<.05){p[i*3+1]=.05;v[i*3+1]=Math.abs(v[i*3+1])*.2;}
+      F.d[i*4]=t;F.d[i*4+1]=L[i*6+2]+L[i*6+3]*Math.pow(t,.85);}
+    for(let i=0;i<Sm.n;i++){if(Sm.d[i*4+3]<.5)continue;const L=Sm.L,v=Sm.v,p=Sm.p;L[i*6]+=dt;const t=L[i*6]/L[i*6+1];if(t>=1){Sm.d[i*4+3]=0;continue;}
+      v[i*3]*=kd;v[i*3+2]*=kd;v[i*3+1]=v[i*3+1]*.99+.6*dt;p[i*3]+=v[i*3]*dt;p[i*3+1]+=v[i*3+1]*dt;p[i*3+2]+=v[i*3+2]*dt;Sm.d[i*4]=t;Sm.d[i*4+1]=L[i*6+2]+L[i*6+3]*t;Sm.live=Math.max(Sm.live,.1);}
+    F.o.geometry.attributes.position.needsUpdate=F.o.geometry.attributes.d.needsUpdate=true;Sm.o.geometry.attributes.position.needsUpdate=Sm.o.geometry.attributes.d.needsUpdate=true;
+    lightW=Math.max(0,lightW-dt*4);light.position.lerp(lp,Math.min(1,dt*12));light.intensity=lightW*(9+5*Math.random());}
+  return{addTo,jet,lick,upd};})();
+FLAME.addTo(scene);
+function updFlames(dt){FLAME.upd(dt,camera,renderer.domElement.height);let best=0,pan=0;
+  for(const f of FS){if(!(f.flameT>0))continue;f.flameT-=dt;const c=camera.position,dx=f.pos.x-c.x,dz=f.pos.z-c.z,d=Math.hypot(dx,dz,f.pos.y-c.y),v=f===ME?1:1/(1+Math.max(0,d-2)/16);
+    if(v>best){best=v;camera.getWorldDirection(SFXv);const h=Math.hypot(dx,dz)||1;pan=f===ME?0:(dx*-SFXv.z+dz*SFXv.x)/h*.7;}}
+  if(window.SFX)window.SFX.bed('flame',best,pan);}
 
 /* ================= characters ================= */
 const CHARS={
@@ -5072,7 +5139,7 @@ function legKnees(ch,M,add){M.knee??={L:splitLeg(M.parts.legL),R:splitLeg(M.part
    left hand on the handguard (or the magazine during a reload; the second pistol for Dual Pistols).
    Looks only: aim, bullets and hitboxes are unchanged. Sword, fists and ninja stars keep their own animation. */
 const HOLD={sniper:{s:.78,h:{r:[0,-.2,-.36],l:[.02,-.04,.5]}},scout:{h:{r:[0,-.2,-.3],l:[.02,-.04,.42]}},m60:{s:.9},mg:{s:.9},
-  ar:{},gar:{},burst:{},smg:{},vector:{},p90:{},hornet:{},shotgun:{},autoshot:{},crossbow:{nf:1},thumper:{},rocket:{nf:1,sh:1},duals:{twin:1}};
+  ar:{},gar:{},burst:{},smg:{},vector:{},p90:{},hornet:{},shotgun:{},autoshot:{},crossbow:{nf:1},thumper:{},rocket:{nf:1,sh:1},duals:{twin:1},flamer:{nf:1}};
 const HELD={};
 function heldParts(id){if(HELD[id])return HELD[id];const g=heroModel(id,B.roundedBox,true),C=HOLD[id];g.updateMatrixWorld(true);const by={};
   g.traverse(o=>{if(!o.isMesh||Array.isArray(o.material)||!o.visible)return;const q=o.geometry.clone().applyMatrix4(o.matrixWorld);(by[o.material.uuid]??={mat:o.material,list:[]}).list.push(q);});
@@ -5700,7 +5767,7 @@ const gunOf=f=>f.slot===0?f.primary:(f.secondary||'smg');
 const SECONDARIES=['smg','hornet','vector','p90','duals','rocket','sword'];
 for(const k of new Set([...PRIMARIES,...SECONDARIES])){const g=GUNS[k];if(!g||g.type==='melee')continue;g.dmg=Math.round(g.dmg*1.25);if(g.direct)g.direct=Math.round(g.direct*1.25);}
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;if(f.relSnd&&window.SFX){window.SFX.stop(f.relSnd,.06);f.relSnd=null;}if(S.state==='fight')sfx('swap',f,{range:6});f.slot=slot;f.reloadT=0;f.burstN=0;f.burstT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
-function resetFighter(f,sp){f.onLadder=null;f.ladK=0;f.ladHid=0;f.boostT=0;f.dazeT=0;f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.jolt=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.downedBy=null;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.thornT=0;
+function resetFighter(f,sp){if(f.secondary==='flamer'){f.secondary=f.flamerPrev||'smg';f.flamerPrev=null;}f.flameT=0;f.onLadder=null;f.ladK=0;f.ladHid=0;f.boostT=0;f.dazeT=0;f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.jolt=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.downedBy=null;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.thornT=0;
   f.ch.root.rotation.x=0;f.ch.root.rotation.z=0;f.ch.bubble.visible=false;setGhost(f,1);
   f.pos.set(sp.x,0,sp.z);f.vel.set(0,0,0);f.yaw=sp.yaw;f.pitch=0;f.hp=f.hpMax;f.alive=true;f.grounded=true;f.ammo={};f.ammo[f.primary]=GUNS[f.primary].mag;f.secondary=f.secondary||'smg';f.ammo[f.secondary]=GUNS[f.secondary].mag;
   f.fireT=0;f.reloadT=0;f.burstN=0;f.burstT=0;f.bloom=0;f.walls=4;f.cv=0;f.crouching=false;f.swingT=0;f.pos.y=sp.y||0;f.buildT=0;f.lastHurt=-9;f.ads=false;f.slot=-1;equip(f,0);f.switchT=0;f.ch.root.visible=true;f.scale=SC;f.ch.root.scale.setScalar(SC);
@@ -6130,7 +6197,7 @@ function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&cfg.g
   if(ME.alive&&ME.pos.distanceTo(at)<14)S.shake=Math.max(S.shake,.6*(1-ME.pos.distanceTo(at)/14)+.15);
   for(const o of FS){if(!o.alive||(o!==src&&!isFoe(src,o))||o===ROCKET_SKIP)continue;const c=new V3(o.pos.x,o.pos.y+1.1*SC,o.pos.z),dd=c.distanceTo(at);if(dd>Rr+.6)continue;if(!los(at,c)&&dd>1.2)continue;
     let dm=Math.round(Math.max(Math.min(18,g.dmg*.2),g.dmg*(1-Math.max(0,dd-.6)/Rr)));if(o===src)dm=Math.round(dm*.5);const kb=c.clone().sub(at).setY(0).normalize();if(o===src){o.vel.x+=kb.x*3;o.vel.z+=kb.z*3;}else{o.vel.x+=kb.x*9;o.vel.z+=kb.z*9;o.vel.y=Math.max(o.vel.y,7);o.grounded=false;}
-    if(src===ME&&o!==ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,src,false,cfg.gun);if(cfg.burn){o.burnT=2.5;o.burnBy=src;}}
+    if(src===ME&&o!==ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,src,false,cfg.gun);if(cfg.burn){o.burnT=2.5;o.burnBy=src;o.burnGun=null;}}
   splashBricks(at,Rr,cfg.wall||120);splashTurrets(at,Rr,g.dmg||100,src);blastProps(at,Rr,src);
   for(let i=mines.length-1;i>=0;i--){const m=mines[i];if(i<mines.length&&Math.hypot(m.x-at.x,m.y-at.y,m.z-at.z)<Math.min(Rr,3)&&Math.hypot(m.x-at.x,m.z-at.z)>.05)boomMine(m,i);}}
 function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='fists'){f.punchT=.26;f.punchL=!f.punchL;}const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
@@ -6147,9 +6214,24 @@ function punch(f){if(f.fireT>0)return;f.fireT=.6;f.swingT=.25;const e=eyeOf(f,ne
   if(dist<2.4&&Math.abs(foe.pos.y-f.pos.y)<1.9&&ang<1.2&&los(e,new V3(foe.pos.x,foe.pos.y+.8,foe.pos.z))){emit(foe.pos.x,foe.pos.y+1,foe.pos.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});
     if(f===ME){S.stats.hits++;S.stats.dmg+=5;hitMarker(5>=foe.hp);dmgNumber(foe,5,false);}sfx('punch',foe,{vol:.6,rate:1.15});damage(foe,5,f,false,'punch');return;}}}
 const SG_POINT_BLANK=3,SG_MAX_FRAC=.75;
+/* Flamethrower (shop item): every tick (20 a second while the trigger is held) sends out a burst of the jet and burns everyone in the cone in front of the nozzle
+   that no wall shields: 2 damage a tick up close (40 a second), down to 45% at 13 m, and they keep burning for 1.5 s. When the fuel runs out, the old secondary comes back. */
+function fireFlame(f,origin,dir){const id='flamer',g=GUNS[id];f.fireT=g.rate;f.ammo[id]--;f.kick=.25;if(!(f.flameT>0))sfx('fireball',f,{vol:.5,rate:.8});f.flameT=.12;if(f===ME)S.stats.shots++;
+  let mz;const hr=f.ch&&f.ch.held&&f.ch.held[id];if(hr&&hr.rig.visible){hr.rig.updateWorldMatrix(true,false);mz=hr.rig.localToWorld(new V3(0,hr.P.muz[0],hr.P.muz[1]));}
+  else{mz=eyeOf(f,new V3()).addScaledVector(dirOf(f.yaw,f.pitch||0,new V3()),.9);mz.y-=.32;} /* no held model showing: just ahead of the chest */
+  const R=g.range,hb=rayBoxes(origin,dir,R+2),d2=origin.clone().addScaledVector(dir,hb?hb.t:R).sub(mz);let stop=d2.length();if(stop<.3){d2.copy(dir);stop=.3;}else d2.normalize();stop=Math.min(stop,R);
+  FLAME.jet(mz,d2,stop);if(NET.role==='client')return;
+  for(const v of foesOf(f)){if(!v.alive)continue;const rel=new V3(v.pos.x,v.pos.y+1.1,v.pos.z).sub(mz),along=rel.dot(d2);if(along<-.3||along>stop+.6)continue;
+    if(rel.clone().addScaledVector(d2,-along).length()>.7+Math.max(0,along)*.12)continue;
+    const L=rel.length();if(L>.6&&rayBoxes(mz,rel.clone().divideScalar(L),L-.5))continue;
+    const dm=g.dmg*(along<5?1:lerp(1,.45,clamp((along-5)/(R-5),0,1)));damage(v,dm,f,false,id);v.burnT=Math.max(v.burnT||0,1.5);v.burnBy=f;v.burnGun=id;
+    if(f===ME){S.stats.dmg+=dm;S.flHit=(S.flHit||0)+dm;if(S.t-(S.flHitT??-9)>.25){S.flHitT=S.t;hitMarker(false);dmgNumber(v,Math.round(S.flHit),false);S.flHit=0;}}}
+  flameOut(f);}
+function flameOut(f){if(f.secondary!=='flamer'||f.ammo.flamer>0)return;f.secondary=f.flamerPrev||'smg';f.flamerPrev=null;f.flameT=0;equip(f,f.slot);}
 function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='crossbow'){f.shotT=S.t;S.lastShooter=f;f.shotP=f.pos.clone();}
 
   if(g.type==='melee'){f.fireT=g.rate;f.kick=1;sfx('swing',f,{rate:id==='fists'?1.3:1});if(f===ME)S.stats.shots++;melee(f);return;}
+  if(g.type==='flame'){fireFlame(f,origin,dir);return;}
   if(g.type==='proj'){f.fireT=g.rate;f.ammo[id]--;f.kick=1;f.flashT=id==='rocket'||id==='thumper'?.08:0;let mz=f.guns[id].userData.muzzle.getWorldPosition(new V3());if(f===ME&&VM.raise>.5&&(id==='rocket'||id==='thumper'||id==='crossbow'))mz=origin.clone().addScaledVector(dir,1.05).add(new V3(0,-.05,0));
     const hb=rayBoxes(origin,dir,250),hf=rayFoes(origin,dir,f);let t=200;if(hb)t=Math.min(t,hb.t);if(hf)t=Math.min(t,hf.t);
     const aim=origin.clone().addScaledVector(dir,t);let d2=aim.sub(mz);if(d2.length()<.5)d2=dir.clone();d2.normalize();d2=spreadDir(d2,curSpread(f));if(id==='grenade'){d2.y+=.22;d2.normalize();}else if(id==='thumper'){d2.y+=.06;d2.normalize();}
@@ -6887,6 +6969,7 @@ const SHOP_ITEMS=[
   {id:'armor',name:'Armour',desc:'Blocks 50 damage',col:'#2f7fe0',ic:'A',can:f=>(f.armor||0)<100,buy:f=>{f.armor=Math.min(100,(f.armor||0)+50);}},
   {id:'nades',name:'Grenades',desc:'3 grenades · T',col:'#3f6b3a',ic:'G',guns:1,can:f=>(f.nades||0)<6,buy:f=>{f.nades=Math.min(6,(f.nades||0)+3);}},
   {id:'turret',name:'Sentry',desc:'Auto-gun · 25s · V',col:'#e8641a',ic:'⌖',guns:1,can:f=>!(f.turretKit>0),buy:f=>{f.turretKit=1;}},
+  {id:'flamer',name:'Flamethrower',desc:'4s of fire · swaps in for your 2nd gun',col:'#ff5a1a',ic:'F',guns:1,can:f=>f.secondary!=='flamer',buy:f=>{f.flamerPrev=f.secondary;f.secondary='flamer';f.ammo.flamer=GUNS.flamer.mag;equip(f,1);}},
   {id:'speed',name:'Speed',desc:'+25% for 30s',col:'#f08a24',ic:'»',rumble:1,can:f=>(f.speedT||0)<45,buy:f=>{f.speedT=(f.speedT||0)+30;}}];
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.stamBoost=false;f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.goldNade=0;f.turretKit=0;f.nadeT=0;f.speedT=0;}
@@ -6902,7 +6985,7 @@ function buyShop(i){if(NET.role==='client'&&S.shopOpen&&ME.shopCD<=0){queueAct('
   emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
 // bots shop too: what they'd want right now (index into the shop list, or -1)
 function botShopWant(f){const L=shopList();const want=id=>{const i=L.findIndex(it=>it.id===id);return i>=0&&L[i].can(f)?i:-1;};
-  let i;if(f.hp<f.hpMax*.6&&(i=want('health'))>=0)return i;if((f.armor||0)<50&&(i=want('armor'))>=0)return i;if(Math.random()<.3&&(i=want('gold'))>=0)return i;if(Math.random()<.25&&(i=want('turret'))>=0)return i;if((f.nades||0)<3&&(i=want('nades'))>=0)return i;if(!(f.speedT>0)&&(i=want('speed'))>=0)return i;if((i=want('stamina'))>=0)return i;return -1;}
+  let i;if(f.hp<f.hpMax*.6&&(i=want('health'))>=0)return i;if((f.armor||0)<50&&(i=want('armor'))>=0)return i;if(Math.random()<.3&&(i=want('gold'))>=0)return i;if(Math.random()<.25&&(i=want('turret'))>=0)return i;if(Math.random()<.2&&(i=want('flamer'))>=0)return i;if((f.nades||0)<3&&(i=want('nades'))>=0)return i;if(!(f.speedT>0)&&(i=want('speed'))>=0)return i;if((i=want('stamina'))>=0)return i;return -1;}
 function botBuy(f){const i=botShopWant(f),it=shopList()[i];if(!it||f.shopCD>0)return false;it.buy(f);shopPress(f,it);f.shopCD=SHOP_CD;sfx('cash',f);
   emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:20,speed:4,size:.2,life:.5,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});return true;}
 function throwNade(f){if(!(f.nades>0||f.goldNade>0)||f.nadeT>0||!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight')return false;
@@ -7032,8 +7115,8 @@ function tickStatus(f,dt){tickCons(f,dt);f.abilT-=dt;if(f.shieldT>0)f.shieldT-=d
   if(f.glideT>0&&!f.grounded&&Math.random()<.5)emit(f.pos.x+rnd(-.8,.8),f.pos.y+rnd(.8,2),f.pos.z+rnd(-.8,.8),{n:1,speed:.4,size:.18,life:.6,grav:.6,colors:['#ffffff','#e8ecff']});
   if(f.thornT>0){f.thornT-=dt;if(Math.random()<.3)emit(f.pos.x+rnd(-.7,.7),f.pos.y+rnd(.3,2.2),f.pos.z+rnd(-.7,.7),{n:1,speed:.5,size:.18,life:.6,grav:1,colors:['#4f9a2e','#7bd13a']});}
   setGhost(f,f.ghostT>0?(isFoe(ME,f)?.08:.35):1);if(f.ch.jet){f.jetOn=(f.jetOn||0)-dt;for(const fl of f.ch.jet.userData.flames)fl.visible=f.jetOn>0;}
-  if(f.burnT>0&&f.alive){f.burnT-=dt;f.burnTick-=dt;if(Math.random()<.6)emit(f.pos.x+rnd(-.4,.4),f.pos.y+rnd(.4,2),f.pos.z+rnd(-.4,.4),{n:1,speed:.5,up:2,size:.25,life:.4,grav:-2,colors:['#ffb347','#ff7a1f']});
-    if(f.burnTick<=0){f.burnTick=.5;damage(f,4,f.burnBy||f,false,'fireball');}}
+  if(f.burnT>0&&f.alive){f.burnT-=dt;f.burnTick-=dt;if(Math.random()<.7)FLAME.lick(f.pos.x+rnd(-.35,.35),f.pos.y+rnd(.3,1.9),f.pos.z+rnd(-.35,.35),1.2);
+    if(f.burnTick<=0){f.burnTick=.5;damage(f,4,f.burnBy||f,false,f.burnGun||'fireball');}}
   // a teammate standing over you revives you twice as fast, and you glow green while they do
   {const help=f.downed&&f.alive&&!f.finishing&&FS.some(m=>m!==f&&m.alive&&!m.downed&&!m.finishing&&!isFoe(m,f)&&Math.hypot(m.pos.x-f.pos.x,m.pos.z-f.pos.z)<1.7&&Math.abs(m.pos.y-f.pos.y)<1.5);f.helped=help;glowLook(f,help);}
   if(f.downed&&f.alive&&!f.finishing){f.bleed-=dt;{f.revive+=dt/5*(f.helped?2:1);/* back up on their own after 5 s (2.5 s with a teammate standing over them) */if(Math.random()<.4)emit(f.pos.x,f.pos.y+.6,f.pos.z,{n:1,speed:.6,up:2,size:.15,life:.5,grav:-1,colors:['#3bb54a','#b6ff3b']});}
@@ -7132,8 +7215,8 @@ function updWalls(dt){for(const w of M.walls){if(!w.alive)continue;const age=S.t
 function clearWalls(){clearTurrets();const rs=M.walls.map(w=>w.bb);for(const w of M.walls)M.group.remove(w.group);M.walls=[];gridDirty=0;gridRg=[];for(const r of rs)buildGrid(r);if(rs.length&&M.grid)gridComps(M.grid);}
 /* ================= bot AI ================= */
 function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L);return!h;}
-function prefRange(id){return {m60:18,duals:11,sniper:34,ar:20,gar:22,burst:21,hornet:13,smg:10,vector:9,p90:12,shotgun:5,autoshot:6,mg:16,rocket:16,thumper:14,crossbow:22,stars:12,sword:1.6,fists:1.4,scout:20,pistol:12,revolver:16}[id]||12;}
-const CLOSE=id=>id==='shotgun'||id==='autoshot'||id==='sword'||id==='fists';
+function prefRange(id){return {m60:18,duals:11,sniper:34,ar:20,gar:22,burst:21,hornet:13,smg:10,flamer:6,vector:9,p90:12,shotgun:5,autoshot:6,mg:16,rocket:16,thumper:14,crossbow:22,stars:12,sword:1.6,fists:1.4,scout:20,pistol:12,revolver:16}[id]||12;}
+const CLOSE=id=>id==='shotgun'||id==='autoshot'||id==='flamer'||id==='sword'||id==='fists';
 function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const px=cx+Math.cos(ang)*rr,pz=cz+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))return null;
   const g=M.grid,kk=cellK(ci,cj),h=g.h[kk*NL+Math.floor(Math.random()*g.n[kk])];return{x:px,h,z:pz,eye:new V3(px,h+2.35*SC,pz)};}
 // kinds: view (sees you, near preferred range), vantage (sees you, high and far), hide (you can't see it), ambush (hidden and close to you), flank (near cx,cz, ideally hidden)
@@ -7177,7 +7260,7 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return
   const P=a.P||STYLES.duelist,dist=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z),id=gunOf(f),pr=prefRange(id)*(CLOSE(id)?1:P.range);
   // weapon choice
   if(f.slot===0&&f.ammo[f.primary]===0&&f.reloadT>0&&see&&dist<22&&GUNS[f.primary].reload>2&&f.primary!=='rocket'&&f.secondary!=='grenade'){equip(f,1);}
-  else if(f.slot===1&&f.secondary!=='grenade'&&f.secondary!=='sword'&&f.secondary!=='shotgun'&&f.secondary!=='autoshot'&&(!see||f.ammo[f.secondary]===0)){equip(f,0);if(f.ammo[f.primary]<GUNS[f.primary].mag)startReload(f);}
+  else if(f.slot===1&&f.secondary!=='grenade'&&f.secondary!=='flamer'&&f.secondary!=='sword'&&f.secondary!=='shotgun'&&f.secondary!=='autoshot'&&(!see||f.ammo[f.secondary]===0)){equip(f,0);if(f.ammo[f.primary]<GUNS[f.primary].mag)startReload(f);}
   if(a.style==='sniper'&&f.slot===0&&see&&dist<11&&f.secondary!=='sword')equip(f,1);
   if(f.secondary==='sword'){if(f.slot===0&&see&&dist<3.2)equip(f,1);else if(f.slot===1&&(!see||dist>5))equip(f,0);}
   if(f.secondary==='shotgun'||f.secondary==='autoshot'){if(f.slot===0&&dist<(a.style==='breacher'?13:9)&&f.ammo[f.secondary]>0)equip(f,1);else if(f.slot===1&&(dist>16||f.ammo[f.secondary]===0)){equip(f,0);if(f.ammo[f.secondary]===0)startReload(f);}}
@@ -7325,7 +7408,7 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return
     let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;const mxt=dif.turn*dt;f.yaw+=clamp(dyaw,-mxt,mxt);f.pitch=damp(f.pitch,wp,dif.turn,dt);
     f.ads=!CLOSE(id)&&dist>10;
     const ready=a.seeT>dif.react*P.react*(id==='sniper'?1.5:1)+(a.hesT||0)&&(a.fireOK||S.t-f.lastHurt<.6);
-    const inRange=(id==='shotgun'||id==='autoshot')?dist<18:(id==='sword'||id==='fists')?dist<2.5&&Math.abs(T.pos.y-f.pos.y)<1.8:(id==='rocket'||id==='thumper')?dist>4.5&&dist<45:id==='stars'?dist<34:id==='crossbow'?dist<55:true;
+    const inRange=id==='flamer'?dist<12:(id==='shotgun'||id==='autoshot')?dist<18:(id==='sword'||id==='fists')?dist<2.5&&Math.abs(T.pos.y-f.pos.y)<1.8:(id==='rocket'||id==='thumper')?dist>4.5&&dist<45:id==='stars'?dist<34:id==='crossbow'?dist<55:true;
     if(ready&&Math.abs(dyaw)<dif.tol+(CLOSE(id)?.12:0)&&canFire(f)&&inRange&&(!GUNS[id].sec||Math.random()<.5)){
       if(!CLOSE(id)&&Math.random()<dif.miss){const sd=Math.random()<.5?-1:1,w=rnd(.9,1.8)*SC;aim.x+=-dz/Math.hypot(dx,dz)*sd*w;aim.z+=dx/Math.hypot(dx,dz)*sd*w;aim.y+=rnd(-.3,.9);} // a near miss
       const d=new V3(aim.x-eye.x,aim.y-eye.y,aim.z-eye.z).normalize();fire(f,eye,d);a.shots=(a.shots||0)+1;a.fired=(a.fired||0)+1;
@@ -8028,7 +8111,7 @@ function step(rdt){pfBudget=24000;
   updWalls(dt);updTurrets(dt);updProps(dt);updPlates(dt);updCelebrate(dt);updCrown(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);if(sh.tick)sh.tick(S.t);else sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){if(x.finishing&&x.finishing.fall)continue;/* a flung body may sail off the map */x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');
-  updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updScorch(dt);updParts(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
+  updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updScorch(dt);updParts(dt);updFlames(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
   updCamera(rdt);if(S.state!=='menu')updHUD(rdt);
   sky.position.copy(camera.position);const c=S.state==='menu'?M.center:ME.pos;placeSun(c);
   fillL.position.copy(camera.position);fillL.target.position.copy(c);}
@@ -8246,7 +8329,7 @@ function addOptic(g,RB,style,o,vm){if(!o)return null;style=style||o.st;
    deep-tint accent slots and ribs, a glowing accent strip, chrome small parts. Built along +z (muzzle forward), y up.
    vm=true drops anything above the sight line and adds see-through ring sights for the first-person view. */
 function heroModelV2(id,RB,vm){
-  const IDS=['sniper','scout','ar','gar','burst','crossbow','mg','m60','smg','hornet','vector','p90','duals','revolver','shotgun','autoshot','thumper','rocket'];
+  const IDS=['sniper','scout','ar','gar','burst','crossbow','mg','m60','smg','hornet','vector','p90','flamer','duals','revolver','shotgun','autoshot','thumper','rocket'];
   if(!IDS.includes(id))return null;
   const g=new THREE.Group();
   const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:0},o||{}));
@@ -8416,6 +8499,49 @@ function heroModelV2(id,RB,vm){
     sling(-.07,.03,-.3,steel);sling(-.06,.05,.66,steel);box(.124,.02,.4,0,.02,.06,lime,.006);
     if(!vm){cylX(.04,.07,0,.18,-.27,dark);for(let i=0;i<4;i++){const a=i/4*Math.PI*2;box(.074,.012,.012,0,.18+Math.sin(a)*.03,-.27+Math.cos(a)*.03,steel,.003);}box(.06,.05,.05,0,.15,-.27,dark,.006);tor(.042,.008,0,.18,.6,dark);box(.012,.05,.012,0,.17,.6,dark,.003);box(.05,.05,.04,0,.14,.6,dark,.006);}
     else vmS({y:.22,rz:-.18,rr:.052,fz:.6,fr:.04,base:.14,m:dark,dot:X.smg,muz:.9,my:.06,hands:{r:[0,-.2,-.1],l:[.06,-.12,.46]}});
+  }
+  else if(id==='flamer'){ /* Flamethrower: gunmetal receiver with heat vents and a carry handle, a red pressurised fuel tank slung underneath (hazard bands, chrome domes, pressure gauge, valve wheel),
+     a ribbed fuel hose looping round into the receiver, a long wand inside a perforated heat shield, a copper nozzle with a glowing blue pilot light, front grip */
+    const red=M('#d8311c',{roughness:.3,metalness:.25}),glw=glow('#ff8a1f',1.4),pilot=glow('#5fc8ff',3),copper=M('#c8743c',{metalness:.9,roughness:.25}),dk=M('#15161a',{roughness:.5,metalness:.35});
+    const hz=(()=>{const c=document.createElement('canvas');c.width=128;c.height=32;const x=c.getContext('2d');x.fillStyle='#ffc61a';x.fillRect(0,0,128,32);x.fillStyle='#16171c';for(let i=-32;i<160;i+=22){x.beginPath();x.moveTo(i,32);x.lineTo(i+11,32);x.lineTo(i+43,0);x.lineTo(i+32,0);x.closePath();x.fill();}
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;t.repeat.set(3,1);return M('#ffffff',{map:t,roughness:.45,metalness:.15});})();
+    /* receiver */
+    ext([[-.4,-.02],[.24,-.02],[.3,.04],[.3,.12],[.24,.16],[-.34,.16],[-.42,.1]],.13,gun,0,.006);
+    for(let i=0;i<5;i++)box(.134,.05,.022,0,.07,-.22+i*.06,dk,.004); /* heat vents */
+    stripe(-.36,.22,.0,.132,glw,.01);pins([[.04,-.3],[.04,.18]],chrome,.066);
+    for(const z of [-.24,.12])box(.03,.08,.03,0,.2,z,dk,.006);box(.04,.035,.42,0,.25,-.06,dk,.01);box(.044,.012,.3,0,.27,-.06,M('#0c0d10'),.003); /* carry handle */
+    /* fuel tank */
+    cyl(.12,.6,0,-.15,.25,red,null,32);for(const z of [.0,.5])cyl(.123,.06,0,-.15,z,hz,null,32);
+    for(const s of [-1,1]){const d=add(new THREE.SphereGeometry(.12,28,14,0,Math.PI*2,0,Math.PI/2),chrome,0,-.15,.25+s*.3);d.rotation.x=s*Math.PI/2;d.scale.y=.45;}
+    for(const z of [.05,.355])add(new THREE.TorusGeometry(.124,.009,8,32),dk,0,-.15,z); /* straps */
+    box(.05,.05,.3,0,-.02,.25,dk,.008); /* tank mount */
+    {const gx=-.11;cylX(.04,.03,gx,-.1,.415,chrome,24);add(new THREE.CircleGeometry(.032,24),M('#f4f4f0',{roughness:.6}),gx-.016,-.1,.415).rotation.y=-Math.PI/2;
+      const nd=box(.003,.004,.026,gx-.018,-.1,.421,M('#e8261a'),.001);nd.rotation.x=.7;cylX(.004,.004,gx-.018,-.1,.415,dk,8);} /* pressure gauge */
+    {add(new THREE.TorusGeometry(.04,.007,8,20),M('#e8261a',{roughness:.4}),.0,-.15,-.09);for(let i=0;i<3;i++){const sp=box(.006,.076,.006,0,-.15,-.09,M('#e8261a'),.002);sp.rotation.z=i*Math.PI/3;}cyl(.012,.04,0,-.15,-.07,chrome);} /* valve wheel */
+    {const lc=document.createElement('canvas');lc.width=256;lc.height=150;const x=lc.getContext('2d');x.fillStyle='#f3efe6';x.fillRect(0,0,256,150);x.fillStyle='#e8261a';x.fillRect(0,0,256,16);x.fillRect(0,134,256,16);
+      x.fillStyle='#ff7a1a';x.beginPath();x.moveTo(46,112);x.quadraticCurveTo(14,82,40,40);x.quadraticCurveTo(42,64,56,66);x.quadraticCurveTo(50,44,68,26);x.quadraticCurveTo(88,66,74,112);x.closePath();x.fill();
+      x.fillStyle='#16171c';x.font='bold 27px Impact, "Arial Black", sans-serif';x.fillText('FLAMMABLE',96,82);x.font='bold 15px Arial, sans-serif';x.fillText('UNDER PRESSURE',98,106);
+      const t=new THREE.CanvasTexture(lc);t.colorSpace=THREE.SRGBColorSpace;t.center.set(.5,.5);t.rotation=Math.PI/2;
+      const lb=add(new THREE.CylinderGeometry(.1215,.1215,.26,40,1,true,Math.PI*1.27,Math.PI*.46),M('#ffffff',{map:t,roughness:.5,side:THREE.DoubleSide}),0,-.15,.2);lb.rotation.x=Math.PI/2;} /* warning label */
+    for(const z of [.07,.43])cyl(.1205,.006,0,-.15,z,M('#9a2010',{roughness:.5}),null,32); /* weld seams */
+    ext([[-.3,.03],[.14,.03],[.18,.07],[.18,.12],[-.3,.12]],.136,dk,0,.004);for(const [y,z] of [[.045,-.27],[.105,-.27],[.045,.15],[.105,.15]])for(const sx of [-1,1])add(new THREE.CircleGeometry(.008,6),chrome,sx*.069,y,z).rotation.y=sx*Math.PI/2; /* side panel + bolts */
+    cylX(.03,.05,-.085,.12,.2,red,16);for(let i=0;i<8;i++){const a=i/8*Math.PI*2;box(.052,.008,.008,-.085,.12+Math.sin(a)*.03,.2+Math.cos(a)*.03,red,.002);}cylX(.012,.06,-.07,.12,.2,chrome,10); /* pressure regulator knob */
+    cyl(.012,.86,.0,.142,.74,chrome,null,10);for(const z of [.42,.66,.88])box(.03,.03,.022,0,.13,z,dk,.004); /* fuel line along the wand */
+    /* fuel hose */
+    {const cu=new THREE.CatmullRomCurve3([new THREE.Vector3(-.06,-.2,-.06),new THREE.Vector3(-.12,-.26,-.2),new THREE.Vector3(-.13,-.12,-.42),new THREE.Vector3(-.08,.02,-.4),new THREE.Vector3(-.06,.05,-.34)]);
+      add(new THREE.TubeGeometry(cu,40,.022,10,false),rubber);for(let i=1;i<10;i++){const p=cu.getPoint(i/10),tg=cu.getTangent(i/10),r=add(new THREE.TorusGeometry(.024,.004,6,12),dk,p.x,p.y,p.z);r.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tg);}
+      for(const u of [0,1]){const p=cu.getPoint(u),tg=cu.getTangent(u),f=add(new THREE.CylinderGeometry(.03,.03,.05,12),chrome,p.x,p.y,p.z);f.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),tg);}}
+    /* wand, heat shield, nozzle, pilot */
+    cyl(.034,.9,0,.07,.7,steel);cyl(.058,.56,0,.07,.62,dk,null,24);for(let r=0;r<3;r++)for(let i=0;i<8;i++){const a=r*2.1;const h=cylX(.012,.01,Math.cos(a)*.058,.07+Math.sin(a)*.058,.4+i*.065,M('#ff6a1a',{emissive:'#ff4a0a',emissiveIntensity:.6}),8);h.rotation.z=a;}
+    for(const z of [.34,.9])cyl(.064,.03,0,.07,z,steel,null,24);
+    cyl(.05,.08,0,.07,1.17,copper,.036,24);cyl(.054,.03,0,.07,1.12,dk,null,24);cyl(.026,.02,0,.07,1.215,M('#140806'),null,16); /* nozzle */
+    box(.034,.036,.12,0,.012,1.12,dk,.006);cyl(.01,.06,0,.012,1.19,chrome,null,8);add(new THREE.SphereGeometry(.014,12,8),pilot,0,.012,1.225);add(new THREE.TorusGeometry(.045,.005,8,24),pilot,0,.07,1.2);{const pf=add(new THREE.ConeGeometry(.012,.05,12),M('#7fd8ff',{emissive:'#3fb4ff',emissiveIntensity:2.5,transparent:true,opacity:.75}),0,.03,1.19);pf.rotation.x=-.9;} /* igniter + pilot flame */
+    /* grips */
+    grip(-.24,-.02,.26,.11,rubber,4,glw);guard(-.18,-.02,steel);
+    ext([[.74,.03],[.82,.03],[.81,-.22],[.73,-.22]],.07,rubber,0,.012);box(.074,.03,.09,0,-.225,.775,red,.008);box(.05,.06,.12,0,.02,.78,dk,.008); /* front grip */
+    box(.12,.18,.05,0,.06,-.44,rubber,.012);box(.124,.02,.054,0,.15,-.44,red,.004); /* rear pad */
+    sling(-.07,.0,-.32,steel);sling(-.07,.07,.95,steel);
+    if(vm){g.userData.muzZ=1.23;g.userData.muzY=.07;g.userData.hands={r:[0,-.2,-.28],l:[.03,-.02,.5]};}
   }
   else if(id==='vector'){ /* Vector: flat-top gunmetal upper with full rail and flip sights, hot-pink "Super V" lower that knifes down into the forward mag well, steep grip, stub barrel with a slotted shroud and brake, folding skeleton stock */
     const poly=M('#ff2e88',{roughness:.34,metalness:.12}),accent=ACC('#3a0520'),glw=glow('#7ff0ff',1.2),dk=M('#1a1c22',{roughness:.5,metalness:.3});

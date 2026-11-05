@@ -4447,10 +4447,41 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     const roof=deco(new THREE.CylinderGeometry(0,6.4,2.6,4),th,cx,CY+1.3,0);roof.rotation.y=Math.PI/4;deco(new THREE.CylinderGeometry(6.4,6.7,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),cx,CY+.05,0).rotation.y=Math.PI/4;
     deco(new THREE.SphereGeometry(.35,8,6),mat('#b88c46'),cx,CY+2.65,0);
     const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(cx,CY-.6,0);M.group.add(l);}
-  /* tiki torches: the far corners of each pavilion and a pair lighting the walkway */
-  const flames=[];{const pole=mat('#7a5a32'),cup=mat('#5a3a1e'),fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4});
-    for(const [x,z] of [[15.3,21.3],[-15.3,21.3],[15.3,-21.3],[-15.3,-21.3],[-L.WX-.6,-4.6],[-L.WX-.6,4.6]]){const y0=Math.abs(x)<4?WY:0;deco(gC(.06,.08,2-y0,6),pole,x,(2+y0)/2,z);deco(gC(.18,.12,.35,8),cup,x,2.15,z);const a=deco(new THREE.ConeGeometry(.17,.5,8),fo,x,2.55,z),b=deco(new THREE.ConeGeometry(.1,.32,8),fy,x,2.5,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;
-      flames.push(a,b);glowSprite(x,2.65,z,2.2,'#ff8a2a',.85);const l=new THREE.PointLight('#ff9a4a',10,12,1.6);window.GFX&&GFX.light(l);l.position.set(x,2.9,z);M.group.add(l);}}
+  /* ---------- evening lights ----------
+     tiki torches: the pair lighting the walkway stand in the water; the ones on the boards are loose props that bullets and people knock over,
+     and a torch that goes down goes out with a puff of smoke until the next round. String lights swag between bamboo posts along every
+     outer rail and across the walkway, paper lanterns hang under the canopy and the bar roofs, and candle lanterns sit on the bar tops */
+  const flames=[],torches=[];
+  {const pole=mat('#7a5a32'),cupM=mat('#5a3a1e'),fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4}),cg=new THREE.ConeGeometry(.17,.5,8),cg2=new THREE.ConeGeometry(.1,.32,8);
+    const light=(x,y,z,c,i,d)=>{const l=new THREE.PointLight(c,i,d,1.6);window.GFX&&GFX.light(l);l.position.set(x,y,z);return l;};
+    for(const [x,z] of [[-L.WX-.6,-4.6],[-L.WX-.6,4.6]]){deco(gC(.06,.08,2-WY,6),pole,x,(2+WY)/2,z);deco(gC(.18,.12,.35,8),cupM,x,2.15,z);const a=deco(cg,fo,x,2.55,z),b=deco(cg2,fy,x,2.5,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;
+      flames.push(a,b);glowSprite(x,2.65,z,2.2,'#ff8a2a',.85);M.group.add(light(x,2.9,z,'#ff9a4a',10,12));}
+    // loose torches on the boards: six per pavilion, the four nearest the corners with a real light, the rest flame and glow only
+    for(const s of [1,-1])for(const [x,z,lit] of [[15.2,21.2,1],[-15.2,21.2,1],[15.2,7.2,1],[-15.2,7.2,1],[7.5,21.2,0],[-7.5,21.2,0]]){const H=2.1,K=knock(s*x,0,s*z,.16,H,.16,'#7a5a32',{cyl:1,top:.75,mat:pole,snd:'wood',heavy:1.1,
+        parts:[[gC(.18,.12,.35,8),cupM,0,H/2-.12,0],[new THREE.CylinderGeometry(.11,.11,.08,8),mat('#3a2614'),0,H/2-.3,0]]});
+      const a=new THREE.Mesh(cg,fo),b=new THREE.Mesh(cg2,fy);a.position.y=H/2+.28;b.position.y=H/2+.23;K.m.add(a,b);flames.push(a,b);
+      const sp=glowSprite(0,H/2+.4,0,2.2,'#ff8a2a',.85);K.m.add(sp);let l=null;if(lit){l=light(0,H/2+.6,0,'#ff9a4a',10,11);K.m.add(l);}
+      torches.push({K,a,b,sp,l,lit:true});}}
+  // string lights: warm bulbs on a sagging wire between bamboo posts
+  {const post=mat('#c8a060',null,{flatShading:true}),wire=new THREE.LineBasicMaterial({color:'#2a2218'}),bulbG=new THREE.SphereGeometry(.075,8,6),bulbM=new THREE.MeshStandardMaterial({color:'#fff2c0',emissive:'#ffd27a',emissiveIntensity:2.2,roughness:.3});
+    const PH=3.3,bulbs=[],pts=[];const P=(x,z)=>{deco(gC(.06,.07,PH,6),post,x,PH/2,z);deco(new THREE.SphereGeometry(.09,6,5),mat('#3a2614'),x,PH,z).castShadow=false;};
+    const run=(x0,z0,x1,z1,sag=.55)=>{const n=Math.max(2,Math.round(Math.hypot(x1-x0,z1-z0)/.8));for(let i=0;i<=n;i++){const t=i/n,x=x0+(x1-x0)*t,z=z0+(z1-z0)*t,y=PH-.08-sag*4*t*(1-t);pts.push(new THREE.Vector3(x,y,z));if(i>0&&i<n)bulbs.push([x,y-.08,z]);}pts.push(null);};
+    for(const s of [1,-1]){const c=[[-15.6,21.6],[-5.2,21.6],[5.2,21.6],[15.6,21.6],[15.6,14],[15.6,6.4],[-15.6,6.4],[-15.6,14]].map(([x,z])=>[s*x,s*z]);for(const [x,z] of c)P(x,z);
+      const seq=[0,1,2,3,4,5];for(let i=0;i<seq.length-1;i++)run(c[seq[i]][0],c[seq[i]][1],c[seq[i+1]][0],c[seq[i+1]][1]);run(c[6][0],c[6][1],c[7][0],c[7][1]);run(c[7][0],c[7][1],c[0][0],c[0][1]);}
+    // across the walkway, from the canopy posts to the pavilion corners
+    for(const s of [1,-1]){P(-L.WX-.6,s*6.6);P(L.WX+.6,s*6.6);run(-L.WX-.55,s*2.7,-L.WX-.6,s*6.6,.3);run(L.NX1+.55,s*2.7,L.WX+.6,s*6.6,.35);}
+    // one line per run, one instanced mesh for all the bulbs
+    let seg=[];const flush=()=>{if(seg.length>1){const g=new THREE.BufferGeometry().setFromPoints(seg);const ln=new THREE.Line(g,wire);ln.userData.dyn=1;M.group.add(ln);}seg=[];};for(const p of pts){if(p)seg.push(p);else flush();}flush();
+    const im=new THREE.InstancedMesh(bulbG,bulbM,bulbs.length),mx=new THREE.Matrix4();bulbs.forEach(([x,y,z],i)=>{mx.makeTranslation(x,y,z);im.setMatrixAt(i,mx);});im.castShadow=false;im.userData.dyn=1;M.group.add(im);
+    M.life.push(t=>{bulbM.emissiveIntensity=2.1+.25*Math.sin(t*2.1)+.1*Math.sin(t*7.3);});}
+  // paper lanterns under the tiki canopy and the bar roofs, and candle lanterns on the bar tops (knock-overs)
+  {const cols=['#ff7a3a','#ff4f8a','#ffd25a','#3fd6c8'],lanG=new THREE.SphereGeometry(.26,10,8);lanG.scale(1,.8,1);
+    const lantern=(x,y,z,c)=>{const m=new THREE.Mesh(lanG,mat(c,null,{emissive:c,emissiveIntensity:1.4,roughness:.9}));m.position.set(x,y,z);m.castShadow=false;m.userData.dyn=1;M.group.add(m);deco(gC(.01,.01,.5,3),mat('#2a2218'),x,y+.45,z).castShadow=false;glowSprite(x,y,z,1.6,c,.5);};
+    const cx=(L.NX1-L.WX)/2,CY=4.3;[[-2.4,-2.2],[2.4,-2.2],[-2.4,2.2],[2.4,2.2],[0,0]].forEach(([dx,dz],i)=>lantern(cx+dx*1.3,CY-.75,dz*1.3,cols[i%4]));
+    for(const s of [1,-1]){const bx=s*-9,bz=s*9.6;for(let i=0;i<4;i++)lantern(bx-2.7+i*1.8,2.85,bz+s*(-.7),cols[(i+s+5)%4]);
+      // candle lanterns: little black cages with a candle inside, loose on the bar top
+      for(const dx of [-2.3,2.1]){const H=.38,K=knock(bx+dx,1.27,bz,.22,H,.22,'#1e1f22',{snd:'wood',heavy:.5,parts:[[new THREE.BoxGeometry(.2,.3,.2),mat('#ffe9b0',null,{emissive:'#ffb050',emissiveIntensity:1.6,transparent:true,opacity:.55}),0,0,0],[new THREE.TorusGeometry(.05,.012,5,10),mat('#1e1f22'),0,H/2+.03,0]]});
+        const sp=glowSprite(0,0,0,.9,'#ffb050',.55);K.m.add(sp);}}}
   /* ---------- cover (the same on both pavilions, turned through 180 degrees) ----------
      solid pieces stop bullets: a stone-topped tiki bar, a lava-rock wall between two stone tiki statues, steel cargo boxes, metal barrels and stone planters;
      only the small wooden crates let shots through */
@@ -4472,7 +4503,7 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
   const rockWall=(x,z,w,d)=>{box(x,0,z,w,1.05,d,'#4a4542',{extra:{flatShading:true,roughness:1},wood:false,edges:false});for(let i=0;i<Math.round(w*1.6);i++){const o=deco(new THREE.DodecahedronGeometry(.22+pr()*.14,0),mat('#6a645c',null,{flatShading:true}),x+(pr()-.5)*(w-.5),.25+pr()*.6,z+(pr()<.5?-1:1)*d/2);o.castShadow=false;}};
   // tiki bar: a stone-topped counter clad in bamboo, with a shelf of bottles behind and a little thatched roof over it
   const tikiBar=(s)=>{const sg=v=>s*v;const bx=sg(-9),bz=sg(9.6);
-    box(bx,0,bz,6,1.15,1.1,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(6.3,.12,1.4),mat('#9a948a',null,{roughness:.6}),bx,1.21,bz);
+    box(bx,0,bz,6,1.27,1.1,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(6.3,.12,1.4),mat('#9a948a',null,{roughness:.6}),bx,1.21,bz);
     {const bam=mat('#c8a060',null,{flatShading:true});for(let i=0;i<14;i++)deco(gC(.1,.1,1.1,6),bam,bx-2.85+i*.44,.55,bz+sg(-.6)).castShadow=false;}
     const sh=box(bx,0,bz+sg(2.1),5.2,1.9,.5,'#6e5a46',{wood:false,extra:{roughness:.85}});deco(new THREE.BoxGeometry(5.3,.08,.6),mat('#9a948a'),bx,1.95,bz+sg(2.1)).castShadow=false;
     for(let i=0;i<8;i++){const c=['#2fb0cc','#e8a030','#d7263d','#7ad040','#f7e7c0'][i%5];deco(gC(.09,.1,.42,8),mat(c,null,{roughness:.2,metalness:.1}),bx-2.1+i*.6,1.9+.21,bz+sg(2.1)).castShadow=false;deco(gC(.035,.035,.14,6),mat('#2a2a2a'),bx-2.1+i*.6,2.4,bz+sg(2.1)).castShadow=false;}
@@ -4508,7 +4539,10 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     const wf=new THREE.Mesh(new THREE.PlaneGeometry(7,34),new THREE.MeshBasicMaterial({map:wt,transparent:true,opacity:.92,side:2}));wf.position.set(0,17,10.6);wf.userData.keep=1;g.add(wf);
     flatGroup(g);M.life.push(t=>{wt.offset.y=t*.9;});glowSprite(-35+Math.sin(.25)*12,WY+3,-175+Math.cos(.25)*12,24,'#ffffff',.45);}
   const sp=[[-6,20],[6,20],[-12,17.5],[12,17.5],[0,20.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
-  M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}});}
+  M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}
+    /* a torch that has been knocked over goes out (one puff of smoke) and relights when it is stood back up for the next round */
+    for(const T of torches){const lit=T.K.st===0;if(lit===T.lit)continue;T.lit=lit;T.a.visible=T.b.visible=T.sp.visible=lit;if(T.l)T.l.intensity=lit?10:0;
+      if(!lit){const w=new THREE.Vector3();T.a.getWorldPosition(w);emit(w.x,w.y,w.z,{n:10,speed:.6,up:1.4,size:.22,life:1.1,grav:-.5,colors:['#8a8a8a','#b0b0b0','#5a5a5a']});}}});}
 const MAPS={
  arena:{modes:['duel'],name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap();}},
  arenasm:{modes:['duel'],one:true,normal:false,name:'Small Arena',desc:'Arena cut down to 1v1 size: the cross ramp, six pillars and less running',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap(true);}},

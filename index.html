@@ -5087,9 +5087,24 @@ function loadTree(id){if(TREE_P[id])return TREE_P[id];return TREE_P[id]=fetch('m
   if(!pb.baseColorTexture)return done(null);const im=J.images[J.textures[pb.baseColorTexture.index].source],v=J.bufferViews[im.bufferView],u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
   return new Promise(ok=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;done(t);ok();},undefined,()=>{done(null);ok();});});});}
 setTimeout(()=>{for(const id of TREE_IDS)loadTree(id).catch(e=>console.warn(e));},900);
-/* a tree h metres tall, turned ry, with a trunk collider tw metres wide */
-function glbTree(id,x,z,h,ry=0,tw=.7){collider(x-tw/2,x+tw/2,0,Math.min(3,h*.35),z-tw/2,z+tw/2);const grp=M.group;
-  const put=()=>{const t=TREEM[id];if(M.group!==grp)return;if(!t){TREE_WAIT.push(put);return;}const m=new THREE.Mesh(t.geo,t.mat);m.position.set(x,0,z);m.rotation.y=ry;m.scale.setScalar(h);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;grp.add(m);};
+/* a tree h metres tall, turned ry, with a trunk tw metres wide. The trunk is a destructible prop: gunfire chips it (wood chips fly) and once it has
+   taken enough (or a rocket, grenade or fireball goes off close by) the tree creaks, topples away from the shot, crashes down in a burst of leaves,
+   lies there a few seconds and sinks away, leaving a stump. It stands again at the start of the next round. */
+const TREE_HP=320;
+function glbTree(id,x,z,h,ry=0,tw=.7){const th=Math.min(3,h*.35),b=box(x,0,z,tw,th,tw,'#7a4c2a',{mat:INVIS,edges:false,shadow:false,prop:'tree',hp:TREE_HP,wood:false});const grp=M.group;
+  const piv=new THREE.Group();piv.position.set(x,0,z);piv.userData.dyn=1;grp.add(piv);
+  const stump=new THREE.Mesh(gC(tw*.42,tw*.5,.45,10),mat('#6b4426'));stump.position.set(x,.225,z);stump.castShadow=true;stump.visible=false;stump.userData.dyn=1;grp.add(stump);
+  const top=new THREE.Mesh(new THREE.CircleGeometry(tw*.42,10),mat('#d9b48a'));top.rotation.x=-Math.PI/2;top.position.y=.226;stump.add(top);
+  const T={st:0,t:0,ax:new V3(1,0,0),q:new THREE.Quaternion()};b.color='#7a4c2a';
+  b.fell=at=>{const d=new V3(x-at.x,0,z-at.z);if(d.lengthSq()<1e-4)d.set(Math.random()-.5,0,Math.random()-.5);d.normalize();T.ax.set(d.z,0,-d.x);T.st=1;T.t=0;stump.visible=true;
+    sfx('wood',{x,y:1,z},{range:24});emit(x,th*.7,z,{n:24,speed:5,up:3,size:.16,life:.7,grav:10,colors:['#7a4c2a','#c99a5b','#e9d3a8']});};
+  b.onRestore=()=>{T.st=0;piv.quaternion.identity();piv.position.y=0;piv.visible=true;stump.visible=false;};
+  M.life.push((t,dt)=>{if(!T.st)return;T.t+=dt;
+    if(T.st===1){const a=Math.min(Math.PI/2*.97,1.25*T.t*T.t*1.6);piv.quaternion.setFromAxisAngle(T.ax,a);if(a>=Math.PI/2*.97){T.st=2;T.t=0;const c=new V3(0,h*.55,0).applyQuaternion(piv.quaternion).add(piv.position);
+        sfx('brick',{x:c.x,y:.5,z:c.z},{range:26});emit(c.x,.6,c.z,{n:46,speed:6,up:4,size:.24,life:1.1,grav:9,colors:['#3f8f3a','#4fae45','#7fd36a','#2f6a1e','#c9e9a6']});emit(c.x,.3,c.z,{n:16,speed:2,up:1.2,size:.6,life:1.2,grav:-1,colors:['#c8b8a0','#a8987e']});}}
+    else if(T.st===2){const k=Math.max(0,1-T.t*3);piv.quaternion.setFromAxisAngle(T.ax,Math.PI/2*.97+Math.sin(T.t*14)*.04*k);if(T.t>4.5){T.st=3;T.t=0;}}
+    else if(T.st===3){piv.position.y=-T.t*1.4;if(T.t>1.4){piv.visible=false;T.st=0;}}});
+  const put=()=>{const t=TREEM[id];if(M.group!==grp)return;if(!t){TREE_WAIT.push(put);return;}const m=new THREE.Mesh(t.geo,t.mat);m.rotation.y=ry;m.scale.setScalar(h);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;piv.add(m);};
   if(TREEM[id])put();else{TREE_WAIT.push(put);loadTree(id).catch(()=>{});}}
 /* Sculpted character models (made in Tripo, split into the six moving parts offline, each carrying its own shoulder and hip pivots).
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
@@ -5986,6 +6001,7 @@ function propPatch(b,add){const g=M.grid;if(!g||!g.sb)return;const i0=Math.max(0
   for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=i+j*g.nx;const L=g.sb[k]||(g.sb[k]=[]);const ix=L.indexOf(b);if(add&&ix<0)L.push(b);else if(!add&&ix>=0)L.splice(ix,1);}
   dirtyGrid(b,.05);MM.layer=null;}
 function breakProp(b,at){if(!b.alive)return;knockOn(b,b.y1);sfx(b.snd||(b.prop==='bush'?'bush':b.prop==='bin'?'bin':'crate'),{x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,z:(b.z0+b.z1)/2},{range:18});b.alive=false;b.backT=PROP_BACK;const ix=M.boxes.indexOf(b);if(ix>=0)M.boxes.splice(ix,1);if(b.mesh)b.mesh.visible=false;propPatch(b,false);
+  if(b.fell){b.fell(at);return;}
   const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,cz=(b.z0+b.z1)/2,w=b.x1-b.x0,h=b.y1-b.y0,d=b.z1-b.z0,bush=b.prop==='bush';
   const away=new V3(cx-at.x,0,cz-at.z);if(away.lengthSq()<1e-4)away.set(Math.random()-.5,0,Math.random()-.5);away.normalize();
   const cols=bush?['#3f8f3a','#4fae45','#2f6a1e','#7a4c2a']:b.prop==='glass'?['#bfe6ff','#e8f6ff','#9fd3f0']:b.prop==='bin'||!b.wood?[b.color,'#55585f','#16171c']:[b.color,'#b9895a','#8a5a34'];
@@ -6036,11 +6052,11 @@ function blastProps(at,Rr,src){knockBlast(at,Rr,src);ruinBlast(at,Rr,src);for(co
   for(const b of M.chips||[]){if(b.broken)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(b.wood&&dd<Rr*.75)breakChip(b,at);else if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
   for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
   if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
-function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}propPatch(b,true);}
+function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}if(b.onRestore)b.onRestore();propPatch(b,true);}
 function updProps(dt){updKnocks(dt);updRuins(dt);updFires(dt);for(const b of M.props||[]){if(b.alive&&b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}}}
 // bullets and blasts through wood: crates and fences break apart; short furniture loses chunks (down to 60% of its height) but stays as cover
 function woodChips(at,col,n){emit(at.x,at.y,at.z,{n:n||4,speed:3,up:1.5,size:.1,life:.45,colors:[col||'#c99a5b','#e9d3a8','#8a5a34']});}
-function itemChips(b,at){if(b.wood)woodChips(at,b.color,3);else emit(at.x,at.y,at.z,{n:3,speed:3,up:1.5,size:.08,life:.4,colors:[b.color||'#9aa0a8','#d8dbe2','#55585f']});}
+function itemChips(b,at){if(b.wood||b.prop==='tree')woodChips(at,b.color,3);else emit(at.x,at.y,at.z,{n:3,speed:3,up:1.5,size:.08,life:.4,colors:[b.color||'#9aa0a8','#d8dbe2','#55585f']});}
 function damageWood(b,dmg,at){if(!b||!(b.prop||b.chip))return;
   if(b.prop){if(!b.alive||b.hp==null)return;b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else itemChips(b,at);return;}
   b.chipHP=Math.max(0,b.chipHP-dmg);const step=Math.ceil((1-b.chipHP/b.hp0)*4)/4,nh=b.h0*(1-.4*step);

@@ -5750,6 +5750,8 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladD
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
   if(f.grounded)f.airJ=1;
+  /* jumping stands you up out of a crouch (and you jump as normal) */
+  if((jumpPress||jump)&&f.crouchOn&&!f.downed)f.crouchOn=false;
   // Jet: jump fires the rocket boost whenever it's ready (from the ground or mid-air), otherwise it's a normal jump
   if(f.char==='jet'&&f.abilT<=0&&(jumpPress||(jump&&f.grounded&&!f.jumpLock))&&useAbility(f)){f.jumpLock=true;}
   else if(jump&&f.grounded&&!f.jumpLock){f.vel.y=jv;f.grounded=false;f.airJ=1;f.jumpLock=true;f._jt=S.t;}

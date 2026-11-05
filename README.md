@@ -87,7 +87,11 @@ Controls: WASD move · Space jump (press again in mid-air to double jump; it cos
 
 **Play a friend (online)** – on the front menu, open the **Play a friend** icon (top right); **Host game** gives you a 4-letter room code; your friend opens the game, types the code and presses **Join**. The friend's character and guns are whatever they pick on their menu; the host chooses the mode and map and presses Start, and the friend takes the place of the first enemy bot (in 1v1 you fight each other; in 2v2 and Free for all the other slots stay bots). The host's game runs the match; the friend's movement and shots show instantly on their screen and the host decides the hits. If the friend leaves or drops out, a bot takes over their fighter and they can rejoin with the same code. Connections go device to device (WebRTC via the free PeerJS matchmaking server); a few strict mobile or work networks may block the direct link.
 
-**Secondaries** are the MP5, Uzi, Dual Pistols, Rocket Launcher and Sword (the Thumper and Ninja Stars are out of the loadout and the bots' kits).
+**Secondaries** are the MP5, Uzi, Vector, P90, Dual Pistols, Rocket Launcher and Sword (the Thumper and Ninja Stars are out of the loadout and the bots' kits).
+
+**Vector** – the fastest-firing gun in the game (about 25 rounds a second, 14 damage a bullet, 25-round mag, so it empties in about a second); almost no kick but the spread opens up fast if you hold the trigger. Hot-pink "Super V" lower under a flat-top gunmetal upper with a full rail, flip sights, weapon light, slotted shroud and brake, and a folding skeleton stock.
+
+**P90** – 50-round bullpup (15 damage a bullet) with hip-fire almost as tight as aiming; slower to aim and a 1.3 s reload. Sculpted charcoal body with neon green trim, trigger and thumbhole cut-outs, a smoked see-through top mag showing the rounds lying crossways and an orange follower, a rounded ring sight and a flash hider.
 
 **Shotty Horror** (replaces the AA-12) – a side-by-side double-barrelled shotgun (break action, top lever, twin gold triggers, cyan stock with a pink glow strip, gold bead sight): two shells, fired one after the other as fast as you can pull the trigger (0.26 s apart), then a 1.2 s reload. Each shell is 10 pellets of 13 damage (130 if they all land within 7 m; damage drops off to 45% by 20 m). One shell downs anyone from up to 5 m if at least half the pellets hit; further out a single shell tops out at 75% of their health, so both barrels up close will finish them.
 

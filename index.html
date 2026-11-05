@@ -2744,8 +2744,12 @@ function vehAttach(C,kind){const go=()=>{const V=VEHM[kind];if(!V||C.model||M.gr
 const FURN_CFG={greysofa:{h:1.34,tint:'#9aa0a8'},pinksofa:{h:1.6},whitesofa:{h:1.68},greychair:{h:1.52},officechair:{h:1.68,tint:'#e9eaee'},plasticchair:{h:1.36},
   plant:{h:2.08},greyplant:{h:1.76,tint:'#d9dde3'},redplant:{h:1.44},wfhman:{h:1.81,r0:Math.PI/2},
   doctor:{h:2.27},nurse:{h:2.12},bed1:{h:2.27,r0:Math.PI/2},bed2:{h:1.68,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:1.52,r0:Math.PI/2},alien:{h:1.88},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8},
-  bed_wood:{h:1.54},bed_cream:{h:1.36},bed_bunny:{h:1.45},bed_bunk:{h:2.25},bed_grey:{h:1.26,tint:'#9aa0a8'}},FURNM={},FURN_P={},FURN_WAIT=[];
-function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/home/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
+  bed_wood:{h:1.54},bed_cream:{h:1.36},bed_bunny:{h:1.45},bed_bunk:{h:2.25},bed_grey:{h:1.26,tint:'#9aa0a8'},
+  /* Toy Town's toys (models/toys, Tripo gallery models baked to ~8k tris / 512 px): fetched only when Toy Town is built */
+  teddy:{h:3.2,dir:'toys'},block:{h:1,dir:'toys'},crayon:{h:1.8,dir:'toys'},pencil:{h:2.4,dir:'toys'},crayonbox:{h:4.2,dir:'toys'},beachball:{h:2.3,dir:'toys'},
+  car:{h:2.38,dir:'toys'},mini:{h:2.21,dir:'toys'},digger:{h:3.4,dir:'toys'},heli:{h:2.6,dir:'toys'},horse:{h:3.2,dir:'toys'},duck:{h:3.45,dir:'toys'},
+  rocket:{h:6,dir:'toys'},xylo:{h:2.2,dir:'toys'},lion:{h:3.6,dir:'toys'},fox:{h:3.12,dir:'toys'},pig:{h:2.86,dir:'toys'}},FURNM={},FURN_P={},FURN_WAIT=[];
+function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/'+(FURN_CFG[id].dir||'home')+'/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
   const acc=i=>{const a=J.accessors[i],v=J.bufferViews[a.bufferView],C=T[a.componentType],n=NC[a.type],es=n*C.BYTES_PER_ELEMENT,st=v.byteStride||es,o=bo+(v.byteOffset||0)+(a.byteOffset||0);
@@ -2761,10 +2765,10 @@ function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('m
     const im=J.images[J.textures[pb.baseColorTexture.index].source],v=J.bufferViews[im.bufferView],u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
     return new Promise(ok=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;ok({geo:g,mat:new THREE.MeshStandardMaterial({map:t,roughness:.7})});},undefined,()=>ok({geo:g,mat:new THREE.MeshStandardMaterial({color:'#cccccc'})}));});}))
   .then(parts=>{FURNM[id]={parts,w:(x1-x0)*sc,d:(z1-z0)*sc};for(const f of FURN_WAIT.splice(0))try{f();}catch(e){}});});}
-setTimeout(()=>{for(const k of Object.keys(FURN_CFG))loadFurn(k).catch(e=>console.warn(e));},1100);
+setTimeout(()=>{for(const k of Object.keys(FURN_CFG))if(!FURN_CFG[k].dir)loadFurn(k).catch(e=>console.warn(e));},1100);
 /* put a furniture model into an object (a prop box or a knock item) at world (x,y,z) turned ry; it shows up as soon as its model has loaded */
-function furnInto(id,host,x,y,z,ry){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp||!host)return;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
-    host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;host.add(g);};
+function furnInto(id,host,x,y,z,ry,sc){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp||!host)return;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
+    host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;if(sc)g.scale.setScalar(sc);host.add(g);};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
 /* Tripo clouds (a single puff and a bank of puffs): every cloud, the far ones round the sky and the ones drifting over the maps, swaps its blocks for one of
    the two models (same width, a random turn) as soon as they've loaded; until then it shows its blocks */
@@ -4027,7 +4031,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   // the shop sits on the loading dock, halfway along the line
   M.shopAt=[{x:-4.6,z:0,y:1.25,k:.7}];
   M.spawns=[[-20,-17],[20,17],[-6.5,-27],[6.5,27],[-23.2,-27],[23.2,27],[14,-15],[-14,15.5],[-10,20],[10,-20]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
-// ---------- Toy Town: fight at toy size across a kid's bedroom floor. A book tower, a toy chest, blocks, dominoes, a die and a checkers board ----------
+// ---------- Toy Town: fight at toy size across a kid's bedroom floor. A book tower, a toy chest, blocks, dominoes and a die on a plain blue rug ----------
 // point-symmetric: everything in tyHalf() is built once as-is and once turned round the middle (flip -1), so both ends play the same.
 // every raised surface ends on .25/.75 so bots can drop off any edge (see navgrid canDrop)
 const TY={};
@@ -4059,7 +4063,7 @@ function tyLetterMat(ch,bg){const fg=bg==='#f4c22b'?'#2f63c8':'#ffffff';return t
   g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=6;g.strokeRect(30,30,w-60,h-60);g.fillStyle=fg;g.font='bold 170px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(ch,w/2,h/2+10);});}
 let tyBlkN=0;
 function tyBlock(S,u0,v0,s,y0=0){const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ123',k=tyBlkN++,mats=[];for(let f=0;f<6;f++)mats.push(tyLetterMat(L[(k*5+f*3)%L.length],TY_BLK[(k+f)%6]));
-  return tyFaced(S,u0,u0+s,v0,v0+s,y0,y0+s,mats);}
+  const m=tyFaced(S,u0,u0+s,v0,v0+s,y0,y0+s,mats);m.visible=false;furnInto('block',M.group,m.position.x,y0,m.position.z,(k%4)*Math.PI/2,s);return m;}
 // dominoes: black tiles with white pips, standing on end
 function tyPipFace(a,b,bg,fg,key){return tyM(key,128,256,(g,w,h)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle=fg;g.fillRect(14,h/2-3,w-28,6);
   const P={0:[],1:[[.5,.5]],2:[[.25,.25],[.75,.75]],3:[[.25,.25],[.5,.5],[.75,.75]],4:[[.25,.25],[.75,.25],[.25,.75],[.75,.75]],5:[[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]],6:[[.25,.2],[.75,.2],[.25,.5],[.75,.5],[.25,.8],[.75,.8]]};
@@ -4074,20 +4078,15 @@ function tyDieMat(n){return tyM('die'+n,128,128,(g,w,h)=>{g.fillStyle='#f7f7f2';
   for(const [px,py] of P[n]){g.beginPath();g.arc(px*w,py*h,n===1?16:11,0,TAU);g.fill();}g.strokeStyle='rgba(0,0,0,.12)';g.lineWidth=6;g.strokeRect(3,3,w-6,h-6);},{roughness:.3});}
 function tyDie(S,u0,v0,s=2){tyFaced(S,u0,u0+s,v0,v0+s,0,s,[1,6,2,5,3,4].map(tyDieMat));}
 // crayon lying on its side along v: six-sided body, paper label, cone tip
-function tyCrayon(S,u,v0,v1,col){const r=.68,[x0,x1,z0,z1]=tyW(S,u-.75,u+.75,v0,v1),cx=(x0+x1)/2,L=z1-z0,tipAtZ1=S.Z(v1)>S.Z(v0);
-  collider(x0,x1,0,1.18,z0+(tipAtZ1?0:1.5),z1-(tipAtZ1?1.5:0));const body=L-1.6,bz=tipAtZ1?z0+body/2:z1-body/2;
-  const cyl=(rr,len,m,z)=>{const g=new THREE.CylinderGeometry(rr,rr,len,6);g.rotateX(Math.PI/2);g.rotateZ(Math.PI/6);return deco(g,m,cx,r*.87,z);};
-  cyl(r,body,mat(col,null,{roughness:.55}),bz);cyl(r*1.035,body*.7,mat(col,null,{roughness:.9}),bz);
-  for(const s of [-1,1])cyl(r*1.05,.18,mat('#1d1e23'),bz+s*body*.3);
-  const tg=new THREE.ConeGeometry(r,1.6,6);tg.rotateX(tipAtZ1?Math.PI/2:-Math.PI/2);tg.rotateZ(Math.PI/6);deco(tg,mat(col,null,{roughness:.55}),cx,r*.87,tipAtZ1?z1-.8:z0+.8);}
-// checkers piece (a king is two stacked)
-function tyChecker(S,u,v,col,n=1,y0=.3){const h=.45,[x0,x1,z0,z1]=tyW(S,u-.75,u+.75,v-.75,v+.75);collider(x0,x1,y0,y0+h*n,z0,z1);const m=mat(col,null,{roughness:.4}),rim=mat(col,null,{roughness:.8});
-  for(let i=0;i<n;i++){const y=y0+h*i;deco(gC(.95,.95,h-.04,28),m,S.X(u),y+h/2,S.Z(v));deco(gC(.7,.7,.04,28),rim,S.X(u),y+h-.01,S.Z(v));}}
+function tyCrayon(S,u,v0,v1){const v=(v0+v1)/2,L=3.335*FURN_CFG.crayon.h,d=FURN_CFG.crayon.h;tyCol(S,u-d*.42,u+d*.42,v-L*.46,v+L*.46,0,d*.9);
+  furnInto('crayon',M.group,S.X(u),0,S.Z(v),Math.PI/2+(S.X(1)>S.X(0)?0:Math.PI));}
 // big bouncy ball: push it, kick it, shoot it about
-function tyBall(x,z,c1,c2,r=1.15){knock(x,0,z,r*2,r*2,r*2,'#ffffff',{ball:1,heavy:1,pop:150,snd:'bounce1',shadow:1,geo:new THREE.SphereGeometry(r,20,14),
-  parts:[[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,Math.PI*.38,Math.PI*.24),c1,0,0,0],[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,0,Math.PI*.16),c2,0,0,0],[new THREE.SphereGeometry(r*1.005,20,14,0,TAU,Math.PI*.84,Math.PI*.16),c2,0,0,0]]});}
-// one half of Toy Town (60 x 70 m): a toy chest and a book tower at the back, a block fort, two dominoes, a die, a crayon and a ball in the middle lanes
-function tyHalf(flip){const S=St(0,0,flip),north=flip>0,CH=north?'#c8322b':'#2f63c8',TR=north?'#f4c22b':'#ffffff',CK=north?'#d33a2c':'#26272c';
+function tyBall(x,z,r=1.15){const K=knock(x,0,z,r*2,r*2,r*2,'#ffffff',{ball:1,heavy:1,pop:150,snd:'bounce1',mat:INVIS,geo:new THREE.SphereGeometry(r,20,14)});furnInto('beachball',K.m,x,0,z,0);}
+// a Tripo toy standing on the rug (or a ledge): a box collider a little inside its footprint (w along u, d along v), the model on top.
+// ry is for the north half; the south half is turned round with everything else
+function tyToy(S,id,u,v,y,w,d,ry,o={}){const k=o.k??.85,h=FURN_CFG[id].h;tyCol(S,u-w*k/2,u+w*k/2,v-d*k/2,v+d*k/2,y,y+h*(o.hk??.95));furnInto(id,M.group,S.X(u),y,S.Z(v),ry+(S.X(1)>S.X(0)?0:Math.PI));}
+// one half of Toy Town (60 x 70 m): a toy chest and a book tower at the back, a block fort, two dominoes, a die, a crayon, a beach ball and Tripo toys for cover
+function tyHalf(flip){const S=St(0,0,flip),north=flip>0,CH=north?'#c8322b':'#2f63c8',TR=north?'#f4c22b':'#ffffff';
   // ---- book tower in the corner: four hardbacks, each set back 2 m, so the edges are steps ----
   tyBook(S,-28.25,-12.25,19.75,33.75,0,1.1,north?'#2f63c8':'#3bb54a','u1',north?'WORLD ATLAS':'BUGS');
   tyBook(S,-28.25,-14.25,21.75,33.75,1.1,1.1,north?'#e8463a':'#a05ad6','v0',north?'DINOSAURS':'OCEANS');
@@ -4109,40 +4108,31 @@ function tyHalf(flip){const S=St(0,0,flip),north=flip>0,CH=north?'#c8322b':'#2f6
       const m=new THREE.Mesh(new THREE.ShapeGeometry(st),new THREE.MeshBasicMaterial({color:TR}));m.position.set(S.X(uu),yy,S.Z(v0-.03));m.rotation.y=north?Math.PI:0;M.group.add(m);}
     // building-brick steps up to the gap in the front rim
     const n=6,rise=F/n,run=.75;for(let k=0;k<n;k++)S.box(18.75,21.25,18.25+run*k,v0,rise*k,rise*(k+1),TY_BLK[(k+(north?0:3))%6],{tx:'stud'});
-    // a teddy bear sitting in the back corner
-    {const bu=15.5,bv=29.6,bx=S.X(bu),bz=S.Z(bv),fm=mat('#a8743f',null,{roughness:.95}),lm=mat('#e8c49a',null,{roughness:.95}),dk=mat('#2a1d14');tyCol(S,14.25,16.75,28.25,30.75,F,F+3.2);
-      deco(new THREE.SphereGeometry(1.15,18,14),fm,bx,F+1.15,bz);deco(new THREE.SphereGeometry(.85,18,14),fm,bx,F+2.55,bz);
-      const fw=north?-1:1;deco(new THREE.SphereGeometry(.38,12,10),lm,bx,F+2.42,bz+fw*.72);deco(new THREE.SphereGeometry(.1,8,6),dk,bx,F+2.52,bz+fw*1.08);
-      for(const s of [-1,1]){deco(new THREE.SphereGeometry(.3,12,10),fm,bx+s*.62,F+3.25,bz);deco(new THREE.SphereGeometry(.09,8,6),dk,bx+s*.3,F+2.75,bz+fw*.74);
-        deco(new THREE.SphereGeometry(.42,12,10),fm,bx+s*.75,F+.4,bz+fw*.75);deco(new THREE.SphereGeometry(.38,12,10),fm,bx+s*1.05,F+1.35,bz+fw*.25);}
-      deco(B.boxGeo(.9,.3,.25),mat('#e8463a'),bx,F+1.95,bz+fw*.78);}
+    // the golden teddy sitting in the back corner, facing out
+    tyCol(S,14.25,16.75,28.25,30.75,F,F+3.2);furnInto('teddy',M.group,S.X(15.5),F,S.Z(29.6),north?Math.PI:0);
     tyBlock(S,23.25,28.25,1.5,F);}
-  // ---- spawn cover: two low brick walls in front of the spawns ----
-  for(const [a,b] of [[-8.75,-4.75],[3.75,7.75]])S.box(a,b,26.75,27.75,0,1.25,north?'#e8463a':'#2f7fe0',{tx:'stud'});
+  // ---- spawn cover: a tall box of crayons and a rainbow xylophone in front of the spawns ----
+  tyToy(S,'crayonbox',-6.75,27.25,0,2.6,1.87,Math.PI);tyToy(S,'xylo',5.75,27.25,0,2.05,.71,Math.PI,{k:.95});
   // ---- ABC blocks: a small fort with one block stacked on top for a look over the middle ----
   tyBlock(S,-13.75,13.25,2.5);tyBlock(S,-16.25,13.25,2.5);tyBlock(S,-15.25,13.75,2.5,2.5);
   // ---- two standing dominoes and one knocked flat ----
   [[8.75,6,4],[11.25,5,5]].forEach(([u,a,b])=>tyDomino(S,u,13.75,a,b));tyDomino(S,14.25,14.25,1,3,true);
   // ---- a die, a crayon and a bouncy ball ----
   tyDie(S,2.25,12.25);
-  tyCrayon(S,21,1.25,10.25,north?'#2f7fe0':'#e8463a');
-  tyBall(S.X(-19),S.Z(5),north?'#e8463a':'#2f7fe0','#f4c22b');
-  // ---- checkers on this half of the board ----
-  for(const [u,v,n] of [[-4.5,4.5,1],[2.5,6,1],[-1.5,2.5,2]])tyChecker(S,u,v,CK,n);}
+  tyCrayon(S,21,2.25,8.25);
+  tyBall(S.X(-19),S.Z(5));
+  // ---- Tripo toys as cover: toy cars and a digger, a rocket by the middle, soft toys, a duck, a giant pencil and a helicopter up on the book tower ----
+  tyToy(S,'car',-24,4,0,2.44,4.55,0);tyToy(S,'mini',24,16,0,4.15,2.2,Math.PI);tyToy(S,'digger',-6,18,0,1.87,3.5,Math.PI);
+  tyToy(S,'heli',-20.5,28,4.4,2.63,2.46,Math.PI);tyToy(S,'horse',10,22,0,3.13,1.23,Math.PI/2);tyToy(S,'duck',27,4,0,2.76,2.88,-Math.PI/2);
+  tyToy(S,'rocket',-2,11.5,0,3.6,3.8,Math.PI,{k:.55});tyToy(S,'lion',-26,10,0,3.24,3.0,Math.PI/2,{k:.8});tyToy(S,'fox',8,6,0,3.15,2.33,Math.PI,{k:.7});
+  tyToy(S,'pig',-10,6,0,4.16,4.16,Math.PI,{k:.7,hk:.8});tyToy(S,'pencil',16,4,0,2.4,5.3,Math.PI/2,{k:.9});}
 // the bedroom round the play area: floorboards, wallpaper, the bed, a desk under the window, a bookcase, door, posters, the ceiling light
 function tyRoom(X,Z){const RX=X+22,RZ=Z+28,RH=46;
   floor(-RX,RX,-RZ,RZ,'#c8955c','wood',-.02,3);
-  // play rug with roads under the middle of the room
-  {const t=tyTex('rug',1024,1024,(g,w,h)=>{g.fillStyle='#5fb3e6';g.fillRect(0,0,w,h);g.fillStyle='#ffffff';g.fillRect(0,0,w,18);g.fillRect(0,h-18,w,18);g.fillRect(0,0,18,h);g.fillRect(w-18,0,18,h);
-      const road=(x,y,ww,hh)=>{g.fillStyle='#5b5f6a';g.fillRect(x,y,ww,hh);g.fillStyle='#ffffff';if(ww>hh)for(let i=x+10;i<x+ww-20;i+=46)g.fillRect(i,y+hh/2-3,24,6);else for(let i=y+10;i<y+hh-20;i+=46)g.fillRect(x+ww/2-3,i,6,24);};
-      road(90,150,w-180,70);road(90,h-220,w-180,70);road(90,150,70,h-300);road(w-160,150,70,h-300);road(w/2-35,150,70,h-300);
-      const col=['#e8463a','#2f7fe0','#f4c22b','#a05ad6','#ff8fab'];let k=0;for(const [x,y] of [[200,260],[330,260],[620,260],[760,260],[200,640],[330,640],[620,640],[760,640]]){g.fillStyle=col[k++%5];g.fillRect(x,y,90,90);g.fillStyle='#ffffff';g.fillRect(x+15,y+15,25,25);g.fillRect(x+50,y+15,25,25);}
-      g.fillStyle='#2a55b0';g.beginPath();g.ellipse(250,480,90,50,0,0,TAU);g.fill();g.fillStyle='#2f7d3a';for(const [x,y] of [[640,480],[700,450],[760,500],[860,860],[150,880]]){g.beginPath();g.arc(x,y,26,0,TAU);g.fill();}});
+  // play rug: plain sky blue with a white edge and a thin pale inner line, nothing else on it
+  {const t=tyTex('rug',512,512,(g,w,h)=>{g.fillStyle='#5fb3e6';g.fillRect(0,0,w,h);g.fillStyle='#ffffff';g.fillRect(0,0,w,10);g.fillRect(0,h-10,w,10);g.fillRect(0,0,10,h);g.fillRect(w-10,0,10,h);
+      g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=4;g.strokeRect(28,28,w-56,h-56);});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(2*X+2,2*Z+2),new THREE.MeshStandardMaterial({map:t,roughness:.95}));m.rotation.x=-Math.PI/2;m.position.set(0,.012,0);m.receiveShadow=true;M.group.add(m);}
-  // the checkers board in the very middle (the shop stands on it)
-  {box(0,0,0,16.5,.3,16.5,'#7a4c2a',{tx:'wood'});const t=tyTex('ck',512,512,(g,w,h)=>{for(let i=0;i<8;i++)for(let j=0;j<8;j++){g.fillStyle=(i+j)%2?'#1f2026':'#d33a2c';g.fillRect(i*64,j*64,64,64);}});
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(15.8,15.8),new THREE.MeshStandardMaterial({map:t,roughness:.5}));m.rotation.x=-Math.PI/2;m.position.set(0,.302,0);M.group.add(m);
-}
   // perimeter: a wall of toy blocks just outside the play area
   {let k=0;const s=2.5,ring=(x,z)=>{const c=TY_BLK[k++%6];box(x,0,z,s,s,s,c,{extra:{roughness:.5}});};
     for(let x=-(X+2.75);x<=X+2.76;x+=s){ring(x,-(Z+1.25));ring(x,Z+1.25);}for(let z=-(Z-1.25);z<=Z-1.24;z+=s){ring(-(X+1.25),z);ring(X+1.25,z);}}
@@ -4187,7 +4177,7 @@ function tyRoom(X,Z){const RX=X+22,RZ=Z+28,RH=46;
         g.fillStyle=fg;g.font='bold 54px Bungee, Impact, sans-serif';g.textAlign='center';g.fillText(txt,w/2,h-40);})}));p.position.copy(f.position);p.rotation.y=ry;p.translateZ(.05);M.group.add(p);}}}
 function playroom(){const X=30,Z=35;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};tyBlkN=0;/* Toy Town: 60 x 70 m, between Railed (50 x 60) and Street Life (92 x 60) */
   tyRoom(X,Z);tyHalf(1);tyHalf(-1);
-  M.shopAt=[{x:0,z:0,y:.3}];
+  M.shopAt=[{x:0,z:0,y:0}];
   const sp=[[-6,31],[6,30.5],[-24,16],[27,13],[0,24]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 // cross ramp in the middle of Arena: a raised square deck with four ramps running down to the floor, each in its own colour, curbs with glowing strips along both sides
@@ -4407,7 +4397,7 @@ const MAPS={
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
  lagoon:{modes:['duel'],one:true,name:'Lagoon',desc:'A deck on stilts over a turquoise lagoon: a tiki hut, crates, barrels and palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
- toys:{modes:['duel'],name:'Toy Town',desc:'Toy-sized fights on a bedroom floor: a book tower, a toy chest, blocks and a checkers board',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
+ toys:{modes:['duel'],name:'Toy Town',desc:'Toy-sized fights on a bedroom floor: a book tower, a toy chest, blocks and dominoes',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
   /* 92 x 60 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,
      either side of the road near the middle (a little off-centre, one towards each end) */

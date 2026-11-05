@@ -2743,7 +2743,8 @@ function vehAttach(C,kind){const go=()=>{const V=VEHM[kind];if(!V||C.model||M.gr
    Each is sat on the ground, centred, turned to face +z (r0) and scaled to its height h (house furniture is 1.6x real size and the people 1.25x, to suit the game's chunky characters). Untextured ones get a flat colour (tint). */
 const FURN_CFG={greysofa:{h:1.34,tint:'#9aa0a8'},pinksofa:{h:1.6},whitesofa:{h:1.68},greychair:{h:1.52},officechair:{h:1.68,tint:'#e9eaee'},plasticchair:{h:1.36},
   plant:{h:2.08},greyplant:{h:1.76,tint:'#d9dde3'},redplant:{h:1.44},wfhman:{h:1.81,r0:Math.PI/2},
-  doctor:{h:2.27},nurse:{h:2.12},bed1:{h:2.27,r0:Math.PI/2},bed2:{h:1.68,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:1.52,r0:Math.PI/2},alien:{h:1.88},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8}},FURNM={},FURN_P={},FURN_WAIT=[];
+  doctor:{h:2.27},nurse:{h:2.12},bed1:{h:2.27,r0:Math.PI/2},bed2:{h:1.68,tint:'#e9eef3',r0:Math.PI/2},wheelchair:{h:1.52,r0:Math.PI/2},alien:{h:1.88},cloud1:{h:1},cloud2:{h:1},fence_tall:{h:2.8},
+  bed_wood:{h:1.54},bed_cream:{h:1.36},bed_bunny:{h:1.45},bed_bunk:{h:2.25},bed_grey:{h:1.26,tint:'#9aa0a8'}},FURNM={},FURN_P={},FURN_WAIT=[];
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/home/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -3113,14 +3114,12 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     plant(5.4,-1.9,0,1.0);
     /* ---- upstairs: carpet, a double bedroom on one side and a kid's room on the other (both clear of the walk-out windows) ---- */
     S.floor(-5.85,.6,-5.35,5.35,F+.025,'#d4bfa8','carpet');
-    {const bd=fur(-4.85,4.77,F,2.2,.5,2.6,'#ffffff',140);kid(bd,gB(2.25,.14,2.0),'#e9c46a',-4.85,4.6,F+.56);kid(bd,gB(2.24,.06,.6),'#b5523b',-4.85,4.2,F+.62);
-      for(const e of [-.5,.5])kid(bd,gB(.75,.15,.42),'#ffffff',-4.85+u2(e),4.77+u2(1.0),F+.62);kid(bd,gB(2.3,1.2,.12),'#7a4c2a',-4.85,4.77+u2(1.3),F+.6);
+    {/* the double bed itself is the Tripo wooden bed, placed with the other models below */
       fur(-3.95,5.0,F,.45,.55,.45,'#8a5a34',50,{tx:'wood'});lamp(-3.95,5.0,F+.55);
-      N(-4.3,4.4,F+.62,.3,.42,.25,'#b07a4a',{geo:new THREE.SphereGeometry(.16,8,6).translate(0,-.06,0),parts:[[new THREE.SphereGeometry(.11,8,6),'#b07a4a',0,.14,0],[new THREE.SphereGeometry(.04,6,4),'#b07a4a',.08,.24,0],[new THREE.SphereGeometry(.04,6,4),'#b07a4a',-.08,.24,0]]});
       rug(-4.3,3.2,F+.035,5.0,4.0,rugTex('#f3efe6','#b5523b','#e9c46a'));armchair(-3.0,2.6,'u-','#e9c46a','#f4d58d');pic(-4.85,5.33,F+2.1,1.2,.8,'v-',2);
       const wd=fur(-.75,5.0,F,1.8,2.1,.65,'#c99a5b',130,{tx:'wood'});kid(wd,gB(.02,1.9,.02),'#5b3a1e',-.75,5.0-u2(.33),F+1.05);
       fur(-2.0,1.0,F,1.4,.8,.5,'#c99a5b',90,{tx:'wood'});N(-2.0,1.0,F+.8,.5,.6,.04,'#cfe8f5',{parts:[[gB(.56,.66,.03),'#7a4c2a',0,0,-.01]]});N(-2.3,1.0,F+.8,.1,.16,.1,'#ff8fab',{cyl:1});N(-1.75,1.0,F+.8,.18,.1,.12,'#a05ad6');}
-    {const kb=fur(-4.85,-4.9,F,2.0,.45,1.0,'#ffffff',110);kid(kb,gB(1.6,.1,.98),'#3bb54a',-4.85+u2(.15),-4.9,F+.5);kid(kb,gB(.45,.12,.6),'#ffffff',-4.85-u2(.72),-4.9,F+.51);kid(kb,gB(.1,.9,1.0),'#2f7fe0',-4.85-u2(1.0),-4.9,F+.45);
+    {/* the kid's bed is the Tripo pink bunny bed, placed with the other models below */
       const tbx=fur(-3.5,-2.9,F,.9,.55,.6,'#e8463a',60);kid(tbx,gB(.92,.08,.62),'#f4c22b',-3.5,-2.9,F+.57);
       N(-3.2,-2.2,F,.4,.4,.4,'#ffffff',{geo:new THREE.SphereGeometry(.2,12,8).translate(0,0,0),parts:[[new THREE.SphereGeometry(.205,12,8,0,1.2),'#1c1d22',0,0,0]]});
       N(-3.8,-3.4,F+.55,.3,.3,.3,'#2f7fe0');N(-3.3,-3.5,F+.55,.25,.25,.25,'#f4c22b');
@@ -3131,14 +3130,17 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       for(const [u,v,c] of [[2.2,-2.6,'#e76f51'],[3.8,-1.2,'#2a9d8f'],[3.9,-3.3,'#f4a261']])N(u,v,LL,.9,.6,.9,c,{geo:new THREE.SphereGeometry(.45,12,8).scale(1,.65,1)});
       shelf(5.6,-4.2,LL,2.2,1.8,.4,false);fur(5.55,.2,LL,.5,.55,1.6,'#5b4a3a',70,{tx:'wood'});N(5.55,.2,LL+.55,.12,.7,1.2,'#1c1d22',{parts:[[gB(.012,.62,1.12),new THREE.MeshBasicMaterial({color:'#3a5f8a'}),-f*.065,0,0]]});plant(5.4,1.4,LL);pic(5.83,-4.2,LL+2.3,1.0,.7,'u-',3);}
     /* ---- Tripo furnishings and the work-from-home man (models/home): the sofas and the desk are solid and break apart when shot (back later); chairs and plants get knocked about ---- */
-    {const FD={greysofa:[3.5,1.62],pinksofa:[2.82,1.14],whitesofa:[3.58,1.82],greychair:[0.93,1.01],officechair:[1.1,1.17],plasticchair:[0.99,1.01],plant:[1.39,0.99],greyplant:[1.44,1.46],redplant:[1.58,1.63],wfhman:[1.49,1.57]};
+    {const FD={greysofa:[3.5,1.62],pinksofa:[2.82,1.14],whitesofa:[3.58,1.82],greychair:[0.93,1.01],officechair:[1.1,1.17],plasticchair:[0.99,1.01],plant:[1.39,0.99],greyplant:[1.44,1.46],redplant:[1.58,1.63],wfhman:[1.49,1.57],bed_wood:[2.55,3.0],bed_cream:[2.18,3.0],bed_bunny:[2.17,2.0],bed_bunk:[2.59,1.62],bed_grey:[1.52,2.6]};
       const tm=(id,u,v,y,dir,hp,col)=>{const [w0,d0]=FD[id],ax=dir[0]==='u',w=ax?d0:w0,d=ax?w0:d0,h=FURN_CFG[id].h,ry=face[dir];
         if(hp){const b=fur(u,v,y,w,h,d,col||'#9aa0a8',hp,{mat:INVIS,edges:false,shadow:false});if(b)furnInto(id,b.mesh,X(u),y,Z(v),ry);return b;}
         const K=N(u,v,y,w,h,d,col||'#9aa0a8',{mat:INVIS});furnInto(id,K.m,X(u),y,Z(v),ry);return K;};
       const LL=8.3;
       tm('wfhman',-.41,1.6,0,'u+',150,'#2b2d33');tm('whitesofa',-5.25,-3.1,0,'u+',130,'#e9e4dc');tm('plant',-5.35,2.75,0,'u+');tm('redplant',4.9,3.0,0,'u-');
       tm('pinksofa',-2.6,-.9,F,'v-',110,'#e8a0a8');tm('greychair',-2.0,1.65,F,'v-');tm('officechair',-.6,-4.55,F,'v-');tm('greyplant',-.4,4.2,F,'u+');tm('plant',.4,1.6,F,'u-');
-      tm('greysofa',1.0,0,LL,'u+',120,'#9aa0a8');tm('plasticchair',-4.6,-1.0,LL,'u-');tm('plasticchair',-4.6,1.0,LL,'u-');}
+      tm('greysofa',1.0,0,LL,'u+',120,'#9aa0a8');tm('plasticchair',-4.6,-1.0,LL,'u-');tm('plasticchair',-4.6,1.0,LL,'u-');
+      /* Tripo beds: the wooden double in the main bedroom, the pink bunny bed in the kid's room, and in the loft den a white bunk bed, the grey single and the cream double */
+      tm('bed_wood',-4.85,4.68,F,'v-',140,'#8a5a34');tm('bed_bunny',-5.3,-4.9,F,'v+',110,'#f4a3b4');
+      tm('bed_bunk',.51,-4.75,LL,'u+',120,'#f3efe6');tm('bed_grey',1.34,-4.77,LL,'v+',100,'#9aa0a8');tm('bed_cream',4.78,-4.68,LL,'v+',130,'#e9e4dc');}
     /* window boxes of flowers and a doormat out front */
     for(const s of [-1,1]){S.box(-6.45,-6.15,s*3.6-.55,s*3.6+.55,.85,1.1,'#7a4c2a',{solid:false});for(let i=0;i<5;i++){const fl=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),mat(['#ff8fab','#f4c22b','#ffffff','#e8463a','#a05ad6'][i]));fl.position.set(X(-6.3),1.2,Z(s*3.6-.4+i*.2));M.group.add(fl);}}
     decal(-6.9,0,1.2,1.8,'#7a4c2a',1,.04);

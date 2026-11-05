@@ -4722,7 +4722,8 @@ function gunModel(id){const g=new THREE.Group();const sh=GUNS[id].base||id;const
   const P=(w,h,d,x,y,z,m)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(x,y,z);me.castShadow=true;g.add(me);return me;};let L=1;
   if(sh==='scout'){P(.13,.17,.72,0,0,.18,acc);P(.055,.055,.6,0,.03,.8,dark);P(.09,.09,.3,0,.16,.22,dark);P(.12,.22,.36,0,-.06,-.3,acc);P(.06,.17,.1,0,-.14,.02,dark);L=1.1;}
   else if(sh==='sniper'){P(.14,.18,1.0,0,0,.25,acc);P(.06,.06,.95,0,.03,1.2,dark);P(.1,.1,.45,0,.17,.32,dark);P(.12,.24,.42,0,-.06,-.36,acc);P(.06,.18,.1,0,-.15,.04,dark);L=1.68;}
-  else if(sh==='shotgun'){P(.15,.17,.8,0,0,.2,dark);P(.1,.1,.6,0,.04,.85,mid);if(id==='autoshot')P(.22,.2,.18,0,-.18,.22,acc);else P(.13,.11,.36,0,-.07,.74,acc);P(.13,.21,.46,0,-.05,-.36,acc);P(.06,.16,.1,0,-.14,.02,dark);L=1.16;}
+  else if(id==='autoshot'){P(.16,.15,.32,0,0,-.02,dark);P(.06,.06,.82,.035,.03,.56,mid);P(.06,.06,.82,-.035,.03,.56,mid);P(.12,.08,.36,0,-.06,.33,acc);P(.12,.2,.46,0,-.05,-.4,acc);P(.06,.16,.1,0,-.14,-.08,dark);L=1.0;}
+  else if(sh==='shotgun'){P(.15,.17,.8,0,0,.2,dark);P(.1,.1,.6,0,.04,.85,mid);P(.13,.11,.36,0,-.07,.74,acc);P(.13,.21,.46,0,-.05,-.36,acc);P(.06,.16,.1,0,-.14,.02,dark);L=1.16;}
   else if(sh==='mg'){P(.2,.24,1.0,0,0,.25,dark);P(.09,.09,.75,0,.03,1.1,mid);P(.24,.26,.26,0,-.22,.22,acc);P(.15,.22,.42,0,-.04,-.4,dark);P(.04,.3,.04,.08,-.2,1.1,mid);P(.04,.3,.04,-.08,-.2,1.1,mid);L=1.48;}
   else if(sh==='ar'){P(.14,.17,.86,0,0,.2,dark);P(.06,.06,.5,0,.02,.86,mid);if(id==='burst'){P(.08,.07,.65,0,.15,.08,acc);P(.09,.28,.13,0,-.2,-.22,acc);}else P(.09,.28,.13,0,-.2,.24,acc);P(.12,.19,.4,0,-.03,-.36,acc);P(.05,.07,.26,0,.12,.14,mid);P(.06,.16,.1,0,-.14,-.05,dark);L=1.12;}
   else if(sh==='smg'){P(.13,.16,.6,0,0,.12,dark);P(.06,.06,.3,0,.02,.55,mid);P(.08,.28,.1,0,-.2,.16,acc);P(.06,.15,.1,0,-.13,-.08,dark);P(.1,.12,.22,0,-.02,-.28,acc);L=.72;}
@@ -5512,7 +5513,7 @@ function setupRoster(){const P=S.players,n=P==='ffa'?ffaN():0;if(n)ensureBots(n-
   ME.team=0;if(P==='2v2'){B2.team=0;BOT.team=1;B3.team=1;}else BOTS.forEach((b,i)=>b.team=i+1);
   for(const b of BOTS)if(!FS.includes(b)){b.alive=false;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}}
 const gunOf=f=>f.slot===0?f.primary:(f.secondary||'smg');
-const SECONDARIES=['smg','hornet','duals','thumper','rocket','stars','sword'];
+const SECONDARIES=['smg','hornet','duals','rocket','sword'];
 for(const k of new Set([...PRIMARIES,...SECONDARIES])){const g=GUNS[k];if(!g||g.type==='melee')continue;g.dmg=Math.round(g.dmg*1.25);if(g.direct)g.direct=Math.round(g.direct*1.25);}
 function equip(f,slot){if(f.slot===slot&&f.guns[gunOf(f)].visible)return;if(f.relSnd&&window.SFX){window.SFX.stop(f.relSnd,.06);f.relSnd=null;}if(S.state==='fight')sfx('swap',f,{range:6});f.slot=slot;f.reloadT=0;f.burstN=0;f.burstT=0;f.switchT=.35;for(const k in f.guns)f.guns[k].visible=k===gunOf(f);}
 function resetFighter(f,sp){f.onLadder=null;f.ladK=0;f.ladHid=0;f.boostT=0;f.dazeT=0;f.corpse=false;f.stunT=0;f.hitBy=null;f.crouchOn=false;f.stam=STAM_MAX;f.stamLock=false;f.sprinting=false;f.stamRest=0;resetCons(f);f.jolt=0;if(f.ch&&f.ch.headG)f.ch.headG.visible=true;f.thrownT=0;const C=CHARS[f.char];untintLook(f);f.ghostShown=null;f.hpMax=C.hp;f.abilT=1.5;f.fuel=2.5;f.airJ=0;f.shieldT=0;f.ghostT=0;f.burnT=0;f.downed=false;f.downedBy=null;f.dhp=0;f.bleed=0;f.revive=0;f.finishing=null;f.finishT=0;f.smashT=0;f.slowT=0;f.thornT=0;
@@ -5589,16 +5590,16 @@ const SC=.8; // fighters are scaled down so they fit every doorway and stair wit
 /* bot play styles: aggr = how hard it pushes, range = x preferred weapon range, retreat = HP fraction it backs off at,
    build = wall eagerness, wallHp = HP below which it walls up when shot, strafe/jump = juking, react/err = aim timing and spread */
 const STYLES={
-  rusher:{name:'Rusher',desc:'Charges straight at you, jukes and jumps, never backs off.',aggr:1,range:.35,retreat:0,build:.3,wallHp:35,strafe:1.3,jump:.35,react:.75,err:1.25,prim:['ar','mg','gar','scout','m60','burst','shotgun','autoshot'],sec:['sword','smg','hornet','sword','duals','thumper']},
-  sniper:{name:'Sniper',desc:'Finds high ground far away, scopes in, moves after every couple of shots.',aggr:.1,range:1.3,retreat:.45,build:.7,wallHp:70,strafe:.5,jump:.05,react:1.15,err:.7,shots:2,prim:['sniper','sniper','sniper','scout','crossbow'],sec:['smg','stars','duals']},
+  rusher:{name:'Rusher',desc:'Charges straight at you, jukes and jumps, never backs off.',aggr:1,range:.35,retreat:0,build:.3,wallHp:35,strafe:1.3,jump:.35,react:.75,err:1.25,prim:['ar','mg','gar','scout','m60','burst','shotgun','autoshot'],sec:['sword','smg','hornet','sword','duals']},
+  sniper:{name:'Sniper',desc:'Finds high ground far away, scopes in, moves after every couple of shots.',aggr:.1,range:1.3,retreat:.45,build:.7,wallHp:70,strafe:.5,jump:.05,react:1.15,err:.7,shots:2,prim:['sniper','sniper','sniper','scout','crossbow'],sec:['smg','duals']},
   lurker:{name:'Lurker',desc:'Hides out of sight near you and waits to ambush you up close.',aggr:.5,range:.6,retreat:.35,build:.4,wallHp:55,strafe:.9,jump:.1,react:.85,err:1,spring:13,prim:['ar','scout','mg','m60','burst','crossbow','shotgun','autoshot'],sec:['sword','smg','duals']},
-  flanker:{name:'Flanker',desc:'Circles round out of sight and hits you from the side.',aggr:.65,range:.8,retreat:.3,build:.5,wallHp:60,strafe:1.15,jump:.2,react:.95,err:1,prim:['ar','scout','gar','burst','crossbow'],sec:['smg','hornet','stars','sword','duals','shotgun']},
-  turtle:{name:'Turtle',desc:'Walls up the moment it sees you, peeks from cover, backs off when hurt.',aggr:.2,range:1.1,retreat:.55,build:1.6,wallHp:95,strafe:.6,jump:.05,react:1,err:.85,hold:1.6,wallCD:10,prim:['mg','ar','gar','m60','burst','crossbow'],sec:['stars','smg','rocket','duals','thumper']},
-  hunter:{name:'Hunter',desc:'Always has a rough idea where you are and keeps tracking you down at mid range.',aggr:.7,range:.85,retreat:.2,build:.6,wallHp:55,strafe:1.1,jump:.2,react:.9,err:1,prim:['ar','mg','scout','m60','burst','crossbow','autoshot'],sec:['smg','stars','duals']},
+  flanker:{name:'Flanker',desc:'Circles round out of sight and hits you from the side.',aggr:.65,range:.8,retreat:.3,build:.5,wallHp:60,strafe:1.15,jump:.2,react:.95,err:1,prim:['ar','scout','gar','burst','crossbow','shotgun'],sec:['smg','hornet','sword','duals']},
+  turtle:{name:'Turtle',desc:'Walls up the moment it sees you, peeks from cover, backs off when hurt.',aggr:.2,range:1.1,retreat:.55,build:1.6,wallHp:95,strafe:.6,jump:.05,react:1,err:.85,hold:1.6,wallCD:10,prim:['mg','ar','gar','m60','burst','crossbow'],sec:['smg','rocket','duals']},
+  hunter:{name:'Hunter',desc:'Always has a rough idea where you are and keeps tracking you down at mid range.',aggr:.7,range:.85,retreat:.2,build:.6,wallHp:55,strafe:1.1,jump:.2,react:.9,err:1,prim:['ar','mg','scout','m60','burst','crossbow','autoshot'],sec:['smg','duals']},
   breacher:{name:'Breacher',desc:'Shotgun. Hops between hiding spots, each one closer, then bursts in.',aggr:.6,range:1,retreat:.3,build:.4,wallHp:50,strafe:1.2,jump:.3,react:.8,err:1.1,prim:['shotgun','autoshot','shotgun'],sec:['smg','hornet','duals']},
-  kiter:{name:'Kiter',desc:'Holds its favourite range: backs off as you push, follows as you run.',aggr:.35,range:1,retreat:.4,build:.8,wallHp:65,strafe:1.4,jump:.25,react:.95,err:.95,prim:['ar','scout','mg','gar','m60','burst','crossbow'],sec:['stars','smg','hornet','duals','thumper']},
-  camper:{name:'Camper',desc:'Picks one spot with a view, walls up and holds the angle all round.',aggr:.05,range:1,retreat:.6,build:1.3,wallHp:90,wallCD:25,strafe:.3,jump:0,react:1.05,err:.8,prim:['mg','ar','sniper','m60','burst'],sec:['smg','duals','thumper']},
-  duelist:{name:'Duelist',desc:'Strafes and trades shots at mid range.',aggr:.5,range:1,retreat:.25,build:1,wallHp:70,strafe:1,jump:.15,react:1,err:1,prim:['sniper','scout','ar','gar','burst','mg','m60','crossbow','shotgun','autoshot'],sec:['smg','hornet','thumper','rocket','stars','sword','duals']}};
+  kiter:{name:'Kiter',desc:'Holds its favourite range: backs off as you push, follows as you run.',aggr:.35,range:1,retreat:.4,build:.8,wallHp:65,strafe:1.4,jump:.25,react:.95,err:.95,prim:['ar','scout','mg','gar','m60','burst','crossbow'],sec:['smg','hornet','duals']},
+  camper:{name:'Camper',desc:'Picks one spot with a view, walls up and holds the angle all round.',aggr:.05,range:1,retreat:.6,build:1.3,wallHp:90,wallCD:25,strafe:.3,jump:0,react:1.05,err:.8,prim:['mg','ar','sniper','m60','burst'],sec:['smg','duals']},
+  duelist:{name:'Duelist',desc:'Strafes and trades shots at mid range.',aggr:.5,range:1,retreat:.25,build:1,wallHp:70,strafe:1,jump:.15,react:1,err:1,prim:['sniper','scout','ar','gar','burst','mg','m60','crossbow','shotgun','autoshot'],sec:['smg','hornet','rocket','sword','duals']}};
 const STYLE_IDS=Object.keys(STYLES),RUMBLE_STYLES=['rusher','lurker','flanker','duelist','hunter','breacher'],SIMPLE_STYLES=STYLE_IDS.filter(k=>k!=='sniper');
 // Simple 1v1s: one fixed loadout for everyone
 const SIMPLE_KIT={primary:'gar',secondary:'sword',cons:'grenade'};
@@ -8135,19 +8136,24 @@ function heroModelV2(id,RB,vm){
     else vmS({y:.22,rz:-.2,rr:.075,fz:.98,fr:.055,base:.1,m:black,dot:X.shotgun,muz:1.12,hands:{r:[0,-.2,-.12],l:[.04,-.12,.44]}});
     sling(-.07,.0,-.25,steel);
   }
-  else if(id==='autoshot'){ // AA-12: boxy receiver with a top rail, 32-round drum, ported shroud, straight stock
-    const poly=POLY('#19bce6'),accent=ACC('#063a4a'),glw=glow('#ff4fd8',.9);
-    box(.13,.2,.86,0,.04,.0,gun,.025);for(const s of [-1,1])box(.006,.12,.6,s*.066,.04,.05,accent,.003);pins([[.08,-.3],[.08,.32],[-.03,.0]],chrome,.07);
-    rail(-.3,.42,.15,.075,black);port(.1,.08,.13,.16);box(.03,.03,.06,-.075,.08,.3,chrome,.006);stripe(-.38,.3,-.02,.13,glw,.016);selDots(-.3,-.04,.13);
-    box(.12,.12,.36,0,.04,.6,poly,.02);for(let i=0;i<4;i++)cylX(.016,.125,0,.06,.47+i*.08,accent,10);slots(.46,4,.08,.0,.12,accent,.03,.012); // shroud with ports
-    cyl(.024,.3,0,.04,.86,steel);cyl(.034,.08,0,.04,1.02,black);for(let i=0;i<3;i++)box(.07,.008,.02,0,.04,1.0+i*.025,steel,.002);
-    cylX(.16,.08,0,-.24,.12,poly,32);cylX(.06,.085,0,-.24,.12,accent,20);cylX(.03,.09,0,-.24,.12,glw,16);for(let i=0;i<10;i++){const a=i/10*Math.PI*2;box(.086,.02,.02,0,-.24+Math.sin(a)*.12,.12+Math.cos(a)*.12,accent,.003);} // drum
-    box(.1,.06,.12,0,-.07,.12,gun,.012);
-    grip(-.14,-.06,.24,.11,poly,3,accent);guard(-.1,-.06,steel);
-    ext([[-.43,.12],[-.9,.1],[-.92,-.14],[-.8,-.15],[-.43,-.06]],.12,poly,0,.018);box(.13,.26,.035,0,-.02,-.92,rubber,.01);slots(-.8,4,.07,.02,.12,accent,.02,.012);
-    sling(-.07,.0,-.7,steel);
-    if(!vm){box(.04,.06,.05,0,.2,-.24,black,.006);tor(.02,.005,0,.24,-.24,black);box(.04,.08,.04,0,.2,.38,black,.006);}
-    else vmS({y:.27,rz:-.24,rr:.08,fz:.4,fr:.06,base:.18,m:black,dot:X.autoshot,muz:1.06,my:.04,hands:{r:[0,-.2,-.2],l:[.06,-.04,.56]}});
+  else if(id==='autoshot'){ /* Shotty Horror: side-by-side double barrel, break action, top lever, twin triggers, cyan stock with a pink glow strip */
+    const poly=POLY('#19bce6'),accent=ACC('#063a4a'),glw=glow('#ff4fd8',.9),wd=M('#1d4f61',{roughness:.5});
+    box(.17,.15,.3,0,.0,-.02,gun,.03);for(const s of [-1,1])box(.006,.09,.22,s*.087,.0,-.02,accent,.003);pins([[.0,-.08],[.0,.06]],chrome,.088);
+    for(const s of [-1,1])add(new THREE.CircleGeometry(.03,16),gold,s*.088,-.01,-.02).rotation.y=s*Math.PI/2; /* engraved side plates */
+    cylX(.022,.18,0,-.045,.13,gold,12); /* hinge pin */
+    {const lv=box(.05,.018,.1,0,.085,-.08,chrome,.006);lv.rotation.y=.35;}box(.03,.02,.04,0,.08,-.14,steel,.004); /* top lever + tang */
+    for(const s of [-1,1]){cyl(.036,.84,s*.038,.035,.56,steel);cyl(.04,.04,s*.038,.035,.97,black);cyl(.027,.03,s*.038,.035,.985,M('#05070a'));} /* barrels, muzzles */
+    box(.03,.014,.8,0,.078,.56,gun,.005);box(.016,.006,.78,0,.087,.56,glw,.002);add(new THREE.SphereGeometry(.009,12,8),glow('#ffe14a',2),0,.096,.95); /* rib, glow line, bead */
+    box(.11,.02,.78,0,-.005,.56,gun,.005); /* lower rib */
+    for(let i=0;i<3;i++)box(.13,.012,.012,0,.035,.4+i*.22,accent,.003); /* barrel bands */
+    ext([[.13,-.02],[.5,-.02],[.54,-.05],[.5,-.1],[.15,-.11]],.12,poly,0,.02);for(let i=0;i<5;i++)box(.124,.008,.02,0,-.075,.2+i*.065,accent,.003); /* forend */
+    stripe(-.14,.1,.04,.172,glw,.012);
+    grip(-.2,-.06,.24,.11,poly,3,accent);guard(-.12,-.07,steel);box(.012,.05,.012,0,-.085,-.1,gold,.003);box(.012,.05,.012,0,-.085,-.135,gold,.003); /* twin triggers */
+    ext([[-.17,.07],[-.86,.05],[-.88,-.17],[-.74,-.18],[-.3,-.08],[-.17,-.07]],.12,wd,0,.018);ext([[-.4,.035],[-.82,.025],[-.82,-.02],[-.4,-.02]],.124,poly,0,.008); /* stock + cyan inlay */
+    box(.125,.25,.035,0,-.06,-.88,rubber,.01);for(const s of [-1,1])add(new THREE.CircleGeometry(.02,14),gold,s*.062,-.05,-.56).rotation.y=s*Math.PI/2;
+    sling(-.07,.0,-.62,steel);
+    if(!vm){box(.02,.022,.03,0,.098,-.11,steel,.004);}
+    else vmS({y:.16,rz:-.12,rr:.07,fz:.94,fr:.05,base:.09,m:black,dot:X.autoshot,muz:.99,my:.035,hands:{r:[0,-.2,-.18],l:[.04,-.1,.36]}});
   }
   else if(id==='thumper'){ // M79: break-action fat barrel with brass bands, ladder sight, orange stock
     const poly=POLY('#ff9d1a'),accent=ACC('#5a2c00'),glw=glow('#ffd36b',1),dk=gun;

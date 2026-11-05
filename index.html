@@ -2507,7 +2507,7 @@ function sfx(n,at,o){const X=window.SFX;if(!X)return null;o=Object.assign({},o);
   return X.play(n,o);}
 /* true when there's a roof or floor above the fighter (inside a building), checked at most every 0.3 s */
 function underRoof(f){const now=performance.now();if(f._roofT>now)return f._roof;f._roofT=now+300;f._roof=!!rayBoxes(new V3(f.pos.x,f.pos.y+1.7,f.pos.z),new V3(0,1,0),14);return f._roof;}
-const GSND={sniper:['hdr',1],scout:['kar',1],ar:['rifle',1],gar:['m4',.94],burst:['rifle',1.12],smg:['smgnova',1],hornet:['smgnova',.9],shotgun:['shotboom',1],autoshot:['shotboom',1.08],mg:['lmg',1],m60:['lmg',.86],pistol:['pistol',1],duals:['pistol',1.08],revolver:['revolver',1],crossbow:['crossbow',1],thumper:['glboom',1]};
+const GSND={sniper:['hdr',1],scout:['kar',1],ar:['rifle',1],gar:['m4',.94],burst:['rifle',1.12],smg:['smgnova',1],hornet:['smgnova',.9],shotgun:['shotboom',1],autoshot:['shotboom',.94],mg:['lmg',1],m60:['lmg',.86],pistol:['pistol',1],duals:['pistol',1.08],revolver:['revolver',1],crossbow:['crossbow',1],thumper:['glboom',1]};
 
 /* ================= scene ================= */
 const scene=new THREE.Scene();
@@ -4692,7 +4692,7 @@ const GUNS={
   smg:{name:'MP5',dmg:11,head:1.6,rate:.055,mag:25,reload:1.5,spread:1.6,adsSpread:.9,ads:.13,pellets:1,fall:[8,26],zoom:48,auto:true,kick:.006,bloom:.13,color:'#a05ad6',note:'Shreds up close, falls off fast'},
   hornet:{name:'Uzi',base:'smg',sec:true,dmg:12,head:1.7,rate:.07,mag:32,reload:1.9,spread:1.5,adsSpread:.75,ads:.14,pellets:1,fall:[10,30],zoom:46,auto:true,kick:.007,bloom:.095,color:'#ffd21f',note:'Punchy close-range SMG'},
   shotgun:{name:'SPAS-12',dmg:8,head:1.3,rate:.8,mag:6,reload:2.0,spread:2.4,adsSpread:1.8,ads:.22,pellets:9,fall:[9,26],zoom:50,auto:false,kick:.05,bloom:0,color:'#e85d22',note:'Heavy pump: one shot downs point-blank, otherwise up to 75% of their health'},
-  autoshot:{name:'AA-12',base:'shotgun',dmg:6,head:1.5,rate:.22,mag:10,reload:2.8,spread:3,adsSpread:2.3,ads:.26,pellets:6,fall:[8,22],zoom:48,auto:true,kick:.032,bloom:.12,color:'#19bce6',note:'Full-auto drum shotgun: one shot downs point-blank; three hits to down up close'},
+  autoshot:{name:'Shotty Horror',base:'shotgun',dmg:8,head:1.3,rate:.26,mag:2,reload:2.4,spread:3.2,adsSpread:2.6,ads:.24,pellets:10,pb:5,fall:[7,20],zoom:48,auto:false,kick:.075,bloom:0,color:'#19bce6',note:'Double-barrel: two huge blasts back to back, then reload. One shell downs from up to 5 m'},
   m60:{name:'M60',base:'mg',dmg:17,head:1.6,rate:.13,mag:50,reload:4.0,spread:2.2,adsSpread:.45,ads:.38,pellets:1,fall:[32,80],zoom:44,auto:true,kick:.014,bloom:.14,color:'#ff3fa4',note:'Heavy LMG: harder hits, slower fire'},
   mg:{name:'LMG',dmg:12,head:1.6,rate:.08,mag:40,reload:3.2,spread:2.6,adsSpread:.55,ads:.34,pellets:1,fall:[28,70],zoom:46,auto:true,kick:.008,bloom:.18,color:'#e8463a',note:'Big belt, slow reload'},
   rocket:{name:'Rocket Launcher',sec:true,type:'proj',dmg:45,direct:100,radius:4.5,head:1,rate:1,mag:1,reload:6.8,spread:.35,adsSpread:0,speed:30,maxSpeed:58,accel:90,grav:0,zoom:42,auto:false,kick:.07,bloom:0,ads:.42,color:'#3bb54a',note:'Direct hit 100, splash up to 45'},
@@ -5987,7 +5987,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){const sg=id==='shotgun'||g.base==='shotgun';for(const [foe,hr] of hits){let total=Math.round(hr.t),shown=total;
       // shotguns: a blast only downs in one shot point-blank (most of the pellets landing from right next to them); anywhere else one blast tops out at 75% of their health
-      if(sg){if(hr.d<=SG_POINT_BLANK&&hr.n>=Math.ceil(g.pellets/2)){shown=Math.max(1,Math.round(foe.downed?foe.dhp:foe.hp+(foe.armor||0)));total=Math.ceil(shown/((foe.shieldT>0?.35:1)*(foe.thornT>0&&!foe.downed?.7:1)))+1;}else total=shown=Math.min(total,Math.round(foe.hpMax*SG_MAX_FRAC));}
+      if(sg){if(hr.d<=(g.pb||SG_POINT_BLANK)&&hr.n>=Math.ceil(g.pellets/2)){shown=Math.max(1,Math.round(foe.downed?foe.dhp:foe.hp+(foe.armor||0)));total=Math.ceil(shown/((foe.shieldT>0?.35:1)*(foe.thornT>0&&!foe.downed?.7:1)))+1;}else total=shown=Math.min(total,Math.round(foe.hpMax*SG_MAX_FRAC));}
       if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(shown,100);dmgNumber(foe,shown,hr.h);}}if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
   if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(GR()-.5)*g.kick*.4;}
   f.bloom=Math.min(f.bloom+g.bloom,3);}

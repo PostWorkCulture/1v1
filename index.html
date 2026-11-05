@@ -2732,7 +2732,7 @@ function cloudModel(g,sky){const id=g.userData.cid||(g.userData.cid=Math.random(
 setTimeout(()=>{for(const g of CLOUDS.g)cloudModel(g,true);},1200);
 /* a run of fence panels along straight lines, the panels stretched a little so each line takes a whole number of them; all panels are merged into one mesh
    per material, so a whole boundary costs a handful of draw calls */
-function modelFence(segs,id){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp)return;const per=F.parts.map(()=>({P:[],U:[],I:[],n:0}));
+function modelFence(segs,id){const grp=M.group;const go=()=>{const F=FURNM[id];if(M.group!==grp)return;if(!F){FURN_WAIT.push(go);return;}const per=F.parts.map(()=>({P:[],U:[],I:[],n:0}));
     const mx=new THREE.Matrix4(),qt=new THREE.Quaternion(),up=new V3(0,1,0),at=new V3(),sc=new V3(),v=new V3();
     for(const [x0,z0,x1,z1] of segs){const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/F.w));qt.setFromAxisAngle(up,Math.abs(x1-x0)>=Math.abs(z1-z0)?0:Math.PI/2);sc.set(L/n/F.w,1,1);
       for(let i=0;i<n;i++){const t=(i+.5)/n;mx.compose(at.set(x0+(x1-x0)*t,0,z0+(z1-z0)*t),qt,sc);
@@ -3773,10 +3773,17 @@ function railTrain(x,dir,spec,o){const T={x,dir,grp:new THREE.Group(),parts:[],w
       s-=L+.6;}}
   if(T.emus){const att=()=>{const V=VEHM.train;if(T.emuOn)return;if(!V){VEH_WAIT.push(att);return;}T.emuOn=1;for(const e of T.emus){e.m.material=INVIS;e.m.castShadow=false;const g=new THREE.Group();
       for(const p of V.parts){const mm=new THREE.Mesh(p.geo,p.mat);mm.castShadow=true;mm.receiveShadow=true;g.add(mm);}g.position.set(0,.22,e.s);g.rotation.y=e.fl?Math.PI:0;T.grp.add(g);}};
-    if(VEHM.train)att();else{VEH_WAIT.push(att);loadVehicle('train').catch(()=>{});}}
+    if(VEHM.train)att();else{VEH_WAIT.push(att);loadVehicle('train').catch(()=>{});}
+    {const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);
+      const gt=new THREE.CanvasTexture(c);T.blink=[];
+      for(const e of T.emus){const f=e.fl?-1:1,zz=e.s+f*8.75,col=e.fl?'#ff3a2a':'#fff4d0';
+        for(const sx of [-1,1]){const m=new THREE.Mesh(new THREE.CircleGeometry(.2,14),new THREE.MeshBasicMaterial({color:col,toneMapped:false}));m.position.set(sx*1.0,1.0,zz);m.rotation.y=f>0?0:Math.PI;T.grp.add(m);
+          const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:col,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true}));sp.position.set(sx*1.0,1.0,zz+f*.15);sp.scale.setScalar(e.fl?1.4:3);T.grp.add(sp);
+          if(!e.fl)T.blink.push({m,sp,ph:sx>0?0:Math.PI});}}
+      M.life.push(t=>{if(!T.grp.visible)return;for(const b of T.blink){const on=Math.sin(t*9+b.ph)>0;b.m.material.color.set(on?'#ffffff':'#4a4438');b.sp.visible=on;}});}}
   T.len=-s;return T;}
 // timetable: enter at one end of the yard, run straight through, wait off the map, come round again
-function railPos(T,t){const span=2*RL.Z+60+T.len,cyc=span/T.speed+T.gap,u=((t+T.ph)%cyc+cyc)%cyc;if(u>span/T.speed)return null;return -T.dir*(RL.Z+30)+T.dir*u*T.speed;}
+function railPos(T,t){const span=2*RL.Z+92+T.len,cyc=span/T.speed+T.gap,u=((t+T.ph)%cyc+cyc)%cyc;if(u>span/T.speed)return null;return -T.dir*(RL.Z+46)+T.dir*u*T.speed;}
 function railStep(T,t,dt){const z=railPos(T,t),was=T.z;if(z==null){if(T.z>-9000){T.z=-9999;for(const b of T.parts){const i=M.boxes.indexOf(b);if(i>=0)M.boxes.splice(i,1);const j=M.movers.indexOf(b);if(j>=0)M.movers.splice(j,1);}T.grp.visible=false;}T.horned=false;return;}
   if(T.z<-9000){for(const b of T.parts){M.boxes.push(b);M.movers.push(b);}T.grp.visible=true;T.z=z;T.place();return;}
   const dz=z-was;if(Math.abs(dz)>20){T.z=z;T.place();return;}
@@ -3814,6 +3821,32 @@ const RL_GLASS=new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,
 function rlGlass(x0,x1,z0,z1,y,nx,nz){const w=(x1-x0)/nx,d=(z1-z0)/nz,fm=mat('#5b6070');
   for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x0+(i+.5)*w,y-.15,z0+(j+.5)*d,w-.02,.15,d-.02,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
   for(let i=0;i<=nx;i++)deco(B.boxGeo(.12,.12,z1-z0),fm,x0+i*w,y-.12,(z0+z1)/2);for(let j=0;j<=nz;j++)deco(B.boxGeo(x1-x0,.12,.12),fm,(x0+x1)/2,y-.12,z0+j*d);}
+/* the yard's boundary wall, in one of four looks; a gap on the north and south sides lets the line through */
+tex('chain',64,64,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(205,210,215,1)';g.lineWidth=3;for(let k=-1;k<=1;k++){g.beginPath();g.moveTo(k*w,0);g.lineTo(k*w+w,h);g.stroke();g.beginPath();g.moveTo(k*w+w,0);g.lineTo(k*w,h);g.stroke();}});
+function rlWall(X,Z,style){const runs=[];for(const s of [-1,1]){runs.push([s*X,-Z,s*X,Z,null]);runs.push([-X,s*Z,X,s*Z,[-3.5,3.5]]);}
+  const piece=(x0,z0,x1,z1,fn)=>{const ax=Math.abs(x1-x0)>Math.abs(z1-z0);fn(ax,(x0+x1)/2,(z0+z1)/2,ax?Math.abs(x1-x0):Math.abs(z1-z0));};
+  const each=fn=>{for(const [x0,z0,x1,z1,gap] of runs){const ax=Math.abs(x1-x0)>Math.abs(z1-z0),a0=ax?x0:z0,a1=ax?x1:z1,P=(a,b)=>piece(ax?a:x0,ax?z0:a,ax?b:x1,ax?z1:b,fn);if(gap){P(a0,gap[0]);P(gap[1],a1);}else P(a0,a1);}};
+  const posts=(step,fn)=>each((ax,cx,cz,L)=>{const n=Math.max(1,Math.round(L/step));for(let i=0;i<=n;i++){const t=-L/2+L*i/n;fn(ax?cx+t:cx,ax?cz:cz+t,ax);}});
+  const W=(ax,cx,cz,L,y,h,t,c,o)=>box(cx,y,cz,ax?L:t,h,ax?t:L,c,Object.assign({edges:false},o||{}));
+  if(style==='brick'){/* red-brick yard wall with stone coping and piers, to match the tunnel portals */
+    each((ax,cx,cz,L)=>{W(ax,cx,cz,L,0,3,.4,'#a2583f',{tx:'brick'});W(ax,cx,cz,L+.1,3,.22,.6,'#bdb5a6',{tx:'rock',solid:false});W(ax,cx,cz,L,0,.35,.5,'#9a9286',{tx:'rock',solid:false});});
+    posts(6,(x,z)=>{box(x,0,z,.8,3.5,.8,'#bdb5a6',{tx:'rock',edges:false});box(x,3.5,z,.95,.18,.95,'#a9a196',{tx:'rock',edges:false,solid:false});});}
+  else if(style==='steel'){/* corrugated steel sheet hoarding on dark posts, a few panels weathered */
+    const cols=['#7d8a96','#71808d','#7d8a96','#8a6a55','#7d8a96','#6f7c88'];let k=0;
+    each((ax,cx,cz,L)=>{const n=Math.max(1,Math.round(L/3)),seg=L/n;for(let i=0;i<n;i++){const t=-L/2+seg*(i+.5);W(ax,ax?cx+t:cx,ax?cz:cz+t,seg-.04,0,3.2,.2,cols[(k++)%cols.length],{tx:'ribs'});}
+      W(ax,cx,cz,L,3.2,.12,.3,'#3a3d45',{solid:false});W(ax,cx,cz,L,1.55,.1,.3,'#3a3d45',{solid:false});});
+    posts(3,(x,z)=>box(x,0,z,.22,3.35,.22,'#2b2d33',{edges:false}));}
+  else if(style==='chain'){/* chain-link on a concrete kerb with galvanised posts and barbed wire: you can see the countryside, but it still stops you and bullets */
+    const cm=new THREE.MeshStandardMaterial({map:TX.chain,transparent:true,alphaTest:.35,side:THREE.DoubleSide,roughness:.4,metalness:.6,color:'#d6dbe0'});
+    each((ax,cx,cz,L)=>{W(ax,cx,cz,L,0,.5,.35,'#a39e94',{tx:'rock'});W(ax,cx,cz,L,.5,2.7,.1,'#000',{mat:INVIS,shadow:false});
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(L,2.6),cm.clone());m.material.map=TX.chain.clone();m.material.map.needsUpdate=true;m.material.map.repeat.set(L/.5,2.6/.5);m.material.map.wrapS=m.material.map.wrapT=THREE.RepeatWrapping;
+      m.position.set(cx,.5+1.3,cz);m.rotation.y=ax?0:Math.PI/2;M.group.add(m);
+      for(const [dy,off] of [[3.2,.0],[3.45,.18],[3.7,.36]]){const w=new THREE.Mesh(B.boxGeo(ax?L:.025,.025,ax?.025:L),mat('#8f959c',null,{metalness:.7,roughness:.4}));w.position.set(cx+(ax?0:(cx>0?off:-off)),dy,cz+(ax?(cz>0?off:-off):0));M.group.add(w);}
+      W(ax,cx,cz,L,3.05,.06,.06,'#b8bec6',{solid:false});});
+    posts(3,(x,z,ax)=>{deco(new THREE.CylinderGeometry(.07,.07,3.25,8),mat('#b8bec6',null,{metalness:.7,roughness:.35}),x,1.62,z);const out=ax?(z>0?1:-1):(x>0?1:-1);const arm=box(x+(ax?0:out*.22),3.15,z+(ax?out*.22:0),ax?.05:.5,.05,ax?.5:.05,'#b8bec6',{solid:false,edges:false});if(arm&&arm.rotation)arm.rotation[ax?'x':'z']=(ax?-out:out)*.7;});}
+  else{/* the Tripo tall wooden fence (as on Street Life) on an invisible wall */
+    const iv={mat:INVIS,shadow:false};each((ax,cx,cz,L)=>W(ax,cx,cz,L,0,2.8,.25,'#b07a4a',iv));
+    const segs=[];each((ax,cx,cz,L)=>segs.push(ax?[cx-L/2,cz,cx+L/2,cz]:[cx,cz-L/2,cx,cz+L/2]));modelFence(segs,'fence_tall');}}
 // build fn() as normal, then slide everything it made by (dx,dz): meshes, colliders, props, knock-overs and ladders
 function rlShift(dx,dz,fn){const keys=Object.keys(M).filter(k=>Array.isArray(M[k])&&k!=='life'),n0={};for(const k of keys)n0[k]=M[k].length;const g0=M.group.children.length;fn();
   for(let i=g0;i<M.group.children.length;i++){const o=M.group.children[i];o.position.x+=dx;o.position.z+=dz;}
@@ -3835,14 +3868,22 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   /* tunnel portals: red-brick headwall with stone pilasters and coping, an arched mouth with a stone ring and keystone, set into grassy embankments */
   {const stone=mat('#bdb5a6','rock'),dark=new THREE.MeshBasicMaterial({color:'#07080b'}),grassM=mat('#86a85a','meadow'),hw=2.75,sh=4.4;
   for(const sz of [-1,1]){const z=sz*(Z+26),zf=z-sz*2.02,ry=sz>0?Math.PI:0;
-    box(0,0,z,32,11,4,'#a2583f',{tx:'brick',solid:false});box(0,11,z,33,.7,5,'#bdb5a6',{tx:'rock',solid:false});box(0,11.7,z,31,.3,4.4,'#a9a196',{tx:'rock',solid:false});
+    for(const s of [-1,1])box(s*10.275,0,z,11.45,11,4,'#a2583f',{tx:'brick',solid:false});
+    {const sp=new THREE.Shape(),a=4.55;sp.moveTo(-a,0);sp.lineTo(-hw,0);sp.lineTo(-hw,sh);sp.absarc(0,sh,hw,Math.PI,0,true);sp.lineTo(hw,0);sp.lineTo(a,0);sp.lineTo(a,11);sp.lineTo(-a,11);sp.closePath();
+      const eg=new THREE.ExtrudeGeometry(sp,{depth:4,bevelEnabled:false,curveSegments:24});eg.translate(0,0,-2);const uv=eg.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*.5,uv.getY(i)*.5);
+      const hwm=new THREE.Mesh(eg,mat('#a2583f','brick'));hwm.position.set(0,0,z);hwm.castShadow=hwm.receiveShadow=true;M.group.add(hwm);}
+    /* inside the tunnel: brick walls and vault, warm lamps every few metres, darkness at the far end, so a train is seen coming out of the light */
+    {const D=18,zb=zf+sz*D,zm=(zf+zb)/2,lm=new THREE.MeshBasicMaterial({color:'#ffd890',toneMapped:false});
+      for(const s of [-1,1])box(s*(hw+.15),0,zm,.3,sh,D,'#6a4a3c',{tx:'brick',solid:false,edges:false});
+      const vg=new THREE.CylinderGeometry(hw+.05,hw+.05,D,24,1,true,Math.PI/2,Math.PI);const vm=new THREE.Mesh(vg,new THREE.MeshStandardMaterial({color:'#5e4236',roughness:.95,side:THREE.BackSide}));vm.rotation.x=Math.PI/2;vm.position.set(0,sh,zm);M.group.add(vm);
+      const bk=new THREE.Mesh(new THREE.PlaneGeometry(2*hw+.4,sh+hw+.2),dark);bk.position.set(0,(sh+hw)/2,zb);bk.rotation.y=ry;M.group.add(bk);
+      for(let d=1.5;d<D-1;d+=3.2)for(const s of [-1,1]){const l=new THREE.Mesh(B.boxGeo(.08,.18,.7),lm);l.position.set(s*(hw-.02),3.4,zf+sz*d);M.group.add(l);}
+      const pl=new THREE.PointLight('#ffc27a',30,22,1.3);pl.position.set(0,3.8,zf+sz*5);M.group.add(pl);}box(0,11,z,33,.7,5,'#bdb5a6',{tx:'rock',solid:false});box(0,11.7,z,31,.3,4.4,'#a9a196',{tx:'rock',solid:false});
     for(const x of [-15.4,-6.2,6.2,15.4])box(x,0,z-sz*2.3,1.3,11,.7,'#bdb5a6',{tx:'rock',solid:false});
     box(0,0,z-sz*2.2,32,.8,.5,'#9a9286',{tx:'rock',solid:false});
-    for(const x of RL.lines){const mo=new THREE.Mesh(new THREE.PlaneGeometry(2*hw,sh),dark);mo.position.set(x,sh/2,zf-sz*.01);mo.rotation.y=ry;M.group.add(mo);
-      const ar=new THREE.Mesh(new THREE.CircleGeometry(hw,28,0,Math.PI),dark);ar.position.set(x,sh,zf-sz*.01);ar.rotation.y=ry;M.group.add(ar);
-      const ring=new THREE.Mesh(new THREE.RingGeometry(hw,hw+.75,28,1,0,Math.PI),stone);ring.position.set(x,sh,zf-sz*.03);ring.rotation.y=ry;M.group.add(ring);
+    for(const x of RL.lines){const ring=new THREE.Mesh(new THREE.RingGeometry(hw,hw+.75,28,1,0,Math.PI),stone);ring.position.set(x,sh,zf-sz*.03);ring.rotation.y=ry;M.group.add(ring);
       for(const s of [-1,1])box(x+s*(hw+.375),0,zf-sz*.15,.75,sh,.3,'#bdb5a6',{tx:'rock',solid:false});box(x,sh+hw+.05,zf-sz*.2,1,1,.4,'#d6cfc2',{tx:'rock',solid:false});}
-    for(const [x,y,zz,sx,sy,sz2] of [[-24,-3,z+sz*4,13,15,17],[24,-3,z+sz*4,13,15,17],[0,8,z+sz*12,22,8,12],[-40,-6,z+sz*14,18,14,20],[40,-6,z+sz*14,18,14,20]]){const hm=deco(new THREE.SphereGeometry(1,28,14),grassM,x,y,zz);hm.scale.set(sx,sy,sz2);hm.castShadow=false;}}}
+    for(const [x,y,zz,sx,sy,sz2] of [[-24,-3,z+sz*4,13,15,17],[24,-3,z+sz*4,13,15,17],[0,8,z+sz*30,22,9,11],[-40,-6,z+sz*14,18,14,20],[40,-6,z+sz*14,18,14,20]]){const hm=deco(new THREE.SphereGeometry(1,28,14),grassM,x,y,zz);hm.scale.set(sx,sy,sz2);hm.castShadow=false;}}}
     /* the sheds are laid out from the old big-yard plans and slid in beside the line */
   rlShift(10,0,()=>{// ---------- west: loading dock and goods shed ----------
   wcBox(-16.2,-12.95,0,1.25,-14,14,'#8d8a83');box(-13.05,1.25,0,.15,.02,28,'#f4c22b',{solid:false,edges:false});
@@ -3920,8 +3961,8 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
     const r=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:'#ff3b2f'})),g=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:'#123a1c'}));
     r.position.set(x,4.95,z+(z<0?.21:-.21));g.position.set(x,4.55,z+(z<0?.21:-.21));M.group.add(r,g);sig.push({r,g,ln});}
   M.life.push(()=>{for(const s of sig){const T=(M.trains||[])[s.ln],busy=T&&T.z>-9000;s.r.material.color.set(busy?'#ff3b2f':'#4a1010');s.g.material.color.set(busy?'#123a1c':'#3bff7a');}});
-  // trees from the Tripo Trees pack: two in the yard corners, the rest outside the fence
-  for(const [id,x,z,h,ry] of [['tt_bigoak',22.5,-27.5,7.5,.4],['tt_pine',-22.5,27.5,8.5,2.1],['tt_pink',-30,-18,6.5,1],['tt_orange',30,18,6.5,2.5],['tt_pine',-31,8,9,.3],['tt_smalloak',31,-8,6.5,3.6],['tt_bigoak',-30,26,8,4],['tt_pine',30,-26,8.5,1.7],['tt_smalloak',-14,-35,6,.8],['tt_pink',14,35,6,5],['tt_orange',-31,-30,6,2],['tt_bigoak',32,32,8,1.2]])glbTree(id,x,z,h,ry);
+  // trees from the Tripo Trees pack, all well outside the fence so none stand in (or hang over) the play space
+  for(const [id,x,z,h,ry] of [['tt_bigoak',34,-24,8,.4],['tt_pine',-35,22,9,2.1],['tt_pink',-34,-12,6.5,1],['tt_orange',34,12,6.5,2.5],['tt_pine',-40,2,9.5,.3],['tt_smalloak',38,-4,6.5,3.6],['tt_bigoak',-36,32,8,4],['tt_pine',36,28,9,1.7],['tt_smalloak',-38,-28,6.5,.8],['tt_pink',42,22,6,5],['tt_orange',-43,-18,6.5,2],['tt_bigoak',44,-34,8.5,1.2],['tt_pine',-45,12,9,1]])glbTree(id,x,z,h,ry);
   // strip lights under the shed roofs
   {const lm=new THREE.MeshBasicMaterial({color:'#fff2c4'});for(const [x,z0,z1,y] of [[-15.5,-8,14,6.5],[15,-6,12,6.9],[11,-6,12,6.9],[19,-6,12,6.9]])for(let z=z0;z<=z1;z+=5.5){const m=new THREE.Mesh(B.boxGeo(.3,.08,1.6),lm);m.position.set(x,y,z);M.group.add(m);}}
   M.railGlow=glow;M.life.push((t,dt)=>{for(const G of glow){const T=(M.trains||[])[G.ln];const hot=T&&(T.z>-9000||railPos(T,t+4)!=null);G.k=clamp(G.k+(hot?dt*2.5:-dt*1.5),0,1);G.hot=G.k>.5;

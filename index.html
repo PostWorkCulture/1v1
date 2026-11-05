@@ -2831,9 +2831,10 @@ function townLife(cars,o){const R=Math.random;
     const side=i%2?1:-1,hx=side*(10+R()*2.5),hz=(R()*2-1)*o.zLim;g.userData={hx,hz,ph:R()*9,p1,p2};M.group.add(g);bfs.push(g);}
   M.life.push((t,dt)=>{for(const g of bfs){const u=g.userData,k=t*.6+u.ph;g.position.set(u.hx+Math.sin(k)*2.2+Math.sin(k*2.3)*.6,1+Math.abs(Math.sin(k*1.7))*1.1,u.hz+Math.cos(k*.8)*2.2);
     g.rotation.y=k;const f=Math.sin(t*18+u.ph)*1.1;u.p1.rotation.y=f;u.p2.rotation.y=-f;}});}
-function roofGable(x,z,w,d,y,color,alongX,tx,endC){const h=2.6,slope=Math.atan2(h,(alongX?d:w)/2),len=Math.hypot(h,(alongX?d:w)/2)+.3;const m=mat(color,tx||'brick');
-  for(const s of [-1,1]){const g=B.boxGeo(alongX?w+.8:len,.35,alongX?len:d+.8);const r=new THREE.Mesh(g,m);r.castShadow=true;r.receiveShadow=true;
-    if(alongX){r.position.set(x,y+h/2,z+s*(d/4));r.rotation.x=s*slope;}else{r.position.set(x+s*(w/4),y+h/2,z);r.rotation.z=-s*slope;}M.group.add(r);}
+function roofGable(x,z,w,d,y,color,alongX,tx,endC,ov){const o0=ov?ov[0]:.4,o1=ov?ov[1]:.4;/* ov: how far the roof overhangs each end (low end, high end), 0.4 m by default */
+  const h=2.6,slope=Math.atan2(h,(alongX?d:w)/2),len=Math.hypot(h,(alongX?d:w)/2)+.3;const m=mat(color,tx||'brick');
+  for(const s of [-1,1]){const g=B.boxGeo(alongX?w+o0+o1:len,.35,alongX?len:d+o0+o1);const r=new THREE.Mesh(g,m);r.castShadow=true;r.receiveShadow=true;
+    if(alongX){r.position.set(x+(o1-o0)/2,y+h/2,z+s*(d/4));r.rotation.x=s*slope;}else{r.position.set(x+s*(w/4),y+h/2,z+(o1-o0)/2);r.rotation.z=-s*slope;}M.group.add(r);}
   const tri=new THREE.Shape();const hw=(alongX?d:w)/2;tri.moveTo(-hw,0);tri.lineTo(hw,0);tri.lineTo(0,h);tri.closePath();
   const tg=new THREE.ShapeGeometry(tri);for(const s of [-1,1]){const t=new THREE.Mesh(tg,mat(endC||'#f3efe6',null,{side:THREE.DoubleSide}));
     if(alongX){t.position.set(x+s*w/2,y,z);t.rotation.y=Math.PI/2;}else t.position.set(x,y,z+s*d/2);M.group.add(t);}
@@ -2971,8 +2972,9 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       // blade crosses on the front corners: a white square with a glowing red cross on both faces, on a bracket off the wall
       for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=F+2.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});
         sb(uo-u2(.95),uo+u2(.95),v-u2(.06),v+u2(.06),y-.95,y+.95,'#ffffff',{solid:false});cross(uo,v,y,1.6,'v',.24);}
-      // a big cross on each side wall between the upstairs windows, and two on the loft wall over the terrace
-      for(const sv of [-1,1]){cross(.35,sv*(5.65+u2(.06)),F+1.95,2.8,'v');cross(-.15-u2(.06),sv*4.55,L+1.95,2.4,'u');}
+      // a big cross on each side wall between the upstairs windows, and one on the loft wall over the terrace
+      for(const sv of [-1,1]){cross(.35,sv*(5.65+u2(.06)),F+1.95,2.8,'v');}
+      cross(-.15-u2(.06),1.0,L+1.95,1.8,'u');/* one cross on the loft wall, between the door and the window, clear of the ladders */
       // a tall glowing cross standing on the front end of the loft ridge
       {const ry=8.3+3.6+.3+2.6;sb(.35-u2(.06),.35+u2(.06),-u2(.07),u2(.07),ry-.2,ry+.35,'#9aa0a8');cross(.35,0,ry+1.75,2.8,'u',.3);}
       // red belts round the building at each floor line, red corner posts, red caps on the porch rail; the porch roof keeps a white tiled floor
@@ -3206,9 +3208,10 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   S.stairs(1,1,2.4,5.3,F,9,(L-F)/9,.39,SC);S.box(-.15,3.2,2.1,2.25,L,L+1,'#ffffff');
   const R2=L+3.6;S.wall('u',6,-5.5,5.5,L,R2,[BW(-2,2.6,L,R2)],wall);for(const v of [-5.5,5.5])S.wall('v',v,0,5.85,L,R2,[BW(3,2.4,L,R2)],wall);
   S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],wall);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
-  roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true);
+  /* no overhang on the terrace end, so the two ladders up the loft wall reach the roof edge without going through the eaves */
+  roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true,null,null,flip>0?[0,.4]:[.4,0]);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
-  for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.1,S.Z(sv*4.7),L,R2+1.05,flip,0);
+  for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.2,S.Z(sv*4.7),L,R2+1.05,flip,0);
   if(!WH)S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
 // single-storey house with a flat roof deck reached by outside stairs
 function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F=4.4,inner='#f3efe6';

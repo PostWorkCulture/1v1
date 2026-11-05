@@ -4334,7 +4334,7 @@ function skyHigh(){const X=17,Z=21;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=one
   const upd=t=>{const a=t*.11;heli.position.set(Math.cos(a)*62,24+Math.sin(t*.5)*2,Math.sin(a)*62);heli.rotation.set(0,-a-Math.PI/2,.16);heli.userData.rot.rotation.y=t*22;
     const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0);M.life.push(upd);
   const sp=[[-5,17],[7,16.5],[-12,15],[9,19],[0,15.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
-/* ---------- Lagoon (1v1): a wooden deck on stilts over a turquoise lagoon at sunset ---------- */
+/* ---------- Lagoon (1v1): two wooden pavilions on stilts over a turquoise lagoon, joined by a narrow walkway, at sunset ---------- */
 function lgPalm(g,x,y,z,s,lean,pr){const pg=new THREE.Group();pg.position.set(x,y,z);pg.rotation.y=pr()*TAU;pg.scale.setScalar(s);g.add(pg);
   const bark=mat('#8a6a45',null,{flatShading:true});let px=0,py=0;
   for(let i=0;i<9;i++){const t=i/9,nx=Math.pow(t,1.6)*lean;const c=new THREE.Mesh(gC(.2-t*.06,.24-t*.06,.95,7),bark);c.position.set((px+nx)/2,py+.45,0);c.rotation.z=-Math.atan2(nx-px,.9);pg.add(c);px=nx;py+=.9;}
@@ -4348,50 +4348,154 @@ function lgIsland(x,z,r,n,pr,wy){const g=new THREE.Group();M.group.add(g);
   for(let i=0;i<n;i++){const a=pr()*TAU,d=pr()*r*.45;lgPalm(g,x+Math.cos(a)*d,wy+r*.1,z+Math.sin(a)*d,1+pr()*.5,.8+pr()*1.4,pr);}
   for(let i=0;i<5;i++){const a=pr()*TAU,d=r*(.2+pr()*.4),b=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),mat('#2f7f3a',null,{flatShading:true}));b.scale.set(1,.7,1).multiplyScalar(.8+pr()*.8);b.position.set(x+Math.cos(a)*d,wy+r*.12,z+Math.sin(a)*d);g.add(b);}
   g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;}});flatGroup(g);}
-function lagoonMap(){const X=17,Z=21,WY=-2.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=onePr(777);
-  /* the lagoon: turquoise near the deck, deeper blue further out, ripples drifting */
-  {const g=new THREE.PlaneGeometry(1400,1400,70,70);g.rotateX(-Math.PI/2);const p=g.attributes.position,cols=[],cA=new THREE.Color('#5ff0dc'),cB=new THREE.Color('#1cb8c8'),cC=new THREE.Color('#1a6fa6'),t=new THREE.Color();
-    for(let i=0;i<p.count;i++){const d=Math.hypot(p.getX(i),p.getZ(i));if(d<45)t.copy(cA).lerp(cB,d/45);else t.copy(cB).lerp(cC,Math.min(1,(d-45)/260));cols.push(t.r,t.g,t.b);}
-    g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
-    const rt=canvasTex(256,256,(c,w,h)=>{c.fillStyle='#ffffff';c.fillRect(0,0,w,h);c.strokeStyle='rgba(255,255,255,.0)';const r=onePr(5);for(let i=0;i<70;i++){c.strokeStyle=`rgba(${r()<.5?'40,90,120':'255,255,255'},${.08+r()*.12})`;c.lineWidth=1+r()*2;c.beginPath();const x=r()*w,y=r()*h,l=10+r()*30;c.moveTo(x,y);c.quadraticCurveTo(x+l/2,y+(r()-.5)*8,x+l,y);c.stroke();}});
-    rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(140,140);
-    const wm=new THREE.MeshStandardMaterial({vertexColors:true,map:rt,roughness:.15,metalness:.1});const w=new THREE.Mesh(g,wm);w.position.y=WY;w.receiveShadow=true;w.userData.dyn=1;M.group.add(w);
-    M.life.push(t=>{rt.offset.set(t*.004,t*.0025);});}
-  /* the deck: planks, a dark edge beam, stilts down into the water with a ring of foam round each */
-  floor(-18.5,18.5,-22.5,22.5,'#b88250','wood',0,2);
-  deco(new THREE.BoxGeometry(37,.45,45),mat('#5a3a22'),0,-.25,0).castShadow=false;
-  for(const [x,z,w,d] of [[0,22.6,37.4,.4],[0,-22.6,37.4,.4],[18.6,0,.4,45.4],[-18.6,0,.4,45.4]])deco(new THREE.BoxGeometry(w,.55,d),mat('#4a2f1a'),x,-.2,z);
-  {const st=mat('#6e4a2c'),fm=mat('#ffffff',null,{transparent:true,opacity:.45,depthWrite:false});for(let x=-18;x<=18.01;x+=4.5)for(let z=-22;z<=22.01;z+=4.4){deco(gC(.22,.25,6,8),st,x,WY-1.4,z);const f=deco(new THREE.RingGeometry(.3,.75,16),fm,x,WY+.03,z);f.rotation.x=-Math.PI/2;f.castShadow=false;}}
-  deckRail(X,Z,'rope');
-  /* tiki deck in the middle: a raised platform with steps on all four sides and a big thatched roof over the shop */
-  const T=4.25,TH=.9;box(0,0,0,2*T,TH,2*T,'#9a6a3a',{tx:'wood',wood:false});
-  [[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dz])=>{for(let i=0;i<2;i++){const u=T+.25+i*.5;box(dx*u,0,dz*u,dx?.5:3.5,TH-.3*(i+1),dz?.5:3.5,'#a8743f',{tx:'wood',wood:false,edges:false});}});
-  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a');for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*3.75,z=sz*3.75;box(x,TH,z,.3,4.8,.3,'#c8a060',{mat:bam,edges:false});for(let y=TH+.5;y<5.4;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
-    const th=mat('#d4ad62',null,{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(6.6,24),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),0,TH+4.82,0);u.rotation.x=Math.PI/2;u.castShadow=false;}deco(new THREE.CylinderGeometry(0,6.6,3.1,12),th,0,TH+4.8+1.45,0);deco(new THREE.CylinderGeometry(6.6,6.9,.6,24,1,true),mat('#b88c46',null,{side:2,flatShading:true}),0,TH+4.85,0);
-    deco(new THREE.SphereGeometry(.4,8,6),mat('#b88c46'),0,TH+8.2,0);
-    for(let k=0;k<12;k++){const a=k/12*TAU;const b=deco(new THREE.BoxGeometry(.12,.12,6.4),mat('#7a5428'),Math.cos(a)*3.1,TH+6.3,Math.sin(a)*3.1);b.rotation.y=-a+Math.PI/2;b.rotation.x=0;b.castShadow=false;b.lookAt(0,TH+8,0);}}
-  M.shopAt=[{x:0,z:0,y:TH}];
-  /* tiki torches round the deck */
+// deck layout, shared by the deck builder and the water shader: two pavilions (32 x 16 m) joined by a 4.5 m walkway, with a shop nook off the walkway
+const LG={X:16,PZ0:6,PZ1:22,WX:2.25,NX0:2.25,NX1:5.5,NZ:1.75,WY:-2.4};
+// the lagoon swell: a long gentle roll with a little chop on top (JS copy of the shader's lgH, for things that float)
+const lgH=(x,z,t)=>.16*Math.sin(x*.21+z*.13+t*.9)+.11*Math.sin(-x*.14+z*.27+t*1.15)+.05*Math.sin(x*.9+z*.7+t*2.3)+.03*Math.sin(x*1.7-z*1.3+t*3.1);
+/* the lagoon water: the Beach Please sea (swell, fine ripples, sun glitter, sparkling glints, caustics) in a lagoon setting:
+   clear turquoise over a sandy bed near the decks, deep blue further out, foam lapping at the deck edges and the odd whitecap */
+function lgWater(){const WY=LG.WY,L=LG;
+  const GL=WC_GLSL+`
+float sdB(vec2 p,vec2 c,vec2 h){vec2 q=abs(p-c)-h;return length(max(q,0.))+min(max(q.x,q.y),0.);}
+float lgSd(vec2 p){float pz=(${L.PZ0}.+${L.PZ1}.)*.5,ph=(${L.PZ1}.-${L.PZ0}.)*.5;
+  return min(min(sdB(p,vec2(0.,pz),vec2(${L.X}.,ph)),sdB(p,vec2(0.,-pz),vec2(${L.X}.,ph))),min(sdB(p,vec2(0.,0.),vec2(${L.WX},${L.PZ0}.2)),sdB(p,vec2(${(L.NX0+L.NX1)/2},0.),vec2(${(L.NX1-L.NX0)/2},${L.NZ}))));}
+float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+p.y*.27+t*1.15)+.05*sin(p.x*.9+p.y*.7+t*2.3)+.03*sin(p.x*1.7-p.y*1.3+t*3.1);}
+`;
+  // the sandy lagoon bed: shallow and pale round the decks, sloping away into deep water
+  {const S=360,n=72,g=new THREE.PlaneGeometry(S,S,n,n);g.rotateX(-Math.PI/2);const p=g.attributes.position,uv=g.attributes.uv,col=new Float32Array(p.count*3),c=new THREE.Color(),sa=new THREE.Color('#ead4a2'),dk=new THREE.Color('#255e6e'),r=onePr(31);
+    for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.hypot(x,z),k=clamp((d-18)/140,0,1);p.setY(i,WY-1.9-k*k*12+(r()-.5)*.25);c.copy(sa).lerp(dk,Math.pow(k,.6));const nz=(r()-.5)*.05;col[i*3]=c.r+nz;col[i*3+1]=c.g+nz;col[i*3+2]=c.b+nz;uv.setXY(i,x/4,z/4);}
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,map:TX.sand,roughness:.95}));m.receiveShadow=true;m.userData.dyn=1;M.group.add(m);}
+  const mk=(x0,x1,z0,z1,nx,nz)=>{const g=new THREE.PlaneGeometry(x1-x0,z1-z0,nx,nz);g.rotateX(-Math.PI/2);g.translate((x0+x1)/2,0,(z0+z1)/2);
+    const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),cA=new THREE.Color('#5ff0dc'),cB=new THREE.Color('#1cb8c8'),cC=new THREE.Color('#1a6fa6');
+    for(let i=0;i<p.count;i++){const d=Math.hypot(p.getX(i),p.getZ(i));if(d<45)c.copy(cA).lerp(cB,d/45);else c.copy(cB).lerp(cC,Math.min(1,(d-45)/260));col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));return g;};
+  const uT={value:0};
+  const mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.06,metalness:.05,transparent:true,depthWrite:false});
+  mt.onBeforeCompile=sh=>{sh.uniforms.uT=uT;
+    sh.vertexShader=GL+sh.vertexShader
+      .replace('#include <beginnormal_vertex>',`vec3 wpos=(modelMatrix*vec4(position,1.)).xyz;vWp=wpos;float e=.35,hk=smoothstep(70.,56.,max(abs(wpos.x),abs(wpos.z))),h0=lgH(wpos.xz,uT)*hk;
+        vec3 objectNormal=normalize(vec3(-(lgH(wpos.xz+vec2(e,0.),uT)*hk-h0)/e,1.,-(lgH(wpos.xz+vec2(0.,e),uT)*hk-h0)/e));`)
+      .replace('#include <begin_vertex>','vec3 transformed=vec3(position);transformed.y+=h0;');
+    sh.fragmentShader=GL+sh.fragmentShader
+      // colour: lighter where a crest lifts the water, sun-lit caustics on the sand round the decks, foam at the deck edges
+      .replace('#include <color_fragment>',`#include <color_fragment>
+        vec2 P=vWp.xz;float e=lgSd(P),camD=length(vViewPosition),hh=lgH(P,uT);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.6,.97,.9),smoothstep(.05,.3,hh)*.3);
+        float wFoam=0.;
+        if(e<60.){vec2 q=swirl(P,uT);float tx=foamTex(q+vec2(uT*.05,0.));
+
+#ifndef WC_LOW
+          if(e<28.){vec2 cp=P+vec2(sin(P.y*.9+uT*.7),cos(P.x*.8-uT*.6))*.35;vec2 c1=wor(cp*.7+vec2(uT*.18,uT*.11)),c2=wor(cp*.95-vec2(uT*.13,-uT*.17));
+            float caus=(1.-smoothstep(0.,.16,c1.y-c1.x))*(1.-smoothstep(0.,.2,c2.y-c2.x));caus=caus*.8+(1.-smoothstep(0.,.07,c1.y-c1.x))*.12;
+            diffuseColor.rgb+=vec3(.8,1.,.95)*caus*.3*smoothstep(26.,2.,e)*smoothstep(60.,15.,camD);}
+#endif
+
+          // water lapping at the decks: a lacy fringe of foam that breathes in and out along every edge
+          float lap=.5+.35*sin(uT*1.3+P.x*.6+P.y*.4)+.25*sin(uT*2.1-P.x*.9+P.y*1.3);
+          float edge=smoothstep(.9+lap,-.1,e)*smoothstep(-1.,-.2,e);
+          // rafts of left-over foam drifting about near the decks
+          float res=smoothstep(40.,4.,e)*smoothstep(.55,.78,fbm(q*.25+vec2(uT*.03,0.)))*.55;
+          wFoam=clamp(edge*(.5+.7*tx)+res*tx,0.,1.);
+          // the odd whitecap further out
+          wFoam=max(wFoam,smoothstep(.2,.34,hh)*smoothstep(.6,.8,fbm(P*.06+vec2(0.,uT*.05)))*smoothstep(10.,30.,e)*tx*.8);}
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.96,.98,1.),wFoam);
+        diffuseColor.a=mix(mix(.55,.94,smoothstep(0.,70.,e)),1.,wFoam);`)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.05,.85,wFoam);')
+      // fine ripples on top of the swell (faded out with distance so far water doesn't shimmer)
+      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+        {vec2 q=vWp.xz;float fade=clamp(1.-camD/110.,0.,1.)*(1.-wFoam*.8);
+          vec3 rp=vec3(1.2*cos(q.x*2.1+q.y*.7+uT*2.1)+.8*cos(q.x*3.7-q.y*2.3-uT*2.9)+.5*cos(q.x*6.1+q.y*5.3+uT*4.1)+.35*cos(-q.x*9.3+q.y*7.7+uT*5.3),0.,
+                       .7*cos(q.x*2.1+q.y*.7+uT*2.1)-1.1*cos(q.x*3.7-q.y*2.3-uT*2.9)+.6*cos(q.x*6.1+q.y*5.3+uT*4.1)+.45*cos(-q.x*9.3+q.y*7.7+uT*5.3))*.045*fade;
+          normal=normalize(normal-(viewMatrix*vec4(rp,0.)).xyz);}`)
+      // sky reflection at grazing angles, the setting sun's glitter path and sparkling glints
+      .replace('#include <opaque_fragment>',`{vec3 V=normalize(vViewPosition),L=normalize((viewMatrix*vec4(normalize(vec3(-.58,.29,-.76)),0.)).xyz),H=normalize(L+V);
+          float fr=pow(1.-clamp(dot(normal,V),0.,1.),4.)*(1.-wFoam);
+          outgoingLight=mix(outgoingLight,vec3(.96,.74,.66),fr*.6);diffuseColor.a=mix(diffuseColor.a,1.,fr*.7);
+          vec2 gp=vWp.xz*5.,gc=floor(gp),gs=gc+floor(uT*7.+h21(gc)*7.)*vec2(1.7,3.1);float cell=h21(gs);vec2 go=vec2(h21(gs+5.3),h21(gs+9.1))*.7+.15;
+          float pt=smoothstep(.09+camD*.004,0.,length(fract(gp)-go));
+          float nh=max(dot(normal,H),0.);
+          float gl=(pow(nh,1400.)*9.+step(.8,cell)*pt*pow(nh,90.)*14.+pow(nh,40.)*.35)*(1.-wFoam);
+          outgoingLight+=vec3(1.,.9,.78)*gl;diffuseColor.a=min(1.,diffuseColor.a+gl*.5);}
+        #include <opaque_fragment>`);};
+  mt.customProgramCacheKey=()=>'lgwater1';
+  // fine mesh round the decks so the swell has shape (faded flat at its edge), four coarse flat strips out to the horizon
+  for(const [x0,x1,z0,z1,nx,nz] of [[-70,70,-70,70,120,120],[-700,-70,-700,700,24,60],[70,700,-700,700,24,60],[-70,70,-700,-70,16,24],[-70,70,70,700,16,24]]){const m=new THREE.Mesh(mk(x0,x1,z0,z1,nx,nz),mt);m.position.y=WY;m.receiveShadow=true;m.userData.dyn=1;m.renderOrder=2;m.frustumCulled=false;M.group.add(m);}
+  M.life.push(t=>{uT.value=t;});}
+// a stretch of deck: planks on a dark underframe, with stilts down through the water into the sand
+function lgDeck(x0,x1,z0,z1){floor(x0,x1,z0,z1,'#b88250','wood',0,2);
+  deco(new THREE.BoxGeometry(x1-x0+.3,.45,z1-z0+.3),mat('#5a3a22'),(x0+x1)/2,-.25,(z0+z1)/2).castShadow=false;
+  const st=mat('#6e4a2c'),nx=Math.max(1,Math.round((x1-x0-2)/4.5)),nz=Math.max(1,Math.round((z1-z0-2)/4.4)),sx=(x1-x0-2)/nx,sz=(z1-z0-2)/nz;
+  for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++)deco(gC(.22,.27,5.6,8),st,x0+1+i*sx,-2.8,z0+1+j*sz);}
+// a rope rail along one edge of the deck; the invisible wall behind it keeps players on the boards but lets bullets through (bots can see past it too)
+function lgRail(x0,z0,x1,z1){const rope=mat('#d9c48e'),post=mat('#6e4a2c'),ax=z0===z1,L=ax?x1-x0:z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2;
+  const b=collider(ax?x0:x0-.2,ax?x1:x0+.2,0,7,ax?z0-.2:z0,ax?z0+.2:z1);b.wood=true;b.see=true;
+  const n=Math.max(1,Math.round(L/3));for(let i=0;i<=n;i++){const t=-L/2+i*L/n;deco(gC(.1,.12,1.15,6),post,ax?cx+t:cx,.575,ax?cz:cz+t);}
+  for(const y of [.55,1.0]){const r=deco(gC(.035,.035,L,5),rope,cx,y,cz);r.rotation.set(ax?0:Math.PI/2,0,ax?Math.PI/2:0);r.castShadow=false;}}
+function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=onePr(777);
+  lgWater();
+  /* the two pavilions, the walkway between them and the shop nook off its east side */
+  for(const s of [1,-1])lgDeck(-L.X,L.X,Math.min(s*L.PZ0,s*L.PZ1),Math.max(s*L.PZ0,s*L.PZ1));
+  lgDeck(-L.WX,L.WX,-L.PZ0,L.PZ0);lgDeck(L.NX0,L.NX1,-L.NZ,L.NZ);
+  for(const s of [1,-1]){const a=s*L.PZ0,b=s*L.PZ1,z0=Math.min(a,b),z1=Math.max(a,b);
+    lgRail(-L.X,b,L.X,b);lgRail(-L.X,z0,-L.X,z1);lgRail(L.X,z0,L.X,z1);lgRail(-L.X,a,-L.WX,a);lgRail(L.WX,a,L.X,a);}
+  lgRail(-L.WX,-L.PZ0,-L.WX,L.PZ0);lgRail(L.WX,-L.PZ0,L.WX,-L.NZ);lgRail(L.WX,L.NZ,L.WX,L.PZ0);
+  lgRail(L.NX0,-L.NZ,L.NX1,-L.NZ);lgRail(L.NX1,-L.NZ,L.NX1,L.NZ);lgRail(L.NX0,L.NZ,L.NX1,L.NZ);
+  /* the shop sits in the nook under a thatched tiki canopy that spans the walkway, its bamboo posts standing in the water */
+  M.shopAt=[{x:(L.NX0+L.NX1)/2+.35,z:0,y:0}];
+  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a'),CY=4.3;for(const [x,z] of [[-L.WX-.55,-2.7],[-L.WX-.55,2.7],[L.NX1+.55,-2.7],[L.NX1+.55,2.7]]){deco(gC(.16,.19,CY-WY,8),bam,x,(CY+WY)/2,z);for(let y=.4;y<CY-.3;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
+    const cx=(L.NX1-L.WX)/2,th=mat('#d4ad62','thatch',{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(6.4,4),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),cx,CY+.02,0);u.rotation.x=Math.PI/2;u.rotation.z=Math.PI/4;u.castShadow=false;}
+    const roof=deco(new THREE.CylinderGeometry(0,6.4,2.6,4),th,cx,CY+1.3,0);roof.rotation.y=Math.PI/4;deco(new THREE.CylinderGeometry(6.4,6.7,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),cx,CY+.05,0).rotation.y=Math.PI/4;
+    deco(new THREE.SphereGeometry(.35,8,6),mat('#b88c46'),cx,CY+2.65,0);
+    const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(cx,CY-.6,0);M.group.add(l);}
+  /* tiki torches: the far corners of each pavilion and a pair lighting the walkway */
   const flames=[];{const pole=mat('#7a5a32'),cup=mat('#5a3a1e'),fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4});
-    for(const [x,z] of [[16,20],[-16,-20],[16,-20],[-16,20],[16,0],[-16,0]]){deco(gC(.06,.08,2,6),pole,x,1,z);deco(gC(.18,.12,.35,8),cup,x,2.15,z);const a=deco(new THREE.ConeGeometry(.17,.5,8),fo,x,2.55,z),b=deco(new THREE.ConeGeometry(.1,.32,8),fy,x,2.5,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;
+    for(const [x,z] of [[15.3,21.3],[-15.3,21.3],[15.3,-21.3],[-15.3,-21.3],[-L.WX-.6,-4.6],[-L.WX-.6,4.6]]){const y0=Math.abs(x)<4?WY:0;deco(gC(.06,.08,2-y0,6),pole,x,(2+y0)/2,z);deco(gC(.18,.12,.35,8),cup,x,2.15,z);const a=deco(new THREE.ConeGeometry(.17,.5,8),fo,x,2.55,z),b=deco(new THREE.ConeGeometry(.1,.32,8),fy,x,2.5,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;
       flames.push(a,b);glowSprite(x,2.65,z,2.2,'#ff8a2a',.85);const l=new THREE.PointLight('#ff9a4a',10,12,1.6);window.GFX&&GFX.light(l);l.position.set(x,2.9,z);M.group.add(l);}}
-  {const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(0,TH+4.2,0);M.group.add(l);}
-  /* cover: crates (wood, shots go through), metal barrels and stone tiki statues (solid) */
+  /* ---------- cover (the same on both pavilions, turned through 180 degrees) ----------
+     solid pieces stop bullets: a stone-topped tiki bar, a lava-rock wall between two stone tiki statues, steel cargo boxes, metal barrels and stone planters;
+     only the small wooden crates let shots through */
   const crM=new THREE.MeshStandardMaterial({roughness:.8,map:canvasTex(128,128,(g,w,h)=>{g.fillStyle='#c89558';g.fillRect(0,0,w,h);for(let i=0;i<4;i++){g.fillStyle=i%2?'rgba(255,230,190,.10)':'rgba(80,45,15,.10)';g.fillRect(0,i*32,w,32);g.fillStyle='rgba(70,40,15,.45)';g.fillRect(0,i*32,w,2);}
     g.fillStyle='#8a5a2c';g.fillRect(0,0,w,13);g.fillRect(0,h-13,w,13);g.fillRect(0,0,13,h);g.fillRect(w-13,0,13,h);g.save();g.translate(w/2,h/2);g.rotate(Math.PI/4);g.fillRect(-84,-7,168,14);g.restore();g.strokeStyle='rgba(40,20,5,.6)';g.lineWidth=2;g.strokeRect(1,1,w-2,h-2);})});
   const crate=(x,z,s)=>box(x,0,z,s,s,s,'#c89558',{mat:crM,wood:true});
+  // steel cargo boxes: painted sheet steel with a dark frame and rivet lines
+  const cgM=c=>new THREE.MeshStandardMaterial({roughness:.5,metalness:.35,map:canvasTex(128,128,(g,w,h)=>{g.fillStyle=c;g.fillRect(0,0,w,h);g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,0,w,9);g.fillRect(0,h-9,w,9);g.fillRect(0,0,9,h);g.fillRect(w-9,0,9,h);
+    g.fillStyle='rgba(255,255,255,.08)';for(let x=18;x<w-9;x+=22)g.fillRect(x,9,3,h-18);g.fillStyle='rgba(0,0,0,.35)';for(let i=14;i<w-9;i+=12){g.fillRect(i,4,2,2);g.fillRect(i,h-6,2,2);}})});
+  const cgA=cgM('#3d7a8f'),cgB=cgM('#8a6a2e');
+  const cargo=(x,y,z,w,h,d,m)=>box(x,y,z,w,h,d,'#3d7a8f',{mat:m,wood:false});
   const bG=new THREE.LatheGeometry([[0,0],[.42,0],[.5,.3],[.52,.55],[.5,.8],[.42,1.1],[0,1.1]].map(p=>new THREE.Vector2(p[0],p[1])),14);
   const barrel=(x,z,c)=>{collider(x-.5,x+.5,0,1.1,z-.5,z+.5);deco(bG,mat(c,null,{flatShading:true,roughness:.55,metalness:.35}),x,0,z);for(const y of [.22,.88])deco(gC(.5,.5,.07,14),mat('#2e3034',null,{metalness:.6}),x,y,z).castShadow=false;};
   const barrels=(x,z,c,s)=>{barrel(x,z,c);barrel(x+s,z,c);barrel(x,z+s,c);};
-  const statue=(x,z,face0)=>{const st='#6f665c',dk=mat('#4e4740',null,{flatShading:true});box(x,0,z,1.5,2.6,1,st,{extra:{flatShading:true,roughness:.95}});for(const face of [face0,-face0]){const f=z+face*.5;
+  const statue=(x,z,face0)=>{const st='#6f665c',dk=mat('#4e4740',null,{flatShading:true});box(x,0,z,1.5,2.6,1,st,{extra:{flatShading:true,roughness:.95},wood:false});for(const face of [face0,-face0]){const f=z+face*.5;
     deco(new THREE.BoxGeometry(1.3,.22,.25),dk,x,2.05,f+face*.1);deco(new THREE.BoxGeometry(.3,.75,.35),dk,x,1.55,f+face*.15);deco(new THREE.BoxGeometry(.9,.18,.2),mat('#3a403c'),x,.95,f+face*.08);
     for(const s of [-.38,.38])deco(new THREE.BoxGeometry(.28,.2,.12),mat('#e8d9a0',null,{emissive:'#ffcc66',emissiveIntensity:.6}),x+s,1.8,f+face*.05);}deco(new THREE.BoxGeometry(1.7,.3,1.2),dk,x,2.6,z);};
-  for(const s of [1,-1]){statue(s*11.5,s*9.75,-s);crate(s*7.5,s*14.5,1.5);crate(s*8.75,s*13.75,1);barrels(-s*11.25,s*4.25,'#2f6fb5',s);barrels(-s*4.75,s*13.25,'#c8462e',s);crate(-s*6.5,s*8.5,1.5);crate(-s*7.75,s*7.75,1);}
-  /* a moored speedboat and a lifebuoy for colour */
-  {const g=new THREE.Group();g.position.set(-21.5,WY+.15,9);M.group.add(g);const add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);g.add(o);return o;};
+  // lava-rock wall: a rough dark block with a few lighter stones set in it
+  const rockWall=(x,z,w,d)=>{box(x,0,z,w,1.05,d,'#4a4542',{extra:{flatShading:true,roughness:1},wood:false,edges:false});for(let i=0;i<Math.round(w*1.6);i++){const o=deco(new THREE.DodecahedronGeometry(.22+pr()*.14,0),mat('#6a645c',null,{flatShading:true}),x+(pr()-.5)*(w-.5),.25+pr()*.6,z+(pr()<.5?-1:1)*d/2);o.castShadow=false;}};
+  // tiki bar: a stone-topped counter clad in bamboo, with a shelf of bottles behind and a little thatched roof over it
+  const tikiBar=(s)=>{const sg=v=>s*v;const bx=sg(-9),bz=sg(9.6);
+    box(bx,0,bz,6,1.15,1.1,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(6.3,.12,1.4),mat('#9a948a',null,{roughness:.6}),bx,1.21,bz);
+    {const bam=mat('#c8a060',null,{flatShading:true});for(let i=0;i<14;i++)deco(gC(.1,.1,1.1,6),bam,bx-2.85+i*.44,.55,bz+sg(-.6)).castShadow=false;}
+    const sh=box(bx,0,bz+sg(2.1),5.2,1.9,.5,'#6e5a46',{wood:false,extra:{roughness:.85}});deco(new THREE.BoxGeometry(5.3,.08,.6),mat('#9a948a'),bx,1.95,bz+sg(2.1)).castShadow=false;
+    for(let i=0;i<8;i++){const c=['#2fb0cc','#e8a030','#d7263d','#7ad040','#f7e7c0'][i%5];deco(gC(.09,.1,.42,8),mat(c,null,{roughness:.2,metalness:.1}),bx-2.1+i*.6,1.9+.21,bz+sg(2.1)).castShadow=false;deco(gC(.035,.035,.14,6),mat('#2a2a2a'),bx-2.1+i*.6,2.4,bz+sg(2.1)).castShadow=false;}
+    const bam2=mat('#c8a060',null,{flatShading:true});for(const px of [bx-3.1,bx+3.1])box(px,0,bz+sg(2.15),.28,3.3,.28,'#c8a060',{mat:bam2,wood:false,edges:false});
+    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});const r=deco(new THREE.BoxGeometry(7.4,.25,4.2),th,bx,3.45,bz+sg(1.2));r.rotation.x=sg(-.22);deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.9,bz+sg(-.9)).castShadow=false;};
+  // stone planter with a palm in it
+  const planter=(x,z)=>{box(x,0,z,2,1.1,2,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(1.7,.1,1.7),mat('#4a3a2a'),x,1.1,z).castShadow=false;const g=new THREE.Group();M.group.add(g);lgPalm(g,x,1.1,z,.55,.6,pr);flatGroup(g);};
+  for(const s of [1,-1]){const sg=v=>s*v;
+    // either side of the walkway mouth: a steel box to tuck behind as you step off the boards
+    cargo(sg(-4.6),0,sg(9.6),1.7,1.5,1.7,cgA);cargo(sg(4.6),0,sg(9.6),1.7,1.5,1.7,cgB);
+    tikiBar(s);
+    rockWall(sg(7.5),sg(12.6),4.4,.8);statue(sg(4.6),sg(12.6),-s);statue(sg(10.4),sg(12.6),-s);
+    // a stack of cargo in the middle of the pavilion: low in front, one box up behind so you can crouch or stand behind it
+    cargo(sg(0),0,sg(15.5),3.6,1.15,1.6,cgA);cargo(sg(-.6),1.15,sg(15.5),2.2,1.5,1.6,cgB);cargo(sg(2.9),0,sg(16.2),1.4,1.4,1.4,cgB);
+    barrels(sg(13),sg(16.5),'#2f6fb5',sg(1));barrels(sg(-13.5),sg(14.5),'#c8462e',sg(1));
+    planter(sg(-13.6),sg(19.9));planter(sg(13.6),sg(19.9));
+    crate(sg(-9.5),sg(19),1.5);crate(sg(-8.3),sg(20.1),1);crate(sg(8),sg(19.5),1.2);}
+  /* a moored speedboat bobbing on the swell, a lifebuoy on the rail */
+  {const g=new THREE.Group();g.position.set(-21.5,WY-.2,13);M.group.add(g);const add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);g.add(o);return o;};
     add(new THREE.BoxGeometry(2.2,.9,6),mat('#f4f5f7'),0,.45,0);const bow=add(new THREE.CylinderGeometry(0,1.1,2,4),mat('#f4f5f7'),0,.45,4);bow.rotation.set(Math.PI/2,Math.PI/4,0);bow.scale.set(1,1,.6);
-    add(new THREE.BoxGeometry(2.25,.25,6.05),mat('#e8463a'),0,.6,0);add(new THREE.BoxGeometry(1.6,.6,1.2),mat('#2a3a55',null,{roughness:.2}),0,1.1,.6);flatGroup(g);}
-  {const lb=deco(new THREE.TorusGeometry(.45,.13,8,20),mat('#ff4a3a'),X+.35,.85,-6);lb.rotation.y=Math.PI/2;}
+    add(new THREE.BoxGeometry(2.25,.25,6.05),mat('#e8463a'),0,.6,0);add(new THREE.BoxGeometry(1.6,.6,1.2),mat('#2a3a55',null,{roughness:.2}),0,1.1,.6);
+    M.life.push(t=>{g.position.y=WY-.2+lgH(g.position.x,g.position.z,t);g.rotation.z=Math.sin(t*.9)*.04;g.rotation.x=Math.sin(t*.7+1)*.025;});}
+  {const lb=deco(new THREE.TorusGeometry(.45,.13,8,20),mat('#ff4a3a'),L.X+.3,.85,14);lb.rotation.y=Math.PI/2;}
   /* palm islands all round, a cliff with a waterfall out past the sunset */
   for(const [x,z,r,n] of [[-75,-45,10,3],[-28,-105,13,4],[62,-128,11,3],[-140,15,15,4],[95,35,9,2],[25,118,12,3],[-62,95,10,2],[150,-62,13,3],[-110,-160,12,3],[140,120,11,2]])lgIsland(x,z,r,n,pr,WY);
   {const g=new THREE.Group();g.position.set(-35,WY,-175);g.rotation.y=.25;M.group.add(g);const rock=mat('#9a9c84',null,{flatShading:true}),moss=mat('#3f8f45',null,{flatShading:true});
@@ -4403,15 +4507,14 @@ function lagoonMap(){const X=17,Z=21,WY=-2.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};co
     const wt=canvasTex(64,256,(c,w,h)=>{c.fillStyle='#bdf2ff';c.fillRect(0,0,w,h);const r=onePr(9);for(let i=0;i<160;i++){c.fillStyle=`rgba(255,255,255,${.3+r()*.6})`;c.fillRect(r()*w,r()*h,1+r()*2,20+r()*70);}});wt.wrapT=THREE.RepeatWrapping;
     const wf=new THREE.Mesh(new THREE.PlaneGeometry(7,34),new THREE.MeshBasicMaterial({map:wt,transparent:true,opacity:.92,side:2}));wf.position.set(0,17,10.6);wf.userData.keep=1;g.add(wf);
     flatGroup(g);M.life.push(t=>{wt.offset.y=t*.9;});glowSprite(-35+Math.sin(.25)*12,WY+3,-175+Math.cos(.25)*12,24,'#ffffff',.45);}
-  const sp=[[-6,17.5],[6,18.5],[-13,16.5],[13,17],[0,17]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
+  const sp=[[-6,20],[6,20],[-12,17.5],[12,17.5],[0,20.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}});}
-
 const MAPS={
  arena:{modes:['duel'],name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap();}},
  arenasm:{modes:['duel'],one:true,normal:false,name:'Small Arena',desc:'Arena cut down to 1v1 size: the cross ramp, six pillars and less running',sw:['#d9dce1','#e8463a','#2f7fe0'],build(){arenaMap(true);}},
  skyhigh:{modes:['duel'],one:true,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
- lagoon:{modes:['duel'],one:true,name:'Lagoon',desc:'A deck on stilts over a turquoise lagoon: a tiki hut, crates, barrels and palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
+ lagoon:{modes:['duel'],one:true,name:'Lagoon',desc:'Two pavilions on stilts over a turquoise lagoon, joined by a narrow walkway: a tiki shop, bars, cargo and statues for cover, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
  toys:{modes:['duel'],name:'Toy Town',desc:'Toy-sized fights on a bedroom floor: a book tower, a toy chest, blocks and dominoes',sw:['#f4c22b','#e8463a','#2f7fe0'],build(){playroom();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
@@ -4798,8 +4901,8 @@ function downYaw(f){if(S.t-(f._dyLast??-9)>.3){f._dyOn=false;f._dyT=0;}f._dyLast
       if(free>=L-.01){best=a;bl=L;break;}if(free>bl+.05){bl=free;best=a;}}
     f._dyw=best;if(!f._dyOn)f._dyv=f.yaw;f._dyOn=true;}
   let df=f._dyw-f._dyv;df=Math.atan2(Math.sin(df),Math.cos(df));f._dyv+=df*Math.min(1,.25);return f._dyv;}
-function rayBoxes(o,d,maxT){let best=maxT,hit=null,nAx=0,nS=0;
-  for(const b of allBoxes()){let t0=-1e9,t1=1e9,ax=0,sg=0;
+function rayBoxes(o,d,maxT,skipSee){let best=maxT,hit=null,nAx=0,nS=0;
+  for(const b of allBoxes()){if(skipSee&&b.see)continue;let t0=-1e9,t1=1e9,ax=0,sg=0;
     for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?b.y1:b.z1;
       if(Math.abs(dd)<1e-9){if(oo<mn||oo>mx){t0=1e9;break;}continue;}let ta=(mn-oo)/dd,tb=(mx-oo)/dd,s=-1;if(ta>tb){const q=ta;ta=tb;tb=q;s=1;}
       if(ta>t0){t0=ta;ax=a;sg=s;}if(tb<t1)t1=tb;if(t0>t1)break;}
@@ -7301,7 +7404,7 @@ function updWalls(dt){for(const w of M.walls){if(!w.alive)continue;const age=S.t
   if(gridDirty>0){gridDirty-=dt;if(gridDirty<=0){gridDirty=0;const rs=gridRg;gridRg=[];for(const r of rs)buildGrid(r);}}}
 function clearWalls(){clearTurrets();const rs=M.walls.map(w=>w.bb);for(const w of M.walls)M.group.remove(w.group);M.walls=[];gridDirty=0;gridRg=[];for(const r of rs)buildGrid(r);if(rs.length&&M.grid)gridComps(M.grid);}
 /* ================= bot AI ================= */
-function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L);return!h;}
+function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L,true);return!h;}
 function prefRange(id){return {m60:18,duals:11,sniper:34,ar:20,gar:22,burst:21,hornet:13,smg:10,flamer:6,vector:9,p90:12,shotgun:5,autoshot:6,mg:16,rocket:16,thumper:14,crossbow:22,stars:12,sword:1.6,fists:1.4,scout:20,pistol:12,revolver:16}[id]||12;}
 const CLOSE=id=>id==='shotgun'||id==='autoshot'||id==='flamer'||id==='sword'||id==='fists';
 function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const px=cx+Math.cos(ang)*rr,pz=cz+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))return null;

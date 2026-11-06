@@ -1,0 +1,23 @@
+<!doctype html><html><body style="margin:0;background:transparent">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+const COL={torso:'#3b82f6',head:'#f59e0b',armL:'#ef4444',armR:'#22c55e',legL:'#a855f7',legR:'#14b8a6'};
+window.render=async({url,w,h,mode,view,bg})=>{
+  const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setSize(w,h);r.setPixelRatio(1);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.shadowMap.enabled=true;
+  document.body.innerHTML='';document.body.appendChild(r.domElement);
+  const sc=new THREE.Scene();if(bg)sc.background=new THREE.Color(bg);
+  const pm=new THREE.PMREMGenerator(r);sc.environment=pm.fromScene(new RoomEnvironment(),.04).texture;sc.environmentIntensity=.55;
+  const d=new THREE.DirectionalLight(0xffffff,2.2);d.position.set(2,5,4);d.castShadow=true;d.shadow.mapSize.set(2048,2048);Object.assign(d.shadow.camera,{left:-4,right:4,top:5,bottom:-1});sc.add(d,new THREE.HemisphereLight(0xffffff,0x888888,.6));
+  const g=await new GLTFLoader().loadAsync(url);const m=g.scene;sc.add(m);
+  m.traverse(o=>{if(o.isMesh){o.castShadow=true;if(mode==='parts')o.material=new THREE.MeshStandardMaterial({color:COL[o.name]||COL[o.parent?.name]||'#888',roughness:.8});else{o.material.emissive?.set(0x000000);}}});
+  const box=new THREE.Box3().setFromObject(m),size=box.getSize(new THREE.Vector3()),c=box.getCenter(new THREE.Vector3());
+  if(bg){const fl=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.ShadowMaterial({opacity:.18}));fl.rotation.x=-Math.PI/2;fl.position.y=box.min.y;fl.receiveShadow=true;sc.add(fl);}
+  const cam=new THREE.PerspectiveCamera(28,w/h,.01,100);
+  const ang={front:0,side:Math.PI/2,back:Math.PI,three:-Math.PI/5,top:0}[view]??0;
+  let tgt=c.clone(),dist;
+  if(view==='face'){tgt=new THREE.Vector3(c.x,box.max.y-size.y*.17,c.z);dist=size.y*.95;}else{dist=Math.max(size.y,(view==="front"?size.x:Math.hypot(size.x,size.z))*h/w)/(2*Math.tan(cam.fov*Math.PI/360))*1.12;}
+  cam.position.set(tgt.x+Math.sin(ang)*dist,tgt.y+(view==='top'?dist:size.y*.06),tgt.z+Math.cos(ang)*dist);cam.lookAt(tgt);
+  r.render(sc,cam);return r.domElement.toDataURL('image/png');};
+window.ready=true;
+</script></body></html>

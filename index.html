@@ -287,6 +287,8 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 /* hit direction: a thin red arc round the crosshair pointing at whoever shot you; it fades in under a second and turns as you turn */
 #d-hitdirs{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:4}
 #d-hitdirs svg{position:absolute;left:-95px;top:-95px;width:190px;height:190px;overflow:visible;opacity:0;transition:opacity .12s}
+/* map title card shown as a match loads, before the countdown: the map's name in gold with the mode under it */
+#d-big.title{font-size:clamp(34px,6.4vw,84px);animation:titleIn .35s ease-out}@keyframes titleIn{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
 #d-big.cd{font-size:clamp(28px,4.6vw,60px);color:#ff2a3a;text-shadow:0 4px 0 #101114,2px 2px 0 #101114,-2px 2px 0 #101114,2px -2px 0 #101114,-2px -2px 0 #101114}
 #d-big.cd.out{animation:cdOut .4s ease-out forwards}#d-big.cd.go{animation:cdIn .28s cubic-bezier(.2,.9,.25,1.4) both}
 @keyframes cdOut{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);letter-spacing:0}100%{opacity:0;filter:blur(12px);transform:translateY(-14px) scale(1.5);letter-spacing:.3em}}
@@ -2798,7 +2800,7 @@ const FURN_CFG={greysofa:{h:1.34,tint:'#9aa0a8'},pinksofa:{h:1.6},whitesofa:{h:1
   tiki_torch:{h:2.2,dir:'lagoon'},tiki_brazier:{h:2.5,dir:'lagoon'},stone_lantern:{h:1.1,dir:'lagoon'},candle_lantern:{h:.34,dir:'lagoon'},moroccan_lantern:{h:.55,dir:'lagoon'},kerosene_lantern:{h:.32,dir:'lagoon'},
   pineapple:{h:.34,dir:'lagoon'},wood_stool:{h:.72,dir:'lagoon'},retro_stool:{h:.82,dir:'lagoon'},
   speedboat:{h:2.1,dir:'lagoon'},cruiser:{h:3.4,dir:'lagoon'},jetski_blue:{h:1.1,dir:'lagoon'},jetski_purple:{h:1.1,dir:'lagoon'},sailboat:{h:8,dir:'lagoon'},rowboat:{h:1,dir:'lagoon'},canoe:{h:1.1,dir:'lagoon'},
-  superyacht:{h:9,dir:'lagoon'},lighthouse:{h:16,dir:'lagoon'},seaplane:{h:3.4,dir:'lagoon'}},FURNM={},FURN_P={},FURN_WAIT=[];
+  superyacht:{h:9,dir:'lagoon'},lighthouse:{h:16,dir:'lagoon'},seaplane:{h:3.4,dir:'lagoon'}},FURNM={},FURN_P={},FURN_WAIT=[],FURN_USED=new Set();/* FURN_USED: model ids the current map build asked for (so a thumbnail can wait for them) */
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/'+(FURN_CFG[id].dir||'home')+'/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -2817,7 +2819,7 @@ function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('m
   .then(parts=>{FURNM[id]={parts,w:(x1-x0)*sc,d:(z1-z0)*sc};for(const f of FURN_WAIT.splice(0))try{f();}catch(e){}});});}
 setTimeout(()=>{for(const k of Object.keys(FURN_CFG))if(!FURN_CFG[k].dir)loadFurn(k).catch(e=>console.warn(e));},1100);
 /* put a furniture model into an object (a prop box or a knock item) at world (x,y,z) turned ry; it shows up as soon as its model has loaded */
-function furnInto(id,host,x,y,z,ry,sc){const grp=M.group;const go=()=>{const F=FURNM[id];if(!F||M.group!==grp||!host)return;const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
+function furnInto(id,host,x,y,z,ry,sc){FURN_USED.add(id);const grp=M.group;const go=()=>{if(M.group!==grp||!host)return;const F=FURNM[id];if(!F){FURN_WAIT.push(go);return;}/* another model's arrival woke us: wait for ours */const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
     host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;if(sc)g.scale.setScalar(sc);host.add(g);};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
 /* Tripo clouds (a single puff and a bank of puffs): every cloud, the far ones round the sky and the ones drifting over the maps, swaps its blocks for one of
@@ -2833,7 +2835,7 @@ function cloudModel(g,sky){const id=g.userData.cid||(g.userData.cid=Math.random(
 setTimeout(()=>{for(const g of CLOUDS.g)cloudModel(g,true);},1200);
 /* a run of fence panels along straight lines, the panels stretched a little so each line takes a whole number of them; all panels are merged into one mesh
    per material, so a whole boundary costs a handful of draw calls */
-function modelFence(segs,id){const grp=M.group;const go=()=>{const F=FURNM[id];if(M.group!==grp)return;if(!F){FURN_WAIT.push(go);return;}const per=F.parts.map(()=>({P:[],U:[],I:[],n:0}));
+function modelFence(segs,id){FURN_USED.add(id);const grp=M.group;const go=()=>{const F=FURNM[id];if(M.group!==grp)return;if(!F){FURN_WAIT.push(go);return;}const per=F.parts.map(()=>({P:[],U:[],I:[],n:0}));
     const mx=new THREE.Matrix4(),qt=new THREE.Quaternion(),up=new V3(0,1,0),at=new V3(),sc=new V3(),v=new V3();
     for(const [x0,z0,x1,z1] of segs){const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/F.w));qt.setFromAxisAngle(up,Math.abs(x1-x0)>=Math.abs(z1-z0)?0:Math.PI/2);sc.set(L/n/F.w,1,1);
       for(let i=0;i<n;i++){const t=(i+.5)/n;mx.compose(at.set(x0+(x1-x0)*t,0,z0+(z1-z0)*t),qt,sc);
@@ -4745,7 +4747,7 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
     for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
     placed.push({x,z});}
   return true;}
-function buildMap(id){clearMap();OPEN_STAIRS=false;M.id=id;applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
+function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: fists only, no shop */
   if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
@@ -8152,8 +8154,10 @@ function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x
     const rest=sp.filter(q=>!used.includes(q)).sort((p,q)=>(d(p,s)-.5*d(p,other))-(d(q,s)-.5*d(q,other)));const m=rest[0]||s;used.push(m);return m;};
   return[a,mate(a,c),c,mate(c,a)];}
 function clearFx(){for(const f of allFighters()){if(f.finishing){for(const o of f.finishing.obj)scene.remove(o);f.finishing=null;}}hemi.color.set(ENV.hemi[0]);}
-function startRound(){S.elimT0=null;resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS){f.armor=0;f.shopCD=0;}FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;
-  for(const n of nums)n.el.remove();nums.length=0;center('3','Round '+S.round);}
+function startRound(){S.elimT0=null;resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS){f.armor=0;f.shopCD=0;}FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;S.title=S.round===1?1.8:0;/* round 1 opens on the map's name for a moment before the 3, 2, 1 */
+  for(const n of nums)n.el.remove();nums.length=0;if(S.title>0)center(MAPS[S.map].name,modeTag(),'title');else center('3','Round '+S.round);}
+/* the mode shown under the map's name on the title card: 1v1, 1v1 · Simple, 2v2, Free for all or Rumble */
+const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1'):(PLAYERS[S.players]||'Duels');
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
   if(cr&&cr!==v&&isFoe(cr,v))cr.k=(cr.k||0)+1;v.d=(v.d||0)+1;const asd=new Set();if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==cr&&src!==v&&isFoe(src,v)&&S.t-t<15&&!asd.has(src)){asd.add(src);src.as=(src.as||0)+1;}if(by&&by!==cr&&by!==v&&isFoe(by,v)&&!asd.has(by))by.as=(by.as||0)+1;v.hitBy=null;lbDirty=1;
@@ -8415,7 +8419,7 @@ function step(rdt){pfBudget=24000;
   if(S.paused||S.replayOpen){render();return;}
   if(S.slowT>0){S.slowT-=rdt;S.ts=damp(S.ts,.25,18,rdt);}else S.ts=damp(S.ts,1,5,rdt);const dt=rdt*S.ts;S.t+=dt;
   if(NET.role==='client'){if(S.state==='countdown'){const c=Math.ceil(S.t0);if(c>0)center(String(c),'Round '+S.round,'cd');}}
-  else if(S.state==='countdown'){S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');cdGo();}else center(String(Math.ceil(S.t0)),'Round '+S.round,'cd');}
+  else if(S.state==='countdown'){if(S.title>0){S.title-=rdt;center(MAPS[S.map].name,modeTag(),'title');}else{S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');cdGo();}else center(String(Math.ceil(S.t0)),'Round '+S.round,'cd');}}
   else if(S.state==='fight'){S.timer-=dt;if(S.timer<=0)timeUp();}
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
@@ -8562,7 +8566,12 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   const who=P==='2v2'?'You and a bot teammate against two bots. First team to five rounds.':P==='ffa'?(ffaN()===2?'Deathmatch against one bot: respawns on, first to 10 kills wins.':`${['','','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][ffaN()]}-way deathmatch against ${ffaN()-1} bots: everyone respawns, first to 10 kills wins.`):'First to five rounds against a bot.';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 const thumbs={};
-function makeThumb(id){if(thumbs[id])return;const keep=M.id;buildMap(id);const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0);
+function makeThumb(id){if(thumbs[id])return;const keep=M.id;buildMap(id);
+  /* models fetched on demand (Toy Town's toys, Lagoon's props and boats) land after the build: wait for them (up to 20 s) so the preview shows the real map */
+  const pend=[...FURN_USED].filter(k=>!FURNM[k]&&FURN_P[k]).map(k=>FURN_P[k]);
+  if(pend.length)return Promise.race([Promise.allSettled(pend),new Promise(r=>setTimeout(r,20000))]).then(()=>{if(M.id!==id||S.state!=='menu'){if(imgQ)imgQ.push(()=>makeThumb(id));return;}shootThumb(id,keep);});
+  shootThumb(id,keep);}
+function shootThumb(id,keep){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0);
   const saveA=camera.aspect,saveF=camera.fov;const W=renderer.domElement.width,H=renderer.domElement.height;
   camera.aspect=W/H;camera.fov=40;camera.position.set(c.x-r*.9,r*1.05,c.z+r*.52);camera.lookAt(c.x+2,0,c.z);camera.updateProjectionMatrix();sky.position.copy(camera.position);
   placeSun({x:c.x,y:0,z:c.z});ME.ch.root.visible=false;BOT.ch.root.visible=false;renderer.render(scene,camera);
@@ -9814,7 +9823,7 @@ function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
   else if(!menuImagesReady())imgLoad.then(()=>{if(!menuImagesReady())startImgQueue();});}
 function startImgQueue(){if(imgQ||menuImagesReady())return;imgQ=[...(previewsMade?[]:previewTasks()),...Object.keys(MAPS).filter(k=>!thumbs[k]).map(k=>()=>makeThumb(k))];setTimeout(runImgQ,60);}
 function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
-  const t=imgQ.shift();if(t){try{t();}catch(e){console.warn('menu image',e);}if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);return;}
+  const t=imgQ.shift();if(t){let r=null;try{r=t();}catch(e){console.warn('menu image',e);}const next=()=>{if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);};if(r&&r.then)r.then(next,next);else next();return;}
   imgQ=null;if(menuImagesReady())IMG_DB.put(imgVersion(),{prev:Object.assign({},PREV),thumbs:Object.assign({},thumbs)}).catch(()=>{});}
 // which duels menu screen is showing: 'setup' (mode and map), 'char' (character) or 'loadout'; Rumble and Simple 1v1 start straight from the character screen
 function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep=st;if(!['setup','char','loadout'].includes(S.mstep))S.mstep='setup';if((S.mode==='rumble'||S.simple)&&S.mstep==='loadout')S.mstep='char';c.dataset.step=S.mstep;const mc=document.querySelector('#menu .menu-card');if(mc)mc.scrollTop=0;for(const id of ['col1','col2','col3','col4'])$(id).scrollTop=0;}

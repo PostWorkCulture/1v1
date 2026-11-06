@@ -3913,7 +3913,7 @@ function railTrainInit(T){T.place=()=>{T.grp.position.set(T.x,.0,T.z);T.grp.rota
 function rlContainer(x,y,z,along,col,o={}){const L=o.L||12,W=o.W||2.5,H=o.H||2.6,ax=along==='x';
   if(!o.open){const b=box(x,y,z,ax?L:W,H,ax?W:L,col,{tx:'ribs'});box(x,y+H,z,ax?L+.02:W+.02,.08,ax?W+.02:L+.02,'#3a3d45',{solid:false,edges:false});return b;}
   // open container: walk in at one end, closed at the other
-  const t=.15,e=o.open,thr=o.open===2;if(ax){box(x,y,z-W/2+t/2,L,H,t,col,{tx:'ribs'});box(x,y,z+W/2-t/2,L,H,t,col,{tx:'ribs'});if(!thr)box(x-e*(L/2-t/2),y,z,t,H,W,col,{tx:'ribs'});}
+  const t=.15,e=o.open,thr=o.open===2;if(ax){for(const sd of [-1,1]){const zw=z+sd*(W/2-t/2);if(o.glass===sd)rlGlassSide(x,y,zw,L,H-.15,t);else box(x,y,zw,L,H,t,col,{tx:'ribs'});}if(!thr)box(x-e*(L/2-t/2),y,z,t,H,W,col,{tx:'ribs'});}
   else{box(x-W/2+t/2,y,z,t,H,L,col,{tx:'ribs'});box(x+W/2-t/2,y,z,t,H,L,col,{tx:'ribs'});if(!thr)box(x,y,z-e*(L/2-t/2),W,H,t,col,{tx:'ribs'});}
   box(x,y+H-.15,z,ax?L:W,.15,ax?W:L,col,{tx:'ribs'});box(x,y,z,ax?L-.3:W-.3,.12,ax?W-.3:L-.3,'#6b4a33',{tx:'wood',solid:false});
   // door leaves swung open
@@ -3924,6 +3924,10 @@ function rlDrum(x,y,z,c='#c8322b',boom=true){const b=box(x,y,z,.7,1.0,.7,c,{prop
   if(boom){const m=new THREE.Mesh(new THREE.PlaneGeometry(.36,.36),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g)=>{g.fillStyle='#f4c22b';g.beginPath();g.moveTo(32,4);g.lineTo(60,58);g.lineTo(4,58);g.closePath();g.fill();g.fillStyle='#1c1d22';g.font='bold 34px sans-serif';g.textAlign='center';g.fillText('!',32,52);}),transparent:true}));m.position.set(0,.05,.356);b.mesh.add(m);b.boom=true;}
   return b;}
 // glass roof panes over [x0,x1]x[z0,z1] with top at y: see-through, stop bullets, and break (leaving a hole you drop through) under sustained fire or a blast
+/* a container's long side as breakable glass panes in a steel frame (panes along x, centred on (x,zw), from y up h) */
+function rlGlassSide(x,y,zw,L,h,t){const n=Math.max(2,Math.round(L/3)),w=L/n,fm=mat('#3a3d45');
+  for(let i=0;i<n;i++)box(x-L/2+(i+.5)*w,y,zw,w-.06,h,t,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
+  for(let i=0;i<=n;i++)deco(B.boxGeo(.1,h,t+.04),fm,x-L/2+i*w,y+h/2,zw);}
 const RL_GLASS=new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,opacity:.3,roughness:.05,metalness:.2,depthWrite:false});
 function rlGlass(x0,x1,z0,z1,y,nx,nz){const w=(x1-x0)/nx,d=(z1-z0)/nz,fm=mat('#5b6070');
   for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x0+(i+.5)*w,y-.15,z0+(j+.5)*d,w-.02,.15,d-.02,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
@@ -4055,8 +4059,9 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
     wLadder(-6.25,z,0,y,1,0);wLadder(6.25,z,0,y,-1,0);}
   // shipping containers: big enough to walk through, doors open at both ends
   const CO={open:2,W:3.4,H:3.4};
-  rlContainer(-15,0,-26.5,'x','#e8463a',CO);rlContainer(15,0,26.5,'x','#2f7fe0',CO);
-  rlContainer(-18,0,22,'x','#f4c22b',{...CO,L:8});rlContainer(18,0,-22,'x','#3bb54a',{...CO,L:8});
+  /* the long side facing into the yard is glass */
+  rlContainer(-15,0,-26.5,'x','#e8463a',{...CO,glass:1});rlContainer(15,0,26.5,'x','#2f7fe0',{...CO,glass:-1});
+  rlContainer(-18,0,22,'x','#f4c22b',{...CO,L:8,glass:-1});rlContainer(18,0,-22,'x','#3bb54a',{...CO,L:8,glass:1});
   // fuel drums on the ground (they blow up)
   for(const [x,z] of [[-23.6,-20],[-22.9,-20.3],[23.6,20],[22.9,20.3]])rlDrum(x,0,z);
   // painted walkway lines and a few stains on the yard

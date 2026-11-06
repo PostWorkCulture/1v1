@@ -73,6 +73,10 @@ button{font:inherit;color:inherit}
 .pop .pts{font-size:.7em;color:#fff}
 .pop.small{font-size:20px}
 .pop.huge{font-size:48px}
+#d-call{position:fixed;left:50%;top:27%;transform:translateX(-50%);z-index:30;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:5px}
+#d-call .kc{font:400 clamp(20px,3vw,34px)/1 var(--f-display);color:#fff;letter-spacing:.04em;background:linear-gradient(90deg,#ff4fa3,#a05ad6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 3px 0 #101114) drop-shadow(0 0 10px rgba(255,79,163,.45));animation:pop 1.9s ease-out forwards;white-space:nowrap}
+#d-call .kc.bad{background:linear-gradient(90deg,#ff3b3b,#ff9a3b);-webkit-background-clip:text;background-clip:text}
+#d-call .ks{font:700 11px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#fff;background:#101114;padding:5px 9px;border-radius:var(--radius);animation:pop 1.9s ease-out forwards}
 @keyframes pop{0%{transform:translateY(16px) scale(.4);opacity:0}14%{transform:translateY(0) scale(1.12);opacity:1}24%{transform:scale(1)}78%{opacity:1}100%{transform:translateY(-34px) scale(.96);opacity:0}}
 
 #banner{position:absolute;left:0;right:0;top:27%;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;opacity:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -7451,10 +7455,34 @@ function botSpot(kind,f,o){const TG=o.T||ME;const meEye=eyeOf(TG,new V3()),body=
     if(sc<bs){bs=sc;best=p;}}
   return best;}
 // picks who this bot is fighting: the nearest enemy, strongly preferring ones it can see or that are downed, and sticking with its current one for a moment
+/* bots lean slightly towards whoever is closest to winning: up to 9 m of 'closeness' for being ahead of the other foes */
+function scoreOf(o){return isDM()?(o.k||0):((S.score&&S.score[o.team])||0);}
+function leadBias(f,o){const fs=foesOf(f);if(fs.length<2)return 0;let sum=0;for(const x of fs)sum+=scoreOf(x);return clamp((scoreOf(o)-sum/fs.length)*3,0,9);}
+/* kill bookkeeping per match: grudges (a killed bot hunts its killer until its own next kill) and call-outs for the player's kills and deaths */
+function killNotes(v,cr){if(!cr||cr===v||!isFoe(cr,v))return;const K=S.kc&&S.kc.seed===S.seed?S.kc:(S.kc={seed:S.seed,first:false,last:new Map()});
+  const firstOfGame=!K.first;K.first=true;
+  const revenge=FS.length>2&&K.last.get(cr)===v;if(K.last.get(cr)===v)K.last.delete(cr);K.last.set(v,cr);
+  const vStreak=v.streak||0;v.streak=0;cr.streak=(cr.streak||0)+1;
+  cr.multi=S.t-(cr.multiT||-99)<4?(cr.multi||1)+1:1;cr.multiT=S.t;
+  if(cr.grudgeSeed===S.seed)cr.grudge=null;
+  if(v!==ME){v.grudge=cr;v.grudgeSeed=S.seed;}
+  if(cr!==ME&&v!==ME)return;
+  const MULTI=['','','DOUBLE KILL','TRIPLE KILL','QUAD KILL','MULTI KILL'],SPREE={3:'KILLING SPREE',5:'RAMPAGE',7:'UNSTOPPABLE',10:'GODLIKE'};
+  const lines=[];
+  if(cr===ME){if(firstOfGame)lines.push(['FIRST BLOOD','']);if(revenge)lines.push(['REVENGE','You got '+nm(v)+' back']);
+    if(vStreak>=3)lines.push(['SHUTDOWN','Ended '+nm(v)+"'s "+vStreak+' kill streak']);
+    if(cr.multi>=2)lines.push([MULTI[Math.min(cr.multi,5)],'']);else if(SPREE[cr.streak])lines.push([SPREE[cr.streak],cr.streak+' kills in a row']);}
+  else{const who=nm(cr);if(firstOfGame)lines.push(['FIRST BLOOD',who+' drew first blood','bad']);if(revenge)lines.push(['PAYBACK',who+' got their revenge','bad']);
+    if(cr.multi>=2)lines.push([MULTI[Math.min(cr.multi,5)],who,'bad']);else if(SPREE[cr.streak])lines.push([SPREE[cr.streak],who+' · '+cr.streak+' in a row','bad']);}
+  if(lines.length)killCall(lines);}
+function killCall(lines){let box=$('d-call');if(!box){box=document.createElement('div');box.id='d-call';document.body.appendChild(box);}box.innerHTML='';
+  lines.slice(0,2).forEach(([big,sub,cls],i)=>{const b=document.createElement('div');b.className='kc'+(cls?' '+cls:'');b.textContent=big;b.style.animationDelay=(i*.35)+'s';b.style.opacity=i?0:'';box.appendChild(b);
+    if(sub){const t=document.createElement('div');t.className='ks';t.textContent=sub;t.style.animationDelay=(i*.35)+'s';t.style.opacity=i?0:'';box.appendChild(t);}});
+  clearTimeout(killCall.t);killCall.t=setTimeout(()=>{box.innerHTML='';},2600);}
 function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.find(o=>o.alive&&o.finishT>0&&isFoe(f,o)&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)));if(saving&&a.tgt!==saving){a.tgt=saving;a.lastSeen=saving.pos.clone();a.seeT=0;a.path=null;a.goalT=0;a.tgtUntil=S.t+.6;return saving;}if(a.tgt&&a.tgt.alive&&isFoe(f,a.tgt)&&!a.tgt.finishing&&(S.t<(a.tgtUntil||0)||(ally&&a.lastSeen)))return a.tgt;
   const e=eyeOf(f,new V3());let best=null,bs=1e9;for(const o of foesOf(f)){if(o.finishing)continue;let sc=Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
-    if(los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))sc-=18;if(o.downed)sc-=12;if(o.finishT>0&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)))sc-=40;if(o===a.tgt)sc-=8;if(o.ghostT>0)sc+=15;if(sc<bs){bs=sc;best=o;}}
-  if(!best)best=foesOf(f)[0]||null;if(best!==a.tgt){a.tgt=best;a.lastSeen=null;a.seeT=0;a.path=null;a.goalT=0;}a.tgtUntil=S.t+.6;return best;}
+    if(los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))sc-=18;if(o.downed)sc-=12;if(o.finishT>0&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)))sc-=40;if(o===a.tgt)sc-=8;if(o.ghostT>0)sc+=15;if(f.grudge===o&&f.grudgeSeed===S.seed)sc-=60;sc-=leadBias(f,o);if(sc<bs){bs=sc;best=o;}}
+  if(!best)best=foesOf(f)[0]||null;if(best!==a.tgt){a.tgt=best;a.lastSeen=best&&f.grudge===best&&f.grudgeSeed===S.seed?best.pos.clone():null;a.seeT=0;a.path=null;a.goalT=0;}a.tgtUntil=S.t+.6;return best;}
 function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
   if(f.downed){updCrouch(f,true,dt);const dd=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z);const seen=T.alive&&los(eyeOf(T,new V3()),new V3(f.pos.x,f.pos.y+.5,f.pos.z));
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
@@ -8053,7 +8081,7 @@ const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
   if(cr&&cr!==v&&isFoe(cr,v))cr.k=(cr.k||0)+1;v.d=(v.d||0)+1;const asd=new Set();if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==cr&&src!==v&&isFoe(src,v)&&S.t-t<15&&!asd.has(src)){asd.add(src);src.as=(src.as||0)+1;}if(by&&by!==cr&&by!==v&&isFoe(by,v)&&!asd.has(by))by.as=(by.as||0)+1;v.hitBy=null;lbDirty=1;
-  if(cr===ME&&v!==ME&&S.stats)S.stats.elims++;
+  if(cr===ME&&v!==ME&&S.stats)S.stats.elims++;killNotes(v,cr);
   S.deathMarks=(S.deathMarks||[]).filter(m=>S.t-m.t<3);S.deathMarks.push({x:v.pos.x,z:v.pos.z,t:S.t});
   if(isDM()){for(const f of FS)S.score[f.team]=f.k||0;if(cr&&cr!==v&&(cr.k||0)>=DM_KILLS){dmWin(cr);return;}v.respawnT=3;if(v===ME)center('Eliminated',by&&by!==v?'by '+nm(by):'','lose');return;}
   if(v.lastFin&&v.lastFin.banner&&S.state==='fight'&&teamsAlive().size>1){v.lastFin.banner=false;center('','');}

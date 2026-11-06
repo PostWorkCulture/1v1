@@ -2803,7 +2803,9 @@ const FURN_CFG={greysofa:{h:1.34,tint:'#9aa0a8'},pinksofa:{h:1.6},whitesofa:{h:1
   tiki_torch:{h:2.2,dir:'lagoon'},tiki_brazier:{h:2.5,dir:'lagoon'},stone_lantern:{h:1.1,dir:'lagoon'},candle_lantern:{h:.34,dir:'lagoon'},moroccan_lantern:{h:.55,dir:'lagoon'},kerosene_lantern:{h:.32,dir:'lagoon'},
   pineapple:{h:.34,dir:'lagoon'},wood_stool:{h:.72,dir:'lagoon'},retro_stool:{h:.82,dir:'lagoon'},
   speedboat:{h:2.1,dir:'lagoon'},cruiser:{h:3.4,dir:'lagoon'},jetski_blue:{h:1.1,dir:'lagoon'},jetski_purple:{h:1.1,dir:'lagoon'},sailboat:{h:8,dir:'lagoon'},rowboat:{h:1,dir:'lagoon'},canoe:{h:1.1,dir:'lagoon'},
-  superyacht:{h:9,dir:'lagoon'},lighthouse:{h:16,dir:'lagoon'},seaplane:{h:3.4,dir:'lagoon'}},FURNM={},FURN_P={},FURN_WAIT=[],FURN_USED=new Set();/* FURN_USED: model ids the current map build asked for (so a thumbnail can wait for them) */
+  superyacht:{h:9,dir:'lagoon'},lighthouse:{h:16,dir:'lagoon'},seaplane:{h:3.4,dir:'lagoon'},
+  /* Street Life's extras (models/street, Tripo gallery models: play frames 10-14k tris / 1024 px, scenery 2-10k / 512-1024 px): fetched only when Street Life is built */
+  climb:{h:5.4,dir:'street'},swings:{h:5,dir:'street'},barn:{h:12,dir:'street'},windmill:{h:14,dir:'street'},balloon:{h:9,dir:'street'},tractor:{h:3.3,dir:'street'},lamp:{h:4.2,dir:'street'}},FURNM={},FURN_P={},FURN_WAIT=[],FURN_USED=new Set();/* FURN_USED: model ids the current map build asked for (so a thumbnail can wait for them) */
 function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('models/'+(FURN_CFG[id].dir||'home')+'/'+id+'.glb').then(r=>{if(!r.ok)throw new Error('furn '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=FURN_CFG[id],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -2825,6 +2827,31 @@ setTimeout(()=>{for(const k of Object.keys(FURN_CFG))if(!FURN_CFG[k].dir)loadFur
 function furnInto(id,host,x,y,z,ry,sc){FURN_USED.add(id);const grp=M.group;const go=()=>{if(M.group!==grp||!host)return;const F=FURNM[id];if(!F){FURN_WAIT.push(go);return;}/* another model's arrival woke us: wait for ours */const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
     host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;if(sc)g.scale.setScalar(sc);host.add(g);};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
+/* a furniture model standing loose in the scene at (x,z) turned ry (raised y), inside its own group (returned, so it can be moved) */
+function scenery(id,x,z,ry,y=0){const g=new THREE.Group();g.position.set(x,y,z);g.userData.dyn=1;M.group.add(g);furnInto(id,g,x,y,z,ry);return g;}
+/* the Tripo windmill with its sails cut free: triangles on the front face (z>1.6) lying along the X of the sails (not the doorway), turned slowly round the middle of the sails */
+function windmill(x,z,ry){FURN_USED.add('windmill');const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;g.userData.dyn=1;M.group.add(g);const grp=M.group;
+  const go=()=>{const F=FURNM.windmill;if(M.group!==grp)return;if(!F){FURN_WAIT.push(go);return;}const P=F.parts[0];
+    if(!F.split){const geo=P.geo,pa=geo.attributes.position.array,ix=geo.index.array,A=[],B=[];let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+      for(let t=0;t<ix.length;t+=3){let cx=0,cy=0,cz=0;for(let k=0;k<3;k++){const q=ix[t+k]*3;cx+=pa[q]/3;cy+=pa[q+1]/3;cz+=pa[q+2]/3;}
+        const u=cx,v=cy-7.4,sail=cz>1.6&&cy>1&&!(Math.abs(cx)<1.4&&cy<4.2)&&(Math.min(Math.abs(u-v),Math.abs(u+v))/1.414<1.25||u*u+v*v<1.6);
+        (sail?B:A).push(ix[t],ix[t+1],ix[t+2]);if(sail){x0=Math.min(x0,cx);x1=Math.max(x1,cx);y0=Math.min(y0,cy);y1=Math.max(y1,cy);}}
+      const part=I=>{const g2=new THREE.BufferGeometry();for(const k in geo.attributes)g2.setAttribute(k,geo.attributes[k]);g2.setIndex(I);g2.computeBoundingSphere();return g2;};
+      F.split={body:part(A),sails:part(B),hx:(x0+x1)/2,hy:(y0+y1)/2};}
+    const S=F.split,b=new THREE.Mesh(S.body,P.mat),hub=new THREE.Group(),sl=new THREE.Mesh(S.sails,P.mat);b.castShadow=sl.castShadow=true;b.receiveShadow=true;
+    hub.position.set(S.hx,S.hy,0);sl.position.set(-S.hx,-S.hy,0);hub.add(sl);g.add(b,hub);M.life.push(t=>{hub.rotation.z=t*.45;});};
+  if(FURNM.windmill)go();else{FURN_WAIT.push(go);loadFurn('windmill').catch(()=>{});}}
+/* a big breakable play frame: the model at (x,z) turned ry on invisible prop blocks cols ([du,dv,w,d,h] around its centre, w and d already turned).
+   Breaking any block brings the whole frame down: it creaks, tips away from the shot and sinks into the lawn. resetProps stands it up again. */
+const PLAY_HP=420;
+function playFrame(id,x,z,ry,cols){const piv=new THREE.Group();piv.position.set(x,0,z);piv.userData.dyn=1;M.group.add(piv);const S={st:0,t:0,ax:new V3(1,0,0)};
+  const bs=cols.map(([du,dv,w,d,h])=>box(x+du,0,z+dv,w,h,d,'#7fd0d8',{mat:INVIS,edges:false,shadow:false,prop:'play',hp:PLAY_HP,wood:false}));
+  const fell=at=>{if(S.st)return;S.st=1;S.t=0;const d=new V3(x-at.x,0,z-at.z);if(d.lengthSq()<1e-4)d.set(Math.random()-.5,0,Math.random()-.5);d.normalize();S.ax.set(d.z,0,-d.x);
+    for(const o of bs)if(o.alive)breakProp(o,at);sfx('brick',{x,y:1.5,z},{range:30});emit(x,1.6,z,{n:40,speed:6,up:4,size:.24,life:1,grav:10,colors:['#7fd0d8','#8a8f99','#c8322b','#f4c22b','#e9eaee']});
+    emit(x,.3,z,{n:16,speed:2,up:1.2,size:.7,life:1.3,grav:-1,colors:['#c8b8a0','#a8987e']});};
+  for(const b of bs){b.fell=fell;b.snd='bin';b.onRestore=()=>{S.st=0;piv.quaternion.identity();piv.position.y=0;piv.visible=true;};}
+  M.life.push((t,dt)=>{if(!S.st)return;S.t+=dt;const a=Math.min(.5,.9*S.t*S.t);piv.quaternion.setFromAxisAngle(S.ax,a);piv.position.y=-Math.max(0,S.t-.5)*1.6;if(S.t>3.2){piv.visible=false;S.st=0;}});
+  furnInto(id,piv,x,0,z,ry);}
 /* Tripo clouds (a single puff and a bank of puffs): every cloud, the far ones round the sky and the ones drifting over the maps, swaps its blocks for one of
    the two models (same width, a random turn) as soon as they've loaded; until then it shows its blocks */
 var CLOUD_MATS=[];
@@ -3009,11 +3036,11 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
   }
   if(th==='hospital'){
     const T=8,L=8.3;
-    /* the Tripo hospital models (models/home): ward beds and a trolley bed that break apart when shot, doctors and nurses who stand their ground, a wheelchair you can knock about */
+    /* the Tripo hospital models (models/home): ward beds, a trolley bed, the doctors, nurses and the alien all break apart when shot (and slide when hit), a wheelchair you can knock about */
     const HD={doctor:[1.99,0.68],nurse:[0.75,0.39],bed1:[1.52,3.36],bed2:[1.39,3.39],wheelchair:[1.12,1.52],alien:[1.16,0.74]};
     const hm=(id,u,v,y,dir,hp)=>{const [w0,d0]=HD[id],ax=dir[0]==='u',w=ax?d0:w0,d=ax?w0:d0,h=FURN_CFG[id].h,ry=face[dir],o={mat:INVIS,edges:false,shadow:false};
       if(id==='wheelchair'){const K=N(u,v,y,w,h,d,'#2b2d33',{mat:INVIS});furnInto(id,K.m,X(u),y,Z(v),ry);return K;}
-      const b=Bx(u,v,y,w,h,d,'#d9dde3',hp?Object.assign({prop:'crate',hp},o):o);if(b){b.mesh.userData.dyn=1;furnInto(id,b.mesh,X(u),y,Z(v),ry);}return b;};
+      const b=Bx(u,v,y,w,h,d,'#d9dde3',Object.assign({prop:'crate',hp:hp||120},o));if(b){b.mesh.userData.dyn=1;furnInto(id,b.mesh,X(u),y,Z(v),ry);}return b;};
     /* signs and red trim: a big HOSPITAL board hung under the porch roof, the name again high on the front, glowing red crosses on the front corners
        (sticking out so they read from up and down the street), on both side walls, on the loft wall and standing on the loft ridge, red belts round the storeys */
     {const RD='#c8322b',redM=new THREE.MeshLambertMaterial({color:'#e3241a',emissive:'#6a0b06'}),D={solid:false,edges:false},Dm=Object.assign({mat:redM},D);
@@ -3243,6 +3270,10 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   // ground floor
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(1.6,4.2),WIN(-3.6)],wall);
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,0,H,[WIN(-2.5,1.6),WIN(3.2,1.6)],wall);
+  /* Street Life's two buildings have breakable glass in the downstairs windows and the two big upstairs front windows */
+  if(th==='home'||th==='hospital'){const g=(ax,at,c,w,y0,y1)=>{const o={mat:HOUSE_GLASS,prop:'glass',hp:110,snd:'frost',wood:false,shadow:false,edges:false};ax==='u'?S.box(at-.04,at+.04,c-w/2,c+w/2,y0,y1,'#bfe6ff',o):S.box(c-w/2,c+w/2,at-.04,at+.04,y0,y1,'#bfe6ff',o);};
+    for(const c of [-3.6,3.6])g('u',-6,c,1.8,1.1,2.5);g('u',6,-3.6,1.8,1.1,2.5);for(const v of [-5.5,5.5]){g('v',v,-2.5,1.6,1.1,2.5);g('v',v,3.2,1.6,1.1,2.5);}
+    for(const c of [-3.65,3.65])g('u',-6,c,2.2,F+.4,T);}
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
   S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?'#f4f5f7':'#d9b48a',.25,WH?{chip:false}:{tx:'wood',wood:true,chip:false});
   S.wall('u',-6,-5.65,5.65,H,F,[],trim);S.wall('u',6,-5.65,5.65,H,F,[],trim);
@@ -3273,7 +3304,10 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true,null,null,flip>0?[0,.4]:[.4,0]);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
   for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.2,S.Z(sv*4.7),L,R2+1.05,flip,0);
-  if(!WH)S.box(-4.6,-3.4,2.6,3.8,L,L+.8,'#e8463a');}
+  /* the home's terrace gets a glass balustrade: panes standing on the parapets and either side of the two ladder heads (breakable, back next round) */
+  if(th==='home'){const g=(u0,u1,v0,v1,y0,y1)=>S.box(u0,u1,v0,v1,y0,y1,'#bfe6ff',{mat:HOUSE_GLASS,prop:'glass',hp:120,snd:'frost',wood:false,shadow:false,edges:false});
+    for(let i=0;i<4;i++)g(-6.07,-5.93,-5.65+i*2.825+.02,-5.65+(i+1)*2.825-.02,P,P+.9);
+    for(const v of [-5.5,5.5]){for(let i=0;i<2;i++)g(-3.6+i*1.725+.02,-3.6+(i+1)*1.725-.02,v-.07,v+.07,P,P+.9);g(-5.85,-5.25,v-.07,v+.07,L,P+.9);g(-4.25,-3.6,v-.07,v+.07,L,P+.9);}}}
 // single-storey house with a flat roof deck reached by outside stairs
 function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F=4.4,inner='#f3efe6';
   S.floor(-5.85,5.85,-5.35,5.35,.02,'#d6c3a5','wood');
@@ -3933,6 +3967,8 @@ function rlDrum(x,y,z,c='#c8322b',boom=true){const b=box(x,y,z,.7,1.0,.7,c,{prop
 function rlGlassSide(x,y,zw,L,h,t){const n=Math.max(2,Math.round(L/3)),w=L/n,fm=mat('#3a3d45');
   for(let i=0;i<n;i++)box(x-L/2+(i+.5)*w,y,zw,w-.06,h,t,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
   for(let i=0;i<=n;i++)deco(B.boxGeo(.1,h,t+.04),fm,x-L/2+i*w,y+h/2,zw);}
+/* window and balustrade glass in Street Life's buildings: a little more tinted than the Railed roof panes so it reads as glass from across the lawn */
+const HOUSE_GLASS=new THREE.MeshStandardMaterial({color:'#8fcdef',transparent:true,opacity:.48,roughness:.05,metalness:.35,emissive:'#3a7fb0',emissiveIntensity:.18,depthWrite:false});
 const RL_GLASS=new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,opacity:.3,roughness:.05,metalness:.2,depthWrite:false});
 function rlGlass(x0,x1,z0,z1,y,nx,nz){const w=(x1-x0)/nx,d=(z1-z0)/nz,fm=mat('#5b6070');
   for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x0+(i+.5)*w,y-.15,z0+(j+.5)*d,w-.02,.15,d-.02,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
@@ -4632,9 +4668,21 @@ const MAPS={
     [-55,-26,'blossom',6.5,.1],[-59,-8,'oak',8,2],[-54,8,'pine',9,5.3],[-60,24,'bonsai',7.5,4.4],
     [-30,40,'block',7.5,3.5,1.2],[-8,44,'oak',8.5,1.1],[14,38,'pine',9,.7],[36,42,'blossom',6.5,3.1],
     [-38,-40,'pine',8.5,2.6],[-14,-37,'purple',7.5,4.1],[10,-43,'oak',8,5.6],[32,-38,'tall',9,1.9],[52,41,'bonsai',7.5,.9],[-52,-42,'oak',7.5,3.3]])glbTree(id,x,z,h,ry,tw);
+  /* the play area: a climbing frame with slides on the home's lawn and a swing set on the hospital's, mirrored. The towers (and the swings' A-frame) are invisible
+     blocks that take fire like a prop (the slides and swings are open to walk round); once they've taken enough (or a blast goes off close by) the whole frame crashes over and sinks away, back next round */
+  playFrame('climb',-30,-20,0,[[1.43,-2.27,2.5,2.8,4.4],[-1.7,.98,3.2,3.2,5.4]]);playFrame('swings',30,20,Math.PI,[[1.25,1.41,2.5,2.5,4.8],[-2.95,1.4,.6,2.2,3.4]]);
+  /* outside the fence (scenery only): a big red barn with a tractor, a windmill with its sails turning, a row of lamps along the fence and a hot-air balloon drifting round the sky */
+  scenery('barn',-70,0,Math.PI/2);scenery('tractor',-63,-13,2.2);windmill(68,-14,-Math.PI/2);
+  for(const x of [-40,-26,-12,-7.5,7.5,12,26,40])for(const z of [-31.6,31.6])scenery('lamp',x,z,z>0?Math.PI:0);
+  for(const z of [-20,0,20])for(const x of [-47.6,47.6])scenery('lamp',x,z,x>0?-Math.PI/2:Math.PI/2);
+  {const g=scenery('balloon',0,-80,0,22);M.life.push(t=>{const a=t*.03;g.position.set(Math.sin(a)*78,21+Math.sin(t*.21)*2.5,-Math.cos(a)*78);g.rotation.y=t*.05;});}
   /* four cars: a wrecked car stays a burnt-out shell until the next round */
   const cars=[car(3.4,-19,false,'','gtr'),car(-3.4,-7,false,'','truck'),car(3.4,6,false,'','lambo'),car(-3.4,18,false,'','porsche')];
   townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:23});
+  /* everything loose or solid inside can be moved and broken: furniture, people and bins slide when shot or blasted (back in place next round),
+     and the loose bits (chairs, plants, drips, cups, the wheelchair...) smash once they've taken enough */
+  for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;
+  for(const K of M.knocks)if(!K.pop)K.brk=K.bhp=Math.round(clamp(30+K.w*K.h*K.d*60,30,160));
   // the shop goes beside the road near the middle, clear of the cars
   M.shopOK=(x,z)=>Math.abs(x)>10;
   for(const z of [-27,27])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
@@ -6227,7 +6275,7 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
     else if(p.id==='heart')explode(p.f,at,hit&&hit.b?hit.b.n:null,{dmg:g.dmg,radius:g.radius,wall:60,gun:'heart',slow:1.5,colors:['#ff6fae','#ff9ccc','#ffffff','#16161a']});
     else if(hit&&hit.f){const head=hit.f.part==='head',dm=Math.round(g.dmg*(head?g.head:1));if(p.f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(dm,100);hitMarker(head);dmgNumber(foe,dm,head);}
       emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,p.id);}
-    else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);if(hit.b.box.turret)hitTurret(hit.b.box.turret,p.id==='crossbow'?90:40,p.f);damageWood(hit.b.box,p.id==='crossbow'?70:40,at);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
+    else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);if(hit.b.box.turret)hitTurret(hit.b.box.turret,p.id==='crossbow'?90:40,p.f);damageWood(hit.b.box,p.id==='crossbow'?70:40,at,p.vel);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
     continue;}
   if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));if(M.deepWater&&THROWN.has(p.id)){p.armed=true;p.life=Math.min(p.life,g.fuse||1);}}}
   if(p.wet&&M.deepWater&&THROWN.has(p.id)){p.vel.multiplyScalar(Math.exp(-5*dt));p.vel.y=Math.max(p.vel.y,-1.2);}/* Lagoon: a grenade lobbed over the rail sinks and goes off under the water */
@@ -6331,15 +6379,23 @@ function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P
 function resetPlates(){const L=M.plates||[];for(const P of L){P.back=0;P.move=0;P.x=P.z=1e5;}for(const P of L){movePlate(P,false);P.grp.visible=true;}}
 function blastProps(at,Rr,src){knockBlast(at,Rr,src);ruinBlast(at,Rr,src);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
   for(const b of M.chips||[]){if(b.broken)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);if(b.wood&&dd<Rr*.75)breakChip(b,at);else if(dd<Rr)damageWood(b,90*(1-dd/Rr)+20,new V3(px,py,pz));}
-  for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);
-  if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.2,Rr*.6))breakProp(b,at);}}
+  for(const b of M.props||[]){if(!b.alive)continue;const px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1),dd=Math.hypot(px-at.x,py-at.y,pz-at.z);
+  if(dd<=Math.max(1.2,Rr*.6))breakProp(b,at);else if(b.shove&&dd<Rr*1.5)shoveProp(b,new V3((b.x0+b.x1)/2-at.x,0,(b.z0+b.z1)/2-at.z),1.6*(1-dd/(Rr*1.5))/Math.sqrt(Math.max(1,(b.x1-b.x0)*(b.z1-b.z0))));}}
+/* slide a solid prop up to dist along dir (each axis on its own, so it scrapes along walls); it won't go into another box or onto a fighter. resetProps puts it back */
+function shoveProp(b,dir,dist){if(!b.alive||dist<.01)return;const l=Math.hypot(dir.x,dir.z);if(l<1e-4)return;const dx=dir.x/l*dist,dz=dir.z/l*dist,L=allBoxes();
+  const free=(x0,x1,z0,z1)=>{for(const o of L){if(o===b||o.y1<=b.y0+.05||o.y0>=b.y1-.05)continue;if(x1>o.x0&&x0<o.x1&&z1>o.z0&&z0<o.z1)return false;}
+    for(const f of FS){if(!f.alive)continue;const q=f.pos;if(q.y>b.y1||q.y+2.5<b.y0)continue;if(q.x>x0-.55&&q.x<x1+.55&&q.z>z0-.55&&q.z<z1+.55)return false;}return true;};
+  let mx=0,mz=0;if(free(b.x0+dx,b.x1+dx,b.z0,b.z1))mx=dx;if(free(b.x0+mx,b.x1+mx,b.z0+dz,b.z1+dz))mz=dz;if(!mx&&!mz)return;
+  if(!b.home)b.home=[b.x0,b.x1,b.z0,b.z1];propPatch(b,false);b.x0+=mx;b.x1+=mx;b.z0+=mz;b.z1+=mz;if(b.mesh){b.mesh.position.x+=mx;b.mesh.position.z+=mz;}propPatch(b,true);knockOn(b,b.y1);}
+function unshove(b){const h=b.home;if(!h)return;const on=M.boxes.includes(b),mx=h[0]-b.x0,mz=h[2]-b.z0;if(on)propPatch(b,false);b.x0=h[0];b.x1=h[1];b.z0=h[2];b.z1=h[3];
+  if(b.mesh){b.mesh.position.x+=mx;b.mesh.position.z+=mz;}if(on)propPatch(b,true);b.home=null;}
 function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}if(b.onRestore)b.onRestore();propPatch(b,true);}
 function updProps(dt){updKnocks(dt);updRuins(dt);updFires(dt);for(const b of M.props||[]){if(b.alive&&b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}}}
 // bullets and blasts through wood: crates and fences break apart; short furniture loses chunks (down to 60% of its height) but stays as cover
 function woodChips(at,col,n){emit(at.x,at.y,at.z,{n:n||4,speed:3,up:1.5,size:.1,life:.45,colors:[col||'#c99a5b','#e9d3a8','#8a5a34']});}
 function itemChips(b,at){if(b.wood||b.prop==='tree')woodChips(at,b.color,3);else emit(at.x,at.y,at.z,{n:3,speed:3,up:1.5,size:.08,life:.4,colors:[b.color||'#9aa0a8','#d8dbe2','#55585f']});}
-function damageWood(b,dmg,at){if(!b||!(b.prop||b.chip))return;
-  if(b.prop){if(!b.alive||b.hp==null)return;b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else itemChips(b,at);return;}
+function damageWood(b,dmg,at,dir){if(!b||!(b.prop||b.chip))return;
+  if(b.prop){if(!b.alive||b.hp==null)return;if(b.shove&&dir)shoveProp(b,dir,Math.min(.4,dmg*.015/Math.max(1,(b.x1-b.x0)*(b.z1-b.z0))));b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else itemChips(b,at);return;}
   b.chipHP=Math.max(0,b.chipHP-dmg);const step=Math.ceil((1-b.chipHP/b.hp0)*4)/4,nh=b.h0*(1-.4*step);
   if(nh<b.y1-b.y0-.01){const top=b.y1;b.y1=b.y0+nh;if(b.mesh){b.mesh.scale.y=nh/b.h0;b.mesh.position.y=b.y0+nh/2;}dirtyGrid(b,.05);MM.layer=null;knockOn(b,top);
     const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;emit(cx,b.y1,cz,{n:12,speed:3.5,up:3,size:.14,life:.7,grav:12,colors:b.wood?[b.color||'#c99a5b','#e9d3a8','#8a5a34']:[b.color||'#9aa0a8','#d8dbe2','#55585f']});sfx(b.wood?'wood':'bin',{x:cx,y:b.y1,z:cz},{range:10});}
@@ -6448,7 +6504,7 @@ function resetRuins(){for(const B of M.blds||[]){if(B.stage===0)continue;B.stage
   for(const b of B.props)if(!M.props.includes(b))M.props.push(b);for(const b of B.chips)if(!M.chips.includes(b))M.chips.push(b);
   for(const m of B.cracks)m.visible=false;for(const m of B.hide1)m.visible=true;B.grp.visible=true;B.grp.matrix.identity();B.grp.matrixWorldNeedsUpdate=true;
   for(const P of M.plates||[])if(P.back>1e8){P.back=0;P.grp.visible=true;}}MM.layer=null;}
-function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
+function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const b of M.props||[])if(b.home)unshove(b);for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
 /* loose items (cans, bottles, cones, tools, drips, chairs...): not solid, so they never block anyone; bullets, blasts and people
    walking into them knock them over. They tumble, land on whatever is under them, and stay down until the next round */
 function knock(x,y,z,w,h,d,color,o={}){const g=o.geo||(o.cyl?new THREE.CylinderGeometry(w/2*(o.top??1),w/2,h,o.seg||10):B.boxGeo(w,h,d));
@@ -6464,8 +6520,11 @@ function knockIt(K,dir,pw){if(S.t-K.kT<.25)return;K.kT=S.t;const p=K.m.position,
   if(K.snd==='cash'){sfx('cash',p,{range:12});}else sfx(K.snd||(Math.random()<.5?'bounce1':'bounce2'),p,{range:10,rate:rnd(.9,1.4),vol:.7});}
 function knockRay(o,d,et,dmg,src){const L=M.knocks;if(!L||!L.length)return;for(const K of L){if(K.st===3)continue;const p=K.m.position,t=(p.x-o.x)*d.x+(p.y-o.y)*d.y+(p.z-o.z)*d.z;if(t<0||t>et+K.r*.5)continue;
   const qx=o.x+d.x*t-p.x,qy=o.y+d.y*t-p.y,qz=o.z+d.z*t-p.z;if(qx*qx+qy*qy+qz*qz<K.r*K.r*.7){knockIt(K,d,rnd(3,6));if(dmg)knockHurt(K,dmg,src);}}}
+// a breakable loose item (Street Life) smashes: a burst of bits in its colour, gone until the next round
+function knockSmash(K){const p=K.m.position,mt=K.m.material,c=mt&&mt.color&&mt.visible!==false&&mt!==INVIS?'#'+mt.color.getHexString():'#9aa0a8';K.st=3;K.back=1e12;K.m.visible=false;
+  sfx(mt&&mt!==INVIS&&mt.transparent?'frost':'crate',p,{range:14});emit(p.x,p.y,p.z,{n:14,speed:5,up:3,size:.12,life:.8,grav:12,colors:[c,'#d8dbe2','#55585f']});}
 // toy balls (Playtime) take damage and pop with a bang when they've had enough; they come back 30 s later or next round
-function knockHurt(K,dm,src){if(!K.pop||K.st===3||K.boomAt)return;K.php-=dm;emit(K.m.position.x,K.m.position.y,K.m.position.z,{n:3,speed:3,up:1,size:.1,life:.3,colors:['#ffffff','#ffd23f']});if(K.php<=0){K.boomAt=S.t+.08;K.src=src;}}
+function knockHurt(K,dm,src){if(K.st===3||K.boomAt)return;if(K.brk){K.bhp-=dm;if(K.bhp<=0)knockSmash(K);return;}if(!K.pop)return;K.php-=dm;emit(K.m.position.x,K.m.position.y,K.m.position.z,{n:3,speed:3,up:1,size:.1,life:.3,colors:['#ffffff','#ffd23f']});if(K.php<=0){K.boomAt=S.t+.08;K.src=src;}}
 function knockPop(K){const at=K.m.position.clone(),Rr=4.6,src=K.src&&K.src.alive!==undefined?K.src:null;K.boomAt=0;K.st=3;K.m.visible=false;K.back=S.t+30;
   sfx('explode',at,{range:26});boomFX(at,Rr);emit(at.x,at.y,at.z,{n:40,speed:9,up:4,size:.22,life:1.1,grav:6,colors:['#e8463a','#2f7fe0','#f4c22b','#3bb54a','#ffffff','#a05ad6']});
   if(ME.alive&&ME.pos.distanceTo(at)<16)S.shake=Math.max(S.shake,.6*(1-ME.pos.distanceTo(at)/16)+.15);
@@ -6492,7 +6551,7 @@ function updKnocks(dt){const L=M.knocks;if(!L||!L.length)return;
     if(p.y-hy2<=g&&K.v.y<=0){p.y=g+hy2;if(K.v.y<-2.5){K.v.y*=-.28;K.v.x*=.55;K.v.z*=.55;K.av.multiplyScalar(.55);}
       else{K.v.set(0,0,0);K.av.set(0,0,0);const q=Math.PI/2;m.rotation.x=Math.round(m.rotation.x/q)*q;m.rotation.z=Math.round(m.rotation.z/q)*q;p.y=g+knockHY(K);K.st=2;}}
     if(p.y<-5){p.y=K.hp.y;K.st=2;}}}
-function resetKnocks(){for(const K of M.knocks||[]){K.m.position.copy(K.hp);K.m.rotation.copy(K.hr);K.v.set(0,0,0);K.av.set(0,0,0);K.st=0;K.php=K.pop;K.boomAt=0;K.m.visible=true;}}
+function resetKnocks(){for(const K of M.knocks||[]){K.m.position.copy(K.hp);K.m.rotation.copy(K.hr);K.v.set(0,0,0);K.av.set(0,0,0);K.st=0;K.php=K.pop;K.bhp=K.brk;K.boomAt=0;K.m.visible=true;}}
 function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&(cfg.gun==='fireball'||cfg.gun==='heart')?1.1:1,vol:cfg&&cfg.gun==='heart'?.6:1});cfg=cfg||{dmg:GUNS.rocket.dmg,radius:GUNS.rocket.radius,wall:300,gun:'rocket',colors:['#ffd23f','#ff7a1f','#ff3b1f','#3a3d45','#ffffff']};if(n)at.addScaledVector(n,.2);const g=cfg,Rr=cfg.radius;
   blastMarks(at,n,Rr,hitBox);
   if(cfg.gun==='grenade'||cfg.gun==='rocket'||cfg.gun==='thumper')boomFX(at,Rr);else emit(at.x,at.y+.2,at.z,{n:Math.round(70*Rr/4.5),speed:12*Rr/4.5,up:3,size:.38,life:.8,grav:4,colors:cfg.colors});
@@ -6550,10 +6609,10 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       const hr=hits.get(hf.who)||{t:0,h:false,n:0,d:1e9};hr.t+=dm;hr.n++;hr.d=Math.min(hr.d,dist);if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;emit(end.x,end.y,end.z,{n:4,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});}
     else if(hb){end=origin.clone().addScaledVector(d,hb.t);const w=brickOf(hb.box);if(p===0)sfx('impact',end,{range:9,rate:w?.85:1});
       emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:w?5:3,speed:3,up:1,size:.1,life:.4,colors:w?[w.wall.color,'#ffffff']:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
-      if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2,d);else if(hb.box.turret)hitTurret(hb.box.turret,g.dmg*(g.pellets>1?1:1.2),f);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end);} // walls go down twice as fast to gunfire
+      if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2,d);else if(hb.box.turret)hitTurret(hb.box.turret,g.dmg*(g.pellets>1?1:1.2),f);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end,d);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
     {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
-    for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
+    for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q,d);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}
   if(anyHit){const sg=id==='shotgun'||g.base==='shotgun';for(const [foe,hr] of hits){let total=Math.round(hr.t),shown=total;
@@ -8617,7 +8676,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='1ba553e7bc0c';
+const MODEL_STAMP='1b4606e900be';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */

@@ -3322,7 +3322,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -4383,18 +4383,18 @@ function skyHigh(){const X=17,Z=21;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=one
     const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0);M.life.push(upd);
   const sp=[[-5,17],[7,16.5],[-12,15],[9,19],[0,15.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 /* ---------- Lagoon (1v1): two wooden pavilions on stilts over a turquoise lagoon, joined by a narrow walkway, at sunset ---------- */
-function lgPalm(g,x,y,z,s,lean,pr){const pg=new THREE.Group();pg.position.set(x,y,z);pg.rotation.y=pr()*TAU;pg.scale.setScalar(s);g.add(pg);
+function lgPalm(g,x,y,z,s,lean,pr,ry){const pg=new THREE.Group();pg.position.set(x,y,z);pg.rotation.y=ry??pr()*TAU;pg.scale.setScalar(s);g.add(pg);
   const bark=mat('#8a6a45',null,{flatShading:true});let px=0,py=0;
   for(let i=0;i<9;i++){const t=i/9,nx=Math.pow(t,1.6)*lean;const c=new THREE.Mesh(gC(.2-t*.06,.24-t*.06,.95,7),bark);c.position.set((px+nx)/2,py+.45,0);c.rotation.z=-Math.atan2(nx-px,.9);pg.add(c);px=nx;py+=.9;}
   const lf=[mat('#2f8f3a',null,{flatShading:true,side:2}),mat('#3fae48',null,{flatShading:true,side:2})];
   if(!lgPalm.fg){lgPalm.fg=new THREE.ConeGeometry(.55,4.2,4);lgPalm.fg.translate(0,2.1,0);lgPalm.fg.scale(1,1,.18);}
   for(let k=0;k<8;k++){const f=new THREE.Mesh(lgPalm.fg,lf[k%2]);f.position.set(px,py,0);f.rotation.order='YZX';f.rotation.y=k/8*TAU+pr()*.3;f.rotation.z=-(Math.PI/2-(pr()*.45-.1));pg.add(f);}
   for(let k=0;k<3;k++){const c=new THREE.Mesh(gC(.17,.17,.3,6),mat('#5a3a1a'));c.position.set(px+pr()*.4-.2,py-.25,pr()*.4-.2);pg.add(c);}}
-function lgIsland(x,z,r,n,pr,wy){const g=new THREE.Group();M.group.add(g);
+function lgIsland(x,z,r,n,pr,wy,clr){/* clr: keep palms and bushes this far from the centre (the lighthouse), palms leaning outwards */const g=new THREE.Group();M.group.add(g);
   const sand=new THREE.Mesh(new THREE.SphereGeometry(1,20,10),mat('#f2dca4',null,{roughness:1}));sand.scale.set(r,r*.22,r);sand.position.set(x,wy-r*.1,z);g.add(sand);
   const grass=new THREE.Mesh(new THREE.SphereGeometry(1,10,6),mat('#4a9a4a',null,{flatShading:true}));grass.scale.set(r*.68,r*.2,r*.68);grass.position.set(x,wy+r*.02,z);g.add(grass);
-  for(let i=0;i<n;i++){const a=pr()*TAU,d=pr()*r*.45;lgPalm(g,x+Math.cos(a)*d,wy+r*.1,z+Math.sin(a)*d,1+pr()*.5,.8+pr()*1.4,pr);}
-  for(let i=0;i<5;i++){const a=pr()*TAU,d=r*(.2+pr()*.4),b=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),mat('#2f7f3a',null,{flatShading:true}));b.scale.set(1,.7,1).multiplyScalar(.8+pr()*.8);b.position.set(x+Math.cos(a)*d,wy+r*.12,z+Math.sin(a)*d);g.add(b);}
+  for(let i=0;i<n;i++){const a=clr?i/n*TAU+pr()*.8:pr()*TAU,d=clr?clr+pr()*(r*.6-clr):pr()*r*.45;lgPalm(g,x+Math.cos(a)*d,wy+r*.1,z+Math.sin(a)*d,1+pr()*.5,.8+pr()*1.4,pr,clr?-a:undefined);}
+  for(let i=0;i<5;i++){const a=pr()*TAU,d=clr?clr*.6+pr()*(r*.6-clr*.6):r*(.2+pr()*.4),b=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),mat('#2f7f3a',null,{flatShading:true}));b.scale.set(1,.7,1).multiplyScalar(.8+pr()*.8);b.position.set(x+Math.cos(a)*d,wy+r*.12,z+Math.sin(a)*d);g.add(b);}
   g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;}});flatGroup(g);}
 // deck layout, shared by the deck builder and the water shader: two pavilions (32 x 16 m) joined by a 4.5 m walkway, with a shop nook off the walkway
 const LG={X:16,PZ0:6,PZ1:22,WX:2.25,NX0:2.25,NX1:5.5,NZ:1.75,WY:-2.4};
@@ -4488,7 +4488,7 @@ const lgSdB=(px,pz,cx,cz,hx,hz)=>{const qx=Math.abs(px-cx)-hx,qz=Math.abs(pz-cz)
 const lgSd=(x,z)=>{const L=LG,pz=(L.PZ0+L.PZ1)/2,ph=(L.PZ1-L.PZ0)/2;return Math.min(lgSdB(x,z,0,pz,L.X,ph),lgSdB(x,z,0,-pz,L.X,ph),lgSdB(x,z,0,0,L.WX,L.PZ0+.2),lgSdB(x,z,(L.NX0+L.NX1)/2,0,(L.NX1-L.NX0)/2,L.NZ));};
 function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=onePr(777);
   /* anything that goes over the rails lands in the lagoon: splashes for shots, blasts and flung bodies (nobody can wade here) */
-  M.waterY=(x,z)=>lgSd(x,z)>.3&&Math.abs(x)<700&&Math.abs(z)<700?WY+lgH(x,z,M.lifeT||0):null;
+  M.deepWater=true;M.waterY=(x,z)=>lgSd(x,z)>.3&&Math.abs(x)<700&&Math.abs(z)<700?WY+lgH(x,z,M.lifeT||0):null;
   waterRings((x,z,t)=>WY+lgH(x,z,t));
   lgWater();
   /* the two pavilions, the walkway between them and the shop nook off its east side */
@@ -4593,10 +4593,10 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
       if(P.wake&&M.splash&&Math.random()<dt*6)M.splash(nx,nz,.5);}
     g.position.y=WY+(o.sink||0)+lgH(g.position.x,g.position.z,t);g.rotation.z=Math.sin(t*.9+ph)*(o.roll??.035);g.rotation.x=Math.sin(t*.7+ph*1.3)*(o.pitch??.02);});return g;};
   floatOn(lgProp('speedboat',-21.5,WY,13,Math.PI/2),{sink:-.3});
-  floatOn(lgProp('cruiser',0,WY,0,0),{path:{x:0,z:0,rx:150,rz:160,sp:.035,yaw:Math.PI/2},sink:-.4,roll:.03});
-  floatOn(lgProp('sailboat',0,WY,0,0),{path:{x:8,z:-6,rx:62,rz:66,sp:.045,yaw:Math.PI/2},sink:-.6,roll:.08,pitch:.03});
+  floatOn(lgProp('cruiser',0,WY,0,0),{path:{x:0,z:0,rx:150,rz:160,sp:.035,yaw:-Math.PI/2},sink:-.4,roll:.03});
+  floatOn(lgProp('sailboat',0,WY,0,0),{path:{x:8,z:-6,rx:62,rz:66,sp:.045,yaw:-Math.PI/2},sink:-.6,roll:.08,pitch:.03});
   floatOn(lgProp('jetski_blue',0,WY,0,0),{path:{x:-42,z:40,rx:26,rz:22,sp:.45,yaw:0,wake:1},sink:-.25,roll:.12,pitch:.06});
-  floatOn(lgProp('jetski_purple',0,WY,0,0),{path:{x:46,z:-44,rx:22,rz:28,sp:-.4,yaw:Math.PI/2,wake:1},sink:-.25,roll:.12,pitch:.06});
+  floatOn(lgProp('jetski_purple',0,WY,0,0),{path:{x:46,z:-44,rx:22,rz:28,sp:-.4,yaw:-Math.PI/2,wake:1},sink:-.25,roll:.12,pitch:.06});
   floatOn(lgProp('superyacht',118,WY,-18,.6),{sink:-.8,roll:.012,pitch:.008});
   lgProp('canoe',-69,WY+.35,-41,2.3).rotation.z=.12;lgProp('rowboat',90,WY+.45,31,-.9).rotation.x=-.1;
   lgProp('lighthouse',-140,WY+2.8,15,0);
@@ -4606,7 +4606,7 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     bm.position.set(lx,ly,lz);bm.geometry.translate(45,0,0);bm.userData.dyn=1;M.group.add(bm);M.life.push(t=>{bm.rotation.y=t*.5;bm.rotation.x=0;});}
   {const lb=deco(new THREE.TorusGeometry(.45,.13,8,20),mat('#ff4a3a'),L.X+.3,.85,14);lb.rotation.y=Math.PI/2;}
   /* palm islands all round, a cliff with a waterfall out past the sunset */
-  for(const [x,z,r,n] of [[-75,-45,10,3],[-28,-105,13,4],[62,-128,11,3],[-140,15,15,4],[95,35,9,2],[25,118,12,3],[-62,95,10,2],[150,-62,13,3],[-110,-160,12,3],[140,120,11,2]])lgIsland(x,z,r,n,pr,WY);
+  for(const [x,z,r,n,c] of [[-75,-45,10,3],[-28,-105,13,4],[62,-128,11,3],[-140,15,15,4,6.5],[95,35,9,2],[25,118,12,3],[-62,95,10,2],[150,-62,13,3],[-110,-160,12,3],[140,120,11,2]])lgIsland(x,z,r,n,pr,WY,c);
   {const g=new THREE.Group();g.position.set(-35,WY,-175);g.rotation.y=.25;M.group.add(g);const rock=mat('#9a9c84',null,{flatShading:true}),moss=mat('#3f8f45',null,{flatShading:true});
     for(let i=0;i<20;i++){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(7+pr()*7,0),rock);o.position.set(pr()*44-22,4+pr()*22,pr()*16-10);o.scale.set(1,1+pr()*.6,1);o.rotation.set(pr()*3,pr()*3,0);g.add(o);}
     for(let i=0;i<9;i++){const o=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),moss);o.scale.set(5+pr()*4,2.2+pr()*1.5,5+pr()*4);o.position.set(pr()*40-20,30+pr()*7,pr()*12-8);g.add(o);}
@@ -5013,9 +5013,9 @@ function downYaw(f){if(S.t-(f._dyLast??-9)>.3){f._dyOn=false;f._dyT=0;}f._dyLast
       if(free>=L-.01){best=a;bl=L;break;}if(free>bl+.05){bl=free;best=a;}}
     f._dyw=best;if(!f._dyOn)f._dyv=f.yaw;f._dyOn=true;}
   let df=f._dyw-f._dyv;df=Math.atan2(Math.sin(df),Math.cos(df));f._dyv+=df*Math.min(1,.25);return f._dyv;}
-function rayBoxes(o,d,maxT,skipSee){let best=maxT,hit=null,nAx=0,nS=0;
-  for(const b of allBoxes()){if(skipSee&&b.see)continue;let t0=-1e9,t1=1e9,ax=0,sg=0;
-    for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?b.y1:b.z1;
+function rayBoxes(o,d,maxT,skipSee,proj){let best=maxT,hit=null,nAx=0,nS=0;
+  for(const b of allBoxes()){if(skipSee&&b.see)continue;let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
+    for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?ty:b.z1;
       if(Math.abs(dd)<1e-9){if(oo<mn||oo>mx){t0=1e9;break;}continue;}let ta=(mn-oo)/dd,tb=(mx-oo)/dd,s=-1;if(ta>tb){const q=ta;ta=tb;tb=q;s=1;}
       if(ta>t0){t0=ta;ax=a;sg=s;}if(tb<t1)t1=tb;if(t0>t1)break;}
     if(t0<=t1&&t0>=0&&t0<best){best=t0;hit=b;nAx=ax;nS=sg;}}
@@ -6229,9 +6229,9 @@ function rocketNear(p,st,L){let best=null;for(const o of foesOf(p.f)){if(o.finis
 let ROCKET_SKIP=null;
 function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS[p.id];p.life-=dt;if(g.accel){const sp=p.vel.length();if(sp<g.maxSpeed)p.vel.multiplyScalar(Math.min(g.maxSpeed,sp+g.accel*dt)/sp);}p.vel.y-=(g.grav||0)*dt;
   const st=p.vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6)continue;const d=st.clone().divideScalar(L);
-  const hb=rayBoxes(p.pos,d,L),hf=rayFoes(p.pos,d,p.f);const foe=hf&&hf.who;let hit=null;if(THROWN.has(p.id)||p.id==='thumper'){p.mesh.rotation.x+=dt*8;if(Math.random()<.35)emit(p.pos.x,p.pos.y+.2,p.pos.z,{n:1,speed:.3,size:.08,life:.3,grav:-1,colors:p.id==='thumper'?['#ffae1f','#d8dbe0']:['#ffd23f']});}
+  const hb=rayBoxes(p.pos,d,L,false,true),hf=rayFoes(p.pos,d,p.f);const foe=hf&&hf.who;let hit=null;if(THROWN.has(p.id)||p.id==='thumper'){p.mesh.rotation.x+=dt*8;if(Math.random()<.35)emit(p.pos.x,p.pos.y+.2,p.pos.z,{n:1,speed:.3,size:.08,life:.3,grav:-1,colors:p.id==='thumper'?['#ffae1f','#d8dbe0']:['#ffd23f']});}
   if(p.id==='rocket'||p.id==='thumper'){const near=rocketNear(p,st,L);if(near&&(!hf||hf.t>L||near.t<hf.t)&&(!hb||near.t<hb.t))hit={t:near.t,f:{who:near.who,t:near.t,part:'body'}};}
-  if(hit){}else if(hf&&hf.t<=L&&(!hb||hf.t<hb.t))hit={t:hf.t,f:hf};else if(hb)hit={t:hb.t,b:hb};else if(p.pos.y+st.y<0)hit={t:L*p.pos.y/Math.max(1e-6,-st.y),g:1};
+  if(hit){}else if(hf&&hf.t<=L&&(!hb||hf.t<hb.t))hit={t:hf.t,f:hf};else if(hb)hit={t:hb.t,b:hb};else if(p.pos.y+st.y<0&&!(M.deepWater&&M.waterY(p.pos.x+st.x,p.pos.z+st.z)!=null))hit={t:L*p.pos.y/Math.max(1e-6,-st.y),g:1};
   if(THROWN.has(p.id)&&p.life>0&&hit&&(!hit.f||p.id==='bomblet')){if(hit.f){hit={t:hit.t,g:1};}const n=hit.b?hit.b.n.clone():new V3(0,1,0);const at=p.pos.clone().addScaledVector(d,hit.t).addScaledVector(n,.06);
     {const v=p.vel.length();if(v>2.5&&S.t-(p.bT||-9)>.12){p.bT=S.t;sfx(Math.random()<.5?'bounce1':'bounce2',at,{vol:clamp(v/14,.3,1),range:12});}}if(!p.armed&&(n.y>.5||p.id==='thumper')){p.armed=true;p.life=p.id==='thumper'?g.landFuse:g.fuse;}p.vel.addScaledVector(n,-2*p.vel.dot(n)).multiplyScalar(p.id==='thumper'?.55:.45);if(n.y>.5&&Math.abs(p.vel.y)<1.5){p.vel.y=0;p.vel.x*=.8;p.vel.z*=.8;}p.pos.copy(at);p.mesh.position.copy(at);continue;}
   if(THROWN.has(p.id)&&p.life<=0)hit=null;
@@ -6251,7 +6251,8 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
       emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,p.id);}
     else{if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);if(hit.b.box.turret)hitTurret(hit.b.box.turret,p.id==='crossbow'?90:40,p.f);damageWood(hit.b.box,p.id==='crossbow'?70:40,at);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
     continue;}
-  if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));}}
+  if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));if(M.deepWater&&THROWN.has(p.id)){p.armed=true;p.life=Math.min(p.life,g.fuse||1);}}}
+  if(p.wet&&M.deepWater&&THROWN.has(p.id)){p.vel.multiplyScalar(Math.exp(-5*dt));p.vel.y=Math.max(p.vel.y,-1.2);}/* Lagoon: a grenade lobbed over the rail sinks and goes off under the water */
   p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));const fl=p.mesh.userData.flame;if(fl)fl.scale.set(1,1,.7+Math.random()*.6);p.age=(p.age||0)+dt;if(p.f!==ME||p.age>.15)emit(p.pos.x-d.x*.6,p.pos.y-d.y*.6,p.pos.z-d.z*.6,{n:2,speed:.5,size:.2,life:.7,grav:-1.2,colors:['#d8dbe0','#a9adb5','#f4f4f4']});if(Math.random()<.5)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:1,speed:.8,size:.14,life:.18,grav:0,colors:['#ffb347','#ffd23f']});}
   else if(p.id==='heart'){if(Math.random()<.8)emit(p.pos.x,p.pos.y,p.pos.z,{n:2,speed:.5,size:.22,life:.4,grav:-1,colors:['#ff6fae','#ff9ccc','#ffffff']});}
   else if(p.id==='fireball'){if(Math.random()<.9)emit(p.pos.x,p.pos.y,p.pos.z,{n:2,speed:.6,size:.3,life:.4,grav:-2,colors:['#ffd23f','#ff7a1f','#ff3b1f']});}
@@ -7273,10 +7274,11 @@ const TP={n:110,dots:null,ring:null,col:new THREE.Color()};
   TP.core=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));TP.ring.add(TP.core);}
 function simThrow(id,from,dir,first){const g=GUNS[id],bouncy=!first&&THROWN.has(id);const pos=from.clone(),vel=dir.clone().multiplyScalar(g.speed);let life=g.landFuse?8:(g.fuse||2.2),armed=!g.landFuse;const pts=[pos.clone()];let end=null,n=null;const dt=1/60;
   for(let k=0;k<400&&life>0;k++){life-=dt;vel.y-=(g.grav||0)*dt;const st=vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6){continue;}const d=st.clone().divideScalar(L);
-    const hb=rayBoxes(pos,d,L);let hit=null;if(hb)hit={t:hb.t,n:hb.n.clone()};else if(pos.y+st.y<0)hit={t:L*pos.y/Math.max(1e-6,-st.y),n:new V3(0,1,0)};
+    const hb=rayBoxes(pos,d,L,false,true);let hit=null;if(hb)hit={t:hb.t,n:hb.n.clone()};else if(pos.y+st.y<0&&!(M.deepWater&&M.waterY(pos.x+st.x,pos.z+st.z)!=null))hit={t:L*pos.y/Math.max(1e-6,-st.y),n:new V3(0,1,0)};
     if(hit){const at=pos.clone().addScaledVector(d,hit.t);if(!bouncy){end=at;n=hit.n;pts.push(at.clone());break;}
       if(!armed&&hit.n.y>.5){armed=true;life=g.fuse;}pos.copy(at.addScaledVector(hit.n,.06));vel.addScaledVector(hit.n,-2*vel.dot(hit.n)).multiplyScalar(.45);if(hit.n.y>.5&&Math.abs(vel.y)<1.5){vel.y=0;vel.x*=.8;vel.z*=.8;}n=hit.n;}
-    else pos.add(st);if(k%2===0)pts.push(pos.clone());}
+    else pos.add(st);if(M.deepWater){const wy=M.waterY(pos.x,pos.z);if(wy!=null&&pos.y<wy){end=pos.clone();end.y=wy;n=new V3(0,1,0);pts.push(end.clone());break;}}/* Lagoon: the arc stops at the water */
+    if(k%2===0)pts.push(pos.clone());}
   if(!end){end=pos.clone();n=n||new V3(0,1,0);}return{pts,end,n,r:g.radius||.6};}
 function previewThrow(){let id=null,from,dir;
   if(D.active&&S.state==='fight'&&ME.alive&&!ME.downed&&!S.paused){

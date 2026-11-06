@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* Safety check for imok 1v1: every inline <script> in index.html, plus sw.js, must parse.
    Run before committing (the pre-commit hook does it) and on GitHub before Pages publishes.
-   Usage: node tools/check.js            -> syntax check
+   Usage: node tools/check.js            -> syntax check (+ MODEL_STAMP up to date)
+          node tools/check.js --stamp    -> also refresh MODEL_STAMP in index.html
           node tools/check.js --smoke    -> also load the page in headless Chromium and make sure Duels starts */
 const fs=require('fs'),path=require('path'),os=require('os'),{execFileSync}=require('child_process');
 const root=path.join(__dirname,'..');
@@ -16,6 +17,14 @@ while((m=re.exec(html))){const attrs=m[1],body=m[2];if(/\bsrc=/.test(attrs)||!bo
   const type=(attrs.match(/type="([^"]*)"/)||[])[1];if(type&&!/module|javascript/.test(type))continue;
   const line=html.slice(0,m.index).split('\n').length;const id=(attrs.match(/id="([^"]*)"/)||[])[1];
   check(`index.html <script${id?' id='+id:''}> (line ${line})`,body,type==='module'?'.mjs':'.js');}
+/* MODEL_STAMP: menu map/character pictures are rendered from the real game and saved per code version. The stamp (a fingerprint of the
+   committed files in models/ and chars/) is part of that version, so a swapped model re-shoots the pictures. --stamp writes it; a plain check refuses a stale one. */
+{let st=null;try{const ls=execFileSync('git',['ls-files','-s','--','models','chars'],{cwd:root,encoding:'utf8'});st=require('crypto').createHash('sha1').update(ls).digest('hex').slice(0,12);}catch(e){}
+  const cur=(html.match(/const MODEL_STAMP='([^']*)'/)||[])[1];
+  if(cur==null){bad++;console.error('FAIL index.html: MODEL_STAMP is missing');}
+  else if(st&&cur!==st){if(process.argv.includes('--stamp')){fs.writeFileSync(path.join(root,'index.html'),html.replace(/const MODEL_STAMP='[^']*'/,`const MODEL_STAMP='${st}'`));console.log('ok   MODEL_STAMP updated to '+st);}
+    else{bad++;console.error(`FAIL index.html: MODEL_STAMP is ${cur} but models/chars are ${st}; run node tools/check.js --stamp (the map previews would stay out of date)`);}}
+  else console.log('ok   MODEL_STAMP '+(st||'(no git, not checked)'));}
 if(fs.existsSync(path.join(root,'sw.js')))check('sw.js',fs.readFileSync(path.join(root,'sw.js'),'utf8'),'.js');
 // in one-line code a // comment silently eats everything after it on that line: flag any // that has code after it
 {const lines=html.split('\n');lines.forEach((l,i)=>{const k=l.indexOf(' // ');if(k<0)return;const before=l.slice(0,k),after=l.slice(k+4);

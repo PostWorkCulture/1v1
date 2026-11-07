@@ -4130,7 +4130,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   M.shopAt=[{x:-4.6,z:0,y:1.25,k:.7}];
   M.spawns=[[-20,-17],[20,17],[-6.5,-27],[6.5,27],[-23.2,-27],[23.2,27],[14,-15],[-14,15.5],[-10,20],[10,-20]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 // cross ramp in the middle of Arena: a raised square deck with four ramps running down to the floor, each in its own colour, curbs with glowing strips along both sides
-function arenaCross(){const C=3.25,H=2,L=8,n=8,cw=.3,cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'],glows=[];
+function arenaCross(H=2){const C=3.25,L=8,n=Math.round(H/.25),cw=.3,cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'],glows=[];
   const dark=c=>{const v=new THREE.Color(c);v.multiplyScalar(.62);return '#'+v.getHexString();};
   // centre deck
   collider(-C,C,0,H,-C,C);box(0,0,0,2*C,H-.2,2*C,'#2b2f3a',{solid:false});box(0,H-.2,0,2*C,.2,2*C,'#f4c22b',{solid:false,extra:{roughness:.4}});
@@ -4160,11 +4160,11 @@ function arenaCross(){const C=3.25,H=2,L=8,n=8,cw=.3,cols=['#e8463a','#2f7fe0','
   // rounded posts where the curbs meet at the corners of the deck
   for(const sx of [-1,1])for(const sz of [-1,1]){const p=deco(gC(.32,.32,H+.6,16),mat('#f4f5f7',null,{roughness:.4}),sx*(C-.15),(H+.6)/2,sz*(C-.15));const b=deco(gC(.34,.34,.1,16),new THREE.MeshBasicMaterial({color:'#f4c22b',toneMapped:false}),sx*(C-.15),H+.62,sz*(C-.15));}
   // a ring of light turning slowly over the deck, and the glow strips breathing
-  {const rg=new THREE.Group();rg.userData.dyn=1;rg.position.y=7;M.group.add(rg);const rm=new THREE.MeshBasicMaterial({color:'#ffffff',toneMapped:false,transparent:true,opacity:.85});
+  {const rg=new THREE.Group();rg.userData.dyn=1;rg.position.y=H+5;M.group.add(rg);const rm=new THREE.MeshBasicMaterial({color:'#ffffff',toneMapped:false,transparent:true,opacity:.85});
     cols.forEach((c,i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(2.6,.09,8,48,TAU/4-.15),new THREE.MeshBasicMaterial({color:c,toneMapped:false}));t.rotation.x=Math.PI/2;t.rotation.z=i*TAU/4;rg.add(t);});
     const inner=new THREE.Mesh(new THREE.TorusGeometry(1.7,.05,8,48),rm);inner.rotation.x=Math.PI/2;rg.add(inner);
     const base=glows.map(m=>m.color.clone());
-    M.life.push(t=>{rg.rotation.y=t*.8;rg.position.y=7+Math.sin(t*1.4)*.35;inner.rotation.y=Math.sin(t)*.3;const k=.7+.3*Math.sin(t*3);glows.forEach((m,i)=>m.color.copy(base[i]).multiplyScalar(.75+.4*Math.sin(t*3+i*1.57)));});}}
+    M.life.push(t=>{rg.rotation.y=t*.8;rg.position.y=H+5+Math.sin(t*1.4)*.35;inner.rotation.y=Math.sin(t)*.3;const k=.7+.3*Math.sin(t*3);glows.forEach((m,i)=>m.color.copy(base[i]).multiplyScalar(.75+.4*Math.sin(t*3+i*1.57)));});}}
 // ---------- Arena: a plain square floor with a handful of tall pillars to duck behind ----------
 /* ---------- Arena: a floodlit stadium at night ----------
    The floor, the cross ramp, six plain white pillars and (full Arena) the two raised side walkways with breakable glass along their inner edge.
@@ -4201,7 +4201,7 @@ function arenaWallSeg(x0,z0,x1,z1,h,out){const L=Math.hypot(x1-x0,z1-z0),ax=Math
     posts(h,mat('#15171c',null,{metalness:.6}),3.5,.14);slab(h-.08,.1,mat('#15171c'),.12);slab(0,.25,mat('#15171c'),.16);}
   else{slab(0,1.1,mat('#c9ccd2','asphalt',{roughness:.9}),.45);ledStrip(cx-out[0]*.235,.25,cz-out[1]*.235,L,.6,face);posts(2.2,steel,3,.08);
     for(const y of [1.6,2.15]){const r=new THREE.Mesh(gC(.05,.05,L,8),steel);r.position.set(cx+ox,y,cz+oz);r.rotation.set(ax?0:Math.PI/2,0,ax?Math.PI/2:0);M.group.add(r);}}}
-function arenaWalls(X,Z,small){const tall=small?0:20,H2=6.4;
+function arenaWalls(X,Z,small){const tall=small?0:20,H2=8.6;
   if(!tall){arenaWallSeg(-X,-Z,X,-Z,3.2,[0,-1]);arenaWallSeg(-X,Z,X,Z,3.2,[0,1]);arenaWallSeg(-X,-Z,-X,Z,3.2,[-1,0]);arenaWallSeg(X,-Z,X,Z,3.2,[1,0]);return;}
   arenaWallSeg(-X,-Z,X,-Z,3.2,[0,-1]);arenaWallSeg(-X,Z,X,Z,3.2,[0,1]);
   for(const s of [-1,1]){const o=[s,0];arenaWallSeg(s*X,-Z,s*X,-tall,3.2,o);arenaWallSeg(s*X,-tall,s*X,tall,H2,o);arenaWallSeg(s*X,tall,s*X,Z,3.2,o);}}
@@ -4288,14 +4288,14 @@ function arenaMap(small){const X=small?20:30,Z=small?26:38;M.bounds={x0:-X,x1:X,
   /* pillars: tall enough that nobody stands on top, square with a base and a cap, a white band, a faint concrete texture */
   const pillar=(x,z,s)=>{box(x,0,z,s,9,s,'#eef0f3',{tx:'pillar',extra:{roughness:.6}});box(x,0,z,s+.5,.5,s+.5,'#c9ccd2',{solid:false});box(x,8.6,z,s+.5,.6,s+.5,'#c9ccd2',{solid:false});
     box(x,2.6,z,s+.08,.5,s+.08,'#ffffff',{solid:false,extra:{roughness:.35}});};
-  arenaCross();
+  arenaCross(small?2:4);/* the full Arena's ramps are twice as tall (4 m deck) */
   if(small){const px=9.5,pz=10.5,pe=17;for(const sx of [-1,1])for(const sz of [-1,1])pillar(sx*px,sz*pz,3);for(const sz of [-1,1])pillar(0,sz*pe,3);}
   else{
     /* six pillars spread round the floor in a staggered layout, each mirrored through the centre so both ends play the same */
     for(const sg of [1,-1]){pillar(sg*17,sg*8,3.2);pillar(-sg*16,sg*15,3);pillar(sg*7,sg*18,2.8);}
-    /* raised walkways along both long sides: 5 m wide, 2.2 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
+    /* raised walkways along both long sides: 5 m wide, 4.4 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
        and breakable glass all along the inner edge */
-    const H=2.2,W=5,D0=-10,D1=10,RL=10,n=9,cols=['#3bb54a','#a05ad6'];
+    const H=4.4,W=5,D0=-10,D1=10,RL=10,n=18,cols=['#3bb54a','#a05ad6'];
     [-1,1].forEach((sx,k)=>{const x1=sx*X,x0=sx*(X-W),xa=Math.min(x0,x1),xb=Math.max(x0,x1),xm=(xa+xb)/2,col=cols[k];
       const dk=new THREE.Color(col).multiplyScalar(.62).getStyle();
       collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#2b2f3a',{solid:false});box(xm,H-.2,(D0+D1)/2,W,.2,D1-D0,col,{solid:false,extra:{roughness:.4}});
@@ -4310,7 +4310,7 @@ function arenaMap(small){const X=small?20:30,Z=small?26:38;M.bounds={x0:-X,x1:X,
         const wd=new THREE.Mesh(eg,new THREE.MeshStandardMaterial({color:dk,roughness:.6}));wd.castShadow=wd.receiveShadow=true;g.add(wd);
         for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});}
   arenaStadium(X,Z,small);
-  M.shopAt=[{x:0,z:0,y:2}];
+  M.shopAt=[{x:0,z:0,y:small?2:4}];
   const sp=small?[[-6,22],[6,23],[-14,21],[14,22],[0,21.5]]:[[-8,34],[8,35],[-22,32],[22,33],[0,28]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 /* ---------- shared bits for the 1v1 scenery maps ---------- */

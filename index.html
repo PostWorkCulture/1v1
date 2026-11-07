@@ -4406,7 +4406,7 @@ function skyHigh(){const X=17,Z=21;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=one
   const upd=t=>{const a=t*.11;heli.position.set(Math.cos(a)*62,24+Math.sin(t*.5)*2,Math.sin(a)*62);heli.rotation.set(0,-a-Math.PI/2,.16);heli.userData.rot.rotation.y=t*22;
     const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0);M.life.push(upd);
   const sp=[[-5,17],[7,16.5],[-12,15],[9,19],[0,15.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
-/* ---------- Lagoon (1v1): two wooden pavilions on stilts over a turquoise lagoon, joined by a narrow walkway, at sunset ---------- */
+/* ---------- Lagoon (1v1): two wooden pavilions on stilts over a turquoise lagoon, joined by two wide walkways, at sunset ---------- */
 function lgPalm(g,x,y,z,s,lean,pr,ry){const pg=new THREE.Group();pg.position.set(x,y,z);pg.rotation.y=ry??pr()*TAU;pg.scale.setScalar(s);g.add(pg);
   const bark=mat('#8a6a45',null,{flatShading:true});let px=0,py=0;
   for(let i=0;i<9;i++){const t=i/9,nx=Math.pow(t,1.6)*lean;const c=new THREE.Mesh(gC(.2-t*.06,.24-t*.06,.95,7),bark);c.position.set((px+nx)/2,py+.45,0);c.rotation.z=-Math.atan2(nx-px,.9);pg.add(c);px=nx;py+=.9;}
@@ -4421,7 +4421,7 @@ function lgIsland(x,z,r,n,pr,wy,clr){/* clr: keep palms and bushes this far from
   for(let i=0;i<5;i++){const a=pr()*TAU,d=clr?clr*.6+pr()*(r*.6-clr*.6):r*(.2+pr()*.4),b=new THREE.Mesh(new THREE.SphereGeometry(1,7,5),mat('#2f7f3a',null,{flatShading:true}));b.scale.set(1,.7,1).multiplyScalar(.8+pr()*.8);b.position.set(x+Math.cos(a)*d,wy+r*.12,z+Math.sin(a)*d);g.add(b);}
   g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;}});flatGroup(g);}
 // deck layout, shared by the deck builder and the water shader: two pavilions (32 x 16 m) joined by a 4.5 m walkway, with a shop nook off the walkway
-const LG={X:16,PZ0:6,PZ1:22,WX:2.25,NX0:2.25,NX1:5.5,NZ:1.75,WY:-2.4};
+const LG={X:16,PZ0:6,PZ1:22,W0:5,W1:11,NX0:11,NX1:14,NZ:1.75,WY:-2.4};/* pavilions x +-X, z PZ0..PZ1 each side; two crossovers x +-(W0..W1); the shop nook off the east crossover x NX0..NX1, z +-NZ */
 // the lagoon swell: a long gentle roll with a little chop on top (JS copy of the shader's lgH, for things that float)
 const lgH=(x,z,t)=>.16*Math.sin(x*.21+z*.13+t*.9)+.11*Math.sin(-x*.14+z*.27+t*1.15)+.05*Math.sin(x*.9+z*.7+t*2.3)+.03*Math.sin(x*1.7-z*1.3+t*3.1);
 /* the lagoon water: the Beach Please sea (swell, fine ripples, sun glitter, sparkling glints, caustics) in a lagoon setting:
@@ -4430,7 +4430,7 @@ function lgWater(){const WY=LG.WY,L=LG;
   const GL=WC_GLSL+`
 float sdB(vec2 p,vec2 c,vec2 h){vec2 q=abs(p-c)-h;return length(max(q,0.))+min(max(q.x,q.y),0.);}
 float lgSd(vec2 p){float pz=(${L.PZ0}.+${L.PZ1}.)*.5,ph=(${L.PZ1}.-${L.PZ0}.)*.5;
-  return min(min(sdB(p,vec2(0.,pz),vec2(${L.X}.,ph)),sdB(p,vec2(0.,-pz),vec2(${L.X}.,ph))),min(sdB(p,vec2(0.,0.),vec2(${L.WX},${L.PZ0}.2)),sdB(p,vec2(${(L.NX0+L.NX1)/2},0.),vec2(${(L.NX1-L.NX0)/2},${L.NZ}))));}
+  return min(min(sdB(p,vec2(0.,pz),vec2(${L.X}.,ph)),sdB(p,vec2(0.,-pz),vec2(${L.X}.,ph))),min(min(sdB(p,vec2(${(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2)),sdB(p,vec2(${-(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2))),sdB(p,vec2(${(L.NX0+L.NX1)/2},0.),vec2(${(L.NX1-L.NX0)/2},${L.NZ}))));}
 float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+p.y*.27+t*1.15)+.05*sin(p.x*.9+p.y*.7+t*2.3)+.03*sin(p.x*1.7-p.y*1.3+t*3.1);}
 `;
   // the sandy lagoon bed: shallow and pale round the decks, sloping away into deep water
@@ -4509,106 +4509,62 @@ function lgProp(id,x,y,z,ry,sc){const g=new THREE.Group();g.position.set(x,y,z);
 function lgKnock(id,x,y,z,w,h,d,ry,o={}){const K=knock(x,y,z,w,h,d,'#ffffff',Object.assign({mat:INVIS},o));furnInto(id,K.m,x,y,z,ry||0);return K;}
 // signed distance from the decks in JS (the shader has its own copy): outside the boards is open water
 const lgSdB=(px,pz,cx,cz,hx,hz)=>{const qx=Math.abs(px-cx)-hx,qz=Math.abs(pz-cz)-hz;return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0);};
-const lgSd=(x,z)=>{const L=LG,pz=(L.PZ0+L.PZ1)/2,ph=(L.PZ1-L.PZ0)/2;return Math.min(lgSdB(x,z,0,pz,L.X,ph),lgSdB(x,z,0,-pz,L.X,ph),lgSdB(x,z,0,0,L.WX,L.PZ0+.2),lgSdB(x,z,(L.NX0+L.NX1)/2,0,(L.NX1-L.NX0)/2,L.NZ));};
+const lgSd=(x,z)=>{const L=LG,pz=(L.PZ0+L.PZ1)/2,ph=(L.PZ1-L.PZ0)/2;return Math.min(lgSdB(x,z,0,pz,L.X,ph),lgSdB(x,z,0,-pz,L.X,ph),lgSdB(x,z,(L.W0+L.W1)/2,0,(L.W1-L.W0)/2,L.PZ0+.2),lgSdB(x,z,-(L.W0+L.W1)/2,0,(L.W1-L.W0)/2,L.PZ0+.2),lgSdB(x,z,(L.NX0+L.NX1)/2,0,(L.NX1-L.NX0)/2,L.NZ));};
+const LG_BZ=11;/* the tiki bars' counters sit this far from the middle */
 function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=onePr(777);
   /* anything that goes over the rails lands in the lagoon: splashes for shots, blasts and flung bodies (nobody can wade here) */
   M.deepWater=true;M.waterY=(x,z)=>lgSd(x,z)>.3&&Math.abs(x)<700&&Math.abs(z)<700?WY+lgH(x,z,M.lifeT||0):null;
   waterRings((x,z,t)=>WY+lgH(x,z,t));
   lgWater();
-  /* the two pavilions, the walkway between them and the shop nook off its east side */
+  /* the two pavilions, two wide crossovers between them and the shop nook off the east crossover. The decks are kept bare:
+     one tiki bar per pavilion is the only cover, facing the other side across the water */
   for(const s of [1,-1])lgDeck(-L.X,L.X,Math.min(s*L.PZ0,s*L.PZ1),Math.max(s*L.PZ0,s*L.PZ1));
-  lgDeck(-L.WX,L.WX,-L.PZ0,L.PZ0);lgDeck(L.NX0,L.NX1,-L.NZ,L.NZ);
+  for(const s of [1,-1])lgDeck(Math.min(s*L.W0,s*L.W1),Math.max(s*L.W0,s*L.W1),-L.PZ0,L.PZ0);
+  lgDeck(L.NX0,L.NX1,-L.NZ,L.NZ);
   for(const s of [1,-1]){const a=s*L.PZ0,b=s*L.PZ1,z0=Math.min(a,b),z1=Math.max(a,b);
-    lgRail(-L.X,b,L.X,b);lgRail(-L.X,z0,-L.X,z1);lgRail(L.X,z0,L.X,z1);lgRail(-L.X,a,-L.WX,a);lgRail(L.WX,a,L.X,a);}
-  lgRail(-L.WX,-L.PZ0,-L.WX,L.PZ0);lgRail(L.WX,-L.PZ0,L.WX,-L.NZ);lgRail(L.WX,L.NZ,L.WX,L.PZ0);
+    lgRail(-L.X,b,L.X,b);lgRail(-L.X,z0,-L.X,z1);lgRail(L.X,z0,L.X,z1);lgRail(-L.X,a,-L.W1,a);lgRail(-L.W0,a,L.W0,a);lgRail(L.W1,a,L.X,a);}
+  for(const s of [1,-1])lgRail(s*L.W0,-L.PZ0,s*L.W0,L.PZ0);
+  lgRail(-L.W1,-L.PZ0,-L.W1,L.PZ0);lgRail(L.W1,-L.PZ0,L.W1,-L.NZ);lgRail(L.W1,L.NZ,L.W1,L.PZ0);
   lgRail(L.NX0,-L.NZ,L.NX1,-L.NZ);lgRail(L.NX1,-L.NZ,L.NX1,L.NZ);lgRail(L.NX0,L.NZ,L.NX1,L.NZ);
-  /* the shop sits in the nook under a thatched tiki canopy that spans the walkway, its bamboo posts standing in the water */
+  /* the shop sits in the nook under a thatched tiki canopy that spans the east crossover, its bamboo posts standing in the water */
   M.shopAt=[{x:(L.NX0+L.NX1)/2+.35,z:0,y:0}];
-  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a'),CY=4.3;for(const [x,z] of [[-L.WX-.55,-2.7],[-L.WX-.55,2.7],[L.NX1+.55,-2.7],[L.NX1+.55,2.7]]){deco(gC(.16,.19,CY-WY,8),bam,x,(CY+WY)/2,z);for(let y=.4;y<CY-.3;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
-    const cx=(L.NX1-L.WX)/2,th=mat('#d4ad62','thatch',{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(6.4,4),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),cx,CY+.02,0);u.rotation.x=Math.PI/2;u.rotation.z=Math.PI/4;u.castShadow=false;}
-    const roof=deco(new THREE.CylinderGeometry(0,6.4,2.6,4),th,cx,CY+1.3,0);roof.rotation.y=Math.PI/4;deco(new THREE.CylinderGeometry(6.4,6.7,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),cx,CY+.05,0).rotation.y=Math.PI/4;
-    deco(new THREE.SphereGeometry(.35,8,6),mat('#b88c46'),cx,CY+2.65,0);
-    const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(cx,CY-.6,0);M.group.add(l);}
-  /* ---------- evening lights ----------
-     tiki torches: the pair lighting the walkway stand in the water; the ones on the boards are loose props that bullets and people knock over,
-     and a torch that goes down goes out with a puff of smoke until the next round. String lights swag between bamboo posts along every
-     outer rail and across the walkway, paper lanterns hang under the canopy and the bar roofs, and candle lanterns sit on the bar tops */
-  const flames=[],torches=[];
-  {const pole=mat('#7a5a32'),cupM=mat('#5a3a1e'),fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4}),cg=new THREE.ConeGeometry(.17,.5,8),cg2=new THREE.ConeGeometry(.1,.32,8);
-    const light=(x,y,z,c,i,d)=>{const l=new THREE.PointLight(c,i,d,1.6);window.GFX&&GFX.light(l);l.position.set(x,y,z);return l;};
-    for(const [x,z] of [[-L.WX-.6,-4.6],[-L.WX-.6,4.6]]){lgProp('tiki_torch',x,WY-.3,z,pr()*TAU,2.2);const a=deco(cg,fo,x,2.25,z),b=deco(cg2,fy,x,2.2,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;
-      flames.push(a,b);glowSprite(x,2.35,z,2.2,'#ff8a2a',.85);M.group.add(light(x,2.6,z,'#ff9a4a',10,12));}
-    // loose torches on the boards: six per pavilion, the four nearest the corners with a real light, the rest flame and glow only
-    for(const s of [1,-1])for(const [x,z,lit] of [[15.2,21.2,1],[-15.2,21.2,1],[15.2,7.2,1],[-15.2,7.2,1],[7.5,21.2,0],[-7.5,21.2,0]]){const id=Math.abs(z)>20&&Math.abs(x)>10?'tiki_brazier':'tiki_torch',H=FURN_CFG[id].h,K=lgKnock(id,s*x,0,s*z,.2,H,.2,pr()*TAU,{snd:'wood',heavy:1.1});
-      const a=new THREE.Mesh(cg,fo),b=new THREE.Mesh(cg2,fy);a.position.y=H*.42;b.position.y=H*.4;K.m.add(a,b);flames.push(a,b);
-      const sp=glowSprite(0,H*.48,0,2.2,'#ff8a2a',.85);K.m.add(sp);let l=null;if(lit){l=light(0,H*.55,0,'#ff9a4a',10,11);K.m.add(l);}
-      torches.push({K,a,b,sp,l,lit:true});}}
-  // string lights: warm bulbs on a sagging wire between bamboo posts
+  const CX=(L.W0+L.NX1)/2,CY=4.3,CR=7.4;
+  {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a');for(const [x,z] of [[L.W0-.55,-2.7],[L.W0-.55,2.7],[L.NX1+.55,-2.7],[L.NX1+.55,2.7]]){deco(gC(.16,.19,CY-WY,8),bam,x,(CY+WY)/2,z);for(let y=.4;y<CY-.3;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
+    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(CR,4),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),CX,CY+.02,0);u.rotation.x=Math.PI/2;u.rotation.z=Math.PI/4;u.castShadow=false;}
+    const roof=deco(new THREE.CylinderGeometry(0,CR,2.8,4),th,CX,CY+1.4,0);roof.rotation.y=Math.PI/4;deco(new THREE.CylinderGeometry(CR,CR+.3,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),CX,CY+.05,0).rotation.y=Math.PI/4;
+    deco(new THREE.SphereGeometry(.35,8,6),mat('#b88c46'),CX,CY+2.85,0);
+    const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(CX,CY-.6,0);M.group.add(l);}
+  /* ---------- evening lights, all round the edges so the boards stay clear ----------
+     tiki torches stand in the water beside the crossovers; string lights swag between bamboo posts along the outer rails and the inner side of
+     each crossover, with a lantern and a real light on every pavilion corner post; paper lanterns hang under the canopy and the bar roofs */
+  const flames=[];
+  {const fo=mat('#ff7a1a',null,{emissive:'#ff7a1a',emissiveIntensity:3}),fy=mat('#ffe07a',null,{emissive:'#ffe07a',emissiveIntensity:4}),cg=new THREE.ConeGeometry(.17,.5,8),cg2=new THREE.ConeGeometry(.1,.32,8);
+    for(const sx of [1,-1])for(const sz of [1,-1]){const x=sx*(L.W0-.7),z=sz*4.6;lgProp('tiki_torch',x,WY-.3,z,pr()*TAU,2.2);const a=deco(cg,fo,x,2.25,z),b=deco(cg2,fy,x,2.2,z);a.castShadow=b.castShadow=false;a.userData.dyn=b.userData.dyn=1;flames.push(a,b);glowSprite(x,2.35,z,2.2,'#ff8a2a',.85);}}
   {const post=mat('#c8a060',null,{flatShading:true}),wire=new THREE.LineBasicMaterial({color:'#2a2218'}),bulbG=new THREE.SphereGeometry(.075,8,6),bulbM=new THREE.MeshStandardMaterial({color:'#fff2c0',emissive:'#ffd27a',emissiveIntensity:2.2,roughness:.3});
     const PH=3.3,bulbs=[],pts=[];const P=(x,z)=>{deco(gC(.06,.07,PH,6),post,x,PH/2,z);deco(new THREE.SphereGeometry(.09,6,5),mat('#3a2614'),x,PH,z).castShadow=false;};
     const run=(x0,z0,x1,z1,sag=.55)=>{const n=Math.max(2,Math.round(Math.hypot(x1-x0,z1-z0)/.8));for(let i=0;i<=n;i++){const t=i/n,x=x0+(x1-x0)*t,z=z0+(z1-z0)*t,y=PH-.08-sag*4*t*(1-t);pts.push(new THREE.Vector3(x,y,z));if(i>0&&i<n)bulbs.push([x,y-.08,z]);}pts.push(null);};
+    const corner=(x,z)=>{const l=new THREE.PointLight('#ffa860',9,13,1.6);window.GFX&&GFX.light(l);l.position.set(x,PH+.2,z);M.group.add(l);const m=deco(new THREE.SphereGeometry(.2,10,8),mat('#ffb060',null,{emissive:'#ff9a40',emissiveIntensity:2.2}),x,PH+.15,z);m.castShadow=false;glowSprite(x,PH+.15,z,1.8,'#ff9a40',.6);};
     for(const s of [1,-1]){const c=[[-15.6,21.6],[-5.2,21.6],[5.2,21.6],[15.6,21.6],[15.6,14],[15.6,6.4],[-15.6,6.4],[-15.6,14]].map(([x,z])=>[s*x,s*z]);for(const [x,z] of c)P(x,z);
-      const seq=[0,1,2,3,4,5];for(let i=0;i<seq.length-1;i++)run(c[seq[i]][0],c[seq[i]][1],c[seq[i+1]][0],c[seq[i+1]][1]);run(c[6][0],c[6][1],c[7][0],c[7][1]);run(c[7][0],c[7][1],c[0][0],c[0][1]);}
-    // across the walkway, from the canopy posts to the pavilion corners
-    for(const s of [1,-1]){P(-L.WX-.6,s*6.6);P(L.WX+.6,s*6.6);run(-L.WX-.55,s*2.7,-L.WX-.6,s*6.6,.3);run(L.NX1+.55,s*2.7,L.WX+.6,s*6.6,.35);}
-    // one line per run, one instanced mesh for all the bulbs
+      const seq=[0,1,2,3,4,5];for(let i=0;i<seq.length-1;i++)run(c[seq[i]][0],c[seq[i]][1],c[seq[i+1]][0],c[seq[i+1]][1]);run(c[6][0],c[6][1],c[7][0],c[7][1]);run(c[7][0],c[7][1],c[0][0],c[0][1]);
+      for(const k of [0,3,5,6])corner(c[k][0],c[k][1]);}
+    // along the inner side of each crossover, pavilion to pavilion
+    for(const s of [1,-1]){P(s*(L.W0-.4),6.4);P(s*(L.W0-.4),-6.4);run(s*(L.W0-.4),6.4,s*(L.W0-.4),-6.4,.7);}
     let seg=[];const flush=()=>{if(seg.length>1){const g=new THREE.BufferGeometry().setFromPoints(seg);const ln=new THREE.Line(g,wire);ln.userData.dyn=1;M.group.add(ln);}seg=[];};for(const p of pts){if(p)seg.push(p);else flush();}flush();
     const im=new THREE.InstancedMesh(bulbG,bulbM,bulbs.length),mx=new THREE.Matrix4();bulbs.forEach(([x,y,z],i)=>{mx.makeTranslation(x,y,z);im.setMatrixAt(i,mx);});im.castShadow=false;im.userData.dyn=1;M.group.add(im);
     M.life.push(t=>{bulbM.emissiveIntensity=2.1+.25*Math.sin(t*2.1)+.1*Math.sin(t*7.3);});}
-  // paper lanterns under the tiki canopy and the bar roofs, and candle lanterns on the bar tops (knock-overs)
   {const cols=['#ff7a3a','#ff4f8a','#ffd25a','#3fd6c8'],lanG=new THREE.SphereGeometry(.26,10,8);lanG.scale(1,.8,1);
     const lantern=(x,y,z,c)=>{const m=new THREE.Mesh(lanG,mat(c,null,{emissive:c,emissiveIntensity:1.4,roughness:.9}));m.position.set(x,y,z);m.castShadow=false;m.userData.dyn=1;M.group.add(m);deco(gC(.01,.01,.5,3),mat('#2a2218'),x,y+.45,z).castShadow=false;glowSprite(x,y,z,1.6,c,.5);};
-    const cx=(L.NX1-L.WX)/2,CY=4.3;[[-2.4,-2.2],[2.4,-2.2],[-2.4,2.2],[2.4,2.2],[0,0]].forEach(([dx,dz],i)=>{const x=cx+dx*1.3,z=dz*1.3,y=CY-1.1;lgProp('moroccan_lantern',x,y,z,pr()*TAU);deco(gC(.01,.01,.55,3),mat('#2a2218'),x,y+.8,z).castShadow=false;glowSprite(x,y+.28,z,1.7,'#ffa040',.55);});
-    for(const s of [1,-1]){for(const x of [-3.4,3.4]){const z=s*7.4;collider(x-.32,x+.32,0,1.1,z-.32,z+.32);lgProp('stone_lantern',x,0,z,s>0?0:Math.PI);glowSprite(x,.72,z,1.8,'#ff9040',.6);}
-      lgKnock('kerosene_lantern',s*-.6,2.65,s*15.5,.22,.32,.22,pr()*TAU,{snd:'wood',heavy:.6}).m.add(glowSprite(0,.05,0,1.1,'#ffd080',.55));
-      lgKnock('kerosene_lantern',s*2.9,1.4,s*16.2,.22,.32,.22,pr()*TAU,{snd:'wood',heavy:.6}).m.add(glowSprite(0,.05,0,1.1,'#ffd080',.55));}
-    for(const s of [1,-1]){const bx=s*-9,bz=s*9.6;for(let i=0;i<4;i++)lantern(bx-2.7+i*1.8,2.85,bz+s*(-.7),cols[(i+s+5)%4]);
-      // candle lanterns: little black cages with a candle inside, loose on the bar top
-      for(const dx of [-2.5,2.4]){const K=lgKnock('candle_lantern',bx+dx,1.27,bz+s*.2,.22,.34,.22,pr()*.6,{snd:'wood',heavy:.5});K.m.add(glowSprite(0,-.02,0,.9,'#ffb050',.55));}
-      // drinks and a pineapple along the bar top, stools along the front
-      const row=[['spritz',-1.7,-.22],['coconut_green',-.9,.2],['pineapple',0,-.2],['coconut_tropical',.8,.22],['coconut_umbrella',1.6,-.18],['beer_green',-.3,-.32],['cola',1.95,.24]];
-      for(const [id,dx,dz] of row){const h=FURN_CFG[id].h;lgKnock(id,bx+dx,1.27,bz+s*dz,h*.7,h,h*.7,pr()*TAU,{snd:'smash',heavy:.5});}
-      for(const dx of [-1.9,0,1.9])lgKnock('wood_stool',bx+dx,0,bz+s*-1.15,.55,.72,.55,pr()*TAU,{snd:'wood',heavy:2.4});
-      lgKnock('retro_stool',bx+3.4,0,bz+s*-1.1,.5,.82,.5,0,{snd:'impact',heavy:2.4});}}
-  /* ---------- cover (the same on both pavilions, turned through 180 degrees) ----------
-     solid pieces stop bullets: a stone-topped tiki bar, a lava-rock wall between two stone tiki statues, steel cargo boxes, metal barrels and stone planters;
-     only the small wooden crates let shots through */
-  const crM=new THREE.MeshStandardMaterial({roughness:.8,map:canvasTex(128,128,(g,w,h)=>{g.fillStyle='#c89558';g.fillRect(0,0,w,h);for(let i=0;i<4;i++){g.fillStyle=i%2?'rgba(255,230,190,.10)':'rgba(80,45,15,.10)';g.fillRect(0,i*32,w,32);g.fillStyle='rgba(70,40,15,.45)';g.fillRect(0,i*32,w,2);}
-    g.fillStyle='#8a5a2c';g.fillRect(0,0,w,13);g.fillRect(0,h-13,w,13);g.fillRect(0,0,13,h);g.fillRect(w-13,0,13,h);g.save();g.translate(w/2,h/2);g.rotate(Math.PI/4);g.fillRect(-84,-7,168,14);g.restore();g.strokeStyle='rgba(40,20,5,.6)';g.lineWidth=2;g.strokeRect(1,1,w-2,h-2);})});
-  const crate=(x,z,s)=>box(x,0,z,s,s,s,'#c89558',{mat:crM,wood:true});
-  // steel cargo boxes: painted sheet steel with a dark frame and rivet lines
-  const cgM=c=>new THREE.MeshStandardMaterial({roughness:.5,metalness:.35,map:canvasTex(128,128,(g,w,h)=>{g.fillStyle=c;g.fillRect(0,0,w,h);g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,0,w,9);g.fillRect(0,h-9,w,9);g.fillRect(0,0,9,h);g.fillRect(w-9,0,9,h);
-    g.fillStyle='rgba(255,255,255,.08)';for(let x=18;x<w-9;x+=22)g.fillRect(x,9,3,h-18);g.fillStyle='rgba(0,0,0,.35)';for(let i=14;i<w-9;i+=12){g.fillRect(i,4,2,2);g.fillRect(i,h-6,2,2);}})});
-  const cgA=cgM('#3d7a8f'),cgB=cgM('#8a6a2e');
-  const cargo=(x,y,z,w,h,d,m)=>box(x,y,z,w,h,d,'#3d7a8f',{mat:m,wood:false});
-  const bG=new THREE.LatheGeometry([[0,0],[.42,0],[.5,.3],[.52,.55],[.5,.8],[.42,1.1],[0,1.1]].map(p=>new THREE.Vector2(p[0],p[1])),14);
-  const barrel=(x,z,c)=>{collider(x-.5,x+.5,0,1.1,z-.5,z+.5);deco(bG,mat(c,null,{flatShading:true,roughness:.55,metalness:.35}),x,0,z);for(const y of [.22,.88])deco(gC(.5,.5,.07,14),mat('#2e3034',null,{metalness:.6}),x,y,z).castShadow=false;};
-  const barrels=(x,z,c,s)=>{barrel(x,z,c);barrel(x+s,z,c);barrel(x,z+s,c);};
-  const statue=(x,z,face0)=>{const st='#6f665c',dk=mat('#4e4740',null,{flatShading:true});box(x,0,z,1.5,2.6,1,st,{extra:{flatShading:true,roughness:.95},wood:false});for(const face of [face0,-face0]){const f=z+face*.5;
-    deco(new THREE.BoxGeometry(1.3,.22,.25),dk,x,2.05,f+face*.1);deco(new THREE.BoxGeometry(.3,.75,.35),dk,x,1.55,f+face*.15);deco(new THREE.BoxGeometry(.9,.18,.2),mat('#3a403c'),x,.95,f+face*.08);
-    for(const s of [-.38,.38])deco(new THREE.BoxGeometry(.28,.2,.12),mat('#e8d9a0',null,{emissive:'#ffcc66',emissiveIntensity:.6}),x+s,1.8,f+face*.05);}deco(new THREE.BoxGeometry(1.7,.3,1.2),dk,x,2.6,z);};
-  // lava-rock wall: a rough dark block with a few lighter stones set in it
-  const rockWall=(x,z,w,d)=>{box(x,0,z,w,1.05,d,'#4a4542',{extra:{flatShading:true,roughness:1},wood:false,edges:false});for(let i=0;i<Math.round(w*1.6);i++){const o=deco(new THREE.DodecahedronGeometry(.22+pr()*.14,0),mat('#6a645c',null,{flatShading:true}),x+(pr()-.5)*(w-.5),.25+pr()*.6,z+(pr()<.5?-1:1)*d/2);o.castShadow=false;}};
-  // tiki bar: a stone-topped counter clad in bamboo, with a shelf of bottles behind and a little thatched roof over it
-  const tikiBar=(s)=>{const sg=v=>s*v;const bx=sg(-9),bz=sg(9.6);
+    [[-2.4,-2.2],[2.4,-2.2],[-2.4,2.2],[2.4,2.2],[0,0]].forEach(([dx,dz])=>{const x=CX+dx*1.3,z=dz*1.3,y=CY-1.1;lgProp('moroccan_lantern',x,y,z,pr()*TAU);deco(gC(.01,.01,.55,3),mat('#2a2218'),x,y+.8,z).castShadow=false;glowSprite(x,y+.28,z,1.7,'#ffa040',.55);});
+    for(const s of [1,-1])for(let i=0;i<4;i++)lantern(-2.7+i*1.8,2.85,s*(LG_BZ-.7),cols[(i+s+5)%4]);}
+  /* ---------- cover: one tiki bar per pavilion, in the middle facing the water between the two sides ----------
+     a stone-topped counter clad in bamboo (crouch behind it, stand to shoot over), with a bottle shelf behind and a thatched roof */
+  for(const s of [1,-1]){const sg=v=>s*v,bx=0,bz=sg(LG_BZ);
     box(bx,0,bz,6,1.27,1.1,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(6.3,.12,1.4),mat('#9a948a',null,{roughness:.6}),bx,1.21,bz);
     {const bam=mat('#c8a060',null,{flatShading:true});for(let i=0;i<14;i++)deco(gC(.1,.1,1.1,6),bam,bx-2.85+i*.44,.55,bz+sg(-.6)).castShadow=false;}
-    const sh=box(bx,0,bz+sg(2.1),5.2,1.9,.5,'#6e5a46',{wood:false,extra:{roughness:.85}});deco(new THREE.BoxGeometry(5.3,.08,.6),mat('#9a948a'),bx,1.95,bz+sg(2.1)).castShadow=false;
-    for(let i=0;i<8;i++){const id=i%3===2?'cola':'beer_green',h=FURN_CFG[id].h;lgKnock(id,bx-2.1+i*.6,1.99,bz+sg(2.1),h*.6,h,h*.6,pr()*TAU,{snd:'smash',heavy:.5});}
+    box(bx,0,bz+sg(2.1),5.2,1.9,.5,'#6e5a46',{wood:false,extra:{roughness:.85}});deco(new THREE.BoxGeometry(5.3,.08,.6),mat('#9a948a'),bx,1.95,bz+sg(2.1)).castShadow=false;
+    {const gl=['#3f8f4a','#7a3a1e','#d8c070','#2a5a8a'];for(let i=0;i<10;i++){const b=deco(gC(.06,.07,.32,8),mat(gl[i%4],null,{roughness:.2,metalness:.1}),bx-2.2+i*.49,2.15,bz+sg(2.1));b.castShadow=false;}}
     const bam2=mat('#c8a060',null,{flatShading:true});for(const px of [bx-3.1,bx+3.1])box(px,0,bz+sg(2.15),.28,3.3,.28,'#c8a060',{mat:bam2,wood:false,edges:false});
-    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});const r=deco(new THREE.BoxGeometry(7.4,.25,4.2),th,bx,3.45,bz+sg(1.2));r.rotation.x=sg(-.22);deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.9,bz+sg(-.9)).castShadow=false;};
-  // stone planter with a palm in it
-  const planter=(x,z)=>{box(x,0,z,2,1.1,2,'#8a7a66',{wood:false,extra:{roughness:.9}});deco(new THREE.BoxGeometry(1.7,.1,1.7),mat('#4a3a2a'),x,1.1,z).castShadow=false;const g=new THREE.Group();M.group.add(g);lgPalm(g,x,1.1,z,.55,.6,pr);flatGroup(g);};
-  for(const s of [1,-1]){const sg=v=>s*v;
-    // either side of the walkway mouth: a steel box to tuck behind as you step off the boards
-    cargo(sg(-4.6),0,sg(9.6),1.7,1.5,1.7,cgA);cargo(sg(4.6),0,sg(9.6),1.7,1.5,1.7,cgB);
-    tikiBar(s);
-    rockWall(sg(7.5),sg(12.6),4.4,.8);statue(sg(4.6),sg(12.6),-s);statue(sg(10.4),sg(12.6),-s);
-    // a stack of cargo in the middle of the pavilion: low in front, one box up behind so you can crouch or stand behind it
-    cargo(sg(0),0,sg(15.5),3.6,1.15,1.6,cgA);cargo(sg(-.6),1.15,sg(15.5),2.2,1.5,1.6,cgB);cargo(sg(2.9),0,sg(16.2),1.4,1.4,1.4,cgB);
-    barrels(sg(13),sg(16.5),'#2f6fb5',sg(1));barrels(sg(-13.5),sg(14.5),'#c8462e',sg(1));
-    planter(sg(-13.6),sg(19.9));planter(sg(13.6),sg(19.9));
-    crate(sg(-9.5),sg(19),1.5);crate(sg(-8.3),sg(20.1),1);crate(sg(8),sg(19.5),1.2);}
+    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});const r=deco(new THREE.BoxGeometry(7.4,.25,4.2),th,bx,3.45,bz+sg(1.2));r.rotation.x=sg(-.22);deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.9,bz+sg(-.9)).castShadow=false;}
   /* a moored speedboat bobbing on the swell, a lifebuoy on the rail */
   /* boats (Tripo models): a speedboat moored by the north pavilion, a cruiser and a sailboat passing round the lagoon, two jet skis tearing about,
      a superyacht at anchor, a rowing boat and a canoe pulled up on the islands, a lighthouse on the big island and a seaplane circling overhead;
@@ -4640,17 +4596,14 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     const wt=canvasTex(64,256,(c,w,h)=>{c.fillStyle='#bdf2ff';c.fillRect(0,0,w,h);const r=onePr(9);for(let i=0;i<160;i++){c.fillStyle=`rgba(255,255,255,${.3+r()*.6})`;c.fillRect(r()*w,r()*h,1+r()*2,20+r()*70);}});wt.wrapT=THREE.RepeatWrapping;
     const wf=new THREE.Mesh(new THREE.PlaneGeometry(7,34),new THREE.MeshBasicMaterial({map:wt,transparent:true,opacity:.92,side:2}));wf.position.set(0,17,10.6);wf.userData.keep=1;g.add(wf);
     flatGroup(g);M.life.push(t=>{wt.offset.y=t*.9;});glowSprite(-35+Math.sin(.25)*12,WY+3,-175+Math.cos(.25)*12,24,'#ffffff',.45);}
-  const sp=[[-6,20],[6,20],[-12,17.5],[12,17.5],[0,20.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
-  M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}
-    /* a torch that has been knocked over goes out (one puff of smoke) and relights when it is stood back up for the next round */
-    for(const T of torches){const lit=T.K.st===0;if(lit===T.lit)continue;T.lit=lit;T.a.visible=T.b.visible=T.sp.visible=lit;if(T.l)T.l.intensity=lit?10:0;
-      if(!lit){const w=new THREE.Vector3();T.a.getWorldPosition(w);emit(w.x,w.y,w.z,{n:10,speed:.6,up:1.4,size:.22,life:1.1,grav:-.5,colors:['#8a8a8a','#b0b0b0','#5a5a5a']});}}});}
+  const sp=[[-6,19.5],[6,19.5],[-12,16],[12,16],[0,20]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
+  M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}});}
 const MAPS={
  arena:{modes:['duel'],name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
  arenasm:{modes:['duel'],one:true,normal:false,name:'Small Arena',desc:'Arena cut down to 1v1 size: the cross ramp, six pillars and less running',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap(true);}},
  skyhigh:{modes:['duel'],one:true,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
- lagoon:{modes:['duel'],one:true,name:'Lagoon',desc:'Two pavilions on stilts over a turquoise lagoon, joined by a narrow walkway: a tiki shop, bars, cargo and statues for cover, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
+ lagoon:{modes:['duel'],one:true,drums:0,name:'Lagoon',desc:'Two pavilions on stilts over a turquoise lagoon, joined by two wide walkways: one tiki bar a side to hide behind, the shop under a thatched canopy, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
  street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
   /* 92 x 60 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,

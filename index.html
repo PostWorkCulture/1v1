@@ -3271,7 +3271,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(1.6,4.2),WIN(-3.6)],wall);
   for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,0,H,[WIN(-2.5,1.6),WIN(3.2,1.6)],wall);
   /* Street Life's two buildings have breakable glass in the downstairs windows and the two big upstairs front windows */
-  if(th==='home'||th==='hospital'){const g=(ax,at,c,w,y0,y1)=>{const o={mat:HOUSE_GLASS,prop:'glass',hp:110,snd:'frost',wood:false,shadow:false,edges:false};ax==='u'?S.box(at-.04,at+.04,c-w/2,c+w/2,y0,y1,'#bfe6ff',o):S.box(c-w/2,c+w/2,at-.04,at+.04,y0,y1,'#bfe6ff',o);};
+  if(th==='home'||th==='hospital'){const g=(ax,at,c,w,y0,y1)=>{const o={mat:HOUSE_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false,edges:false};ax==='u'?S.box(at-.04,at+.04,c-w/2,c+w/2,y0,y1,'#bfe6ff',o):S.box(c-w/2,c+w/2,at-.04,at+.04,y0,y1,'#bfe6ff',o);};
     for(const c of [-3.6,3.6])g('u',-6,c,1.8,1.1,2.5);g('u',6,-3.6,1.8,1.1,2.5);for(const v of [-5.5,5.5]){g('v',v,-2.5,1.6,1.1,2.5);g('v',v,3.2,1.6,1.1,2.5);}
     for(const c of [-3.65,3.65])g('u',-6,c,2.2,F+.4,T);}
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
@@ -3305,7 +3305,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
   for(const sv of [-1,1])wLadder(S.X(-.15)-flip*.2,S.Z(sv*4.7),L,R2+1.05,flip,0);
   /* the home's terrace gets a glass balustrade: panes standing on the parapets and either side of the two ladder heads (breakable, back next round) */
-  if(th==='home'){const g=(u0,u1,v0,v1,y0,y1)=>S.box(u0,u1,v0,v1,y0,y1,'#bfe6ff',{mat:HOUSE_GLASS,prop:'glass',hp:120,snd:'frost',wood:false,shadow:false,edges:false});
+  if(th==='home'){const g=(u0,u1,v0,v1,y0,y1)=>S.box(u0,u1,v0,v1,y0,y1,'#bfe6ff',{mat:HOUSE_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false,edges:false});
     for(let i=0;i<4;i++)g(-6.07,-5.93,-5.65+i*2.825+.02,-5.65+(i+1)*2.825-.02,P,P+.9);
     for(const v of [-5.5,5.5]){for(let i=0;i<2;i++)g(-3.6+i*1.725+.02,-3.6+(i+1)*1.725-.02,v-.07,v+.07,P,P+.9);g(-5.85,-5.25,v-.07,v+.07,L,P+.9);g(-4.25,-3.6,v-.07,v+.07,L,P+.9);}}}
 // single-storey house with a flat roof deck reached by outside stairs
@@ -3965,13 +3965,13 @@ function rlDrum(x,y,z,c='#c8322b',boom=true){const b=box(x,y,z,.7,1.0,.7,c,{prop
 // glass roof panes over [x0,x1]x[z0,z1] with top at y: see-through, stop bullets, and break (leaving a hole you drop through) under sustained fire or a blast
 /* a container's long side as breakable glass panes in a steel frame (panes along x, centred on (x,zw), from y up h) */
 function rlGlassSide(x,y,zw,L,h,t){const n=Math.max(2,Math.round(L/3)),w=L/n,fm=mat('#3a3d45');
-  for(let i=0;i<n;i++)box(x-L/2+(i+.5)*w,y,zw,w-.06,h,t,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
+  for(let i=0;i<n;i++)box(x-L/2+(i+.5)*w,y,zw,w-.06,h,t,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false});
   for(let i=0;i<=n;i++)deco(B.boxGeo(.1,h,t+.04),fm,x-L/2+i*w,y+h/2,zw);}
 /* window and balustrade glass in Street Life's buildings: a little more tinted than the Railed roof panes so it reads as glass from across the lawn */
 const HOUSE_GLASS=new THREE.MeshStandardMaterial({color:'#8fcdef',transparent:true,opacity:.48,roughness:.05,metalness:.35,emissive:'#3a7fb0',emissiveIntensity:.18,depthWrite:false});
 const RL_GLASS=new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,opacity:.3,roughness:.05,metalness:.2,depthWrite:false});
 function rlGlass(x0,x1,z0,z1,y,nx,nz){const w=(x1-x0)/nx,d=(z1-z0)/nz,fm=mat('#5b6070');
-  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x0+(i+.5)*w,y-.15,z0+(j+.5)*d,w-.02,.15,d-.02,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
+  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x0+(i+.5)*w,y-.15,z0+(j+.5)*d,w-.02,.15,d-.02,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false});
   for(let i=0;i<=nx;i++)deco(B.boxGeo(.12,.12,z1-z0),fm,x0+i*w,y-.12,(z0+z1)/2);for(let j=0;j<=nz;j++)deco(B.boxGeo(x1-x0,.12,.12),fm,(x0+x1)/2,y-.12,z0+j*d);}
 /* the yard's boundary wall, in one of four looks; a gap on the north and south sides lets the line through */
 tex('chain',64,64,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(205,210,215,1)';g.lineWidth=3;for(let k=-1;k<=1;k++){g.beginPath();g.moveTo(k*w,0);g.lineTo(k*w+w,h);g.stroke();g.beginPath();g.moveTo(k*w+w,0);g.lineTo(k*w,h);g.stroke();}});
@@ -4300,7 +4300,7 @@ function arenaMap(small){const X=small?20:30,Z=small?26:38;M.bounds={x0:-X,x1:X,
       const dk=new THREE.Color(col).multiplyScalar(.62).getStyle();
       collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#2b2f3a',{solid:false});box(xm,H-.2,(D0+D1)/2,W,.2,D1-D0,col,{solid:false,extra:{roughness:.4}});
       {const gx=sx*(X-W+.12),np=8,pw=(D1-D0)/np,fm=mat('#b9c0c9',null,{metalness:.8,roughness:.3});
-        for(let i=0;i<np;i++)box(gx,H,D0+(i+.5)*pw,.1,1.15,pw-.06,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:240,snd:'frost',wood:false,shadow:false});
+        for(let i=0;i<np;i++)box(gx,H,D0+(i+.5)*pw,.1,1.15,pw-.06,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false});
         for(let i=0;i<=np;i++)deco(B.boxGeo(.14,1.2,.14),fm,gx,H+.6,D0+i*pw);deco(B.boxGeo(.16,.08,D1-D0),fm,gx,H+1.2,0);}
       for(const dir of [-1,1]){const zTop=dir>0?D1:D0,zLow=zTop+dir*RL;
         for(let i=0;i<n;i++){const u0=zLow-dir*i*RL/n,u1=zLow-dir*(i+1)*RL/n,top=H*(i+1)/n;collider(xa,xb,0,top,Math.min(u0,u1),Math.max(u0,u1));}
@@ -7307,8 +7307,10 @@ function throwDirFor(f){if(NET.role==='host'&&f===NET.R){const d=dirOf(f.yaw,f.p
 /* throw preview: simulates the same flight as updProjs (gravity, bounces, fuse) and draws it as a dotted arc */
 const TP={n:110,dots:null,ring:null,col:new THREE.Color()};
 {const g=new THREE.SphereGeometry(.11,10,8);TP.dots=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:1,depthWrite:false,depthTest:false,toneMapped:false}),TP.n);TP.dots.frustumCulled=false;TP.dots.count=0;TP.dots.renderOrder=5;scene.add(TP.dots);
-  TP.ring=new THREE.Mesh(new THREE.RingGeometry(.82,1,48),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));TP.ring.visible=false;TP.ring.renderOrder=5;scene.add(TP.ring);
-  TP.core=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}));TP.ring.add(TP.core);}
+  TP.ring=new THREE.Mesh(new THREE.RingGeometry(.82,1,48),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.95,side:THREE.DoubleSide,depthWrite:false,depthTest:false,toneMapped:false}));TP.ring.visible=false;TP.ring.renderOrder=5;scene.add(TP.ring);
+  TP.core=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false,depthTest:false,toneMapped:false}));TP.core.renderOrder=5;TP.ring.add(TP.core);
+  {const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#101114';g.beginPath();g.arc(32,32,24,0,7);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(32,32,16,0,7);g.fill();
+   TP.dot=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,depthWrite:false,sizeAttenuation:false,toneMapped:false,transparent:true}));TP.dot.scale.setScalar(.035);TP.dot.renderOrder=6;TP.dot.visible=false;TP.dot.frustumCulled=false;scene.add(TP.dot);}}
 function simThrow(id,from,dir,first){const g=GUNS[id],bouncy=!first&&THROWN.has(id);const pos=from.clone(),vel=dir.clone().multiplyScalar(g.speed);let life=g.landFuse?8:(g.fuse||2.2),armed=!g.landFuse;const pts=[pos.clone()];let end=null,n=null;const dt=1/60;
   for(let k=0;k<400&&life>0;k++){life-=dt;vel.y-=(g.grav||0)*dt;const st=vel.clone().multiplyScalar(dt),L=st.length();if(L<1e-6){continue;}const d=st.clone().divideScalar(L);
     const hb=rayBoxes(pos,d,L,false,true);let hit=null;if(hb)hit={t:hb.t,n:hb.n.clone()};else if(pos.y+st.y<0&&!(M.deepWater&&M.waterY(pos.x+st.x,pos.z+st.z)!=null))hit={t:L*pos.y/Math.max(1e-6,-st.y),n:new V3(0,1,0)};
@@ -7321,12 +7323,14 @@ function previewThrow(){let id=null,from,dir;
   if(D.active&&S.state==='fight'&&ME.alive&&!ME.downed&&!S.paused){
     if(ME.aimThrow&&AIMED.has(ME.cons)&&consReady(ME)){id=ME.cons;from=throwFrom(ME);dir=throwDirFor(ME);}
 }
-  if(!id){TP.dots.count=0;TP.ring.visible=false;return;}
+  if(!id){TP.dots.count=0;TP.ring.visible=false;TP.dot.visible=false;return;}
   const r0=simThrow(id,from,dir,true);const r={end:r0.end,n:r0.n,r:r0.r,pts:[]};{const P=r0.pts,step=.55;let acc=0;r.pts.push(P[0].clone());for(let i=1;i<P.length;i++){let a=P[i-1].clone();const b=P[i];let L=a.distanceTo(b);while(acc+L>=step){const t=(step-acc)/L;a=a.lerp(b,t);r.pts.push(a.clone());L=a.distanceTo(b);acc=0;}acc+=L;}}
   const col=id==='stun'?'#4fb0ff':id==='flash'?'#ffffff':id==='cluster'?'#ff8a1f':id==='grenade'?'#ffcc1f':'#39c6ff';TP.dots.material.color.set(col);TP.ring.material.color.set(col);TP.core.material.color.set(col);
   const m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3();const n=Math.min(TP.n,r.pts.length);
   for(let i=0;i<n;i++){const k=i/(n-1||1);const s=i<2?0:.85-.3*k;sc.set(s,s,s);m.compose(r.pts[i],q,sc);TP.dots.setMatrixAt(i,m);}TP.dots.count=n;TP.dots.instanceMatrix.needsUpdate=true;
-  TP.ring.visible=false;TP.ring.position.copy(r.end).addScaledVector(r.n,.05);TP.ring.lookAt(r.end.clone().add(r.n));TP.ring.scale.setScalar(id==='stars'?.35:r.r);}
+  TP.ring.visible=false;TP.ring.position.copy(r.end).addScaledVector(r.n,.05);TP.ring.lookAt(r.end.clone().add(r.n));TP.ring.scale.setScalar(id==='stars'?.35:r.r);
+  /* a small dot where it lands: faces the camera and keeps the same size on screen at any range, dark outline so it shows on white floors */
+  TP.dot.material.color.set(col);TP.dot.position.copy(r.end).addScaledVector(r.n,.12);TP.dot.visible=true;}
 function useCons(f,dir){if(!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight'||!consReady(f))return false;const id=f.cons,c=CONS[id];
   if(id==='mine'){if(!layMine(f))return false;f.consN--;f.consT=.9;f.swingT=.32;}
   else if(AIMED.has(id)){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=throwFrom(f);sfx('throw',f);spawnProj(f,id,from,dir||throwDirFor(f));if(f.consN>0)f.consN--;else f.nades--;f.consT=.9;f.swingT=.32;}

@@ -6561,7 +6561,33 @@ function explode(src,at,n,cfg,hitBox){sfx('explode',at,{range:22,rate:cfg&&(cfg.
     if(src===ME&&o!==ME){S.stats.hits++;S.stats.dmg+=Math.min(dm,100);hitMarker(dm>=o.hp);dmgNumber(o,dm,false);}damage(o,dm,src,false,cfg.gun);if(cfg.slow&&o!==src)o.slowT=Math.max(o.slowT||0,cfg.slow);if(cfg.burn){o.burnT=2.5;o.burnBy=src;o.burnGun=null;}}
   splashBricks(at,Rr,cfg.wall||120);splashTurrets(at,Rr,g.dmg||100,src);blastProps(at,Rr,src);
   for(let i=mines.length-1;i>=0;i--){const m=mines[i];if(i<mines.length&&Math.hypot(m.x-at.x,m.y-at.y,m.z-at.z)<Math.min(Rr,3)&&Math.hypot(m.x-at.x,m.z-at.z)>.05)boomMine(m,i);}}
-function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='fists'){f.punchT=.26;f.punchL=!f.punchL;}const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
+
+/* Sword: held in a high guard with the blade up over the shoulder, and every swing is a big diagonal slash that alternates
+   (forehand: from high on the sword side, down across the body; backhand: rising back up), with the body turning into it
+   and a bright arc left behind the blade. Poses are written as arm and blade directions in the fighter's own frame
+   (x = sword-arm side, y = up, z = forward); the camera sits on the other side, so the big arcs cross into its view. Looks only. */
+const SWK={
+  R:{A:[.3,-.35,.88],D:[.35,.9,-.25],tw:0},
+  F:[{t:.16,A:[.55,.65,.25],D:[-.2,.45,-.85],tw:.32},{t:.3,A:[.1,.35,.95],D:[-.35,.55,.75],tw:0},{t:.45,A:[-.65,-.45,.6],D:[-.75,-.55,.35],tw:-.42}],
+  B:[{t:.16,A:[-.6,-.4,.65],D:[-.7,-.45,.4],tw:-.36},{t:.3,A:[.1,.2,.98],D:[.4,.6,.7],tw:0},{t:.45,A:[.6,.5,.6],D:[.6,.75,.25],tw:.36}]};
+const SWV={a:new THREE.Vector3(),d:new THREE.Vector3(),x:new THREE.Vector3(),m:new THREE.Matrix4(),t1:new THREE.Vector3(),t2:new THREE.Vector3()};
+function swordPose(f,ch,p){const g=f.guns.sword,K=SWK,t=f.swingT>0?1-f.swingT/.32:1,seq=[{t:0,...K.R},...(f.swL?K.B:K.F),{t:1,...K.R}];
+  let i=0;while(i<seq.length-2&&t>seq[i+1].t)i++;const P=seq[i],Q=seq[i+1],u0=clamp((t-P.t)/(Q.t-P.t),0,1),u=u0*u0*(3-2*u0);
+  const L=(a,b)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u];const A=SWV.a.fromArray(L(P.A,Q.A)).normalize(),D=SWV.d.fromArray(L(P.D,Q.D)).normalize();
+  const sx=Math.sign(ch.aR.p.position.x)||1;A.x*=sx;D.x*=sx;const ph=-p*.55,c=Math.cos(ph),s=Math.sin(ph);for(const v of [A,D]){const y=v.y*c-v.z*s,z=v.y*s+v.z*c;v.y=y;v.z=z;}
+  D.addScaledVector(A,-D.dot(A)).normalize();const X=SWV.x.crossVectors(A,D).negate();SWV.m.makeBasis(X,A.clone().negate(),D);ch.aR.p.quaternion.setFromRotationMatrix(SWV.m);
+  g.rotation.set(0,0,0);ch.aL.p.rotation.set(-1.15-p*.3,.3,-.25*sx);ch.root.rotation.y+=(P.tw+(Q.tw-P.tw)*u)*sx;}
+function swordTrail(f,on){let T=f.swTr;const g=f.guns.sword;
+  if(!T){const N=16,geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*6),3));geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(N*8),4));
+    const idx=[];for(let i=0;i<N-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}geo.setIndex(idx);
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));m.frustumCulled=false;m.renderOrder=5;m.visible=false;scene.add(m);T=f.swTr={m,N,pts:[]};}
+  const t=f.swingT>0?1-f.swingT/.32:1,live=on&&g.visible&&t>.12&&t<.52,now=S.t,LIFE=.16;
+  if(live){f.ch.root.updateMatrixWorld(true);T.pts.unshift([g.localToWorld(SWV.t1.set(0,0,.45)).toArray(),g.localToWorld(SWV.t2.set(0,0,1.5)).toArray(),now]);}
+  while(T.pts.length&&(T.pts.length>T.N||now-T.pts[T.pts.length-1][2]>LIFE))T.pts.pop();
+  const n=T.pts.length;T.m.visible=n>1;if(n<2)return;const pos=T.m.geometry.attributes.position,col=T.m.geometry.attributes.color;
+  for(let i=0;i<T.N;i++){const q=T.pts[Math.min(i,n-1)],a=i<n?Math.max(0,1-(now-q[2])/LIFE)*(1-i/T.N):0;pos.setXYZ(i*2,...q[0]);pos.setXYZ(i*2+1,...q[1]);col.setXYZW(i*2,1,.85,.45,a*.55);col.setXYZW(i*2+1,1,.97,.85,a*.95);}
+  pos.needsUpdate=col.needsUpdate=true;}
+function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='sword')f.swL=!f.swL;if(gid==='fists'){f.punchT=.26;f.punchL=!f.punchL;}const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
   const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());for(let k=0;k<10;k++){const a=f.yaw+(k/9-.5)*1.6;emit(f.pos.x+Math.sin(a)*1.7,e.y-.6,f.pos.z+Math.cos(a)*1.7,{n:1,speed:.3,size:.16,life:.25,grav:0,colors:['#ffffff','#ffe9a8']});}
   for(const foe of foesOf(f).sort(byDist(f))){const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dy=foe.pos.y-f.pos.y,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
     if(dist<g.reach+(aerial?.5:0)&&(Math.abs(dy)<1.9||(aerial&&dy<0&&dy>-3.2))&&ang<g.arc&&los(e,new V3(foe.pos.x,foe.pos.y+1.2*SC,foe.pos.z))){const dm=aerial?20:g.dmg;
@@ -8173,6 +8199,7 @@ function animFighter(f,dt,menu){const ch=f.ch;
     A.rotation.set(gx+(jab-gx)*r,-.5+.44*r,.05);L.rotation.set(gx-bob*2+(jab-gx)*l,.5-.44*l,-.05);
     A.position.z=A.userData.z0+.35*r;L.position.z=L.userData.z0+.35*l;ch.root.rotation.y+=(l-r)*.28;}
    else{A.position.z=A.userData.z0;L.position.z=L.userData.z0;}}
+  if(f.guns&&f.guns.sword){const on=gunOf(f)==='sword'&&f.alive&&!f.downed&&!f.finishing;if(on)swordPose(f,ch,p);swordTrail(f,on);}
   ch.headG.rotation.x=-clamp(f.pitch,-.6,.6)*.6;
   {const dg=f.guns.duals;if(dg&&dg.userData.twin){const tw=dg.userData.twin;tw.visible=dg.visible;if(dg.visible)ch.aL.p.rotation.set(-Math.PI/2-p-k*(f.dualL?1:0),.06,0);for(const m of tw.userData.flash)m.material.opacity=f.flashT>0&&f.dualL?1:0;}}
   const fl=f.guns[gunOf(f)].userData.flash;f.flashT-=dt;{const on=f.flashT>0&&!(gunOf(f)==='duals'&&f.dualL)&&!(f===ME&&VM.raise>.3);const sc=.75+Math.random()*.5;for(const m of fl){m.material.opacity=on?.85:0;m.rotation.z=Math.random()*3;m.scale.setScalar(sc);}}

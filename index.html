@@ -826,6 +826,17 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .st-floor i+i{width:66%;border:4px dotted color-mix(in srgb,var(--cc) 50%,#fff);animation-duration:9s;animation-direction:reverse;opacity:.5}
 @keyframes stSpin{from{transform:translate(-50%,-50%) scaleY(.25) rotate(0)}to{transform:translate(-50%,-50%) scaleY(.25) rotate(360deg)}}
 @keyframes stPool{50%{opacity:1;transform:scale(1.05)}}
+/* the pad the character stands on: everything is a circle laid flat (scaleY .25) like the dashed rings */
+.st-floor b{position:absolute;left:50%;top:50%;width:100%;aspect-ratio:1;border-radius:50%;mix-blend-mode:screen;transform:translate(-50%,-50%) scaleY(.25)}
+.st-floor b.sw{background:conic-gradient(from 0deg,transparent 0 58%,color-mix(in srgb,var(--cc) 25%,transparent) 72%,var(--cc) 91%,#fff 96.5%,transparent 97%);
+  -webkit-mask:radial-gradient(closest-side,transparent 50%,#000 54%,#000 76%,transparent 80%);mask:radial-gradient(closest-side,transparent 50%,#000 54%,#000 76%,transparent 80%);animation:stSpin 2.4s linear infinite}
+.st-floor b.seg{width:116%;opacity:.85;background:conic-gradient(var(--cc) 0 7%,transparent 7% 12.5%,#fff 12.5% 13.5%,transparent 13.5% 25%,var(--cc) 25% 32%,transparent 32% 37.5%,#fff 37.5% 38.5%,transparent 38.5% 50%,var(--cc) 50% 57%,transparent 57% 62.5%,#fff 62.5% 63.5%,transparent 63.5% 75%,var(--cc) 75% 82%,transparent 82% 87.5%,#fff 87.5% 88.5%,transparent 88.5%);
+  -webkit-mask:radial-gradient(closest-side,transparent 88%,#000 90%,#000 95%,transparent 97%);mask:radial-gradient(closest-side,transparent 88%,#000 90%,#000 95%,transparent 97%);animation:stSpin 7s linear infinite reverse}
+.st-floor b.rp{border:2px solid color-mix(in srgb,var(--cc) 60%,#fff);box-shadow:0 0 22px var(--cc),inset 0 0 22px var(--cc);opacity:0;animation:stRipple 2.4s cubic-bezier(.2,.6,.3,1) infinite}
+.st-floor b.rp+b.rp{animation-delay:1.2s}
+.st-floor b.orb{background:radial-gradient(circle at 50% 2.5%,#fff 0 .9%,var(--cc) 1.8%,transparent 4%),radial-gradient(circle at 93.3% 75%,#fff 0 .9%,var(--cc) 1.8%,transparent 4%),radial-gradient(circle at 6.7% 75%,#fff 0 .9%,var(--cc) 1.8%,transparent 4%);animation:stSpin 3.4s linear infinite}
+@keyframes stRipple{0%{opacity:0;transform:translate(-50%,-50%) scaleY(.25) scale(.18)}18%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scaleY(.25) scale(1.3)}}
+@media (prefers-reduced-motion:reduce){.st-floor b{animation:none!important}.st-floor b.rp{opacity:0}}
 .st-wave{left:28%;bottom:3%;width:34%;aspect-ratio:4/1;z-index:3;border-radius:50%;border:3px solid #fff;box-shadow:0 0 22px var(--cc),inset 0 0 22px var(--cc);transform:translateX(-50%);opacity:0}
 .st-fig{left:28%;bottom:7%;height:70%;max-width:52%;aspect-ratio:480/608;z-index:4;transform:translateX(-50%)}
 .st-in,.st-br{position:absolute;inset:0}
@@ -10015,7 +10026,7 @@ const CHAR_INFO={
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';
-  el.innerHTML='<div class="st-bg"></div><div class="st-grid"></div><div class="st-beam l"></div><div class="st-beam r"></div><div class="st-beam k"></div><div class="st-floor"><i></i><i></i></div><div class="st-wave"></div><div class="st-q" aria-hidden="true">?</div><div class="st-fig"><div class="st-in"><div class="st-br"><img alt=""><div class="st-rim"></div><div class="st-shade"></div><div class="st-sweep"></div></div></div></div><canvas class="st-fx"></canvas><div class="st-vig"></div><div class="st-flash"></div><div class="st-info"><div class="st-tag"></div><div class="st-name"></div></div><div class="st-side"><div class="st-abil"></div><div class="st-desc"></div></div>';
+  el.innerHTML='<div class="st-bg"></div><div class="st-grid"></div><div class="st-beam l"></div><div class="st-beam r"></div><div class="st-beam k"></div><div class="st-floor"><i></i><i></i><b class="sw"></b><b class="seg"></b><b class="rp"></b><b class="rp"></b><b class="orb"></b></div><div class="st-wave"></div><div class="st-q" aria-hidden="true">?</div><div class="st-fig"><div class="st-in"><div class="st-br"><img alt=""><div class="st-rim"></div><div class="st-shade"></div><div class="st-sweep"></div></div></div></div><canvas class="st-fx"></canvas><div class="st-vig"></div><div class="st-flash"></div><div class="st-info"><div class="st-tag"></div><div class="st-name"></div></div><div class="st-side"><div class="st-abil"></div><div class="st-desc"></div></div>';
   const q=x=>el.querySelector(x);STG={el,img:q('.st-fig img'),br:q('.st-br'),name:q('.st-name'),abil:q('.st-abil'),desc:q('.st-desc'),tag:q('.st-tag'),cv:q('.st-fx'),id:undefined,cc:'#ff6a1a',parts:[],burst:0};
   STG.img.addEventListener('error',()=>{const k=STG.id;if(k&&!/_p\.webp$/.test(STG.img.src)){el.classList.add('boxed');STG.img.src=PREV['p_'+k]||`chars/${k}_p.webp`;}});
   stageLoop(STG);}
@@ -10037,7 +10048,6 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
     const dt=Math.min(.05,last?(t-last)/1000:0);last=t;const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
     const P=G.parts;
     if(G.burst){G.burst=0;for(let i=0;i<70;i++){const a=Math.PI*(.05+Math.random()*.9),s=160+Math.random()*380;P.push({x:w*(innerWidth<=720?.27:.28)+(Math.random()-.5)*w*.12,y:h*.9,vx:Math.cos(a)*s,vy:-Math.sin(a)*s*1.15,l:0,L:.45+Math.random()*.6,r:1+Math.random()*1.6,k:1});}}
-    if(P.length<160&&Math.random()<dt*40)P.push({x:w*(.15+Math.random()*.7),y:h*(.78+Math.random()*.24),vx:(Math.random()-.5)*16,vy:-(28+Math.random()*80),l:0,L:2.6+Math.random()*3.2,r:.8+Math.random()*2,k:0,ph:Math.random()*7});
     g.globalCompositeOperation='lighter';g.lineCap='round';
     for(let i=P.length-1;i>=0;i--){const p=P[i];p.l+=dt;if(p.l>=p.L){P.splice(i,1);continue;}
       if(p.k){p.vy+=520*dt;p.vx*=1-1.5*dt;}else p.vx+=Math.sin(t/650+p.ph)*10*dt;

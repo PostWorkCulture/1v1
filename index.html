@@ -3432,10 +3432,23 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
      outside, wall-washers that throw tall soft beams up the upstairs walls between the windows, downlights in the porch soffit and garden spots at the corners.
      The real lights follow the graphics setting (GFX.light); the fittings and glows always show */
   if(GW){const C=HOME?'#ffe1ad':'#e8f3ff',fx=new THREE.MeshBasicMaterial({color:C}),pl=(u,v,y,i,d)=>{const l=new THREE.PointLight(C,i,d,1.6);window.GFX&&GFX.light(l);l.position.set(S.X(u),y,S.Z(v));M.group.add(l);};
-    const fit=HOME?new THREE.CylinderGeometry(.22,.22,.05,16):new THREE.BoxGeometry(1.0,.05,1.0),ceil=(y,pts)=>{for(const [u,v] of pts){const m=new THREE.Mesh(fit,fx);m.position.set(S.X(u),y-.035,S.Z(v));m.userData.dyn=1;M.group.add(m);}};
-    ceil(H,[[-4,-1],[-1.5,-1],[-4,3],[-1.5,3],[-4,-4],[-1.5,-4],[2,-1],[4.5,-1],[2,3],[4.5,3]]);
-    ceil(T,[[-4,-3.5],[-1.5,-3.5],[-4,0],[-1.5,0],[-4,3.5],[-1.5,3.5],[2,-3.5],[4.5,-3.5],[2,0],[4.5,0]]);ceil(R2,[[1.5,-3.5],[4.5,-3.5],[1.5,0],[4.5,0],[1.5,3.5],[4.5,3.5]]);
-    pl(-3,1,H-1.5,7,13);pl(3,1,H-1.5,7,13);pl(-3,0,T-1.5,7,13);pl(3,-1.5,T-1.5,7,13);pl(3,0,R2-1.5,6,12);
+    const fit=HOME?new THREE.CylinderGeometry(.22,.22,.05,16):new THREE.BoxGeometry(2.6,.06,1.15),ceil=(y,pts)=>{for(const [u,v] of pts){const m=new THREE.Mesh(fit,fx);m.position.set(S.X(u),y-.035,S.Z(v));m.userData.dyn=1;M.group.add(m);}};
+    if(HOME){ceil(H,[[-4,-1],[-1.5,-1],[-4,3],[-1.5,3],[-4,-4],[-1.5,-4],[2,-1],[4.5,-1],[2,3],[4.5,3]]);
+      ceil(T,[[-4,-3.5],[-1.5,-3.5],[-4,0],[-1.5,0],[-4,3.5],[-1.5,3.5],[2,-3.5],[4.5,-3.5],[2,0],[4.5,0]]);ceil(R2,[[1.5,-3.5],[4.5,-3.5],[1.5,0],[4.5,0],[1.5,3.5],[4.5,3.5]]);
+      pl(-3,1,H-1.5,7,13);pl(3,1,H-1.5,7,13);pl(-3,0,T-1.5,7,13);pl(3,-1.5,T-1.5,7,13);pl(3,0,R2-1.5,6,12);}
+    else{/* hospitals are very bright: big white light panels in a close grid over every floor (none over the stairwells) and plenty of strong real lights,
+       each panel ringed with a soft glow so the ceilings read as lit from across the room */
+      fx.color.set('#ffffff');const grid=(y,u0,u1,hole)=>{const pts=[];for(let u=u0;u<=u1+.01;u+=1.9)for(let v=-4.4;v<=4.41;v+=2.2){if(hole&&u>hole[0]-.6&&u<hole[1]+.6&&v>hole[2]-.4&&v<hole[3]+.4)continue;pts.push([u,v]);}ceil(y,pts);
+        for(const [u,v] of pts)glowSprite(S.X(u),y-.25,S.Z(v),3.2,'#eef6ff',.22);};
+      grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25]);grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
+      for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,0],[4.6,-4]])pl(u,v,H-1.2,22,18);for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,-3.6],[3,.8]])pl(u,v,T-1.2,22,18);pl(3,-1,R2-1.2,18,16);
+      /* the stairs stand out: a red nosing on every step with a cool LED strip glowing under it, and a lit strip up each side */
+      const red=mat('#d3302a'),led=new THREE.MeshBasicMaterial({color:'#bff3ff'}),SO={solid:false,edges:false,shadow:false};
+      const trim=(uS,dir,v0,v1,y0,n,rise,run)=>{for(let i=0;i<n;i++){const a=uS+dir*run*i,top=y0+rise*(i+1);
+          S.box(Math.min(a,a+dir*.12),Math.max(a,a+dir*.12),v0,v1,top-.06,top+.015,null,Object.assign({mat:red},SO));
+          S.box(Math.min(a-dir*.02,a),Math.max(a-dir*.02,a),v0+.08,v1-.08,top-.2,top-.12,null,Object.assign({mat:led},SO));
+          for(const vv of [v0+.03,v1-.03])S.box(Math.min(a,a+dir*run),Math.max(a,a+dir*run),vv-.03,vv+.03,top+.015,top+.05,null,Object.assign({mat:led},SO));}};
+      trim(1.3,1,-5.3,-2.4,0,9,F/9,.39);trim(1,1,2.4,5.3,F,9,(L-F)/9,.39);}
     /* wall-washers: a little fitting on the slab band and a soft beam fanning up the wall above it */
     if(!WASHT)WASHT=canvasTex(64,128,(g,w,h)=>{for(let y=0;y<h;y++){const t=y/h,a=Math.pow(t,1.6)*.9,hw=w*(.18+.32*(1-t));const gr=g.createLinearGradient(w/2-hw,0,w/2+hw,0);
       gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,`rgba(255,255,255,${a})`);gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,y,w,1);}});

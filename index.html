@@ -998,6 +998,43 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .mcar-cap{position:absolute;left:0;right:0;top:0;padding:12px 70px 34px;background:linear-gradient(rgba(6,8,14,.85),transparent);display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;pointer-events:none}
 .mcar-cap .t{font:400 28px/1 var(--f-display,var(--f-body));color:#fff}.mcar-cap .b{font:500 13px/1.3 var(--f-body);color:#d6dcef;max-width:70ch}
 .mcar-dots{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+
+/* match intro card: round 1 opens on the map's HQ picture with the same cinematic title as the menu, then fades into the 3, 2, 1 */
+#d-intro{position:fixed;inset:0;z-index:40;background:#05060a;overflow:hidden;pointer-events:none;transition:opacity .4s}
+#d-intro.out{opacity:0}
+body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-intro{display:none}
+#d-intro .in-pic{position:absolute;inset:0;background:#0b0d14 center/cover no-repeat;animation:mcarDrift 6s ease-out both}
+#d-intro::before,#d-intro::after{content:"";position:absolute;left:0;right:0;height:9%;background:#000;z-index:2}
+#d-intro::before{top:0}#d-intro::after{bottom:0}
+#d-intro .in-cap{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:80px max(32px,6vw) calc(9% + 28px);background:linear-gradient(0deg,rgba(6,6,12,.9),rgba(6,6,12,.45) 50%,rgba(6,6,12,0));display:flex;flex-direction:column;align-items:flex-start}
+#d-intro .chip{font:700 12px/1 var(--f-body);letter-spacing:.2em;text-transform:uppercase;color:#fff;padding:7px 10px;border-radius:5px;background:linear-gradient(90deg,#ff4f8b,#8a5cff);margin-bottom:12px;animation:mcarUp .5s both}
+#d-intro .t{font:400 clamp(40px,8vw,104px)/.9 var(--f-display,var(--f-body));letter-spacing:.02em;background:linear-gradient(100deg,#fff 0%,#fff 40%,#ffd6ec 48%,#fff 56%,#fff 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#fff;filter:drop-shadow(0 4px 18px rgba(0,0,0,.6));animation:mcarTrack .9s cubic-bezier(.16,1,.3,1) both,mcarShine 2.4s .7s ease-in-out infinite}
+#d-intro .rule{display:block;height:4px;width:0;border-radius:2px;margin:14px 0 12px;background:linear-gradient(90deg,#ff4f8b,#8a5cff);animation:mcarRule .7s .3s cubic-bezier(.2,.8,.2,1) both}
+#d-intro .b{font:700 clamp(12px,1.5vw,17px)/1.35 var(--f-body);letter-spacing:.2em;text-transform:uppercase;color:#eceef6;animation:mcarUp .6s .45s both;max-width:60ch}
+@media (max-height:520px){#d-intro .in-cap{padding:40px 24px calc(9% + 12px)}#d-intro .t{font-size:clamp(30px,6vw,56px)}#d-intro .rule{margin:8px 0 7px}#d-intro .b{letter-spacing:.12em;font-size:11px}}
+@media (prefers-reduced-motion:reduce){#d-intro *{animation:none!important}#d-intro .rule{width:min(300px,40%)}}
+/* cinematic map title: letterbox bars, a slow camera drift on the picture, the name tracks in with a light sweep, a pink-purple rule and a one-liner */
+.mcar-stage img{animation:mcarDrift 16s ease-in-out infinite alternate;transform-origin:50% 55%}
+@keyframes mcarDrift{from{transform:scale(1.03) translate(-1%,.5%)}to{transform:scale(1.13) translate(1.2%,-1.2%)}}
+.mcar-bars::before,.mcar-bars::after{content:"";position:absolute;left:0;right:0;height:7%;background:#000;z-index:1;pointer-events:none}
+.mcar-bars::before{top:0}.mcar-bars::after{bottom:0}
+.mcar-stage .mcar-cap{top:auto;bottom:0;left:0;right:0;padding:60px 76px calc(7% + 18px) 30px;background:linear-gradient(0deg,rgba(6,6,12,.88) 0%,rgba(6,6,12,.45) 45%,rgba(6,6,12,0) 100%);align-items:flex-start;text-align:left;gap:0;z-index:2}
+.mcar-cap .chip{font:700 11px/1 var(--f-body);letter-spacing:.2em;text-transform:uppercase;color:#fff;padding:6px 9px;border-radius:5px;background:linear-gradient(90deg,#ff4f8b,#8a5cff);margin-bottom:10px;animation:mcarUp .5s both}
+.mcar-stage .mcar-cap .t{font:400 clamp(30px,5.4vw,68px)/.92 var(--f-display,var(--f-body));letter-spacing:.02em;
+  background:linear-gradient(100deg,#fff 0%,#fff 40%,#ffd6ec 48%,#fff 56%,#fff 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#fff;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,.6));animation:mcarTrack 1s cubic-bezier(.16,1,.3,1) both,mcarShine 3.4s 1s ease-in-out infinite}
+@keyframes mcarTrack{from{letter-spacing:.45em;opacity:0;transform:translateY(10px)}to{letter-spacing:.02em;opacity:1;transform:none}}
+@keyframes mcarShine{0%{background-position:100% 0}60%,100%{background-position:-50% 0}}
+.mcar-cap .rule{display:block;height:3px;width:0;border-radius:2px;margin:12px 0 10px;background:linear-gradient(90deg,#ff4f8b,#8a5cff);animation:mcarRule .8s .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mcarRule{to{width:min(300px,40%)}}
+.mcar-stage .mcar-cap .b{font:700 clamp(11px,1.25vw,14px)/1.35 var(--f-body);letter-spacing:.2em;text-transform:uppercase;color:#eceef6;animation:mcarUp .6s .6s both;max-width:60ch}
+@keyframes mcarUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mcar.rand .mcar-cap .t{-webkit-text-fill-color:#fff}
+.mcar-nav{z-index:3;top:34%!important}
+@media (max-width:599px){.mcar-stage .mcar-cap{padding:40px 16px calc(7% + 12px)}.mcar-cap .chip{font-size:9.5px;margin-bottom:7px}.mcar-stage .mcar-cap .b{letter-spacing:.12em}.mcar-cap .rule{margin:8px 0 7px}}
+@media (max-height:520px){.mcar-nav{top:30%!important}.mcar-stage .mcar-cap{padding:30px 16px calc(7% + 8px) 16px}.mcar-stage .mcar-cap .b{letter-spacing:.1em;font-size:10.5px}.mcar-stage .mcar-cap .t{font-size:clamp(22px,4vw,36px)}.mcar-cap .chip{display:none}.mcar-cap .rule{margin:6px 0 5px}}
+@media (prefers-reduced-motion:reduce){.mcar-stage img,.mcar-cap *{animation:none!important}.mcar-cap .rule{width:min(300px,40%)}}
+
 .mcar-d{height:48px;padding:0 16px;border-radius:12px;border:2px solid rgba(233,238,252,.14);background:#161a2a;color:#c9d0e6;font:700 14px/1 var(--f-body);cursor:pointer;white-space:nowrap}
 .mcar-d:hover{border-color:rgba(61,224,255,.6);color:#fff}
 .mcar-d[aria-pressed="true"]{border-color:#3de0ff;background:rgba(61,224,255,.18);color:#fff;box-shadow:0 0 10px rgba(61,224,255,.45)}
@@ -1230,6 +1267,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
     <div class="panel d-mm" id="d-mm"><canvas id="d-mmc" width="264" height="264"></canvas></div>
     <div id="d-feed"></div>
     <div id="d-center"><div id="d-big"></div><div id="d-sub"></div></div>
+    <div id="d-intro" hidden><div class="in-pic" id="in-pic"></div><div class="in-cap"><span class="chip" id="in-chip"></span><span class="t" id="in-t"></span><i class="rule"></i><span class="b" id="in-b"></span></div></div>
     <div class="panel" id="d-prompt" hidden></div>
     <div id="dtouch" hidden>
       <div class="dt-stick" id="dt-stick"><i></i></div>
@@ -8299,8 +8337,11 @@ function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x
     const rest=sp.filter(q=>!used.includes(q)).sort((p,q)=>(d(p,s)-.5*d(p,other))-(d(q,s)-.5*d(q,other)));const m=rest[0]||s;used.push(m);return m;};
   return[a,mate(a,c),c,mate(c,a)];}
 function clearFx(){for(const f of allFighters()){if(f.finishing){for(const o of f.finishing.obj)scene.remove(o);f.finishing=null;}}hemi.color.set(ENV.hemi[0]);}
-function startRound(){S.elimT0=null;resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS){f.armor=0;f.shopCD=0;}FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;S.title=S.round===1?1.8:0;/* round 1 opens on the map's name for a moment before the 3, 2, 1 */
-  for(const n of nums)n.el.remove();nums.length=0;if(S.title>0)center(MAPS[S.map].name,modeTag(),'title');else center('3','Round '+S.round);}
+function startRound(){S.elimT0=null;resetProps();resetPlates();clearCelebrate();$('d-goal').textContent=isDM()?`First to ${DM_KILLS} kills`:'First to 5';for(const f of FS)f.respawnT=0;S.deathMarks=[];$('d-rend').hidden=true;RP.round=[];RP.marks=[];RP.hold=[];clearFx();clearWalls();clearDebris();clearProjs();const sp=pickSpawns();for(const b of FS)if(b!==ME)applyStyle(b);for(const f of FS){f.armor=0;f.shopCD=0;}FS.forEach((f,i)=>resetFighter(f,sp[i]));S.timer=isDM()?600:S.players==='1v1'?90:120;S.state='countdown';S.t0=3;S.ts=1;S.slowT=0;S.title=S.round===1?2.4:0;/* round 1 opens on the map's name for a moment before the 3, 2, 1 */
+  for(const n of nums)n.el.remove();nums.length=0;if(S.title>0){center('','');showIntro();}else{hideIntro(true);center('3','Round '+S.round);}}
+function showIntro(){const el=$('d-intro'),pic=thumbs[S.map];$('in-pic').style.backgroundImage=pic?`url(${pic})`:'';$('in-chip').textContent=mapChip();$('in-t').textContent=MAPS[S.map].name;$('in-b').textContent=MAP_TAG[S.map]||MAPS[S.map].desc||'';
+  el.classList.remove('out');el.hidden=false;for(const n of el.querySelectorAll('*')){n.style.animation='none';void n.offsetWidth;n.style.animation='';}}
+function hideIntro(now){const el=$('d-intro');if(!el||el.hidden)return;if(now){el.hidden=true;return;}if(!el.classList.contains('out')){el.classList.add('out');setTimeout(()=>{if(el.classList.contains('out'))el.hidden=true;},420);}}
 /* the mode shown under the map's name on the title card: 1v1, 1v1 · Simple, 2v2, Free for all or Rumble */
 const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1'):(PLAYERS[S.players]||'Duels');
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
@@ -8564,7 +8605,7 @@ function step(rdt){pfBudget=24000;
   if(S.paused||S.replayOpen){render();return;}
   if(S.slowT>0){S.slowT-=rdt;S.ts=damp(S.ts,.25,18,rdt);}else S.ts=damp(S.ts,1,5,rdt);const dt=rdt*S.ts;S.t+=dt;
   if(NET.role==='client'){if(S.state==='countdown'){const c=Math.ceil(S.t0);if(c>0)center(String(c),'Round '+S.round,'cd');}}
-  else if(S.state==='countdown'){if(S.title>0){S.title-=rdt;center(MAPS[S.map].name,modeTag(),'title');}else{S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');cdGo();}else center(String(Math.ceil(S.t0)),'Round '+S.round,'cd');}}
+  else if(S.state==='countdown'){if(S.title>0){S.title-=rdt;if(S.title<=.35)hideIntro();}else{hideIntro();S.t0-=rdt;{const c=Math.ceil(S.t0);if(c>0&&c!==S.tickN){S.tickN=c;sfx('tick');}}if(S.t0<=0){S.tickN=0;S.state='fight';sfx('round');cdGo();}else center(String(Math.ceil(S.t0)),'Round '+S.round,'cd');}}
   else if(S.state==='fight'){S.timer-=dt;if(S.timer<=0)timeUp();}
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
@@ -8694,7 +8735,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b
 
 /* ================= menu integration ================= */
 function renderRecord(){const el=$('d-record');if(!el)return;let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}el.textContent=`${w}–${l}`;}
-function enterMenu(){clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapList()[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
+function enterMenu(){hideIntro(true);clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapList()[0];if(M.id!==mp)buildMap(mp);clearWalls();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'blaze');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':S.simple?SIMPLE_KIT.primary:(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
@@ -10052,6 +10093,10 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
   requestAnimationFrame(tick);}
 /* only touch a menu list when its contents really change, so a tap isn't lost to a list being rebuilt under the finger (menu pictures are still being made for a few seconds after load) */
 function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
+/* map picker title: a one-liner per map under the big cinematic name */
+const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",arenasm:'Same arena, half the room. No time to breathe.',skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
+  street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Sun, sand and a shipwreck full of trouble.',house:'Room to room, fist to fist.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
+function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble',sk=ru||!!S.simple;
   const c=S.char&&CHARS[S.char];
@@ -10062,7 +10107,7 @@ function renderDuelMenu(){
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
     setHTML('d-maps',`<div class="mcar${S.randMap?' rand':''}"><div class="mcar-stage">${cur?(thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:''):'<b class="mcar-q" aria-hidden="true">?</b>'}
       ${L.length>1?'<button class="mcar-nav prev" data-nav="-1" aria-label="Previous map">&#8249;</button><button class="mcar-nav next" data-nav="1" aria-label="Next map">&#8250;</button>':''}
-      <div class="mcar-cap"><span class="t">${cur?m.name:'Random'}</span><span class="b">${cur?m.desc:'A surprise map every match'}</span></div></div>
+      <div class="mcar-bars"></div><div class="mcar-cap"><span class="chip">${mapChip()}</span><span class="t">${cur?m.name:'Random'}</span><i class="rule"></i><span class="b">${cur?(MAP_TAG[cur[0]]||m.desc):MAP_TAG.random}</span></div></div>
       <div class="mcar-dots">${L.length<2?'<i></i>':`<button class="mcar-r" data-map="random" aria-pressed="${!!S.randMap}" title="Random: a surprise map every match"><b aria-hidden="true">?</b><span>Random</span></button>`}${L.map(([k,mm])=>`<button class="mcar-d" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}" title="${mm.desc||mm.name}">${mm.name}</button>`).join('')}</div></div>`);}
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;return `<button class="opt gun-opt" ${attr}="${k}" aria-pressed="${k===sel}"><img class="gp${HERO[k]?' spot':''}" src="${PREV['g_'+k]||''}" alt=""><span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
   const rcard=(attr,on,what)=>`<button class="opt gun-opt rand" ${attr}="random" aria-pressed="${!!on}" title="Random: a surprise ${what} every match"><span class="gp rq" aria-hidden="true">?</span><span class="t">Random</span><span class="b">A surprise ${what} every match</span></button>`;

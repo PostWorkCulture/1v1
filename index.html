@@ -7380,7 +7380,7 @@ const CONS={
 const THROWN=new Set(['grenade','stun','flash','cluster','bomblet']),AIMED=new Set(['grenade','stun','flash','cluster']);
 const CONS_FIRST=['cluster','mine','gold'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='grenade'&&k!=='stim'&&k!=='sense')]; /* loadout order: Cluster, Mine, Gold Armour first */
 let flashA=0;
-function resetCons(f){f.aimThrow=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.stimT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
+function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.stimT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
 const GOLD_ARMOUR=30;
 function consReady(f){const c=CONS[f.cons];if(!c||c.passive)return false;return f.consT<=0&&(!c.uses||f.consN>0||(f.cons==='grenade'&&f.nades>0));}
 function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
@@ -7403,6 +7403,7 @@ function simThrow(id,from,dir,first){const g=GUNS[id],bouncy=!first&&THROWN.has(
 function previewThrow(){let id=null,from,dir;
   if(D.active&&S.state==='fight'&&ME.alive&&!ME.downed&&!S.paused){
     if(ME.aimThrow&&AIMED.has(ME.cons)&&consReady(ME)){id=ME.cons;from=throwFrom(ME);dir=throwDirFor(ME);}
+    else if(ME.aimNade&&(ME.nades>0||ME.goldNade>0)){id='grenade';from=throwFrom(ME);dir=throwDirFor(ME);}
 }
   if(!id){TP.dots.count=0;TP.ring.visible=false;TP.dot.visible=false;return;}
   const r0=simThrow(id,from,dir,true);const r={end:r0.end,n:r0.n,r:r0.r,pts:[]};{const P=r0.pts,step=.55;let acc=0;r.pts.push(P[0].clone());for(let i=1;i<P.length;i++){let a=P[i-1].clone();const b=P[i];let L=a.distanceTo(b);while(acc+L>=step){const t=(step-acc)/L;a=a.lerp(b,t);r.pts.push(a.clone());L=a.distanceTo(b);acc=0;}acc+=L;}}
@@ -7968,9 +7969,9 @@ const keys={};let mouseL=false,mouseR=false;
 const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueSwap=()=>queueAct(ME.slot?'Digit1':'Digit2');
 function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
   yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!mouseR,run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
-function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'){equip(ME,a==='Digit1'?0:1);NET.swapAt=performance.now();}else if(a==='KeyR')startReload(ME);else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up')ME.aimThrow=false;continue;}
+function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'){equip(ME,a==='Digit1'?0:1);NET.swapAt=performance.now();}else if(a==='KeyR')startReload(ME);else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up')ME.aimThrow=false;else if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up')ME.aimNade=false;continue;}
   if(typeof a==='string'&&a.startsWith('buy:')){const it=shopList()[+a.slice(4)];if(it&&ME.shopCD<=0&&it.can(ME)){it.buy(ME);ME.shopCD=SHOP_CD;sfx('cash',ME);}continue;}
-  if(a==='KeyT')throwNade(ME);else if(a==='KeyV')deployTurret(ME);else if(a==='Digit1')equip(ME,0);else if(a==='Digit2')equip(ME,1);else if(a==='KeyR')startReload(ME);else if(a==='KeyQ')buildWall(ME);
+  if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up'){if(ME.aimNade){ME.aimNade=false;throwNade(ME);}}else if(a==='KeyV')deployTurret(ME);else if(a==='Digit1')equip(ME,0);else if(a==='Digit2')equip(ME,1);else if(a==='KeyR')startReload(ME);else if(a==='KeyQ')buildWall(ME);
   else if(a==='KeyE'){if(!ME.downed)useAbility(ME);}else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
   else if(a==='KeyF'){const v=finishable(ME);if(v)finish(ME,v);}else if(a==='KeyC'){if(!ME.downed)ME.crouchOn=!ME.crouchOn;}}}
 /* keyboard: E throws/uses your lethal and G fires your character ability (the game's actions are still named KeyE = ability, KeyG = lethal internally,
@@ -7989,7 +7990,7 @@ window.addEventListener('keydown',e=>{const code=KEYSWAP[e.code]||e.code;if(!D.a
   if(S.state==='roundEnd'&&!$('d-rend').hidden){if(/^Digit[1-9]$/.test(code)&&RP.bar){const c=RP.bar[+code.slice(5)-1];if(c){openReplay(RP.clips.indexOf(c));return;}}if(code==='KeyH'){$('d-rend').hidden=true;leave();return;}}
   if(['KeyT','KeyV','Digit1','Digit2','KeyR','KeyQ','KeyE','KeyG','KeyF','KeyC'].includes(code))queueAct(code);
 },true);
-window.addEventListener('keyup',e=>{const code=KEYSWAP[e.code]||e.code;keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');});
+window.addEventListener('keyup',e=>{const code=KEYSWAP[e.code]||e.code;keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');if(code==='KeyT'&&D.active&&!S.paused)queueAct('KeyT:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){mouseL=true;}/* snipers fire straight from the hip on left click (right click scopes); the hold-to-scope quick-scope stays on the touch fire button */if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
@@ -8001,7 +8002,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.active&&
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});
 document.addEventListener('pointerlockerror',()=>{S.lockOK=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseL=mouseR=false;});
-function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
+function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;ME.aimNade=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
 function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.touch)lock();}
 /* ---- touch controls ---- */
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;

@@ -6399,10 +6399,23 @@ const PROP_BACK=40;
 function propPatch(b,add){const g=M.grid;if(!g||!g.sb)return;const i0=Math.max(0,Math.floor((b.x0-CLR-g.x0)/CS)),i1=Math.min(g.nx-1,Math.floor((b.x1+CLR-g.x0)/CS)),j0=Math.max(0,Math.floor((b.z0-CLR-g.z0)/CS)),j1=Math.min(g.nz-1,Math.floor((b.z1+CLR-g.z0)/CS));
   for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=i+j*g.nx;const L=g.sb[k]||(g.sb[k]=[]);const ix=L.indexOf(b);if(add&&ix<0)L.push(b);else if(!add&&ix>=0)L.splice(ix,1);}
   dirtyGrid(b,.05);MM.layer=null;}
+/* glass breaks into lots of tiny glittering shards that spray out, tinkle down and bounce, plus a puff of sparkles */
+const GLS={geo:null,mat:null};
+function glassShatter(b,cx,cy,cz,w,h,d,away){if(!GLS.geo){GLS.geo=[0,1,2,3].map(k=>{const sh=new THREE.Shape(),r=()=>.4+Math.random()*.6;sh.moveTo(0,0);sh.lineTo(r(),Math.random()*.3);sh.lineTo(Math.random()*.5,r());sh.closePath();const g=new THREE.ShapeGeometry(sh);g.translate(-.3,-.3,0);return g;});
+    GLS.mat=new THREE.MeshStandardMaterial({color:'#d8f2ff',transparent:true,opacity:.75,roughness:.04,metalness:.35,emissive:'#7fc8ff',emissiveIntensity:.25,side:THREE.DoubleSide,depthWrite:false});}
+  const area=Math.max(w*h,w*d,h*d),n=Math.round(Math.min(70,Math.max(26,area*14))),flat=h<Math.min(w,d)*.5;
+  for(let i=0;i<n;i++){const sz=rnd(.04,.14),m=new THREE.Mesh(GLS.geo[i&3],GLS.mat);m.scale.setScalar(sz);m.rotation.set(rnd(0,TAU),rnd(0,TAU),rnd(0,TAU));
+    m.position.set(cx+rnd(-w/2,w/2),cy+rnd(-h/2,h/2),cz+rnd(-d/2,d/2));scene.add(m);
+    const v=flat?new V3(rnd(-1.5,1.5),rnd(-2,1),rnd(-1.5,1.5)):away.clone().multiplyScalar(rnd(1.5,6)).add(new V3(rnd(-1.8,1.8),rnd(0,3.5),rnd(-1.8,1.8)));
+    const floorY=groundAt(m.position.x,m.position.z,m.position.y)+.02;
+    debris.push({o:m,v,w:new V3(rnd(-14,14),rnd(-14,14),rnd(-14,14)),t:0,ttl:rnd(1.6,2.6),fx:(q,dt)=>{q.v.y-=22*dt;q.o.position.addScaledVector(q.v,dt);q.o.rotation.x+=q.w.x*dt;q.o.rotation.y+=q.w.y*dt;q.o.rotation.z+=q.w.z*dt;
+      if(q.o.position.y<floorY&&q.v.y<0){q.o.position.y=floorY;q.v.y*=-.25;q.v.x*=.5;q.v.z*=.5;q.w.multiplyScalar(.3);}if(q.t>q.ttl-.5)q.o.scale.setScalar(Math.max(.001,sz*(q.ttl-q.t)/.5));}});}
+  emit(cx,cy,cz,{n:34,speed:5,up:2.5,size:.07,life:.7,grav:10,colors:['#ffffff','#e8f8ff','#bfe6ff','#9fd3f0']});}
 function breakProp(b,at){if(!b.alive)return;knockOn(b,b.y1);sfx(b.snd||(b.prop==='bush'?'bush':b.prop==='bin'?'bin':'crate'),{x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,z:(b.z0+b.z1)/2},{range:18});b.alive=false;b.backT=PROP_BACK;const ix=M.boxes.indexOf(b);if(ix>=0)M.boxes.splice(ix,1);if(b.mesh)b.mesh.visible=false;propPatch(b,false);
   if(b.fell){b.fell(at);return;}
   const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,cz=(b.z0+b.z1)/2,w=b.x1-b.x0,h=b.y1-b.y0,d=b.z1-b.z0,bush=b.prop==='bush';
   const away=new V3(cx-at.x,0,cz-at.z);if(away.lengthSq()<1e-4)away.set(Math.random()-.5,0,Math.random()-.5);away.normalize();
+  if(b.prop==='glass'){glassShatter(b,cx,cy,cz,w,h,d,away);return;}
   const cols=bush?['#3f8f3a','#4fae45','#2f6a1e','#7a4c2a']:b.prop==='glass'?['#bfe6ff','#e8f6ff','#9fd3f0']:b.prop==='bin'||!b.wood?[b.color,'#55585f','#16171c']:[b.color,'#b9895a','#8a5a34'];
   const n=bush?14:10;for(let i=0;i<n;i++){const sz=bush?rnd(.15,.32):rnd(.12,.3);const g=bush?new THREE.BoxGeometry(sz,sz,sz):new THREE.BoxGeometry(rnd(.4,.9)*Math.min(w,1.2),sz*.5,sz);
     const m=new THREE.Mesh(g,mat(cols[i%cols.length]));m.position.set(cx+rnd(-w/2,w/2)*.8,cy+rnd(-h/2,h/2)*.8,cz+rnd(-d/2,d/2)*.8);m.castShadow=true;scene.add(m);

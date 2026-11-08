@@ -3302,7 +3302,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     rug(2.6,1.7,.035,6.0,4.6,rugTex('#3a5f8a','#f3efe6','#e9c46a'));
     plant(5.4,-1.9,0,1.0);
     /* ---- upstairs: carpet, a double bedroom on one side and a kid's room on the other (both clear of the walk-out windows) ---- */
-    S.floor(-5.85,.6,-5.35,5.35,F+.025,'#d4bfa8','carpet');
+    /* carpet round the glass square in the floor */for(const [u0,u1,v0,v1] of [[-5.85,-3.5,-5.35,5.35],[-1.0,.6,-5.35,5.35],[-3.5,-1.0,-5.35,-1.25],[-3.5,-1.0,1.25,5.35]])S.floor(u0,u1,v0,v1,F+.025,'#d4bfa8','carpet');
     {/* the double bed itself is the Tripo wooden bed, placed with the other models below */
       fur(-3.95,5.0,F,.45,.55,.45,'#8a5a34',50,{tx:'wood'});lamp(-3.95,5.0,F+.55);
       rug(-4.3,3.2,F+.035,5.0,4.0,rugTex('#f3efe6','#b5523b','#e9c46a'));armchair(-3.0,2.6,'u-','#e9c46a','#f4d58d');pic(-4.85,5.33,F+2.1,1.2,.8,'v-',2);
@@ -3400,7 +3400,12 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
   S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?'#f4f5f7':th==='home'?'#ffffff':'#d9b48a',.25,WH?{chip:false}:th==='home'?{tx:'cedar',wood:true,chip:false}:{tx:'wood',wood:true,chip:false});
   S.wall('u',-6,-5.65,5.65,H,F,[],trim);S.wall('u',6,-5.65,5.65,H,F,[],trim);
-  S.slab(-5.85,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);
+  if(th==='home'||th==='hospital'){/* Street Life: a square of thick glass set into the ceiling of the front room, so you can look up from downstairs and see who's on the floor above
+     (it's walked on like the rest of the floor and doesn't break); slim frame round its edge on top */
+    const g0=-3.5,g1=-1.0,h0=-1.25,h1=1.25;S.slab(0,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);S.slab(-5.85,0,-5.35,5.35,H,F,SL[0],{u0:g0,u1:g1,v0:h0,v1:h1},SL[1]);
+    S.box(g0,g1,h0,h1,H,F,'#bfe6ff',{mat:HOUSE_GLASS,shadow:false,edges:false});const fr=th==='home'?'#2c3036':'#c8322b',FO={solid:false,edges:false};
+    S.box(g0-.06,g1+.06,h0-.06,h0,F,F+.04,fr,FO);S.box(g0-.06,g1+.06,h1,h1+.06,F,F+.04,fr,FO);S.box(g0-.06,g0,h0,h1,F,F+.04,fr,FO);S.box(g1,g1+.06,h0,h1,F,F+.04,fr,FO);}
+  else S.slab(-5.85,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);
   // stairs end on a landing in front of the back wall (not against it); the rail only guards the deep end of the stairwell, so the whole top of the flight opens onto the floor
   S.stairs(1.3,1,-5.3,-2.4,0,9,F/9,.39,SC);S.box(.75,2.3,-2.25,-2.1,F,F+1,'#ffffff');
   // furniture kept against the walls, clear of every doorway and the stair foot
@@ -3436,14 +3441,14 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
      The real lights follow the graphics setting (GFX.light); the fittings and glows always show */
   if(GW){const C=HOME?'#ffe1ad':'#e8f3ff',fx=new THREE.MeshBasicMaterial({color:C}),pl=(u,v,y,i,d)=>{const l=new THREE.PointLight(C,i,d,1.6);window.GFX&&GFX.light(l);l.position.set(S.X(u),y,S.Z(v));M.group.add(l);};
     const fit=HOME?new THREE.CylinderGeometry(.22,.22,.05,16):new THREE.BoxGeometry(2.6,.06,1.15),ceil=(y,pts)=>{for(const [u,v] of pts){const m=new THREE.Mesh(fit,fx);m.position.set(S.X(u),y-.035,S.Z(v));m.userData.dyn=1;M.group.add(m);}};
-    if(HOME){ceil(H,[[-4,-1],[-1.5,-1],[-4,3],[-1.5,3],[-4,-4],[-1.5,-4],[2,-1],[4.5,-1],[2,3],[4.5,3]]);
+    if(HOME){ceil(H,[[-4,-1],[-.5,-1],[-4,3],[-1.5,3],[-4,-4],[-1.5,-4],[2,-1],[4.5,-1],[2,3],[4.5,3]]);
       ceil(T,[[-4,-3.5],[-1.5,-3.5],[-4,0],[-1.5,0],[-4,3.5],[-1.5,3.5],[2,-3.5],[4.5,-3.5],[2,0],[4.5,0]]);ceil(R2,[[1.5,-3.5],[4.5,-3.5],[1.5,0],[4.5,0],[1.5,3.5],[4.5,3.5]]);
       pl(-3,1,H-1.5,7,13);pl(3,1,H-1.5,7,13);pl(-3,0,T-1.5,7,13);pl(3,-1.5,T-1.5,7,13);pl(3,0,R2-1.5,6,12);}
     else{/* hospitals are very bright: big white light panels in a close grid over every floor (none over the stairwells) and plenty of strong real lights,
        each panel ringed with a soft glow so the ceilings read as lit from across the room */
-      fx.color.set('#ffffff');const grid=(y,u0,u1,hole)=>{const pts=[];for(let u=u0;u<=u1+.01;u+=1.9)for(let v=-4.4;v<=4.41;v+=2.2){if(hole&&u>hole[0]-.6&&u<hole[1]+.6&&v>hole[2]-.4&&v<hole[3]+.4)continue;pts.push([u,v]);}ceil(y,pts);
+      fx.color.set('#ffffff');const grid=(y,u0,u1,hole,h2)=>{const pts=[];for(let u=u0;u<=u1+.01;u+=1.9)for(let v=-4.4;v<=4.41;v+=2.2){if(hole&&u>hole[0]-.6&&u<hole[1]+.6&&v>hole[2]-.4&&v<hole[3]+.4)continue;if(h2&&u>h2[0]-.6&&u<h2[1]+.6&&v>h2[2]-.4&&v<h2[3]+.4)continue;pts.push([u,v]);}ceil(y,pts);
         for(const [u,v] of pts)glowSprite(S.X(u),y-.25,S.Z(v),3.2,'#eef6ff',.22);};
-      grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25]);grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
+      grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25],[-3.5,-1.0,-1.25,1.25]);grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
       for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,0],[4.6,-4]])pl(u,v,H-1.2,22,18);for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,-3.6],[3,.8]])pl(u,v,T-1.2,22,18);pl(3,-1,R2-1.2,18,16);
       /* the stairs stand out: a red nosing on every step with a cool LED strip glowing under it, and a lit strip up each side */
       const red=mat('#d3302a'),led=new THREE.MeshBasicMaterial({color:'#bff3ff'}),SO={solid:false,edges:false,shadow:false};

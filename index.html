@@ -3741,10 +3741,19 @@ function waterRings(yAt){const rg=new THREE.RingGeometry(.72,1,28);rg.rotateX(-M
 function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   const R=Math.random;wcSand();wcWater();
   /* premium beach kit: breakable glass balustrades with a steel top rail, and loungers that slide when shot, break and can be stood on */
-  const glassRun=(x0,z0,x1,z1,y,h=1.1)=>{const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/1.6)),ax=Math.abs(x1-x0)>=Math.abs(z1-z0),st={solid:false,edges:false,extra:{metalness:.85,roughness:.22}};
+  const glassRun=(x0,z0,x1,z1,y,h=1.1,pl=1.6)=>{const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/pl)),ax=Math.abs(x1-x0)>=Math.abs(z1-z0),st={solid:false,edges:false,extra:{metalness:.85,roughness:.22}};
     for(let i=0;i<n;i++){const t=(i+.5)/n,cx=x0+(x1-x0)*t,cz=z0+(z1-z0)*t,w=L/n-.06;box(cx,y,cz,ax?w:.08,h,ax?.08:w,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false});}
     for(let i=0;i<=n;i++){const t=i/n;box(x0+(x1-x0)*t,y,z0+(z1-z0)*t,.07,h+.04,.07,'#e6e9ee',st);}
     box((x0+x1)/2,y+h,(z0+z1)/2,ax?L+.08:.1,.06,ax?.1:L+.08,'#e6e9ee',st);};
+  // a glowing neon sign: lettering with a soft halo on a dark board, a bloom plane behind it and a little coloured light thrown forward
+  const neon=(text,x,y,z,w,h,ry,col,glow,fs)=>{const cv=document.createElement('canvas');cv.width=1024;cv.height=Math.round(1024*h/w);const g=cv.getContext('2d'),W=cv.width,H=cv.height;
+    g.fillStyle='#120b07';g.fillRect(0,0,W,H);g.strokeStyle=glow;g.lineWidth=10;g.shadowColor=glow;g.shadowBlur=28;g.strokeRect(18,18,W-36,H-36);
+    g.font='bold '+Math.round(H*(fs||.62))+'px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';for(let k=0;k<3;k++){g.shadowBlur=40-k*12;g.fillStyle=k<2?glow:col;g.fillText(text,W/2,H*.54);}
+    const t=new THREE.CanvasTexture(cv);if(THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Group();sg.position.set(x,y,z);sg.rotation.y=ry||0;M.group.add(sg);
+    sg.add(new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t,toneMapped:false})));
+    const hc=document.createElement('canvas');hc.width=hc.height=128;const hg=hc.getContext('2d'),gr=hg.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');hg.fillStyle=gr;hg.fillRect(0,0,128,128);
+    const halo=new THREE.Mesh(new THREE.PlaneGeometry(w*1.6,h*2.4),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(hc),color:glow,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));halo.position.z=-.03;sg.add(halo);
+    const pl=new THREE.PointLight(glow,3,Math.max(8,w*2),2);window.GFX&&GFX.light(pl);pl.position.set(0,0,1.2);sg.add(pl);return sg;};
   const LTEX={};const ltex=(k,draw)=>LTEX[k]||(LTEX[k]=canvasTex(128,128,draw));
   const LSTY=[
     {frame:'#f4f5f7',metal:.3,tex:()=>ltex('white',(g,w,h)=>{g.fillStyle='#fbfaf6';g.fillRect(0,0,w,h);g.strokeStyle='rgba(0,0,0,.08)';g.lineWidth=2;for(let y=8;y<h;y+=16){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}})},
@@ -3780,48 +3789,54 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcBox(x-1.6,x+1.6,G,G+.5,z+1.1,z+1.6,'#8a5a34',{tx:'wood'});wcBox(x-.9,x+.9,G+.5,G+1.6,z+1.2,z+1.6,'#8a5a34',{tx:'wood',chip:false});ruinEnd(r,x,z,1,1,'#c99a5b',c,G+2.7,{noCracks:1,hide1:strip});};
   // the open middle: just the cabana, with a glass-walled pavilion in each corner of the beach
   cabana(-4,2,'#1d3557');
-  const pavilion=(px,pz,c)=>{const r=ruinBegin(),P=G+6,RF=G+9,hide=[],wht='#f4f5f7';
+  const pavilion=(px,pz,c,gapS)=>{const r=ruinBegin(),P=G+6,RF=G+11.5,hide=[],wht='#f4f5f7';
     for(const [a,b] of [[-1.85,-1.85],[1.85,-1.85],[-1.85,1.85],[1.85,1.85]])wcBox(px+a-.15,px+a+.15,G,P-.25,pz+b-.15,pz+b+.15,wht);
     for(const a of [-1.85,1.85]){box(px+a,G+2.6,pz,.1,.1,3.7,'#d9dde3',{solid:false,edges:false});box(px,G+2.6,pz+a,3.7,.1,.1,'#d9dde3',{solid:false,edges:false});}
     wcBox(px-2.1,px+2.1,P-.25,P,pz-2.1,pz+2.1,'#c8a27a',{tx:'wood'});
     for(const [a,b] of [[-1.95,-1.95],[1.95,-1.95],[-1.95,1.95],[1.95,1.95]])wcBox(px+a-.1,px+a+.1,P,RF,pz+b-.1,pz+b+.1,wht);
     // glass all the way round, open only where the ladder comes up
-    glassRun(px-2.05,pz-2.05,px+2.05,pz-2.05,P);glassRun(px-2.05,pz+2.05,px+2.05,pz+2.05,P);glassRun(px-2.05,pz-2.05,px-2.05,pz+2.05,P);
+    if(gapS){glassRun(px-2.05,pz-2.05,px-.9,pz-2.05,P);glassRun(px+.9,pz-2.05,px+2.05,pz-2.05,P);}else glassRun(px-2.05,pz-2.05,px+2.05,pz-2.05,P);glassRun(px-2.05,pz+2.05,px+2.05,pz+2.05,P);glassRun(px-2.05,pz-2.05,px-2.05,pz+2.05,P);
     glassRun(px+2.05,pz-2.05,px+2.05,pz-.6,P);glassRun(px+2.05,pz+.6,px+2.05,pz+2.05,P);
     wcBox(px-2.4,px+2.4,RF,RF+.25,pz-2.4,pz+2.4,wht);for(let i=0;i<4;i++)hide.push(box(px-2.4+i*1.2+.6,RF+.25,pz,1.2,.06,4.8,i%2?'#ffffff':c,{solid:false,edges:false}));
     const lx=px+2.3,lm=mat('#ffffff',null,{metalness:.3,roughness:.4});for(const zz of [pz-.5,pz+.5])deco(B.boxGeo(.08,P+1.1-G,.08),lm,lx,(P+1.1+G)/2,zz);for(let yy=G+.35;yy<P+.9;yy+=.35)deco(B.boxGeo(.06,.06,1),lm,lx,yy,pz);
     const Bp=ruinEnd(r,px,pz,1,1,wht,c,P,{noCracks:1,hide1:hide});
     (M.ladders||(M.ladders=[])).push({x0:px+2.1,x1:px+2.9,z0:pz-.55,z1:pz+.55,y0:G,y1:P,nx:-1,nz:0,rung:lx,ruin:Bp});};
-  pavilion(-30,46,'#2a9d8f');pavilion(-29,-33,'#1d3557');pavilion(3,47,'#e9c46a');pavilion(3,-48,'#f28482');
+  pavilion(-30,46,'#2a9d8f');pavilion(-31,-34.6,'#1d3557',1);pavilion(3,47,'#e9c46a');pavilion(3,-48,'#f28482');
   // big beach balls: push them about, kick them, shoot them
   for(const [x,z,c1,c2] of [[-12,-1,'#e8463a','#2f7fe0'],[-25,13,'#f4c22b','#3bb54a'],[4,17,'#a05ad6','#3bb54a']]){const r=.8;
     knock(x,G,z,r*2,r*2,r*2,'#ffffff',{ball:1,heavy:1,snd:'bounce1',shadow:1,geo:new THREE.SphereGeometry(r,18,12),parts:[[new THREE.SphereGeometry(r*1.005,18,12,0,Math.PI/3),c1,0,0,0],[new THREE.SphereGeometry(r*1.005,18,12,2*Math.PI/3,Math.PI/3),c2,0,0,0],[new THREE.SphereGeometry(r*1.005,18,12,4*Math.PI/3,Math.PI/3),'#f4c22b',0,0,0]]});}
 
-  /* ---------- Tiki Bar (north, beach side) ---------- */
-  {const wcBox=(a,b,c,d,e,g,h,o)=>box((a+b)/2,c,(e+g)/2,b-a,d-c,Math.abs(g-e),h,o),tr=ruinBegin(),y=G+.45,RB=y+3.3;wcBox(-34,-18,G,y,-42,-54,'#b88a5a',{tx:'wood'});
-    for(const [x,z] of [[-33.6,-42.4],[-26,-42.4],[-18.4,-42.4],[-33.6,-53.6],[-26,-53.6],[-18.4,-53.6]])wcBox(x-.2,x+.2,y,RB,z-.2,z+.2,'#6b4a2c',{tx:'wood'});
-    const rc0=M.group.children.length;roofGable(-26,-48,16.4,12.4,RB,'#c9a25a',true,'thatch','#b88a5a');const thatch=M.group.children.slice(rc0);
-    wcBox(-30,-22,y,y+1.1,-49,-50,'#8a5a34',{tx:'wood'});wcBox(-30.2,-21.8,y+1.1,y+1.22,-48.8,-50.2,'#c99a5b',{tx:'wood'});wcBox(-31,-30,y,y+1.1,-45.6,-50,'#8a5a34',{tx:'wood'});
-    wcBox(-31,-21,y,y+2.2,-52.8,-53.4,'#6b4a2c',{tx:'wood'});
-    for(let i=0;i<12;i++){const b=new THREE.Mesh(B.boxGeo(.18,.5,.18),mat(['#3bb54a','#2f7fe0','#e8463a','#f4c22b','#ffffff'][i%5],null,{roughness:.2,metalness:.2}));b.position.set(-30.4+i*.8,y+2.45,-53);M.group.add(b);}
-    for(let i=0;i<5;i++)box(-29+i*1.6,y,-48.2,.55,.75,.55,'#e8463a',{edges:false});
-    for(const [x,z] of [[-30.5,-44.2],[-22,-44.4]]){wcBox(x-.6,x+.6,y,y+.95,z-.6,z+.6,'#7a4c2a',{tx:'wood'});box(x,y+.95,z,.08,1.4,.08,'#f4efe6',{solid:false,edges:false});
-      const um=new THREE.Mesh(new THREE.ConeGeometry(1.3,.5,8),mat('#f4c22b','thatch'));um.position.set(x,y+2.5,z);M.group.add(um);}
-    // fairy lights round the eaves
-    const lm=new THREE.MeshBasicMaterial({color:'#ffd98a'});for(let i=0;i<=16;i++)for(const z of [-42.1,-53.9]){const s=new THREE.Mesh(new THREE.SphereGeometry(.09,6,4),lm);s.position.set(-34+i,RB-.25-Math.sin(i*Math.PI/4)**2*.25,z);M.group.add(s);}
-    // TIKI sign
-    {const cv=document.createElement('canvas');cv.width=512;cv.height=160;const g=cv.getContext('2d');g.fillStyle='#6b4a2c';g.fillRect(0,0,512,160);g.fillStyle='#ffd23f';g.font='bold 104px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('TIKI BAR',256,86);
-      const tx=new THREE.CanvasTexture(cv);if(THREE.SRGBColorSpace)tx.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Mesh(new THREE.PlaneGeometry(5,1.55),new THREE.MeshBasicMaterial({map:tx}));s.position.set(-26,RB+.9,-41.55);s.rotation.y=0;M.group.add(s);
-      const s2=s.clone();s2.position.z=-41.5;s2.rotation.y=0;s2.position.z=-41.45;}
-    // evening glow: string lights down both sides, warm lanterns under the roof and an LED strip under the bar
-    {const lm2=new THREE.MeshBasicMaterial({color:'#ffe2a8'});for(const x of [-34.1,-17.9])for(let k=0;k<=12;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(.1,6,4),lm2);s.position.set(x,RB-.3-Math.sin(k*Math.PI/6)**2*.3,-42-k);M.group.add(s);}
-      for(const [x,z] of [[-30,-45],[-22,-45],[-26,-49.5]]){box(x,RB-1.2,z,.02,1.2,.02,'#3a3d45',{solid:false,edges:false});const ln=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,.5,10),new THREE.MeshStandardMaterial({color:'#ffcf7a',emissive:'#ffb347',emissiveIntensity:1.6}));ln.position.set(x,RB-1.45,z);M.group.add(ln);
-        const pl=new THREE.PointLight('#ffb35a',4,12,2);window.GFX&&GFX.light(pl);pl.position.set(x,RB-1.7,z);M.group.add(pl);}
-      box(-26,y+.15,-48.95,8,.06,.04,'#ffd98a',{solid:false,edges:false,mat:new THREE.MeshBasicMaterial({color:'#ffcf7a'})});}
-    ruinEnd(tr,-26,-48,1,1,'#b88a5a','#6b4a2c',RB,{noCracks:1,hide1:thatch});
-    // climb onto the thatch: keg, crate, crates
-    {const lx=-34.35,lz=-48,lm=mat('#ffffff',null,{roughness:.5});for(const zz of [lz-.5,lz+.5])deco(B.boxGeo(.08,RB+.6-G,.08),lm,lx,(RB+.6+G)/2,zz);for(let yy=G+.35;yy<RB+.4;yy+=.35)deco(B.boxGeo(.06,.06,1),lm,lx,yy,lz);(M.ladders||(M.ladders=[])).push({x0:lx-.8,x1:lx,z0:lz-.55,z1:lz+.55,y0:G,y1:RB,nx:1,nz:0,rung:lx});}
-    for(const [x,z,c] of [[-17.4,-45,'#2f7fe0'],[-17.4,-46.2,'#f4c22b'],[-17.4,-47.4,'#e8463a']]){const sb=box(x,G,z,.25,2.6,.75,c,{solid:false});sb.rotation.z=.12;collider(x-.3,x+.3,G,G+2.6,z-.375,z+.375);}}
+  /* ---------- Tiki Bar (back-right corner): big enough to walk round inside, bamboo and woven textures, neon signs and warm lights ---------- */
+  {const tr=ruinBegin(),x0=-37,x1=-11,z0=-56,z1=-38,y=G+.45,RB=y+5.2,cx=(x0+x1)/2,cz=(z0+z1)/2;
+    const tx=(draw,rx,ry)=>{const t=canvasTex(128,128,draw);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t;};
+    const bamboo=(g,w,h)=>{for(let i=0;i<8;i++){const xx=i*16;g.fillStyle=i%2?'#c9a25a':'#dcb872';g.fillRect(xx,0,16,h);g.fillStyle='rgba(0,0,0,.2)';g.fillRect(xx+14,0,2,h);g.fillStyle='rgba(255,255,255,.2)';g.fillRect(xx+3,0,2,h);for(let k=0;k<3;k++){g.fillStyle='rgba(90,60,20,.5)';g.fillRect(xx,(k*43+i*9)%h,16,3);}}};
+    const weave=(g,w,h)=>{g.fillStyle='#5a4126';g.fillRect(0,0,w,h);for(let yy=0;yy<h;yy+=16)for(let xx=0;xx<w;xx+=16){const o=((xx+yy)/16)%2;g.fillStyle=o?'#a8844c':'#8a6a3c';g.fillRect(xx+1,yy+1,o?14:6,o?6:14);g.fillStyle=o?'#8a6a3c':'#a8844c';g.fillRect(xx+(o?1:9),yy+(o?9:1),o?14:6,o?6:14);}};
+    const bamM=new THREE.MeshStandardMaterial({map:tx(bamboo,1,2),roughness:.75}),barM=new THREE.MeshStandardMaterial({map:tx(bamboo,6,1),roughness:.75}),wvM=new THREE.MeshStandardMaterial({map:tx(weave,8,1.5),roughness:.9});
+    wcBox(x0,x1,G,y,z0,z1,'#b88a5a',{tx:'wood'});
+    for(const x of [x0+.4,cx-6.5,cx,cx+6.5,x1-.4])for(const z of [z0+.4,z1-.4])wcBox(x-.28,x+.28,y,RB,z-.28,z+.28,'#c9a25a',{mat:bamM});
+    for(const x of [x0+.4,x1-.4])wcBox(x-.28,x+.28,y,RB,cz-.28,cz+.28,'#c9a25a',{mat:bamM});
+    const rc0=M.group.children.length;roofGable(cx,cz,x1-x0+1.6,z1-z0+1.6,RB,'#c9a25a',true,'thatch','#b88a5a');const thatch=M.group.children.slice(rc0);
+    // woven back wall with bottle shelves, a long bamboo bar in front of it, and the rest open to walk round
+    wcBox(x0+.7,x1-.7,y,y+2.7,z0+.2,z0+.6,'#6b4a2c',{mat:wvM});
+    for(const sh of [1.5,2.2]){wcBox(cx-8,cx+8,y+sh,y+sh+.08,z0+.6,z0+1,'#4a2f1c',{tx:'wood',solid:false});
+      for(let i=0;i<20;i++){const bt=new THREE.Mesh(B.boxGeo(.16,.45,.16),mat(['#3bb54a','#2f7fe0','#e8463a','#f4c22b','#ffffff','#a05ad6'][i%6],null,{roughness:.15,metalness:.25}));bt.position.set(cx-7.6+i*.8,y+sh+.31,z0+.8);M.group.add(bt);}}
+    wcBox(cx-8,cx+8,y,y+1.15,z0+3.2,z0+4.1,'#8a5a34',{mat:barM});wcBox(cx-8.2,cx+8.2,y+1.15,y+1.28,z0+3,z0+4.3,'#3a2414',{tx:'wood'});
+    box(cx,y+.1,z0+4.15,16,.06,.04,'#ffcf7a',{solid:false,edges:false,mat:new THREE.MeshBasicMaterial({color:'#ffcf7a',toneMapped:false})});
+    // two high tables with thatch umbrellas at the front corners
+    for(const [x,z] of [[x0+4,z1-3],[x1-4,z1-3]]){wcBox(x-.6,x+.6,y,y+1.05,z-.6,z+.6,'#7a4c2a',{mat:bamM});box(x,y+1.05,z,.08,2.4,.08,'#f4efe6',{solid:false,edges:false});
+      const um=new THREE.Mesh(new THREE.ConeGeometry(1.5,.55,8),mat('#e9c46a','thatch'));um.position.set(x,y+3.55,z);M.group.add(um);}
+    // string lights along every eave, lanterns under the roof
+    {const lm=new THREE.MeshBasicMaterial({color:'#ffe2a8',toneMapped:false});const bulb=(x,z,k)=>{const s=new THREE.Mesh(new THREE.SphereGeometry(.11,6,4),lm);s.position.set(x,RB-.3-Math.sin(k*Math.PI/4)**2*.35,z);M.group.add(s);};
+      for(let k=0;k<=26;k++){bulb(x0+k,z1+.15,k);bulb(x0+k,z0-.15,k);}for(let k=0;k<=18;k++){bulb(x0-.15,z0+k,k);bulb(x1+.15,z0+k,k);}
+      for(const [x,z] of [[cx-7,cz-2],[cx+7,cz-2],[cx-7,cz+4],[cx+7,cz+4]]){box(x,RB-1.6,z,.02,1.6,.02,'#3a3d45',{solid:false,edges:false});
+        const ln=new THREE.Mesh(new THREE.CylinderGeometry(.26,.34,.6,10),new THREE.MeshStandardMaterial({color:'#ffcf7a',emissive:'#ffb347',emissiveIntensity:2}));ln.position.set(x,RB-1.9,z);M.group.add(ln);
+        const pl=new THREE.PointLight('#ffb35a',4,13,2);window.GFX&&GFX.light(pl);pl.position.set(x,RB-2.2,z);M.group.add(pl);}}
+    ruinEnd(tr,cx,cz,1,1,'#b88a5a','#6b4a2c',RB,{noCracks:1,hide1:thatch});
+    // neon: TIKI BAR over the front, OPEN under the eave, COCKTAILS on the back wall
+    neon('TIKI BAR',cx,RB+1.6,z1+1,9,2.2,0,'#fff3c4','#ffb020');neon('OPEN',cx+8.5,RB-1.2,z1+.25,2.6,1,0,'#ffe6f2','#ff3d8b',.7);neon('COCKTAILS',cx,y+3.4,z0+.62,6,1.2,0,'#e6fbff','#2ee6d6');
+    // white ladder up the east side onto the roof
+    {const lx=x1+.35,lz=cz,lm=mat('#ffffff',null,{roughness:.5});for(const zz of [lz-.5,lz+.5])deco(B.boxGeo(.08,RB+.6-G,.08),lm,lx,(RB+.6+G)/2,zz);for(let yy=G+.35;yy<RB+.4;yy+=.35)deco(B.boxGeo(.06,.06,1),lm,lx,yy,lz);(M.ladders||(M.ladders=[])).push({x0:lx,x1:lx+.8,z0:lz-.55,z1:lz+.55,y0:G,y1:RB,nx:-1,nz:0,rung:lx});}
+    for(const [z,c] of [[z1-.6,'#2f7fe0'],[z1-1.8,'#f4c22b'],[z1-3,'#e8463a']]){const sb=box(x1+1.2,G,z,.25,2.6,.75,c,{solid:false});sb.rotation.z=-.12;collider(x1+.9,x1+1.5,G,G+2.6,z-.375,z+.375);}}
 
   /* ---------- lifeguard tower (south, near the water) ---------- */
   {const lr=ruinBegin(),cx=10,cz=-40,PL=G+4,red='#e8463a',w='#ffffff';
@@ -3845,7 +3860,12 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     for(let x=16;x<=40;x+=4)for(const z of [44.1,49.9])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
     for(const [x,z] of [[31.2,43.2],[43.6,43.2],[31.2,53.8],[43.6,53.8]])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
     for(const x of [22,34]){box(x,J,zz(49.6),.12,3.2,.12,'#3a3d45');const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(x,J+3.4,zz(49.6));M.group.add(l);}
-    glassRun(14.2,zz(44.05),31,zz(44.05),J);glassRun(14.2,zz(49.95),31,zz(49.95),J);
+    glassRun(14.2,zz(44.05),22,zz(44.05),J);glassRun(27,zz(44.05),31,zz(44.05),J);glassRun(14.2,zz(49.95),31,zz(49.95),J);
+    // the long walkway running from the jetty almost to the middle of the bay, where it nearly meets the other one
+    {const [a,b]=Zr(1.5,44);wcBox(22,27,J-.25,J,a,b,wd,{tx:'wood'});}
+    for(let z=4;z<44;z+=4)for(const x of [22.2,26.8])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
+    for(const z of [8,20,32]){box(26.6,J,zz(z),.12,3.2,.12,'#3a3d45');const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(26.6,J+3.4,zz(z));M.group.add(l);}
+    glassRun(22.05,zz(1.55),22.05,zz(44),J,1.1,2.4);glassRun(26.95,zz(1.55),26.95,zz(44),J,1.1,2.4);glassRun(22.05,zz(1.55),26.95,zz(1.55),J);
     glassRun(31.05,zz(43.05),31.05,zz(44),J);glassRun(31.05,zz(50),31.05,zz(53.95),J);glassRun(31.05,zz(53.95),43.75,zz(53.95),J);glassRun(43.75,zz(43.05),43.75,zz(53.95),J);
     if(sg>0){glassRun(31.05,zz(43.05),37.6,zz(43.05),J);glassRun(40.4,zz(43.05),43.75,zz(43.05),J);}else glassRun(31.05,zz(43.05),43.75,zz(43.05),J);};
   jetty(1);jetty(-1);
@@ -3869,8 +3889,8 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     wcBox(38.1,38.9,BD,BD+1.05,36.4,37.6,'#3a3d45');deco(new THREE.TorusGeometry(.32,.05,6,16),mat('#8a5a34'),38.3,BD+1.4,37).rotation.y=Math.PI/2;
     box(41.4,BD,40.3,1.4,.6,.9,'#3a3d45',{edges:false});box(41.2,BD,33,1.6,.5,1.6,'#e8b81f',{edges:false});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.11,8,16),mat('#ff7a1f'));ring.position.set(33,BD+.7,bz1+.02);M.group.add(ring);
-    const nm=document.createElement('canvas');nm.width=256;nm.height=64;const ng=nm.getContext('2d');ng.fillStyle='#ffffff';ng.fillRect(0,0,256,64);ng.fillStyle='#2f63c8';ng.font='bold 44px Bungee, Impact, sans-serif';ng.textAlign='center';ng.textBaseline='middle';ng.fillText('SALTY',128,34);
-    const nt=new THREE.CanvasTexture(nm);if(THREE.SRGBColorSpace)nt.colorSpace=THREE.SRGBColorSpace;const ns=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:nt}));ns.position.set(38.5,BD+.55,bz0-.02);ns.rotation.y=Math.PI;M.group.add(ns);}
+    const nm=document.createElement('canvas');nm.width=256;nm.height=64;const ng=nm.getContext('2d');ng.fillStyle='#0d1626';ng.fillRect(0,0,256,64);ng.font='bold 44px Bungee, Impact, sans-serif';ng.textAlign='center';ng.textBaseline='middle';ng.shadowColor='#3ad7ff';for(let k=0;k<3;k++){ng.shadowBlur=22-k*7;ng.fillStyle=k<2?'#3ad7ff':'#e8fbff';ng.fillText('SALTY',128,34);}
+    const nt=new THREE.CanvasTexture(nm);if(THREE.SRGBColorSpace)nt.colorSpace=THREE.SRGBColorSpace;const ns=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:nt,toneMapped:false}));ns.position.set(38.5,BD+.55,bz0-.02);ns.rotation.y=Math.PI;M.group.add(ns);}
   /* ---------- cliffs and the lookout ledge (west) ---------- */
   {const sa=['#b39a7c','#a48b6e','#bfa585'],bush=mat('#3f8a3a'),bush2=mat('#56a546'),bm=mat('#9c8a74','rock');
     for(let z=-58,i=0;z<58;z+=4,i++){const h=7+Math.abs(Math.sin(z*.37))*5+(Math.abs(z)<7?3:0);wcRock(-42.4+Math.sin(z)*.3,z+2,3.4,4.2,h,G,sa[i%3]);
@@ -3920,12 +3940,6 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   wcPalm(-16,-31,.6,1.1);wcPalm(-33,-15,-.3,.9);wcPalm(-13,25,2.4,1);wcPalm(-36,27,.9,1);wcPalm(-22,52,.2,1);wcPalm(-38,46,1.2,.8);
 
   /* ---------- in the water ---------- */
-  // swim raft
-  {wcBox(34,38,0,.75,-9,-5,'#c99a5b',{tx:'wood'});wcBox(33.4,34,0,.4,-7.6,-6.4,'#9aa0a8');box(37.6,.75,-8.6,.1,1.6,.1,'#d9dde3');}
-  // swan pedalo
-  {const g=new THREE.Group(),w=mat('#ffffff');const b=new THREE.Mesh(B.boxGeo(2.2,1,3),w);b.position.y=.5;g.add(b);const n1=new THREE.Mesh(B.boxGeo(.4,1.8,.4),w);n1.position.set(0,1.6,1.4);n1.rotation.x=-.15;g.add(n1);
-    const hd=new THREE.Mesh(B.boxGeo(.45,.4,.8),w);hd.position.set(0,2.5,1.7);g.add(hd);const bk=new THREE.Mesh(B.boxGeo(.25,.2,.4),mat('#ff7a1f'));bk.position.set(0,2.45,2.2);g.add(bk);
-    const st=new THREE.Mesh(B.boxGeo(1.8,.4,1.2),mat('#e8463a'));st.position.set(0,1.1,-.4);g.add(st);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});wcFloat(g,30,24,{sink:-.3,roll:.03});collider(28.9,31.1,0,1.2,22.5,25.5);collider(29.75,30.25,1.2,2.75,24.9,26);}
   // buoy line marks the edge of the swimming area
   {const fm=[mat('#e8463a'),mat('#ffffff')];for(let z=-56,i=0;z<=56;z+=3,i++){const b=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),fm[i%2]);b.castShadow=true;wcFloat(b,43.6,z,{sink:0,roll:.2,pitch:.2});}
     const rp=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,112),mat('#f4efe6'));rp.position.set(43.6,.3,0);M.group.add(rp);}
@@ -10151,7 +10165,7 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
 function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 /* map picker title: a one-liner per map under the big cinematic name */
 const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",arenasm:'Same arena, half the room. No time to breathe.',skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
-  street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Sun, sand and a shipwreck full of trouble.',house:'Room to room, fist to fist.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
+  street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, fist to fist.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
 function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble',sk=ru||!!S.simple;

@@ -59,7 +59,7 @@ Characters (15), each a sculpted 3D model: Blaze (a fire brawler; fireballs), Go
 
 **Lethals** (what used to be called consumables; press G): Stun Grenade, plus the ones below. Grenade, Stim and HeartBeat have been taken out of the loadout (Simple 1v1s still give everyone grenades).
 - **Flash Bang** (2 per round) – thrown like a grenade; anyone who can see the blast gets a white screen for exactly 1 second including the fade-out (0.6 if facing away). Bots lose track of you for as long.
-- **Proximity Mine** (2 per round) – laid on the floor in front of you, armed after a second (fast-blinking red light while arming), goes off when an enemy comes within about 1.7 m (60 damage); anyone can shoot it to break it harmlessly (no blast); it's dark grey with a dim red blink, so it's easy to miss. Other blasts set it off too.
+- **Proximity Mine** (2 per round) – laid on the floor in front of you, armed after a second (fast-blinking red light while arming), goes off when an enemy comes within about 1.7 m (60 damage); anyone can shoot it to set it off: a full mine blast with the same damage and radius, counted as the shooter's, so shooting an enemy's mine next to them hurts them, and you take half if you're inside the blast; it's dark grey with a dim red blink, so it's easy to miss. Other blasts set it off too.
 - **Cluster Grenade** (2 per round) – a small burst that throws out five bomblets, each a smaller, weaker blast (24 damage) a moment later.
 - **Gold Armour** (always on) – you start every round or respawn with 30 armour, which rebuilds back to 30 slowly once you've gone 3 seconds without being hit. Your armour bar (and the sparks when it soaks a hit) is gold instead of blue.
 

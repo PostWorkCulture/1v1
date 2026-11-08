@@ -7714,6 +7714,20 @@ function clearWalls(){clearTurrets();const rs=M.walls.map(w=>w.bb);for(const w o
 /* ================= bot AI ================= */
 function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(L);const h=rayBoxes(a,d,L,true);return!h;}
 function prefRange(id){return {m60:18,duals:11,sniper:34,ar:20,gar:22,burst:21,hornet:13,smg:10,flamer:6,vector:9,p90:12,shotgun:5,autoshot:6,mg:16,rocket:16,thumper:14,crossbow:22,stars:12,sword:1.6,fists:1.4,scout:20,pistol:12,revolver:16}[id]||12;}
+/* Close-range bots used to keep walking straight into you, so they sat inside your body and followed every step.
+   keepOff: once a bot is at its fighting distance from a foe it stops pressing in (it still strafes and circles), and backs off a little if closer.
+   bodyPush: two fighters can't overlap; a bot is pushed out of you, you are never pushed by a bot (two bots share the push). */
+const KEEP=id=>id==='fists'||id==='sword'?1.5:CLOSE(id)?3:2.2,BODY_R=.42;
+function keepOff(b,c,id){const k=KEEP(id);for(const o of FS){if(o===b||!o.alive||o.downed||!isFoe(b,o)||Math.abs(o.pos.y-b.pos.y)>1.8)continue;
+  const dx=o.pos.x-b.pos.x,dz=o.pos.z-b.pos.z,d=Math.hypot(dx,dz);if(d>k||d<1e-4)continue;const ux=dx/d,uz=dz/d,into=c.wx*ux+c.wz*uz;
+  if(into>0){c.wx-=ux*into;c.wz-=uz*into;}if(d<k*.75){const back=.5*(1-d/(k*.75))+.15;c.wx-=ux*back;c.wz-=uz*back;}}}
+function bodyPush(){for(let i=0;i<FS.length;i++){const a=FS[i];if(!a.alive||a.corpse||a.thrownT>0||a.finishing||a.finishT>0)continue;
+  for(let j=i+1;j<FS.length;j++){const b=FS[j];if(!b.alive||b.corpse||b.thrownT>0||b.finishing||b.finishT>0)continue;
+    if(Math.abs(a.pos.y-b.pos.y)>1.6)continue;let dx=b.pos.x-a.pos.x,dz=b.pos.z-a.pos.z,d=Math.hypot(dx,dz);const m=BODY_R*2;if(d>=m)continue;
+    if(d<1e-4){dx=Math.sin(a.yaw);dz=Math.cos(a.yaw);d=1e-4;}const ux=dx/d,uz=dz/d,o=m-d;
+    // you (and a remote player) are never shoved by a bot; between two of the same kind the push is shared
+    const pa=a===ME||NET.R===a,pb=b===ME||NET.R===b;if(pa&&pb)continue;const wa=pa&&!pb?0:!pa&&pb?1:.5,wb=1-wa;
+    if(wa){a.pos.x-=ux*o*wa;a.pos.z-=uz*o*wa;depen(a);}if(wb){b.pos.x+=ux*o*wb;b.pos.z+=uz*o*wb;depen(b);}}}}
 const CLOSE=id=>id==='shotgun'||id==='autoshot'||id==='flamer'||id==='sword'||id==='fists';
 function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const px=cx+Math.cos(ang)*rr,pz=cz+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))return null;
   const g=M.grid,kk=cellK(ci,cj),h=g.h[kk*NL+Math.floor(Math.random()*g.n[kk])];return{x:px,h,z:pz,eye:new V3(px,h+2.35*SC,pz)};}
@@ -8641,8 +8655,9 @@ function step(rdt){pfBudget=24000;
   // a finisher's scripted moves mustn't leave the attacker standing inside a wall or post
   for(const x of FS)if(x.alive&&(x.finishT>0||FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===x)))depen(x);
   for(const b of FS){if(b===ME)continue;if(NET.role==='client'){netFollow(b,dt);continue;}if(NET.R===b&&NET.live){netDrive(b,dt,live);continue;}
-    if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?11.75:10.75)*stimMul(b),c.jumpPress);}
+    if(b.thrownT>0)physics(b,dt,0,0,false,0,false);else if(b.alive&&live&&!b.finishing&&!(b.finishT>0)){const c=botThink(b,dt);b._want=Math.hypot(c.wx,c.wz);const id=gunOf(b);keepOff(b,c,id);physics(b,dt,c.wx,c.wz,c.jump,(b.ads?(id==='sniper'?3.8:5.6):(id==='sword'||id==='fists')?11.25:10.75)*stimMul(b),c.jumpPress);}
     else if(b.alive&&!(b.finishing&&b.finishing.move)&&!FS.some(v=>v.finishing&&v.finishing.move&&v.finishing.by===b))physics(b,dt,0,0,false,0);}
+  if(NET.role!=='client')bodyPush();
   updWalls(dt);updTurrets(dt);updProps(dt);updPlates(dt);updCelebrate(dt);updCrown(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);if(sh.tick)sh.tick(S.t);else sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){if(x.finishing&&x.finishing.fall)continue;/* a flung body may sail off the map */x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');

@@ -960,6 +960,9 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .wshow{display:grid;gap:10px;min-width:0}
 .wshow[hidden],.wtabs[hidden]{display:none}
 .ws-img{aspect-ratio:2.1/1;border-radius:12px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(60% 34% at 50% 86%,rgba(255,255,255,.22),rgba(255,255,255,0) 70%),linear-gradient(180deg,#151824,#0b0c12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.ws-img{position:relative}.ws-img.has3d img{opacity:0}
+.ws-3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}.ws-3d:active{cursor:grabbing}
+.ws-hint{position:absolute;right:10px;bottom:7px;font:700 11px/1 var(--f-body);letter-spacing:.04em;color:rgba(255,255,255,.55);pointer-events:none;transition:opacity .4s}.ws-hint.off{opacity:0}
 .ws-img img{width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));animation:wsIn .35s cubic-bezier(.2,.8,.2,1)}
 .ws-img b{font:900 64px/1 var(--f-body);color:#3de0ff}
 @keyframes wsIn{from{opacity:0;transform:translateX(18px) scale(.96)}to{opacity:1;transform:none}}
@@ -8701,7 +8704,7 @@ function step(rdt){pfBudget=24000;
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
   // player
-  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary;if(g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0)queueAct(o?'Digit2':'Digit1');}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
+  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}/* auto switch: when the gun runs dry while you're using it, swap to the other gun if it has ammo; otherwise (or when you swap back to an empty gun) reload it */{const gid=gunOf(ME),am=ME.ammo[gid];if(ME._dryG!==gid){ME._dryG=gid;ME.justDry=false;}else if(ME._dryA>0&&am===0)ME.justDry=true;ME._dryA=am;}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0&&!(ME.actT>S.t)){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary,canSw=g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0;if(ME.justDry&&canSw){ME.justDry=false;ME.actT=S.t+.3;queueAct(o?'Digit2':'Digit1');}else if(ME.reloadT<=0&&isFinite(GUNS[gunOf(ME)].mag)&&!GUNS[gunOf(ME)].noReload){ME.justDry=false;ME.actT=S.t+.3;queueAct('KeyR');}}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
     const fi=cmd.fi,si=cmd.si;
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
@@ -10053,6 +10056,43 @@ function heroShots(ids,RB,W=640,H=320){const out={};let r;
     const span=Math.max(sz.x/(W/H),sz.y)*1.1;const d=span/2/Math.tan(C.fov*Math.PI/360)+sz.z/2,up=span*.13;C.position.set(c.x,c.y+up,c.z+d);C.lookAt(c.x,c.y+up,c.z); /* sits a little low, under the card's spotlight */
     r.render(S,C);out[id]=r.domElement.toDataURL('image/webp',.92);S.remove(wrap);}
   pm.dispose();r.dispose();try{r.forceContextLoss();}catch(e){}return out;}
+/* loadout showcase in 3D: the picked weapon (or lethal) is drawn live, so you can drag it round with the mouse or a finger to see every side;
+   it eases to a stop when you let go and turns slowly by itself after a few seconds untouched. One small renderer of its own,
+   running only while the showcase is on screen; built models are kept, so flicking between weapons is instant. */
+const WS3={r:null,S:null,C:null,cv:null,hint:null,id:null,piv:null,cache:{},yaw:-.42,pitch:.3,vy:0,drag:null,idle:9,raf:0,last:0,w:0,h:0};
+function ws3Init(){if(WS3.r!==null)return !!WS3.r;
+  try{const cv=document.createElement('canvas');cv.className='ws-3d';cv.setAttribute('aria-label','Drag to spin the weapon');const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+    r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.setClearColor(0,0);WS3.r=r;WS3.cv=cv;}catch(e){WS3.r=false;return false;}
+  const S=new THREE.Scene(),ES=new THREE.Scene();ES.background=new THREE.Color('#5d6676');
+  const panel=(c,i,w,h,x,y,z)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);ES.add(m);};
+  panel('#ffffff',7,8,2.5,0,6,3);panel('#ffffff',4,3,7,7,1,4);panel('#bfe0ff',3.5,3,7,-7,1,-1);panel('#ffe2c0',3,9,1.5,0,-5,5);panel('#ffffff',5,6,1,0,1.5,8);
+  try{const pm=new THREE.PMREMGenerator(WS3.r);S.environment=pm.fromScene(ES,.02).texture;S.environmentIntensity=1.2;pm.dispose();}catch(e){}
+  S.add(new THREE.HemisphereLight('#ffffff','#445',.6));const key=new THREE.DirectionalLight('#ffffff',2.2);key.position.set(2,5,6);S.add(key);const rim=new THREE.DirectionalLight('#ffffff',2.4);rim.position.set(-4,3,-5);S.add(rim);
+  WS3.S=S;WS3.C=new THREE.PerspectiveCamera(24,2,.05,100);
+  const hint=document.createElement('span');hint.className='ws-hint';hint.textContent='Drag to spin';WS3.hint=hint;
+  const cv=WS3.cv;let lx=0,ly=0,lt=0;
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}WS3.drag=e.pointerId;lx=e.clientX;ly=e.clientY;lt=performance.now();WS3.vy=0;hint.classList.add('off');});
+  cv.addEventListener('pointermove',e=>{if(WS3.drag!==e.pointerId)return;const now=performance.now(),dx=e.clientX-lx,dy=e.clientY-ly,dt=Math.max(8,now-lt)/1000;lx=e.clientX;ly=e.clientY;lt=now;
+    WS3.yaw+=dx*.012;WS3.pitch=Math.max(-.6,Math.min(.6,WS3.pitch+dy*.008));WS3.vy=WS3.vy*.5+(dx*.012/dt)*.5;});
+  const up=e=>{if(WS3.drag!==e.pointerId)return;WS3.drag=null;WS3.idle=0;if(performance.now()-lt>90)WS3.vy=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  return true;}
+function ws3Model(id){if(WS3.cache[id])return WS3.cache[id];const m=heroModel(id,B.roundedBox);heroOutline(m,id==='stars'?.012:.014);m.rotation.y=id==='c_sense'||id==='c_gold'?-.4:Math.PI/2;
+  const tilt=new THREE.Group();tilt.rotation.z=id==='sword'?.42:id==='stars'?0:.06;tilt.add(m);tilt.updateMatrixWorld(true);
+  const bx=new THREE.Box3().setFromObject(tilt),c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());tilt.position.sub(c);
+  const piv=new THREE.Group();piv.add(tilt);piv.rotation.order='XYZ';piv.userData={w:sz.x,h:sz.y,d:sz.z};return WS3.cache[id]=piv;}
+function ws3Show(id){const box=document.querySelector('#d-wshow .ws-img');
+  if(!id||!box||!ws3Init()){if(WS3.cv&&WS3.cv.parentNode)WS3.cv.remove();ws3Stop();return;}
+  if(WS3.cv.parentNode!==box){box.appendChild(WS3.cv);box.appendChild(WS3.hint);}
+  if(WS3.id!==id){if(WS3.piv)WS3.S.remove(WS3.piv);WS3.piv=ws3Model(id);WS3.S.add(WS3.piv);WS3.id=id;WS3.yaw=id==='stars'?0:-.42;WS3.pitch=id==='stars'?0:.3;WS3.vy=0;WS3.idle=0;box.classList.remove('has3d');}
+  if(!WS3.raf&&!WS3.wait){WS3.last=performance.now();WS3.raf=requestAnimationFrame(ws3Frame);}}
+function ws3Stop(){if(WS3.raf)cancelAnimationFrame(WS3.raf);WS3.raf=0;if(WS3.wait)clearTimeout(WS3.wait);WS3.wait=0;}
+function ws3Frame(now){const cv=WS3.cv;if(!cv||!cv.isConnected||!WS3.piv){WS3.raf=0;return;}if(!cv.offsetParent){WS3.raf=0;WS3.wait=setTimeout(()=>{WS3.wait=0;if(!WS3.raf&&cv.isConnected){WS3.last=performance.now();WS3.raf=requestAnimationFrame(ws3Frame);}},300);return;}WS3.raf=requestAnimationFrame(ws3Frame);
+  const dt=Math.min(.05,(now-WS3.last)/1000);WS3.last=now;const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+  if(w!==WS3.w||h!==WS3.h){WS3.w=w;WS3.h=h;WS3.r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));WS3.r.setSize(w,h,false);}
+  if(WS3.drag==null){WS3.yaw+=WS3.vy*dt;WS3.vy*=Math.exp(-dt*3.5);WS3.idle+=dt;if(WS3.idle>3.5&&Math.abs(WS3.vy)<.4)WS3.yaw+=dt*.4*Math.min(1,WS3.idle-3.5);}
+  const P=WS3.piv,u=P.userData,C=WS3.C;P.rotation.set(WS3.pitch,WS3.yaw,0);C.aspect=w/h;
+  const span=Math.max(u.w/C.aspect,u.h,Math.max(u.w,u.d)*.42)*(u.h>u.w/C.aspect?1.55:1.04),dist=span/2/Math.tan(C.fov*Math.PI/360)+Math.max(u.w,u.d)*.5,up=span*.1;C.position.set(0,up,dist);C.lookAt(0,up,0);C.updateProjectionMatrix();
+  WS3.r.render(WS3.S,C);const box=cv.parentNode;if(box&&!box.classList.contains('has3d'))box.classList.add('has3d');}
 /* ================= first-person aim (viewmodel) =================
    When you aim with a supported gun the camera eases into your eyes and the gun is drawn in its own pass
    (so it never clips into walls), held in two hands with its iron sights lined up on the centre of the screen. */
@@ -10222,7 +10262,7 @@ function renderDuelMenu(){
    else{const g=GUNS[k],dmg=g.dmg*(g.pellets||1)*(g.burst||1),rps=g.rate?1/g.rate:0,rng=g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k),bar=(l,v,mx,t)=>`<div>${l}<i><u style="width:${Math.max(4,Math.min(100,Math.round(v/mx*100)))}%"></u></i><em>${t}</em></div>`;
      img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=`${lab[tab]} · ${WC[k]||''}`;name=g.name;
      body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',dmg,130,Math.round(dmg))}${bar('Fire rate',rps,25,(rps<3?rps.toFixed(1):Math.round(rps))+'/s')}${bar('Range',rng,160,Math.round(rng)+' m')}${bar('Mag',isFinite(g.mag)?g.mag:0,50,isFinite(g.mag)&&g.mag?g.mag:'—')}</div>`;}
-   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}</div><div><div class="ws-cls">${cls}</div><div class="ws-name">${name}</div>${body}</div>`;}}
+   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}</div><div><div class="ws-cls">${cls}</div><div class="ws-name">${name}</div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',sk||(!!S.gun&&!!S.sec&&!!S.cons));menuStep();
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';

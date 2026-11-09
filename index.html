@@ -7520,12 +7520,17 @@ function flashBang(src,at){sfx('stun',at,{range:24,rate:1.25});emit(at.x,at.y,at
   if(src===ME&&hitAny)hitMarker(false);}
 // proximity mines: laid on the floor in front of you, armed after a second, go off when an enemy steps near
 const mines=[];
-function layMine(f){const fw=dirOf(f.yaw,0,new V3());let x=f.pos.x+fw.x*1.1,z=f.pos.z+fw.z*1.1;let y=surfaceAt(x,z,f.pos.y+.6);if(y==null||Math.abs(y-f.pos.y)>.6){x=f.pos.x;z=f.pos.z;y=f.pos.y;}
-  if(allBoxes().some(b=>x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2&&b.y1>y+.1&&b.y0<y+.4)){x=f.pos.x;z=f.pos.z;y=f.pos.y;}
+function layMine(f){const fw=dirOf(f.yaw,0,new V3());let x=f.pos.x+fw.x*1.1,z=f.pos.z+fw.z*1.1;let y=mineFloor(x,z,f.pos.y+.25);if(Math.abs(y-f.pos.y)>.6){x=f.pos.x;z=f.pos.z;y=mineFloor(x,z,f.pos.y);}
+  if(allBoxes().some(b=>x>b.x0-.2&&x<b.x1+.2&&z>b.z0-.2&&z<b.z1+.2&&b.y1>y+.1&&b.y0<y+.4)){x=f.pos.x;z=f.pos.z;y=mineFloor(x,z,f.pos.y);}
   const g=lethMesh('c_mine',.95);const led=g.getObjectByName('led');
   g.position.set(x,y,z);scene.add(g);mines.push({f,x,y,z,arm:1,mesh:g,led,t:0});sfx('wall',{x,y,z},{range:8,rate:1.6});return true;}
+/* mines always sit on something: laid mid-jump they drop to the surface below, and if what they sit on goes (broken glass, a moving train, a smashed crate) they fall */
+const MDOWN=new V3(0,-1,0);
+function mineFloor(x,z,y){const h=rayBoxes(new V3(x,y+.35,z),MDOWN,60);if(h)return y+.35-h.t;return M.deepWater?-60:0;}
+function mineSettle(m,dt){m.ck=(m.ck||0)-dt;if(m.ck<=0||m.vy){m.ck=.15;m.fl=mineFloor(m.x,m.z,m.y);}const fl=m.fl;
+  if(m.y>fl+.02||m.vy){m.vy=(m.vy||0)-24*dt;m.y=Math.max(fl,m.y+m.vy*dt);if(m.y<=fl+.001){m.y=fl;m.vy=0;}m.mesh.position.y=m.y;}return m.y>-50;}
 function boomMine(m,i,by){scene.remove(m.mesh);mines.splice(i,1);explode(by&&by.alive?by:m.f,new V3(m.x,m.y+.35,m.z),null,{dmg:GUNS.mine.dmg,radius:GUNS.mine.radius,wall:150,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#9aa0a8','#ffffff']});}
-function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];m.t+=dt;if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
+function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];m.t+=dt;if(!mineSettle(m,dt)){scene.remove(m.mesh);mines.splice(i,1);continue;}if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
   if(!m.f||S.state!=='fight')continue;if(FS.some(o=>o.alive&&isFoe(m.f,o)&&!o.finishing&&Math.hypot(o.pos.x-m.x,o.pos.z-m.z)<1.7&&Math.abs(o.pos.y-m.y)<1.1)){sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10});boomMine(m,i);}}}
 function clearMines(){for(const m of mines)scene.remove(m.mesh);mines.length=0;}
 /* shooting a mine sets it off: a full mine blast (same damage and radius as stepping on it), credited to whoever shot it,

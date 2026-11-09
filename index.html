@@ -998,6 +998,13 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
   #menu .mfull.duels[data-step="loadout"] #col3.wsc>#d-wtabs:not(#_a):not(#_b){grid-column:2;grid-row:2;align-self:start}
   #menu .mfull.duels[data-step="loadout"] #col3.wsc>.wgroup:not(#_a):not(#_b){grid-column:2;grid-row:3;align-self:start}
   #menu .mfull.duels[data-step="loadout"] #col3.wsc :is(#d-guns,#d-secs,#d-consl){grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* menu navigation: Back and Next/Start are the same size, side by side in the middle of the footer (step 1 has just Next, centred) */
+#menu .navrow{display:flex;justify-content:center;align-items:stretch;gap:12px;width:100%}
+#menu .navrow>.btn{flex:1 1 0!important;max-width:300px;min-width:0!important;width:auto!important;margin:0;align-self:stretch!important;min-height:0;white-space:nowrap}
+#menu .mnavback{font-size:22px;padding:14px;background:#1d2130;color:#e9eefc;border:2px solid rgba(233,238,252,.28);border-radius:var(--radius,12px);cursor:pointer;font-weight:700}
+#menu .mnavback:hover{border-color:#3de0ff;color:#fff}
+#menu .mfull.duels .mstep .mback{display:none}
+@media (max-height:520px),(max-width:599px){#menu .navrow>.btn{font-size:18px;padding:12px 10px}}
 /* the sticky footers (Next / Start) fade over the content above them: only their buttons take taps, so map buttons and tiles peeking out underneath stay clickable */
 #menu .mfoot{pointer-events:none}#menu .mfoot :is(button,a,input,select,label,[role=button]){pointer-events:auto}
 /* map picker: one big picture with arrows, dots and a small ? for Random underneath */
@@ -1164,7 +1171,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           </div>
           <div class="mfoot setfoot">
             <div class="mneed" id="d-need0"></div>
-            <button class="btn primary mstart" id="d-next0">Character</button>
+            <div class="navrow"><button class="btn primary mstart" id="d-next0">Character</button></div>
           </div>
         </section>
         <section class="mcol dcol2" id="col2">
@@ -1172,7 +1179,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           <div class="d-lob"><div class="d-chars" id="d-chars"></div><div class="stage" id="d-prof"></div></div>
           <div class="mfoot lobfoot">
             <div class="mneed" id="d-need1"></div>
-            <button class="btn primary mstart" id="d-next">Loadout</button>
+            <div class="navrow"><button class="btn mnavback" id="d-fback1" type="button">&#8249; Back</button><button class="btn primary mstart" id="d-next">Loadout</button></div>
           </div>
         </section>
         <section class="mcol dcol3" id="col3">
@@ -1198,7 +1205,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           <div class="rumble-info" id="d-rinfo" hidden><b>Fists only</b><span>Just your fists in Rumble: no guns, lethals, abilities, walls or shop. 15 damage a punch. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
-            <button class="btn primary mstart" id="d-start">Start</button>
+            <div class="navrow"><button class="btn mnavback" id="d-fback2" type="button">&#8249; Back</button><button class="btn primary mstart" id="d-start">Start</button></div>
             <div class="keys" id="d-keys"><span>Controls are on the pause menu (<kbd>P</kbd>)</span></div>
           </div>
         </section>
@@ -10492,6 +10499,7 @@ function rollMap(){const l=mapList();if(!l.length)return;const pool=l.length>1?l
 D.rollMap=rollMap;
 $('d-guns').addEventListener('click',e=>{const b=e.target.closest('[data-gun]');if(!b)return;if(b.dataset.gun==='random'){S.randGun=true;}else{S.randGun=false;S.gun=b.dataset.gun;}renderDuelMenu();});
 $('d-secs').addEventListener('click',e=>{const b=e.target.closest('[data-sec]');if(!b)return;if(b.dataset.sec==='random'){S.randSec=true;}else{S.randSec=false;S.sec=b.dataset.sec;}renderDuelMenu();});
+$('d-fback1').addEventListener('click',()=>$('d-back1').click());$('d-fback2').addEventListener('click',()=>$('d-back').click());
 $('d-wtabs').addEventListener('click',e=>{const b=e.target.closest('[data-wtab]');if(!b)return;S.wtab=b.dataset.wtab;renderDuelMenu();});
 $('d-consl').addEventListener('click',e=>{const b=e.target.closest('[data-cons]');if(!b)return;if(b.dataset.cons==='random'){S.randCons=true;}else{S.randCons=false;S.cons=b.dataset.cons;}renderDuelMenu();});
 setDuelMode(S.mode);

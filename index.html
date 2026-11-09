@@ -969,7 +969,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .wshow{display:grid;gap:10px;min-width:0}
 .wshow[hidden],.wtabs[hidden]{display:none}
 .ws-img{aspect-ratio:2.1/1;border-radius:12px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(60% 34% at 50% 86%,rgba(255,255,255,.22),rgba(255,255,255,0) 70%),linear-gradient(180deg,#151824,#0b0c12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-.ws-img{position:relative}.ws-img.has3d img{opacity:0}
+.ws-img{position:relative}.ws-img.has3d img,.ws-img:has(canvas) img{opacity:0}
 .ws-3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}.ws-3d:active{cursor:grabbing}
 .ws-hint{position:absolute;right:10px;bottom:7px;font:700 11px/1 var(--f-body);letter-spacing:.04em;color:rgba(255,255,255,.55);pointer-events:none;transition:opacity .4s}.ws-hint.off{opacity:0}
 .ws-img img{width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));animation:wsIn .35s cubic-bezier(.2,.8,.2,1)}
@@ -1346,11 +1346,6 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
             <div class="seg" role="radiogroup" aria-label="Touch controls" id="dp-touch">
               <button role="radio" data-t="1" aria-checked="false">On</button>
               <button role="radio" data-t="0" aria-checked="true">Off</button>
-            </div></div>
-          <div class="pm-row gun-k"><span>Auto weapon switch <small>swap to your other gun when this one runs dry</small></span>
-            <div class="seg" role="radiogroup" aria-label="Auto weapon switch" id="dp-autosw">
-              <button role="radio" data-v="1" aria-checked="false">On</button>
-              <button role="radio" data-v="0" aria-checked="true">Off</button>
             </div></div>
           <div class="pm-row t-only"><span>Aim assist</span>
             <div class="seg" role="radiogroup" aria-label="Aim assist" id="dp-aa">
@@ -3852,7 +3847,7 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
       for(const [x,z] of [[cx-7,cz-2],[cx+7,cz-2],[cx-7,cz+4],[cx+7,cz+4]]){box(x,RB-1.6,z,.02,1.6,.02,'#3a3d45',{solid:false,edges:false});
         const ln=new THREE.Mesh(new THREE.CylinderGeometry(.26,.34,.6,10),new THREE.MeshStandardMaterial({color:'#ffcf7a',emissive:'#ffb347',emissiveIntensity:2}));ln.position.set(x,RB-1.9,z);M.group.add(ln);
         const pl=new THREE.PointLight('#ffb35a',4,13,2);window.GFX&&GFX.light(pl);pl.position.set(x,RB-2.2,z);M.group.add(pl);}}
-    ruinEnd(tr,cx,cz,1,1,'#b88a5a','#6b4a2c',RB,{noCracks:1,hide1:thatch});
+    ruinEnd(tr,cx,cz,1,1,'#b88a5a','#6b4a2c',RB,{noCracks:1,hide1:thatch,sturdy:1})/* the bar is too big to fold up from a couple of grenades: it stays standing (its bottles, glass and props still break) */;
     // neon: TIKI BAR over the front, OPEN under the eave, COCKTAILS on the back wall
     neon('TIKI BAR',cx,RB+1.6,z1+1,9,2.2,0,'#fff3c4','#ffb020');neon('OPEN',cx+8.5,RB-1.2,z1+.25,2.6,1,0,'#ffe6f2','#ff3d8b',.7);neon('COCKTAILS',cx,y+3.4,z0+.62,6,1.2,0,'#e6fbff','#2ee6d6');
     // white ladder up the east side onto the roof
@@ -6579,7 +6574,7 @@ function ruinEnd(r,cx,cz,flip,k,wall,trim,F,o={}){const kids=M.group.children.sl
   let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,top=0;for(const b of boxes){x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);z0=Math.min(z0,b.z0);z1=Math.max(z1,b.z1);top=Math.max(top,b.y1);b.ruin=1;}
   // the roof wall and everything up there stays separate so the first blast can knock it off
   const roofBits=boxes.filter(b=>b.y0>=F-.01&&!b.prop);for(const b of roofBits)if(b.mesh)b.mesh.userData.dyn=1;
-  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip),hide1:o.hide1||[],splash:o.splash};for(const m of B.hide1)m.userData.dyn=1;if(o.noCracks){(M.blds||(M.blds=[])).push(B);return B;}
+  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip),hide1:o.hide1||[],splash:o.splash,sturdy:!!o.sturdy};for(const m of B.hide1)m.userData.dyn=1;if(o.noCracks){(M.blds||(M.blds=[])).push(B);return B;}
   // cracks on every outside wall, hidden until the house is hit
   const ct=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(28,29,34,.9)';g.lineCap='round';
     for(let n=0;n<5;n++){let x=40+Math.random()*176,y=10+Math.random()*60;g.lineWidth=5;g.beginPath();g.moveTo(x,y);for(let s=0;s<9;s++){x+=(Math.random()-.5)*50;y+=14+Math.random()*16;g.lineTo(x,y);g.lineWidth=Math.max(1.5,5-s*.4);}g.stroke();}});
@@ -6591,7 +6586,7 @@ function ruinBatch(){for(const B of M.blds||[])batchStatic(B.grp);}
 function ruinMat(B,ang,ax,az,sink){const p=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),q=new THREE.Quaternion().setFromAxisAngle(new V3(ax,0,az).normalize(),ang);
   const m=new THREE.Matrix4().makeTranslation(p.x,p.y-sink,p.z).multiply(new THREE.Matrix4().makeRotationFromQuaternion(q)).multiply(new THREE.Matrix4().makeTranslation(-p.x,-p.y,-p.z));B.grp.matrix.copy(m);B.grp.matrixWorldNeedsUpdate=true;}
 function ruinOut(B,b){const i=M.boxes.indexOf(b);if(i>=0){M.boxes.splice(i,1);B.gone.push(b);}dirtyGrid(b,.05);}
-function ruinBlast(at,Rr,src){for(const B of M.blds||[]){if(B.stage>=2||at.x<B.x0-1.5||at.x>B.x1+1.5||at.z<B.z0-1.5||at.z>B.z1+1.5||at.y>B.top+2.5)continue;
+function ruinBlast(at,Rr,src){for(const B of M.blds||[]){if(B.sturdy||B.stage>=2||at.x<B.x0-1.5||at.x>B.x1+1.5||at.z<B.z0-1.5||at.z>B.z1+1.5||at.y>B.top+2.5)continue;
   if(S.t-B.t<.9)continue;B.t=S.t;if(B.stage===0)ruinHit(B,at);else ruinFall(B,at,src);}}
 function ruinHit(B,at){B.stage=1;const c=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),dir=new V3(c.x-at.x,0,c.z-at.z);if(dir.lengthSq()<.01)dir.set(1,0,0);dir.normalize();B.dir=dir;
   // blow the roof wall off (most of it), break what was up there
@@ -8109,8 +8104,8 @@ function syncAimOpts(){document.querySelectorAll('#dp-aa [data-aa]').forEach(b=>
   document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));
   document.querySelectorAll('#dp-autoads [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===AA.autoAds)));}
 $('d-sx').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();snipeUp(false);});
-S.autoSw=!!store.get('duel:autosw',false);const syncSw=()=>document.querySelectorAll('#dp-autosw [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===S.autoSw)));syncSw();
-$('dp-autosw').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;S.autoSw=b.dataset.v==='1';store.set('duel:autosw',S.autoSw);syncSw();});
+
+
 $('dp-autoads').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;AA.autoAds=b.dataset.v==='1';store.set('duel:autoads',AA.autoAds);syncAimOpts();});
 $('dp-aa').addEventListener('click',e=>{const b=e.target.closest('[data-aa]');if(!b)return;AA.lvl=b.dataset.aa;store.set('duel:aa',AA.lvl);syncAimOpts();});
 $('dp-gyro').addEventListener('click',async e=>{const b=e.target.closest('[data-g]');if(!b)return;let on=b.dataset.g==='1';
@@ -8741,7 +8736,7 @@ function step(rdt){pfBudget=24000;
   else if(S.state==='roundEnd'){S.t0-=rdt;if(S.t0<=0){if(S.matchOver)matchEnd();else{S.round++;startRound();}}}
   const live=S.state==='fight';
   // player
-  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}/* auto switch: when the gun runs dry while you're using it, swap to the other gun if it has ammo; otherwise (or when you swap back to an empty gun) reload it */{const gid=gunOf(ME),am=ME.ammo[gid];if(ME._dryG!==gid){ME._dryG=gid;ME.justDry=false;}else if(ME._dryA>0&&am===0)ME.justDry=true;ME._dryA=am;}if(S.autoSw&&S.state==='fight'&&ME.alive&&!ME.downed&&!SNQ.hold&&!SNQ.fire&&S.mode!=='rumble'&&ME.switchT<=0&&ME.ammo[gunOf(ME)]===0&&!(ME.actT>S.t)){const o=ME.slot?0:1,g=o?ME.secondary:ME.primary,canSw=g&&g!=='grenade'&&g!=='sword'&&ME.ammo[g]>0;if(ME.justDry&&canSw){ME.justDry=false;ME.actT=S.t+.3;queueAct(o?'Digit2':'Digit1');}else if(ME.reloadT<=0&&isFinite(GUNS[gunOf(ME)].mag)&&!GUNS[gunOf(ME)].noReload){ME.justDry=false;ME.actT=S.t+.3;queueAct('KeyR');}}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
+  if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.prevR;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing&&!(f.finishT>0)){
     const fi=cmd.fi,si=cmd.si;
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
@@ -10282,7 +10277,7 @@ function ws3Model(id){if(WS3.cache[id])return WS3.cache[id];const m=heroModel(id
 function ws3Show(id){const box=document.querySelector('#d-wshow .ws-img');
   if(!id||!box||!ws3Init()){if(WS3.cv&&WS3.cv.parentNode)WS3.cv.remove();ws3Stop();return;}
   if(WS3.cv.parentNode!==box){box.appendChild(WS3.cv);box.appendChild(WS3.hint);}
-  if(WS3.id!==id){if(WS3.piv)WS3.S.remove(WS3.piv);WS3.piv=ws3Model(id);WS3.S.add(WS3.piv);WS3.id=id;WS3.yaw=id==='stars'?0:-.42;WS3.pitch=id==='stars'?0:.3;WS3.vy=0;WS3.idle=0;box.classList.remove('has3d');}
+  if(WS3.id!==id){if(WS3.piv)WS3.S.remove(WS3.piv);WS3.piv=ws3Model(id);WS3.S.add(WS3.piv);WS3.id=id;WS3.yaw=id==='stars'?0:-.42;WS3.pitch=id==='stars'?0:.3;WS3.vy=0;WS3.idle=0;box.classList.remove('has3d');try{WS3.r.clear();}catch(e){}/* wipe the last weapon off the canvas so it never shows next to the new one */}
   if(!WS3.raf&&!WS3.wait){WS3.last=performance.now();WS3.raf=requestAnimationFrame(ws3Frame);}}
 function ws3Stop(){if(WS3.raf)cancelAnimationFrame(WS3.raf);WS3.raf=0;if(WS3.wait)clearTimeout(WS3.wait);WS3.wait=0;}
 function ws3Frame(now){const cv=WS3.cv;if(!cv||!cv.isConnected||!WS3.piv){WS3.raf=0;return;}if(!cv.offsetParent){WS3.raf=0;WS3.wait=setTimeout(()=>{WS3.wait=0;if(!WS3.raf&&cv.isConnected){WS3.last=performance.now();WS3.raf=requestAnimationFrame(ws3Frame);}},300);return;}WS3.raf=requestAnimationFrame(ws3Frame);

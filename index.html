@@ -3527,7 +3527,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -3778,8 +3778,8 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     {frame:'#2b2d33',metal:.6,tex:()=>ltex('teal',(g,w,h)=>{for(let i=0;i<6;i++){g.fillStyle=i%2?'#2a9d8f':'#e9f5f2';g.fillRect(i*w/6,0,w/6,h);}})},
     {frame:'#9c6b3f',wood:1,tex:()=>ltex('teak',(g,w,h)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?'#a8743f':'#b9844c';g.fillRect(0,i*h/8,w,h/8-2);g.fillStyle='#5b3a22';g.fillRect(0,i*h/8+h/8-2,w,2);}})}];
   // a sun lounger facing the sea (+x): solid frame you can jump on, a textured cushion and a raised back; slides when shot or blasted, smashes after enough
-  const lounger=(x,z,k)=>{const st=LSTY[k%LSTY.length],L=2.05,W=.74,H=.36;
-    const b=box(x,G,z,L,H,W,st.frame,{prop:'lounger',hp:70,col:st.frame,snd:st.wood?'crate':'bin',wood:!!st.wood,extra:{metalness:st.metal||0,roughness:.35}});b.shove=1;
+  const lounger=(x,z,k,yb=G)=>{const st=LSTY[k%LSTY.length],L=2.05,W=.74,H=.36;
+    const b=box(x,yb,z,L,H,W,st.frame,{prop:'lounger',hp:70,col:st.frame,snd:st.wood?'crate':'bin',wood:!!st.wood,extra:{metalness:st.metal||0,roughness:.35}});b.shove=1;
     const cm=new THREE.MeshStandardMaterial({map:st.tex(),roughness:.7});const cu=new THREE.Mesh(B.boxGeo(1.38,.1,W-.06),cm);cu.position.set(.3,H/2+.05,0);cu.castShadow=true;b.mesh.add(cu);
     const bk=new THREE.Mesh(B.boxGeo(.72,.1,W-.06),cm);bk.position.set(-.6,H/2+.3,0);bk.rotation.z=-.85;bk.castShadow=true;b.mesh.add(bk);
     const pil=new THREE.Mesh(B.boxGeo(.22,.12,W-.2),mat('#ffffff'));pil.position.set(-.78,H/2+.55,0);pil.rotation.z=-.85;b.mesh.add(pil);return b;};
@@ -3869,44 +3869,47 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     ruinEnd(lr,cx,cz,1,1,w,red,PL+2.6,{noCracks:1});
     wcProp(()=>{const rb=box(13,G,-35.6,.5,2.6,.7,'#ffd23f',{solid:false});rb.rotation.z=-.2;collider(12.7,13.5,G,G+2.5,-35.95,-35.25);},{prop:'board',hp:50,col:'#ffd23f',snd:'crate'});}
 
-  /* ---------- two matching jetties with glass balustrades (north with the moored fishing boat, south in place of the old trawler) ---------- */
-  const jetty=sg=>{const J=2.9,wd='#a8794c',Zr=(p,q)=>sg>0?[p,q]:[-q,-p],zz=v=>sg*v;
+  /* ---------- two matching jetties: from the beach out to a long promenade right along the edge of the bay, the two almost meeting in the middle;
+     tall glass all along, a pergola terrace with loungers, palm planters, frosted screens and a viewer at the end break up the walk ---------- */
+  const jetty=sg=>{const J=2.9,GH=1.6,wd='#a8794c',Zr=(p,q)=>sg>0?[p,q]:[-q,-p],zz=v=>sg*v,gl=(x0,z0,x1,z1,pl)=>glassRun(x0,zz(z0),x1,zz(z1),J,GH,pl||1.6),
+      pile=(x,z)=>wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'}),
+      lamp=(x,z)=>{box(x,J,zz(z),.12,3.4,.12,'#2b2d33',{extra:{metalness:.7,roughness:.3}});const l=new THREE.Mesh(B.boxGeo(.5,.18,.5),new THREE.MeshBasicMaterial({color:'#fff2c4',toneMapped:false}));l.position.set(x,J+3.5,zz(z));M.group.add(l);},
+      strip=(x0,z0,x1,z1,c)=>box((x0+x1)/2,J-.18,zz((z0+z1)/2),Math.abs(x1-x0)||.06,.06,Math.abs(z1-z0)||.06,c,{solid:false,edges:false,mat:new THREE.MeshBasicMaterial({color:c,toneMapped:false})});
     wcStairs(10.4,1,...Zr(44,50),G,J,6,.6,'#8a5a34');
     {const [a,b]=Zr(44,50);wcBox(14,42,J-.25,J,a,b,wd,{tx:'wood'});}{const [a,b]=Zr(43,54);wcBox(31,43.8,J-.25,J,a,b,wd,{tx:'wood'});}
-    for(let x=16;x<=40;x+=4)for(const z of [44.1,49.9])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
-    for(const [x,z] of [[31.2,43.2],[43.6,43.2],[31.2,53.8],[43.6,53.8]])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
-    for(const x of [22,34]){box(x,J,zz(49.6),.12,3.2,.12,'#3a3d45');const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(x,J+3.4,zz(49.6));M.group.add(l);}
-    glassRun(14.2,zz(44.05),22,zz(44.05),J);glassRun(27,zz(44.05),31,zz(44.05),J);glassRun(14.2,zz(49.95),31,zz(49.95),J);
-    // the long walkway running from the jetty almost to the middle of the bay, where it nearly meets the other one
-    {const [a,b]=Zr(1.5,44);wcBox(22,27,J-.25,J,a,b,wd,{tx:'wood'});}
-    for(let z=4;z<44;z+=4)for(const x of [22.2,26.8])wcBox(x-.15,x+.15,0,J-.25,zz(z)-.15,zz(z)+.15,'#5b3a22',{tx:'wood'});
-    for(const z of [8,20,32]){box(26.6,J,zz(z),.12,3.2,.12,'#3a3d45');const l=new THREE.Mesh(B.boxGeo(.4,.5,.4),new THREE.MeshBasicMaterial({color:'#fff2c4'}));l.position.set(26.6,J+3.4,zz(z));M.group.add(l);}
-    glassRun(22.05,zz(1.55),22.05,zz(44),J,1.1,2.4);glassRun(26.95,zz(1.55),26.95,zz(44),J,1.1,2.4);glassRun(22.05,zz(1.55),26.95,zz(1.55),J);
-    glassRun(31.05,zz(43.05),31.05,zz(44),J);glassRun(31.05,zz(50),31.05,zz(53.95),J);glassRun(31.05,zz(53.95),43.75,zz(53.95),J);glassRun(43.75,zz(43.05),43.75,zz(53.95),J);
-    if(sg>0){glassRun(31.05,zz(43.05),37.6,zz(43.05),J);glassRun(40.4,zz(43.05),43.75,zz(43.05),J);}else glassRun(31.05,zz(43.05),43.75,zz(43.05),J);};
+    for(let x=16;x<=40;x+=4)for(const z of [44.1,49.9])pile(x,z);
+    for(const [x,z] of [[31.2,53.8],[43.6,53.8]])pile(x,z);
+    for(const x of [22,34])lamp(x,49.6);
+    // the promenade: 5 m wide, hard against the edge of the bay
+    {const [a,b]=Zr(1.5,43);wcBox(38.8,43.8,J-.25,J,a,b,wd,{tx:'wood'});}
+    for(let z=2;z<43;z+=4)for(const x of [39,43.6])pile(x,z);
+    for(let z=4;z<43;z+=6)box(41.3,J,zz(z),5,.01,.35,'#6b4428',{solid:false,edges:false,tx:'wood'});
+    strip(38.85,1.5,38.85,18,'#5fe1ff');strip(38.85,26,38.85,43,'#5fe1ff');strip(43.75,1.5,43.75,53.9,'#5fe1ff');
+    for(const [x,z] of [[43.4,8],[39.2,14],[43.4,28],[39.2,36],[43.4,41]])lamp(x,z);
+    // a pergola terrace off the shore side, with loungers and a parasol
+    {const [a,b]=Zr(18,26);wcBox(33.8,38.8,J-.25,J,a,b,'#c8a27a',{tx:'wood'});}
+    for(const [x,z] of [[34,18.2],[34,25.8],[37,18.2],[37,25.8]])pile(x,z);
+    for(const [x,z] of [[34.1,18.3],[34.1,25.7],[38.5,18.3],[38.5,25.7]])box(x,J,zz(z),.18,3.2,.18,'#f4f5f7',{solid:false});
+    for(let i=0;i<9;i++)box(36.3,J+3.2,zz(18.4+i*.9),4.8,.12,.18,'#f4f5f7',{solid:false,edges:false});
+    lounger(35.6,zz(20.2),1,J);lounger(35.6,zz(23.8),3,J);
+    gl(33.85,18.05,38.8,18.05);gl(33.85,25.95,38.8,25.95);gl(33.85,18.05,33.85,25.95);
+    // white planters with little palms, alternating sides (cover as you cross)
+    for(const [x,z] of [[39.6,9],[43,15],[39.6,31],[43,35]]){wcBox(x-.65,x+.65,J,J+1.1,zz(z)-.65,zz(z)+.65,'#f4f5f7');wcPalm(x,zz(z),z*.3,.42,J+1.1);}
+    // frosted glass screens that break up the long sight line
+    {const fr=new THREE.MeshStandardMaterial({color:'#e8f4fb',transparent:true,opacity:.7,roughness:.4,metalness:.1,depthWrite:false});
+      for(const [x0,x1,z] of [[41.4,43.7,11],[38.9,41.2,22],[41.4,43.7,38]])box((x0+x1)/2,J,zz(z),x1-x0,2.2,.1,'#e8f4fb',{mat:fr,prop:'glass',hp:50,snd:'frost',wood:false,shadow:false});}
+    // a coin viewer at the very end
+    box(41.3,J,zz(2.6),.16,1.2,.16,'#2b2d33',{extra:{metalness:.7,roughness:.3}});box(41.3,J+1.2,zz(2.6),.5,.32,.32,'#d9a520',{solid:false,extra:{metalness:.8,roughness:.25}});
+    // tall glass the whole way round
+    gl(14.2,44.05,31,44.05);gl(14.2,49.95,31,49.95);gl(31.05,43.05,31.05,44);gl(31.05,50,31.05,53.95);gl(31.05,53.95,43.75,53.95);gl(31.05,43.05,38.8,43.05);
+    gl(43.75,1.55,43.75,53.95,2.4);gl(38.85,1.55,38.85,9.4,2.4);gl(38.85,10.6,38.85,18,2.4);gl(38.85,26,38.85,43.05,2.4);gl(38.85,1.55,40.7,1.55);gl(41.9,1.55,43.75,1.55);
+    // ladders up out of the water: one at the very end (in the gap between the two walkways) and one on the shore side
+    {const LD=(M.ladders||(M.ladders=[])),lm=mat('#ffffff',null,{metalness:.3,roughness:.4}),lad=(x,z,nx,nz)=>{const ax=nx!==0,len=1.1;
+        for(const s of [-len/2,len/2])deco(B.boxGeo(.08,J+1.2,.08),lm,x+(ax?0:s),(J+1.2)/2-.1,z+(ax?s:0));for(let yy=.25;yy<J+.9;yy+=.35)deco(B.boxGeo(ax?.06:len,.06,ax?len:.06),lm,x,yy,z);
+        LD.push({x0:x-(ax?.4:len/2),x1:x+(ax?.4:len/2),z0:z-(ax?len/2:.4),z1:z+(ax?len/2:.4),y0:0,y1:J,nx,nz,rung:ax?x:z});};
+      lad(41.3,zz(1.2),0,sg);lad(38.45,zz(10),1,0);}};
   jetty(1);jetty(-1);
-  {const J=2.9;
-    // the boat: wide and roomy now. Board it from the jetty (drop through the gate), up the swim platform at the stern, or climb crates onto the wheelhouse roof
-    const BD=1.3,bz0=31.5,bz1=42.5,bx0=29,bx1=43,wh='#f4f5f7',bl='#2f63c8';
-    wcBox(bx0+.3,bx1-.3,0,BD,bz0+.3,bz1-.3,'#b8894f',{tx:'wood'});
-    wcWall('x',bz0+.15,bx0,bx1,0,BD+1,[],wh,{},.3);wcWall('x',bz1-.15,bx0,bx1,0,BD+1,[{c:39,w:2.6,y0:BD,y1:9}],wh,{},.3);
-    wcWall('z',bx0+.15,bz0,bz1,0,BD+1,[{c:37,w:3.6,y0:BD,y1:9}],wh,{},.3);wcWall('z',bx1-.15,bz0,bz1,0,BD+1,[],wh,{},.3);
-    for(const z of [bz0+.15,bz1-.15])box((bx0+bx1)/2,.35,z,bx1-bx0+.04,.3,.34,bl,{solid:false,edges:false});
-    {const pr=new THREE.Mesh(new THREE.ConeGeometry(2.75,3,4),mat(wh));pr.rotation.z=-Math.PI/2;pr.rotation.x=Math.PI/4;pr.scale.set(1,1,.84*2);pr.position.set(bx1+1.4,.8,(bz0+bz1)/2);pr.castShadow=true;M.group.add(pr);const cz=(bz0+bz1)/2;collider(bx1,bx1+1.2,0,BD+.6,cz-3.6,cz+3.6);collider(bx1+1.2,bx1+2.4,0,BD,cz-1.8,cz+1.8);}
-    // swim platform and steps across the back
-    wcBox(bx0-1.6,bx0,0,.45,35,39,'#9aa0a8');wcBox(bx0-.8,bx0,0,.9,35,39,'#9aa0a8');
-    // wheelhouse: 5 m square with a wide doorway at the back, doors both sides and big windows to shoot from
-    const wx0=34,wx1=39,wz0=34.5,wz1=39.5,WT=BD+3;
-    wcWall('z',wx0+.15,wz0,wz1,BD,WT,[{c:37,w:2.8,y0:BD,y1:BD+2.7}],wh,{},.3);wcWall('z',wx1-.15,wz0,wz1,BD,WT,[{c:37,w:3.6,y0:BD+1.1,y1:BD+2.5}],wh,{},.3);
-    wcWall('x',wz0+.15,wx0,wx1,BD,WT,[{c:35.4,w:1.6,y0:BD,y1:BD+2.6},{c:37.8,w:1.6,y0:BD+1.1,y1:BD+2.5}],wh,{},.3);wcWall('x',wz1-.15,wx0,wx1,BD,WT,[{c:35.4,w:1.6,y0:BD,y1:BD+2.6},{c:37.8,w:1.6,y0:BD+1.1,y1:BD+2.5}],wh,{},.3);
-    wcBox(wx0-.2,wx1+.2,WT,WT+.2,wz0-.2,wz1+.2,bl);
-    for(const [a,b,c,d] of [[wx0-.2,wx1+.2,wz0-.2,wz0-.1],[wx0-.2,wx1+.2,wz1+.1,wz1+.2],[wx1+.1,wx1+.2,wz0-.2,wz1+.2]])wcBox(a,b,WT+.2,WT+1,c,d,'#d9dde3');
-    box(37.5,WT+.2,37,.12,3.6,.12,'#d9dde3');
-    wcBox(38.1,38.9,BD,BD+1.05,36.4,37.6,'#3a3d45');deco(new THREE.TorusGeometry(.32,.05,6,16),mat('#8a5a34'),38.3,BD+1.4,37).rotation.y=Math.PI/2;
-    box(41.4,BD,40.3,1.4,.6,.9,'#3a3d45',{edges:false});box(41.2,BD,33,1.6,.5,1.6,'#e8b81f',{edges:false});
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.11,8,16),mat('#ff7a1f'));ring.position.set(33,BD+.7,bz1+.02);M.group.add(ring);
-    const nm=document.createElement('canvas');nm.width=256;nm.height=64;const ng=nm.getContext('2d');ng.fillStyle='#0d1626';ng.fillRect(0,0,256,64);ng.font='bold 44px Bungee, Impact, sans-serif';ng.textAlign='center';ng.textBaseline='middle';ng.shadowColor='#3ad7ff';for(let k=0;k<3;k++){ng.shadowBlur=22-k*7;ng.fillStyle=k<2?'#3ad7ff':'#e8fbff';ng.fillText('SALTY',128,34);}
-    const nt=new THREE.CanvasTexture(nm);if(THREE.SRGBColorSpace)nt.colorSpace=THREE.SRGBColorSpace;const ns=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:nt,toneMapped:false}));ns.position.set(38.5,BD+.55,bz0-.02);ns.rotation.y=Math.PI;M.group.add(ns);}
+
   /* ---------- cliffs and the lookout ledge (west) ---------- */
   {const sa=['#b39a7c','#a48b6e','#bfa585'],bush=mat('#3f8a3a'),bush2=mat('#56a546'),bm=mat('#9c8a74','rock');
     for(let z=-58,i=0;z<58;z+=4,i++){const h=7+Math.abs(Math.sin(z*.37))*5+(Math.abs(z)<7?3:0);wcRock(-42.4+Math.sin(z)*.3,z+2,3.4,4.2,h,G,sa[i%3]);
@@ -3993,11 +3996,13 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   M.waterY=(x,z)=>x>wcShore(z)+.3&&x<700?wcWave(x,z,M.lifeT||0):null;
   waterRings((x,z,t)=>wcWave(x,z,t));
   // only offer extra spawns you can walk to from the beach (no perches on top of the cliffs)
-  M.reachSpawns=id=>{const g=M.grid,k=(id/NL)|0,i=k%g.nx,x=g.x0+(i+.5)*CS,z=g.z0+((k-i)/g.nx+.5)*CS;if(x>wcShore(z)-2)return false;if(!g.comp)return true;
+  M.spawnOK=(x,z)=>x<wcShore(z)-3&&x>-36;
+  M.reachSpawns=id=>{const g=M.grid,k=(id/NL)|0,i=k%g.nx,x=g.x0+(i+.5)*CS,z=g.z0+((k-i)/g.nx+.5)*CS;if(!M.spawnOK(x,z))return false;if(!g.comp)return true;
     const sp=M.spawns[0],s0=nearestNode(sp.x,sp.y||0,sp.z);return s0<0||g.comp[id]===g.comp[s0];};
   M.shopOK=(x,z)=>x<wcShore(z)-4&&x>-34;
   M.mmPaint=(g,k,b)=>{g.fillStyle='#efe0b5';g.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);g.fillStyle='#8fd6e4';for(let z=b.z0;z<b.z1;z+=1){const xs=wcShore(z+.5);g.fillRect((xs-b.x0)*k,(z-b.z0)*k,(b.x1-xs)*k,k+1);}};
-  M.spawns=[[-10,-54,G],[6,54,G],[-32,-12,G],[10,-36,G],[-12,50,G],[12,-54,G],[10,36,G],[-32,2,G]].map(([x,z,y])=>({x,z,y,yaw:Math.atan2(-x,-z)}));}
+  /* twelve spawn points spread over the sand, all well up the beach from the water and clear of the bars, pavilions and loungers */
+  M.spawns=[[-5,-50,G],[-6,50,G],[-27,-26,G],[-24,22,G],[-32,9,G],[-10,-20,G],[-8,24,G],[0,-30,G],[2,32,G],[-10,-6,G],[-18,36,G],[-3,-38,G]].map(([x,z,y])=>({x,z,y,yaw:Math.atan2(-x,-z)}));}
 
 /* ================= Rail Yard ================= */
 /* meadow grass round the Railed yard: mottled greens, darker clumps, fine blades and a few clover/flower specks (one tile covers 10 m) */
@@ -8439,7 +8444,7 @@ function startMatch(){if(S.one)S.players='1v1';if(S.randMap)rollMap();if(S.randC
 function openSpots(){if(M.spots&&M.spots.id===M.id)return M.spots.list;const g=M.grid,list=[];if(!g||!g.comp)return list;const cnt=new Map();
   for(let i=0;i<g.comp.length;i++)if(g.comp[i]>=0)cnt.set(g.comp[i],(cnt.get(g.comp[i])||0)+1);let main=-1,mc=0;for(const [c,n] of cnt)if(n>mc){mc=n;main=c;}
   for(let t=0;t<4000&&list.length<160;t++){const i=1+Math.floor(Math.random()*(g.nx-2)),j=1+Math.floor(Math.random()*(g.nz-2)),k=i+j*g.nx;if(!g.n[k])continue;const l=Math.floor(Math.random()*g.n[k]),id=k*NL+l;if(g.comp[id]!==main)continue;
-    const x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS,y=g.h[id];if(!bodyFits(x,z,y))continue;let ok=true;for(let di=-1;di<=1&&ok;di++)for(let dj=-1;dj<=1;dj++){const k2=k+di+dj*g.nx;let h=false;for(let l2=0;l2<g.n[k2];l2++)if(Math.abs(g.h[k2*NL+l2]-y)<.05)h=true;if(!h){ok=false;break;}}if(!ok)continue;
+    const x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS,y=g.h[id];if(M.spawnOK&&!M.spawnOK(x,z,y))continue;if(!bodyFits(x,z,y))continue;let ok=true;for(let di=-1;di<=1&&ok;di++)for(let dj=-1;dj<=1;dj++){const k2=k+di+dj*g.nx;let h=false;for(let l2=0;l2<g.n[k2];l2++)if(Math.abs(g.h[k2*NL+l2]-y)<.05)h=true;if(!h){ok=false;break;}}if(!ok)continue;
     list.push({x,z,y,yaw:Math.atan2(M.center.x-x,M.center.z-z),open:1});}
   M.spots={id:M.id,list};return list;}
 const spotFree=p=>!(M.movers||[]).some(b=>p.x>b.x0-1&&p.x<b.x1+1&&p.z>b.z0-1&&p.z<b.z1+1)&&!(M.blds||[]).some(B=>B.stage===2&&p.x>B.x0-1&&p.x<B.x1+1&&p.z>B.z0-1&&p.z<B.z1+1);
@@ -8456,7 +8461,7 @@ function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1
 function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x,p.z-q.z);
   const used=[a,c];// teammate stands beside you (to your left, then right), a gap between you, both facing the same way so the camera sees you both
   const mate=(s,other)=>{const y=s.y||0,rx=Math.cos(s.yaw),rz=-Math.sin(s.yaw),fx=Math.sin(s.yaw),fz=Math.cos(s.yaw);for(const [sd,bk] of [[1,0],[-1,0],[1,-.8],[-1,-.8],[1,.8],[-1,.8]]){for(const r of [2.5,2.1,3]){const x=s.x+rx*sd*r+fx*bk,z=s.z+rz*sd*r+fz*bk;
-      if(x<b.x0+1||x>b.x1-1||z<b.z0+1||z>b.z1-1)continue;const su=surfaceAt(x,z,y+.6);if(su==null||Math.abs(su-y)>.3)continue;if(allBoxes().some(bx=>overlaps(bx,x,z,y+.05)))continue;return{x,z,y:s.y,yaw:s.yaw};}}
+      if(x<b.x0+1||x>b.x1-1||z<b.z0+1||z>b.z1-1)continue;if(M.spawnOK&&!M.spawnOK(x,z,y))continue;const su=surfaceAt(x,z,y+.6);if(su==null||Math.abs(su-y)>.3)continue;if(allBoxes().some(bx=>overlaps(bx,x,z,y+.05)))continue;return{x,z,y:s.y,yaw:s.yaw};}}
     const rest=sp.filter(q=>!used.includes(q)).sort((p,q)=>(d(p,s)-.5*d(p,other))-(d(q,s)-.5*d(q,other)));const m=rest[0]||s;used.push(m);return m;};
   return[a,mate(a,c),c,mate(c,a)];}
 function clearFx(){for(const f of allFighters()){if(f.finishing){for(const o of f.finishing.obj)scene.remove(o);f.finishing=null;}}hemi.color.set(ENV.hemi[0]);}

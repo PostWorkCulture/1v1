@@ -8473,6 +8473,12 @@ function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1
   let pairs=[];for(const p of pool)for(const q of pool)if(p!==q&&d(p,q)>lim)pairs.push([p,q]);if(!pairs.length)for(const p of pool)for(const q of pool)if(p!==q)pairs.push([p,q]);
   pairs.sort(()=>Math.random()-.5);const two=S.players==='2v2';let best=null,bv=1e9;
   for(const [p,q] of pairs.slice(0,40)){const r=two?teamSpots(p,q):[p,q],v=two?seen([r[0],r[1]],[r[2],r[3]]):seen([p],[q]);if(v<bv){bv=v;best=r;}if(v===0)break;}
+  /* 1v1: nobody starts already looking at the other player. Each turns 100-140 degrees off the line to their opponent, to whichever side has
+     more open space in front, so you have to turn and find them */
+  if(!two&&best){const [p,q]=best,turn=(a,o)=>{const toO=Math.atan2(o.x-a.x,o.z-a.z),off=(100+Math.random()*40)*Math.PI/180,y=a.y||0;let pick=null,far=-1;
+      for(const sg of Math.random()<.5?[1,-1]:[-1,1]){const yw=toO+sg*off,dir=new V3(Math.sin(yw),0,Math.cos(yw)),h=rayBoxes(new V3(a.x,y+1.5,a.z),dir,12),L=h?h.t:12;if(L>far+.5){far=L;pick=yw;}}
+      return Object.assign({},a,{yaw:pick});};
+    best=[turn(p,q),turn(q,p)];}
   return best;}
 function teamSpots(a,c){const sp=M.spawns,b=M.bounds,d=(p,q)=>Math.hypot(p.x-q.x,p.z-q.z);
   const used=[a,c];// teammate stands beside you (to your left, then right), a gap between you, both facing the same way so the camera sees you both

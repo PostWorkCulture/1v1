@@ -4362,12 +4362,12 @@ function arenaWallSeg(x0,z0,x1,z1,h,out){const L=Math.hypot(x1-x0,z1-z0),ax=Math
     posts(h,mat('#15171c',null,{metalness:.6}),3.5,.14);slab(h-.08,.1,mat('#15171c'),.12);slab(0,.25,mat('#15171c'),.16);}
   else{slab(0,1.1,mat('#c9ccd2','asphalt',{roughness:.9}),.45);ledStrip(cx-out[0]*.235,.25,cz-out[1]*.235,L,.6,face);posts(2.2,steel,3,.08);
     for(const y of [1.6,2.15]){const r=new THREE.Mesh(gC(.05,.05,L,8),steel);r.position.set(cx+ox,y,cz+oz);r.rotation.set(ax?0:Math.PI/2,0,ax?Math.PI/2:0);M.group.add(r);}}}
-function arenaWalls(X,Z,small){const tall=small?0:20,H2=8.6;
+function arenaWalls(X,Z){const tall=20,H2=8.6;
   if(!tall){arenaWallSeg(-X,-Z,X,-Z,3.2,[0,-1]);arenaWallSeg(-X,Z,X,Z,3.2,[0,1]);arenaWallSeg(-X,-Z,-X,Z,3.2,[-1,0]);arenaWallSeg(X,-Z,X,Z,3.2,[1,0]);return;}
   arenaWallSeg(-X,-Z,X,-Z,3.2,[0,-1]);arenaWallSeg(-X,Z,X,Z,3.2,[0,1]);
   for(const s of [-1,1]){const o=[s,0];arenaWallSeg(s*X,-Z,s*X,-tall,3.2,o);arenaWallSeg(s*X,-tall,s*X,tall,H2,o);arenaWallSeg(s*X,tall,s*X,Z,3.2,o);}}
 /* the stadium outside the wall */
-function arenaStadium(X,Z,small){const G=M.group,rows=small?12:16,rd=1.1,rh=.75,base=1.2,off=4;let seed=11;const R=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+function arenaStadium(X,Z){const G=M.group,rows=16,rd=1.1,rh=.75,base=1.2,off=4;let seed=11;const R=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
   const sides=[{o:[1,0],c:[X+off,0],L:2*Z+8,pal:0},{o:[-1,0],c:[-X-off,0],L:2*Z+8,pal:0},{o:[0,1],c:[0,Z+off],L:2*X+8,pal:1},{o:[0,-1],c:[0,-Z-off],L:2*X+8,pal:2}];
   const pals=[['#e8463a','#2f7fe0','#ffffff','#f4c22b','#22252c','#3bb54a','#a05ad6','#ff8a3a'],['#e8463a','#ff6b5a','#ffffff','#c22e24','#22252c'],['#2f7fe0','#5aa8ff','#ffffff','#1c5bb0','#22252c']];
   const seatA=mat('#2b2f3a',null,{roughness:.85}),seatB=mat('#353a47',null,{roughness:.85}),backM=mat('#1d2029'),roofM=mat('#3a3f4c',null,{metalness:.4,roughness:.5}),people=[];
@@ -4397,7 +4397,7 @@ function arenaStadium(X,Z,small){const G=M.group,rows=small?12:16,rd=1.1,rh=.75,
     {const m=new THREE.Mesh(new THREE.BoxGeometry(along?L+2:D*.8,.5,along?D*.8:L+2),roofM);m.position.set(S0.c[0]+nx*D*.55,top+6.5,S0.c[1]+nz*D*.55);G.add(m);}
     for(const y of [base-1.1]){const s=ledStrip(S0.c[0]-nx*.05,y,S0.c[1]-nz*.05,L,1.05,face);s.userData.dyn=1;}
     /* a row of lamps along the front of the roof */
-    const nL=along?(small?3:4):(small?4:6),ry=top+6.1,rf=D*.55-D*.4+.3;for(let k=0;k<nL;k++){const u=-L/2+(k+.5)*L/nL;addLamp(G,new V3(S0.c[0]+nx*rf+tx*u,ry,S0.c[1]+nz*rf+tz*u),2.4,1.3,30,10,false);}}
+    const nL=along?(4):(6),ry=top+6.1,rf=D*.55-D*.4+.3;for(let k=0;k<nL;k++){const u=-L/2+(k+.5)*L/nL;addLamp(G,new V3(S0.c[0]+nx*rf+tx*u,ry,S0.c[1]+nz*rf+tz*u),2.4,1.3,30,10,false);}}
   /* the crowd: three instanced groups that bounce out of step */
   {const bg=new THREE.BoxGeometry(.48,.62,.32),hg=new THREE.SphereGeometry(.16,7,5),skins=['#f1c7a5','#c98e66','#8a5a3c','#5e3a26','#e8b48e'],m4=new THREE.Matrix4(),q=new THREE.Quaternion(),c=new THREE.Color(),Y=new V3(0,1,0),grp=[];
     for(let k=0;k<3;k++){const P=people.filter(p=>p.k===k),n=P.length,bm=new THREE.InstancedMesh(bg,mat('#ffffff',null,{roughness:.8}),n),hm=new THREE.InstancedMesh(hg,mat('#ffffff',null,{roughness:.8}),n);
@@ -4409,7 +4409,7 @@ function arenaStadium(X,Z,small){const G=M.group,rows=small?12:16,rd=1.1,rh=.75,
       const pm=new THREE.PointsMaterial({color:'#ffffff',size:.9,map:GLOWT,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});const pts=new THREE.Points(g,pm);pts.userData.dyn=1;G.add(pts);fl.push(pts);}
     M.life.push(t=>{for(let k=0;k<3;k++){const y=Math.max(0,Math.sin(t*5.2+k*2.1))*.14;grp[k][0].position.y=grp[k][1].position.y=y;}fl[0].material.opacity=.5+.5*Math.sin(t*7);fl[1].material.opacity=.5-.5*Math.sin(t*7+.6);});}
   /* floodlight towers: four corners and one behind each long stand. The pole is a prop too: shot enough, it topples outwards and smashes */
-  const towers=[[X+24,Z+24],[-X-24,Z+24],[X+24,-Z-24],[-X-24,-Z-24],[X+off+rows*rd+5,0],[-X-off-rows*rd-5,0]],PH=small?36:44;
+  const towers=[[X+24,Z+24],[-X-24,Z+24],[X+24,-Z-24],[-X-24,-Z-24],[X+off+rows*rd+5,0],[-X-off-rows*rd-5,0]],PH=44;
   for(const [x,z] of towers){const piv=new THREE.Group();piv.position.set(x,0,z);piv.userData.dyn=1;G.add(piv);
     const pole=new THREE.Mesh(gC(.45,.8,PH,10),mat('#4a4f5c',null,{metalness:.6,roughness:.4}));pole.position.y=PH/2;pole.castShadow=true;piv.add(pole);
     const cage=new THREE.Mesh(new THREE.BoxGeometry(10,.3,1.2),mat('#2a2d35'));cage.position.y=PH-2.6;piv.add(cage);
@@ -4433,25 +4433,24 @@ function arenaStadium(X,Z,small){const G=M.group,rows=small?12:16,rd=1.1,rh=.75,
     g.fillStyle='#ffffff';g.font='900 34px Arial Black,Arial,sans-serif';g.fillText('IMOK 1V1',w/2,48);g.font='900 120px Arial Black,Arial,sans-serif';g.fillText(a+'  -  '+b,w/2,178);
     g.font='800 26px Arial,sans-serif';g.fillStyle='#ffe25a';g.fillText(S.state==='menu'?'LIVE TONIGHT':'ROUND '+(S.round||1),w/2,228);scr.needsUpdate=true;};
   drawScore();let last='';M.life.push(()=>{const k=(S.score||[]).join(',')+'|'+S.round+'|'+(S.state==='menu');if(k!==last){last=k;drawScore();}});
-  const sy=small?24:31,sw=small?20:26,sh=small?10:13;for(const s of [1,-1]){const gz=s*(Z+off+rows*rd+4),face=s>0?Math.PI:0;
+  const sy=31,sw=26,sh=13;for(const s of [1,-1]){const gz=s*(Z+off+rows*rd+4),face=s>0?Math.PI:0;
     const fr=deco(new THREE.BoxGeometry(sw+1,sh+1,.8),mat('#15171c',null,{metalness:.5}),0,sy,gz+s*.5);fr.castShadow=false;
     const p=new THREE.Mesh(new THREE.PlaneGeometry(sw,sh),new THREE.MeshBasicMaterial({map:scr,toneMapped:false}));p.position.set(0,sy,gz-s*.0);p.rotation.y=face;p.userData.dyn=1;G.add(p);
     for(const lx of [-sw/3,sw/3])deco(new THREE.BoxGeometry(.8,sy-sh/2,.8),mat('#2a2d35'),lx,(sy-sh/2)/2,gz+s*1);}
   /* the LED boards scroll */
   M.life.push((t,dt)=>{if(ARENA_LED)ARENA_LED.offset.x=-t*.04;});}
-function arenaMap(small){const X=small?20:30,Z=small?26:38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-120,120,-120,120,'#3a3e48','asphalt',-.02,1);floor(-X,X,-Z,Z,'#d9dce1','tile',0,4);
   /* markings: centre circle and halfway line */
   {const t=canvasTex(512,512,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(w/2,h/2,w/2-10,0,TAU);g.stroke();});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(16,16),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(0,.015,0);M.group.add(m);}
   floor(-X,X,-.15,.15,'#ffffff',null,.012);
-  arenaWalls(X,Z,small);
+  arenaWalls(X,Z);
   /* pillars: tall enough that nobody stands on top, square with a base and a cap, a white band, a faint concrete texture */
   const pillar=(x,z,s)=>{box(x,0,z,s,9,s,'#eef0f3',{tx:'pillar',extra:{roughness:.6}});box(x,0,z,s+.5,.5,s+.5,'#c9ccd2',{solid:false});box(x,8.6,z,s+.5,.6,s+.5,'#c9ccd2',{solid:false});
     box(x,2.6,z,s+.08,.5,s+.08,'#ffffff',{solid:false,extra:{roughness:.35}});};
-  arenaCross(small?2:4);/* the full Arena's ramps are twice as tall (4 m deck) */
-  if(small){const px=9.5,pz=10.5,pe=17;for(const sx of [-1,1])for(const sz of [-1,1])pillar(sx*px,sz*pz,3);for(const sz of [-1,1])pillar(0,sz*pe,3);}
-  else{
+  arenaCross(4);/* the full Arena's ramps are twice as tall (4 m deck) */
+  
     /* six pillars spread round the floor in a staggered layout, each mirrored through the centre so both ends play the same */
     for(const sg of [1,-1]){pillar(sg*17,sg*8,3.2);pillar(-sg*16,sg*15,3);pillar(sg*7,sg*18,2.8);}
     /* raised walkways along both long sides: 5 m wide, 4.4 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
@@ -4469,10 +4468,10 @@ function arenaMap(small){const X=small?20:30,Z=small?26:38;M.bounds={x0:-X,x1:X,
         const top=new THREE.Mesh(new THREE.BoxGeometry(len,.2,W),new THREE.MeshStandardMaterial({color:col,roughness:.35}));top.position.set(RL/2,H/2-.1,0);top.rotation.z=-ang;top.castShadow=top.receiveShadow=true;g.add(top);
         const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(RL,0);sh.lineTo(0,H-.2);sh.closePath();const eg=new THREE.ExtrudeGeometry(sh,{depth:W-.02,bevelEnabled:false});eg.translate(0,0,-W/2+.01);
         const wd=new THREE.Mesh(eg,new THREE.MeshStandardMaterial({color:dk,roughness:.6}));wd.castShadow=wd.receiveShadow=true;g.add(wd);
-        for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});}
-  arenaStadium(X,Z,small);
-  M.shopAt=[{x:0,z:0,y:small?2:4}];
-  const sp=small?[[-6,22],[6,23],[-14,21],[14,22],[0,21.5]]:[[-8,34],[8,35],[-22,32],[22,33],[0,28]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+        for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});
+  arenaStadium(X,Z);
+  M.shopAt=[{x:0,z:0,y:4}];
+  const sp=[[-8,34],[8,35],[-22,32],[22,33],[0,28]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 
 /* ---------- shared bits for the 1v1 scenery maps ---------- */
 function flatGroup(g){g.updateMatrixWorld(true);const ms=[];g.traverse(o=>{if(o.isMesh&&!o.userData.keep)ms.push(o);});for(const o of ms)M.group.attach(o);if(!g.children.length)M.group.remove(g);}
@@ -4750,13 +4749,12 @@ function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
   const sp=[[-6,19.5],[6,19.5],[-12,16],[12,16],[0,20]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}});}
 const MAPS={
- arena:{modes:['duel'],name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
- arenasm:{modes:['duel'],one:true,normal:false,name:'Small Arena',desc:'Arena cut down to 1v1 size: the cross ramp, six pillars and less running',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap(true);}},
- skyhigh:{modes:['duel'],one:true,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
+ arena:{modes:['duel'],in1v1:true,name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
+ skyhigh:{modes:['duel'],one:true,in1v1:true,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
- lagoon:{modes:['duel'],one:true,drums:0,name:'Lagoon',desc:'Two pavilions on stilts over a turquoise lagoon, joined by two wide walkways: one tiki bar a side to hide behind, the shop under a thatched canopy, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
+ lagoon:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Lagoon',desc:'Two pavilions on stilts over a turquoise lagoon, joined by two wide walkways: one tiki bar a side to hide behind, the shop under a thatched canopy, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
- street:{modes:['duel'],no1v1:true,name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
+ street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
   /* 92 x 60 m: just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,
      either side of the road near the middle (a little off-centre, one towards each end) */
   const X=46,Z=30;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
@@ -4804,7 +4802,7 @@ const MAPS={
   for(const z of [-27,27])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
   M.spawns=[[10,22],[-10,-22],[40,26],[-40,-26],[43,-17],[-43,17],[7.6,12],[-7.6,-12],[24,13],[-24,-13]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Small freight yard split by a live line, with a footbridge over it',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
- wreck:{modes:['duel'],no1v1:true,name:'Beach Please',desc:'A sleek, upmarket beach: glass-walled pavilions, a lit Tiki Bar, two glass-railed jetties and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
+ wreck:{modes:['duel'],name:'Beach Please',desc:'A sleek, upmarket beach: glass-walled pavilions, a lit Tiki Bar, two glass-railed jetties and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=5.8,T=.4;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-70,70,-90,90,'#5fb24b','grass',-.02,1);
@@ -6321,7 +6319,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const mapOK=m=>!!m&&(S.one?(S.simple?!!m.one:m.normal!==false&&!m.no1v1&&(!!m.one||m.modes.includes('duel'))):m.modes.includes(S.mode)&&!m.one),oneTop=e=>!!e[1].one,mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const mapOK=m=>!!m&&(S.one?!!m.in1v1:m.modes.includes(S.mode)&&!m.one)/* 1v1 (Simple and Normal): Sky High, Lagoon and Arena */,oneTop=e=>!!e[1].one,mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(6,+store.get('duel:ffan',4)||4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
@@ -8920,7 +8918,7 @@ function makeThumb(id){if(thumbs[id]&&!thumbsPartial.has(id))return;const keep=M
   shootThumb(id,keep);}
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
-const HERO_CAM={arena:[-.42,.2,.1,40],arenasm:[-.42,.22,.12,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
+const HERO_CAM={arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   const OW=1600,OH=900,SS=2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
   try{renderer.setPixelRatio(1);renderer.setSize(OW*SS,OH*SS,false);}catch(e){}
@@ -10445,7 +10443,7 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
 /* only touch a menu list when its contents really change, so a tap isn't lost to a list being rebuilt under the finger (menu pictures are still being made for a few seconds after load) */
 function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 /* map picker title: a one-liner per map under the big cinematic name */
-const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",arenasm:'Same arena, half the room. No time to breathe.',skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
+const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
   street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, fist to fist.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
 function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
 function renderDuelMenu(){

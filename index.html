@@ -4303,11 +4303,11 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   M.shopAt=[{x:-4.6,z:0,y:1.25,k:.7}];
   M.spawns=[[-20,-17],[20,17],[-6.5,-27],[6.5,27],[-23.2,-27],[23.2,27],[14,-15],[-14,15.5],[-10,20],[10,-20]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 // cross ramp in the middle of Arena: a raised square deck with four ramps running down to the floor, each in its own colour, curbs with glowing strips along both sides
-function arenaCross(H=2){const C=3.25,L=8,n=Math.round(H/.25),cw=.3,cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'],glows=[];
+function arenaCross(H=2){const C=3.25,L=8,n=Math.round(H/.25),cw=.3,DECK='#e8cf86',DECK_HI='#eedca6',DECK_LO='#e3c678',cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'].map(c=>'#'+new THREE.Color(c).lerp(new THREE.Color('#d9dce1'),.5).getHexString())/* softened halfway towards the floor grey */,glows=[];
   const dark=c=>{const v=new THREE.Color(c);v.multiplyScalar(.62);return '#'+v.getHexString();};
   // centre deck
-  collider(-C,C,0,H,-C,C);box(0,0,0,2*C,H-.2,2*C,'#2b2f3a',{solid:false});box(0,H-.2,0,2*C,.2,2*C,'#f4c22b',{solid:false,extra:{roughness:.4}});
-  {const t=canvasTex(512,512,(g,w,h)=>{g.fillStyle='#f4c22b';g.fillRect(0,0,w,h);g.translate(w/2,h/2);for(let i=0;i<16;i++){g.fillStyle=i%2?'#ffd96a':'#f7b416';g.beginPath();g.moveTo(0,0);g.arc(0,0,400,i*TAU/16,(i+1)*TAU/16);g.fill();}
+  collider(-C,C,0,H,-C,C);box(0,0,0,2*C,H-.2,2*C,'#2b2f3a',{solid:false});box(0,H-.2,0,2*C,.2,2*C,DECK,{solid:false,extra:{roughness:.4}});
+  {const t=canvasTex(512,512,(g,w,h)=>{g.fillStyle=DECK;g.fillRect(0,0,w,h);g.translate(w/2,h/2);for(let i=0;i<16;i++){g.fillStyle=i%2?DECK_HI:DECK_LO;g.beginPath();g.moveTo(0,0);g.arc(0,0,400,i*TAU/16,(i+1)*TAU/16);g.fill();}
       g.fillStyle='#ffffff';g.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?62:150;i?g.lineTo(Math.cos(a)*r,Math.sin(a)*r):g.moveTo(Math.cos(a)*r,Math.sin(a)*r);}g.fill();
       g.strokeStyle='#1d1f27';g.lineWidth=18;g.strokeRect(-w/2+9,-h/2+9,w-18,h-18);});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(2*C,2*C),new THREE.MeshStandardMaterial({map:t,roughness:.45}));m.rotation.x=-Math.PI/2;m.position.set(0,H+.006,0);M.group.add(m);}
@@ -4331,7 +4331,7 @@ function arenaCross(H=2){const C=3.25,L=8,n=Math.round(H/.25),cw=.3,cols=['#e846
     for(const s of [-1,1]){add(new THREE.BoxGeometry(len,.6,cw),cm,um,H/2+.3,s*(C-cw/2),-ang);add(new THREE.BoxGeometry(len,.08,cw+.04),gm,um,H/2+.64,s*(C-cw/2),-ang);
       add(new THREE.BoxGeometry(.3,.6+.02,cw),cm,C+L-.15,.3,s*(C-cw/2));}});
   // rounded posts where the curbs meet at the corners of the deck
-  for(const sx of [-1,1])for(const sz of [-1,1]){const p=deco(gC(.32,.32,H+.6,16),mat('#f4f5f7',null,{roughness:.4}),sx*(C-.15),(H+.6)/2,sz*(C-.15));const b=deco(gC(.34,.34,.1,16),new THREE.MeshBasicMaterial({color:'#f4c22b',toneMapped:false}),sx*(C-.15),H+.62,sz*(C-.15));}
+  for(const sx of [-1,1])for(const sz of [-1,1]){const p=deco(gC(.32,.32,H+.6,16),mat('#f4f5f7',null,{roughness:.4}),sx*(C-.15),(H+.6)/2,sz*(C-.15));const b=deco(gC(.34,.34,.1,16),new THREE.MeshBasicMaterial({color:DECK,toneMapped:false}),sx*(C-.15),H+.62,sz*(C-.15));}
   // a ring of light turning slowly over the deck, and the glow strips breathing
   {const rg=new THREE.Group();rg.userData.dyn=1;rg.position.y=H+5;M.group.add(rg);const rm=new THREE.MeshBasicMaterial({color:'#ffffff',toneMapped:false,transparent:true,opacity:.85});
     cols.forEach((c,i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(2.6,.09,8,48,TAU/4-.15),new THREE.MeshBasicMaterial({color:c,toneMapped:false}));t.rotation.x=Math.PI/2;t.rotation.z=i*TAU/4;rg.add(t);});
@@ -4467,10 +4467,10 @@ function arenaMap(){const X=30,Z=38;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
     for(const sg of [1,-1]){pillar(sg*17,sg*8,3.2);pillar(-sg*16,sg*15,3);pillar(sg*7,sg*18,2.8);}
     /* raised walkways along both long sides: 5 m wide, 4.4 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
        and breakable glass all along the inner edge */
-    const H=4.4,W=5,D0=-10,D1=10,RL=10,n=18,cols=['#3bb54a','#a05ad6'];
+    const H=4.4,W=5,D0=-10,D1=10,RL=10,n=18,cols=['#d9dce1','#d9dce1'];/* walkways in the same grey as the floor */
     [-1,1].forEach((sx,k)=>{const x1=sx*X,x0=sx*(X-W),xa=Math.min(x0,x1),xb=Math.max(x0,x1),xm=(xa+xb)/2,col=cols[k];
-      const dk=new THREE.Color(col).multiplyScalar(.62).getStyle();
-      collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#2b2f3a',{solid:false});box(xm,H-.2,(D0+D1)/2,W,.2,D1-D0,col,{solid:false,extra:{roughness:.4}});
+      const dk=new THREE.Color(col).multiplyScalar(.82).getStyle();
+      collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#b7bac1',{solid:false});box(xm,H-.2,(D0+D1)/2,W,.2,D1-D0,col,{solid:false,extra:{roughness:.4}});
       {const gx=sx*(X-W+.12),np=8,pw=(D1-D0)/np,fm=mat('#b9c0c9',null,{metalness:.8,roughness:.3});
         for(let i=0;i<np;i++)box(gx,H,D0+(i+.5)*pw,.1,1.15,pw-.06,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false});
         for(let i=0;i<=np;i++)deco(B.boxGeo(.14,1.2,.14),fm,gx,H+.6,D0+i*pw);deco(B.boxGeo(.16,.08,D1-D0),fm,gx,H+1.2,0);}

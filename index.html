@@ -5371,7 +5371,7 @@ function downYaw(f){if(S.t-(f._dyLast??-9)>.3){f._dyOn=false;f._dyT=0;}f._dyLast
     f._dyw=best;if(!f._dyOn)f._dyv=f.yaw;f._dyOn=true;}
   let df=f._dyw-f._dyv;df=Math.atan2(Math.sin(df),Math.cos(df));f._dyv+=df*Math.min(1,.25);return f._dyv;}
 function rayBoxes(o,d,maxT,skipSee,proj){let best=maxT,hit=null,nAx=0,nS=0;
-  for(const b of allBoxes()){if(skipSee&&b.see)continue;let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
+  for(const b of allBoxes()){if(skipSee&&(b.see||(b.prop==='glass'&&b.alive!==false)))continue;/* sight passes through glass (bots spot and shoot you through windows) */let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
     for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?ty:b.z1;
       if(Math.abs(dd)<1e-9){if(oo<mn||oo>mx){t0=1e9;break;}continue;}let ta=(mn-oo)/dd,tb=(mx-oo)/dd,s=-1;if(ta>tb){const q=ta;ta=tb;tb=q;s=1;}
       if(ta>t0){t0=ta;ax=a;sg=s;}if(tb<t1)t1=tb;if(t0>t1)break;}
@@ -6442,7 +6442,7 @@ const hhOf=f=>HH*(1-.3*(f.cv||0));
 function overlaps(b,x,z,y,h=HH){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+h;}
 // in the air, a lip up to AIR_STEP above your feet lifts you onto it (catching a ledge at the top of a jump) instead of stopping you dead
 const AIR_STEP=.3;
-function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;if(M.deepWater&&f.bot&&f.grounded&&!(f.thrownT>0)&&M.edgeDrop(nx,nz)&&!M.edgeDrop(f.pos.x,f.pos.z))return false;/* Lagoon: a bot on its feet won't step off the boards */const H=hhOf(f),allow=f.grounded?STEP:f.vel.y<6&&!f.downed?AIR_STEP:0;
+function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;if(M.deepWater&&f.bot&&f.grounded&&!(f.thrownT>0)&&!(f.ai&&f.ai.reck)&&M.edgeDrop(nx,nz)&&!M.edgeDrop(f.pos.x,f.pos.z))return false;/* Lagoon: a bot on its feet won't step off the boards */const H=hhOf(f),allow=f.grounded?STEP:f.vel.y<6&&!f.downed?AIR_STEP:0;
   for(const b of allBoxes()){if(!overlaps(b,nx,nz,f.pos.y,H))continue;const need=b.y1-f.pos.y;
     if(need<=allow&&!allBoxes().some(o=>o!==b&&overlaps(o,nx,nz,f.pos.y+need,H)&&o.y1>f.pos.y+need+.02&&o.y0>=f.pos.y+need+.02&&o.y0<f.pos.y+need+H)){lift=Math.max(lift,need);continue;}
     if(overlaps(b,f.pos.x,f.pos.z,f.pos.y,H)&&b.y0<f.pos.y+H*.5){continue;}if(b.touch&&b.alive&&!(NET.role==='client'&&!NET.replay))touchGlass(b,f);return false;}
@@ -6451,7 +6451,7 @@ function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;if(M.dee
 const TGQ=[];function touchGlass(b,f){if(!TGQ.some(q=>q.b===b))TGQ.push({b,at:new V3(f.pos.x,f.pos.y+1.1,f.pos.z)});}
 function flushGlass(){while(TGQ.length){const q=TGQ.shift();if(q.b.alive)breakProp(q.b,q.at);}}
 /* on a map with an open edge (Sky High) you aren't held inside the map's bounds: the glass is the wall. Bots stay held unless they're knocked or in the air */
-const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||f.thrownT>0||!f.grounded||!!(f.finishing&&f.finishing.fall));
+const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||!!(f.ai&&f.ai.reck)||f.thrownT>0||!f.grounded||!!(f.finishing&&f.finishing.fall));
 /* ---------- Man Down: you went through the glass and off the edge. Slow motion, a camera out over the drop, and you lose the round ---------- */
 function startEdgeFall(f){const ax=Math.abs(f.pos.x)/18.5>Math.abs(f.pos.z)/22.5,n=M.edgeN?M.edgeN(f.pos.x,f.pos.z):ax?new V3(Math.sign(f.pos.x),0,0):new V3(0,0,Math.sign(f.pos.z));
   const out=f.vel.x*n.x+f.vel.z*n.z;if(out<3.2){f.vel.x+=n.x*(3.2-out);f.vel.z+=n.z*(3.2-out);}
@@ -7789,7 +7789,7 @@ function mineFloor(x,z,y){const h=rayBoxes(new V3(x,y+.35,z),MDOWN,60);if(h)retu
 function mineSettle(m,dt){m.ck=(m.ck||0)-dt;if(m.ck<=0||m.vy){m.ck=.15;m.fl=mineFloor(m.x,m.z,m.y);}const fl=m.fl;
   if(m.y>fl+.02||m.vy){m.vy=(m.vy||0)-24*dt;m.y=Math.max(fl,m.y+m.vy*dt);if(m.y<=fl+.001){m.y=fl;m.vy=0;}m.mesh.position.y=m.y;}return m.y>-50;}
 function boomMine(m,i,by){scene.remove(m.mesh);mines.splice(i,1);explode(by&&by.alive?by:m.f,new V3(m.x,m.y+.35,m.z),null,{dmg:GUNS.mine.dmg,radius:GUNS.mine.radius,wall:150,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#9aa0a8','#ffffff']});}
-function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];m.t+=dt;if(!mineSettle(m,dt)){scene.remove(m.mesh);mines.splice(i,1);continue;}if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
+function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];if(!m)continue;/* a blast can clear other mines mid-loop */m.t+=dt;if(!mineSettle(m,dt)){scene.remove(m.mesh);mines.splice(i,1);continue;}if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
   if(!m.f||S.state!=='fight')continue;if(FS.some(o=>o.alive&&isFoe(m.f,o)&&!o.finishing&&Math.hypot(o.pos.x-m.x,o.pos.z-m.z)<1.7&&Math.abs(o.pos.y-m.y)<1.1)){sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10});boomMine(m,i);}}}
 function clearMines(){for(const m of mines)scene.remove(m.mesh);mines.length=0;}
 /* shooting a mine sets it off: a full mine blast (same damage and radius as stepping on it), credited to whoever shot it,
@@ -8129,7 +8129,23 @@ function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.fin
   const e=eyeOf(f,new V3());let best=null,bs=1e9;for(const o of foesOf(f)){if(o.finishing)continue;let sc=Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
     if(los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))sc-=18;if(o.downed)sc-=12;if(o.finishT>0&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)))sc-=40;if(o===a.tgt)sc-=8;if(o.ghostT>0)sc+=15;if(f.grudge===o&&f.grudgeSeed===S.seed)sc-=60;sc-=leadBias(f,o);if(sc<bs){bs=sc;best=o;}}
   if(!best)best=foesOf(f)[0]||null;if(best!==a.tgt){a.tgt=best;a.lastSeen=best&&f.grudge===best&&f.grudgeSeed===S.seed?best.pos.clone():null;a.seeT=0;a.path=null;a.goalT=0;}a.tgtUntil=S.t+.6;return best;}
-function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
+/* bots aren't perfectly careful: every few seconds each one rolls whether it's playing reckless (more often on Easy, when it's low on health
+   or when its target is nearly dead). A reckless bot isn't held back from open edges (Sky High's glass, Lagoon's boards), so like a player it can
+   crash through and fall off */
+function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06}[S.diff]??.14;
+    if(f.hp<35)p+=.15;const T=a.tgt;if(T&&T.alive&&(T.downed||T.hp<35))p+=.12;a.reck=Math.random()<p;}return!!a.reck;}
+/* something to blow up near the target: an explosive drum within its blast of them, or (for rockets and grenade launchers) the destructible
+   building they were last seen in. Needs a clear shot from the bot's eye; the bot keeps its distance so it doesn't catch the blast itself */
+const BLAST_IDS=new Set(['rocket','thumper','swarm']);
+function boomNear(f,T,eye,id,see){const a=f.ai;let best=null,bd=1e9;
+  for(const b of M.boxes){if(b.prop!=='fuel'||!b.boom||b.alive===false)continue;const c=new V3((b.x0+b.x1)/2,b.y0+.55,(b.z0+b.z1)/2);
+    const dT=Math.hypot(c.x-T.pos.x,c.z-T.pos.z),dy=Math.abs(c.y-T.pos.y-.5),dF=Math.hypot(c.x-f.pos.x,c.z-f.pos.z);if(dT>4||dy>2.5||dF<6.5||dF>45)continue;
+    const d=c.clone().sub(eye),L=d.length();d.divideScalar(L);const h=rayBoxes(eye,d,L+.5,true);if(!h||h.box!==b)continue;if(dT<bd){bd=dT;best={p:c,b};}}
+  if(best)return best;
+  if(!see&&BLAST_IDS.has(id)&&a.lastSeen&&M.blds)for(const B of M.blds){if(B.sturdy||B.stage>=2)continue;const L0=a.lastSeen;if(L0.x<B.x0||L0.x>B.x1||L0.z<B.z0||L0.z>B.z1)continue;
+    const c=new V3(L0.x,L0.y+1.2,L0.z),d=c.clone().sub(eye),L=d.length();if(L<7||L>45)continue;d.divideScalar(L);const h=rayBoxes(eye,d,L,true);if(h&&B.boxes.includes(h.box)&&h.t>6)return{p:eye.clone().addScaledVector(d,h.t),b:h.box,bld:1};}
+  return null;}
+function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
   if(f.downed){updCrouch(f,true,dt);const dd=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z);const seen=T.alive&&los(eyeOf(T,new V3()),new V3(f.pos.x,f.pos.y+.5,f.pos.z));
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
   // when the target goes down the bot either walks over to finish them (50%) or stays put and shoots them on the ground (50%)
@@ -8291,8 +8307,15 @@ function botThink(f,dt){const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return
   // Railyard: bots jump over hot rails most of the time (or hop clear after a shock), so they only rarely get zapped or clipped by a train
   if(a.railHop){a.railHop=0;jump=true;const sd=Math.sign(f.pos.x)||1;wx+=sd*.85;}
   else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
+  // explosives: blow up a drum next to the target (or the building they're hiding in) instead of shooting them, without hesitating
+  let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
+    const bm=a.boom;if(bm&&bm.b.alive!==false&&M.boxes.includes(bm.b)){const aim=bm.p.clone().add(new V3(rnd(-1,1),rnd(-.5,.5),rnd(-1,1)).multiplyScalar(.12+dif.err*.01));
+      const dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z,wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;
+      f.yaw+=clamp(dyaw,-dif.turn*dt,dif.turn*dt);f.pitch=damp(f.pitch,wp,dif.turn,dt);f.ads=false;bmDone=true;
+      if(Math.abs(dyaw)<dif.tol+.05&&canFire(f)){fire(f,eye,new V3(dx,dy,dz).normalize());f.fireT=Math.max(f.fireT,(GUNS[id].rate||.1)*dif.rof);}}
+    else a.boom=null;}
   // aim
-  if(see){let tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;if(id==='rocket'&&T.grounded&&seeB)tgt=new V3(T.pos.x,T.pos.y+1.0*SC,T.pos.z);
+  if(see&&!bmDone){let tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;if(id==='rocket'&&T.grounded&&seeB)tgt=new V3(T.pos.x,T.pos.y+1.0*SC,T.pos.z);
     const spr=deg=>dist*Math.tan(Math.min(deg,30)*Math.PI/180),E=dif.err*P.err;
     if(a.seeT<dt*1.5){a.err.set(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(spr(E*3));a.headPick=Math.random()<dif.head;a.hesT=Math.random()<dif.hes?rnd(.4,1.1):0;}
     if(S.t-f.lastHurt<dt*1.5)a.err.add(new V3(rnd(-1,1),rnd(-.4,.8),rnd(-1,1)).multiplyScalar(spr(dif.flinch))); // getting shot knocks its aim off

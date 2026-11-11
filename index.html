@@ -995,12 +995,17 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 @keyframes wsIn{from{opacity:0;transform:translateX(18px) scale(.96)}to{opacity:1;transform:none}}
 .ws-cls{font:700 10.5px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#3de0ff}
 .ws-name{font:400 clamp(22px,3.2vw,30px)/1 var(--f-display);color:var(--panel-ink);margin:4px 0 8px}
-.ws-note{font:500 12.5px/1.35 var(--f-body);color:var(--muted);margin:0 0 8px}
-.ws-st{display:grid;gap:5px}
-.ws-st div{display:grid;grid-template-columns:64px minmax(0,1fr) 48px;gap:8px;align-items:center;font:600 11px/1 var(--f-body);color:var(--muted)}
-.ws-st i{display:block;height:6px;border-radius:3px;background:color-mix(in srgb,var(--panel-ink) 12%,transparent);overflow:hidden}
+.ws-note{font:500 15px/1.45 var(--f-body);color:#dfe5ee;margin:0 0 12px}
+.ws-st{display:grid;gap:9px}
+.ws-st div{display:grid;grid-template-columns:76px minmax(0,calc(50% - 50px)) auto;justify-content:start;gap:12px;align-items:center;font:700 12.5px/1 var(--f-body);letter-spacing:.02em;color:#c3ccd9}
+.ws-st i{display:block;position:relative;height:9px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.ws-st i::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1.5px),rgba(10,11,16,.85) calc(10% - 1.5px) 10%);pointer-events:none}
 .ws-st i u{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#3de0ff,#9cecff);transition:width .35s}
-.ws-st em{font-style:normal;text-align:right;color:var(--panel-ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ws-st em{font-style:normal;color:#fff;font:800 14px/1 var(--f-body);white-space:nowrap;font-variant-numeric:tabular-nums}.ws-st em small{font-size:11px;font-weight:700;color:#8f99a8;margin-left:1px}
+.ws-st div.mg{grid-template-columns:76px auto}.ws-st div.mg em{font-size:14px}
+.ws-ov-n{position:absolute;left:14px;bottom:10px;z-index:2;font:400 clamp(26px,3.4vw,42px)/1 var(--f-display);color:#fff;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.75),0 0 2px rgba(0,0,0,.6);pointer-events:none;max-width:calc(100% - 120px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws-ov-c{position:absolute;right:12px;top:11px;z-index:2;font:700 11px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#3de0ff;padding:4px 7px 3px;border-radius:4px;background:rgba(11,12,15,.55);pointer-events:none}
+.ws-img .ws-hint{z-index:2}
 .wtabs{display:flex;gap:6px;min-width:0}
 .wtabs button{flex:1 1 0;min-width:0;display:grid;gap:3px;justify-items:start;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--panel-ink) 14%,transparent);background:color-mix(in srgb,var(--panel-ink) 5%,transparent);color:var(--panel-ink);cursor:pointer;font:inherit}
 .wtabs button small{font:700 9.5px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -5431,6 +5436,8 @@ fireball:{name:'Fireball',type:'ability',dmg:45,radius:2.7,speed:30,grav:2,sprea
 };
 for(const k in GUNS)if(GUNS[k].reload)GUNS[k].reload*=.5; // reloads are 50% quicker
 for(const k in GUNS)if(GUNS[k].dmg)GUNS[k].dmg=Math.round(GUNS[k].dmg*1.2); // every weapon and ability hits 20% harder (fireball included) // every weapon hits 20% harder (shorter time to kill)
+/* best value of each stat across every primary and secondary (damage per trigger pull, shots a second, effective range), so the top gun scores 10 */
+let STATMX=null;function statMax(){if(STATMX)return STATMX;const m={dmg:1,rps:1,rng:1};for(const k of [...PRIMARIES,...SECONDARIES]){const g=GUNS[k];if(!g)continue;m.dmg=Math.max(m.dmg,g.dmg*(g.pellets||1)*(g.burst||1));m.rps=Math.max(m.rps,g.rate?1/g.rate:0);m.rng=Math.max(m.rng,g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k));}return STATMX=m;}
 const GCAT={ar:'AR',gar:'AR',burst:'AR',mg:'LMG',m60:'LMG',sniper:'Sniper',scout:'Sniper',shotgun:'Shotgun',autoshot:'Shotgun',crossbow:'Crossbow',smg:'SMG',hornet:'SMG',vector:'SMG',p90:'SMG',ump:'SMG',sting:'SMG',duals:'Pistols',rocket:'Launcher',swarm:'Launcher',sword:'Melee'};
 const PRIMARIES=['gar','ar','burst','crossbow','mg','m60','sniper','scout','shotgun','autoshot'];
 let FLASH_TEX=null;function flashTex(){if(FLASH_TEX)return FLASH_TEX;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
@@ -10821,9 +10828,9 @@ function ws3Frame(now){const cv=WS3.cv;if(!cv||!cv.isConnected||!WS3.piv){WS3.ra
   /* fit the weapon's real silhouette at its current angle: it fills about 88% of the width (or 72% of the height), eased so spinning it never jumps */
   {const e=P.matrix.elements,pt=u.pts,tV=Math.tan(C.fov*Math.PI/360),tH=tV*C.aspect;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;const n=pt.length;
    for(let i=0;i<n;i+=3){const x=pt[i],y=pt[i+1],z=pt[i+2],X=e[0]*x+e[4]*y+e[8]*z,Y=e[1]*x+e[5]*y+e[9]*z;if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y;}
-   const cx=(x0+x1)/2,cy=(y0+y1)/2;let d=0;for(let i=0;i<n;i+=3){const x=pt[i],y=pt[i+1],z=pt[i+2],X=e[0]*x+e[4]*y+e[8]*z-cx,Y=e[1]*x+e[5]*y+e[9]*z-cy,Z=e[2]*x+e[6]*y+e[10]*z,q=Z+Math.max(Math.abs(X)/(tH*.88),Math.abs(Y)/(tV*.72));if(q>d)d=q;}
+   const cx=(x0+x1)/2,cy=(y0+y1)/2;let d=0;for(let i=0;i<n;i+=3){const x=pt[i],y=pt[i+1],z=pt[i+2],X=e[0]*x+e[4]*y+e[8]*z-cx,Y=e[1]*x+e[5]*y+e[9]*z-cy,Z=e[2]*x+e[6]*y+e[10]*z,q=Z+Math.max(Math.abs(X)/(tH*.88),Math.abs(Y)/(tV*.66));if(q>d)d=q;}
    if(!n){d=Math.max(u.w,u.h)*2;}const F=WS3.fit;if(!F)WS3.fit={x:cx,y:cy,d};else{const k=1-Math.exp(-dt*7);F.x+=(cx-F.x)*k;F.y+=(cy-F.y)*k;F.d+=(d-F.d)*k;}
-   const f=WS3.fit;C.position.set(f.x,f.y,f.d);C.lookAt(f.x,f.y,0);C.near=Math.max(.02,f.d*.02);C.far=f.d*4+10;C.updateProjectionMatrix();
+   const f=WS3.fit,oy=f.d*Math.tan(C.fov*Math.PI/360)*.12;C.position.set(f.x,f.y-oy,f.d);C.lookAt(f.x,f.y-oy,0);C.near=Math.max(.02,f.d*.02);C.far=f.d*4+10;C.updateProjectionMatrix();
    if(WS3.glint){const a=now*.00045;WS3.glint.position.set(f.x+Math.sin(a)*f.d*.6,f.y+f.d*.35,f.d*.55);WS3.glint.distance=f.d*3;}}
   WS3.r.render(WS3.S,C);const box=cv.parentNode;if(box&&!box.classList.contains('has3d'))box.classList.add('has3d');}
 /* ================= first-person aim (viewmodel) =================
@@ -10997,10 +11004,10 @@ function renderDuelMenu(){
    const k=pick[tab];let img,cls,name,body;
    if(!k){img='<b aria-hidden="true">?</b>';cls=lab[tab];name='Random';body=`<p class="ws-note">A surprise ${lab[tab].toLowerCase()} every match, never the same one twice in a row</p>`;}
    else if(tab==='let'){const c=CONS[k];img=`<img src="${PREV['g_c_'+k]||''}" alt="">`;cls='Lethal';name=c.name;body=`<p class="ws-note">${c.desc}</p><p class="ws-note">${c.meta||''}</p>`;}
-   else{const g=GUNS[k],dmg=g.dmg*(g.pellets||1)*(g.burst||1),rps=g.rate?1/g.rate:0,rng=g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k),bar=(l,v,mx,t)=>`<div>${l}<i><u style="width:${Math.max(4,Math.min(100,Math.round(v/mx*100)))}%"></u></i><em>${t}</em></div>`;
-     img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=`${lab[tab]} · ${WC[k]||''}`;name=g.name;
-     body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',dmg,130,Math.round(dmg))}${bar('Fire rate',rps,25,(rps<3?rps.toFixed(1):Math.round(rps))+'/s')}${bar('Range',rng,160,Math.round(rng)+' m')}${bar('Mag',isFinite(g.mag)?g.mag:0,50,isFinite(g.mag)&&g.mag?g.mag:'—')}</div>`;}
-   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}</div><div><div class="ws-cls">${cls}</div><div class="ws-name">${name}</div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
+   else{const g=GUNS[k],dmg=g.dmg*(g.pellets||1)*(g.burst||1),rps=g.rate?1/g.rate:0,rng=g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k),rt=(v,mx,sq)=>Math.max(1,Math.min(10,Math.round((sq?Math.sqrt(Math.max(0,v)/mx):Math.max(0,v)/mx)*10))),bar=(l,r)=>`<div>${l}<i><u style="width:${r*10}%"></u></i><em>${r}<small>/10</small></em></div>`,MX=statMax();
+     img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=WC[k]||lab[tab];name=g.name;
+     body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',rt(dmg,MX.dmg,1))}${bar('Fire rate',rt(rps,MX.rps,1))}${bar('Range',rt(rng,MX.rng))}<div class="mg">Mag<em>${isFinite(g.mag)&&g.mag?g.mag+' rounds':'—'}</em></div></div>`;}
+   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',sk||(!!S.gun&&!!S.sec&&!!S.cons));menuStep();
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';

@@ -4522,6 +4522,17 @@ function skyRail(X,Z){const H=2.1,T=.1,steel=mat('#c3c9d0',null,{metalness:.8,ro
     for(let i=0;i<n;i++){const c=-L/2+(i+.5)*w,b=box(ax?c:e,0,ax?e:c,ax?w-.04:T,H,ax?T:w-.04,'#cfeeff',{mat:SKY_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false});b.touch=1;b.edge=1;}
     deco(new THREE.BoxGeometry(ax?L+.3:.3,.16,ax?.3:L+.3),shoe,ax?0:e,.02,ax?e:0).castShadow=false;
     for(let i=0;i<=n;i++){const c=-L/2+i*w;for(const y of [.32,H-.25])deco(new THREE.BoxGeometry(ax?.12:.22,.1,ax?.22:.12),steel,ax?c:e,y,ax?e:c).castShadow=false;}}}
+/* Sky High textures: rendered stairwell walls (a 2 m tile with panel joints, grain and rain streaks), a gravel roof membrane and air-con louvres */
+tex('skywall',256,256,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=0;i<5200;i++){const v=Math.random();g.fillStyle=`rgba(${v<.55?40:255},${v<.55?36:255},${v<.55?30:255},${.03+Math.random()*.06})`;g.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2,1+Math.random()*2);}
+  for(let i=0;i<7;i++){const x=Math.random()*w,y=Math.random()*h,r=18+Math.random()*40,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(90,80,64,.09)');gr.addColorStop(1,'rgba(90,80,64,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
+  for(let i=0;i<9;i++){const x=Math.random()*w,L=30+Math.random()*120,gr=g.createLinearGradient(0,0,0,L);gr.addColorStop(0,'rgba(60,55,48,.16)');gr.addColorStop(1,'rgba(60,55,48,0)');g.fillStyle=gr;g.fillRect(x,0,1.5+Math.random()*3,L);}
+  g.fillStyle='rgba(55,50,44,.38)';g.fillRect(0,0,w,2);g.fillRect(0,0,2,h);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(0,2,w,1);g.fillRect(2,0,1,h);});
+TX.skywall.repeat.set(.5,.5);
+tex('skyroof',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=0;i<3600;i++){const v=.55+Math.random()*.6;g.fillStyle=`rgba(${(v*200)|0},${(v*196)|0},${(v*188)|0},.75)`;const r=.6+Math.random()*1.6;g.beginPath();g.arc(Math.random()*w,Math.random()*h,r,0,TAU);g.fill();}
+  for(let i=0;i<4;i++){const x=Math.random()*w,y=Math.random()*h,r=10+Math.random()*24,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(20,20,22,.18)');gr.addColorStop(1,'rgba(20,20,22,0)');g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r);}
+  g.fillStyle='rgba(18,18,20,.55)';g.fillRect(0,0,w,3);g.fillRect(0,0,3,h);});
+tex('louvre',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let y=0;y<h;y+=16){g.fillStyle='rgba(20,22,26,.55)';g.fillRect(0,y+9,w,6);g.fillStyle='rgba(255,255,255,.7)';g.fillRect(0,y+7,w,2);}
+  for(let i=0;i<500;i++){g.fillStyle=`rgba(0,0,0,${Math.random()*.06})`;g.fillRect(Math.random()*w,Math.random()*h,2,2);}});
 /* ---------- Sky High (1v1): a helipad deck on top of a skyscraper at golden hour ---------- */
 function skyWin(seed,facade,lit){const r=onePr(seed),cells=[];for(let y=0;y<16;y++)for(let x=0;x<8;x++)cells.push(r()<lit?['#ffd58a','#ffe9b8','#ffc56a','#cfe6ff'][(r()*4)|0]:null);
   const draw=emi=>(g,w,h)=>{g.fillStyle=emi?'#000':facade;g.fillRect(0,0,w,h);let i=0;for(let y=0;y<16;y++)for(let x=0;x<8;x++){const c=cells[i++],px=x*16+3,py=y*16+4;
@@ -4559,21 +4570,91 @@ function skyHigh(){const X=18.5,Z=22.5;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr
   const stepM='#6b7079';
   [[1,0],[0,1],[-1,0],[0,-1]].forEach(([dx,dz])=>{for(let i=0;i<6;i++){const u=P+.25+i*.5,top=PH-.25*(i+1);box(dx*u,0,dz*u,dx?.5:3.5,top,dz?.5:3.5,stepM,{edges:i===0});
       deco(new THREE.BoxGeometry(dx?.08:3.5,.02,dz?.08:3.5),mat('#f4c22b'),dx*(u-.21),top+.01,dz*(u-.21)).castShadow=false;}});
-  M.shopAt=[{x:0,z:0,y:PH}];
-  /* cover: air-con units, water tanks on plinths, glass skylights, the stairwell huts at each end */
-  const ac=(x,z,along)=>{const w=along?2.5:1.5,d=along?1.5:2.5;box(x,0,z,w,1.5,d,'#d3d6db',{extra:{roughness:.55}});
-    for(const o of [-.6,.6])deco(gC(.52,.52,.06,18),mat('#2a2d31'),x+(along?o:0),1.53,z+(along?0:o)).castShadow=false;
-    deco(new THREE.BoxGeometry(along?2.3:.04,.55,along?.04:2.3),mat('#7b8088'),x+(along?0:-w/2-.01),.45,z+(along?d/2+.01:0)).castShadow=false;};
+  /* the shop stands at the foot of the helipad, down its east side beside the steps, facing out across the roof, so the chopper has the pad to itself */
+  M.shopAt=[{x:P+.72,z:-3.75,y:0,q:1}];
+  /* cover: air-con units, water tanks on plinths, glass skylights, the stairwell buildings at each end */
+  /* air-con units, 2, 3 or 4 fans long: louvred sides between corner posts on steel rails, fans spinning under round guards, a service panel and warning label
+     on one end, copper pipe runs (one lagged) and a conduit box on the other */
+  const fans=[],acBody=mat('#d6d9de',null,{roughness:.5,metalness:.25}),acDark=mat('#202328',null,{roughness:.6}),acRail=mat('#5d6168',null,{metalness:.6,roughness:.4}),
+    acGuard=mat('#a3a9b1',null,{metalness:.75,roughness:.3}),acLouv=mat('#c4c8ce','louvre',{roughness:.55,metalness:.2}),acPanel=mat('#bfc3c9',null,{roughness:.45,metalness:.3}),
+    copper=mat('#b8733d',null,{metalness:.7,roughness:.35}),lag=mat('#151619',null,{roughness:.9}),warn=mat('#f4c22b',null,{roughness:.6});
+  const pipe=(a,b,r,m)=>{const d=new V3(b[0]-a[0],b[1]-a[1],b[2]-a[2]),L=d.length(),o=deco(gC(r,r,L,8),m,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);o.quaternion.setFromUnitVectors(new V3(0,1,0),d.normalize());o.castShadow=false;return o;};
+  const ac=(x,z,along,n)=>{const L=n*1.2+.3,H=1.22+n*.09,Wd=1.5,P3=(u,y,v)=>along?[x+u,y,z+v]:[x+v,y,z+u],D3=(u,h,v)=>along?[u,h,v]:[v,h,u],put=(m,u,y,v,su,h,sv,sh)=>{const p=P3(u,y,v),d=D3(su,h,sv);const o=deco(B.boxGeo(d[0],d[1],d[2]),m,p[0],p[1],p[2]);o.castShadow=!!sh;return o;};
+    box(x,0,z,along?L:Wd,H,along?Wd:L,'#d6d9de',{mat:acBody,edges:false});
+    for(const v of [-.55,.55])put(acRail,0,.07,v,L+.24,.14,.14,1);
+    for(const su of [-1,1])for(const sv of [-1,1])put(acRail,su*(L/2-.04),H/2,sv*(Wd/2-.04),.1,H+.02,.1,1);
+    for(const sv of [-1,1]){put(acLouv,0,.2+(H-.42)/2,sv*(Wd/2+.012),L-.2,H-.42,.03);for(let k=0;k<=n;k++)put(acDark,-L/2+.15+k*1.2,.2+(H-.42)/2,sv*(Wd/2+.03),.05,H-.42,.02);}
+    put(acPanel,0,H+.015,0,L-.06,.03,Wd-.06);
+    for(let k=0;k<n;k++){const u=-L/2+.75+k*1.2,c=P3(u,H,0);deco(gC(.53,.53,.05,28),acDark,c[0],H+.04,c[2]).castShadow=false;
+      const fg=new THREE.Group();fg.position.set(c[0],H+.05,c[2]);fg.userData.dyn=1;M.group.add(fg);for(let b=0;b<5;b++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.44,.015,.13),acGuard);bl.geometry.translate(.25,0,0);bl.rotation.set(.3,b/5*TAU,0);fg.add(bl);}
+      const hub=new THREE.Mesh(gC(.09,.09,.06,12),acRail);hub.position.y=.02;fg.add(hub);fans.push({g:fg,sp:(5+((x*7+z*3+k)%3+3)%3)*(k%2?1:-1)});
+      for(const r of [.52,.34,.17]){const t=deco(new THREE.TorusGeometry(r,.018,5,32),acGuard,c[0],H+.11,c[2]);t.rotation.x=Math.PI/2;t.castShadow=false;}
+      for(const q of [0,Math.PI/2]){const o=deco(B.boxGeo(1.04,.025,.04),acGuard,c[0],H+.11,c[2],q+(along?0:Math.PI/2));o.castShadow=false;}}
+    {const e=L/2+.02;put(acPanel,e,H*.5,0,.03,H-.5,Wd-.4);put(warn,e+.02,H-.38,.35,.02,.16,.3);for(const sv of [-.5,.5])for(const y of [.4,H-.2])put(acRail,e+.025,y,sv,.02,.04,.04);}
+    {const e=-L/2-.02;put(acPanel,e-.06,.75,-.35,.12,.34,.26);const A=P3(e,.62,.3),B2=P3(e-.4,.62,.3),C=P3(e-.4,.05,.3),D2=P3(e-1.3,.05,.3);pipe(A,B2,.035,copper);pipe(B2,C,.035,copper);pipe(C,D2,.035,copper);
+      const A2=P3(e,.82,.48),B3=P3(e-.5,.82,.48),C3=P3(e-.5,.06,.48),D3b=P3(e-1.3,.06,.48);pipe(A2,B3,.06,lag);pipe(B3,C3,.06,lag);pipe(C3,D3b,.06,lag);
+      const E=P3(e-.06,.75,-.35),F2=P3(e-.06,.05,-.35);pipe(E,F2,.025,acRail);}};
   const tank=(x,z)=>{box(x,0,z,3.5,.5,3.5,'#8d8f95');collider(x-1.25,x+1.25,.5,4.7,z-1.25,z+1.25);
     deco(gC(1.35,1.35,3.4,24),mat('#5e7f99',null,{roughness:.5,metalness:.3}),x,2.2,z);deco(gC(.15,1.42,.75,24),mat('#4e6b82',null,{metalness:.3}),x,4.27,z);
     for(const y of [1.6,2.8,3.7])deco(gC(1.38,1.38,.08,24),mat('#39434d'),x,y,z).castShadow=false;deco(new THREE.BoxGeometry(.5,3.6,.05),mat('#9a9ea4',null,{metalness:.7}),x,2.3,z+1.38*Math.sign(-z||1)).castShadow=false;};
   const skylight=(x,z)=>{box(x,0,z,2.5,.75,2.5,'#9aa0a8');const g=new THREE.ConeGeometry(1.65,.7,4);g.rotateY(Math.PI/4);deco(g,mat('#a9dcf5',null,{roughness:.1,metalness:.5,transparent:true,opacity:.7}),x,1.1,z).castShadow=false;};
-  const hut=(z)=>{const s=Math.sign(z),fz=z-s*1.5;box(0,0,z,4.5,3.25,3,'#d9cfbf');deco(new THREE.BoxGeometry(4.9,.22,3.4),mat('#6b6058'),0,3.3,z);
-    deco(new THREE.BoxGeometry(1.1,2.1,.06),mat('#3c4652'),.9,1.05,fz-s*.02).castShadow=false;deco(new THREE.BoxGeometry(.9,.5,.06),mat('#9fc6e0',null,{roughness:.1,metalness:.4}),-1.1,1.8,fz-s*.02).castShadow=false;
-    deco(gC(.08,.08,.12,8),mat('#ffd080',null,{emissive:'#ffd080',emissiveIntensity:3}),.9,2.4,fz-s*.08).castShadow=false;};
-  for(const s of [1,-1]){hut(s*19.25);ac(s*3.5,s*19.5,true);ac(s*12.5,s*4,false);ac(s*6,s*12,true);ac(-s*12,s*10,true);tank(s*12.5,s*15.5);skylight(-s*7,s*7.5);}
-  /* antenna with a blinking light on one hut, a windsock in a corner */
-  deco(gC(.06,.12,7,6),mat('#c3c9d0',null,{metalness:.8}),1.6,6.9,19.9);const blink=glowSprite(1.6,10.5,19.9,2.6,'#ff3030');
+  /* the stairwell buildings: 9 x 6 m and 6.5 m tall, glass double doors that swing open as anyone comes near, glass windows on both floors (one bullet breaks them),
+     an upper floor over the front half up a white ladder, and a parapet roof up a white ladder outside. Rendered walls with a dark plinth, corner piers and a band
+     at the upper floor; a gravel roof with a hatch, vents and a condenser; a lit STAIR sign and a lamp over the door */
+  const HW=9,HD=6,HH=6.5,HT=.25,FL=3.2,doors=[];
+  const wallM=mat('#e6decf','skywall',{roughness:.85}),pierM=mat('#bdb4a5','skywall',{roughness:.85}),plinthM=mat('#4a4d54','slab',{roughness:.8}),roofM=mat('#8e9096','skyroof',{roughness:.95}),
+    frameM=mat('#2c2f35',null,{metalness:.6,roughness:.35}),sillM=mat('#c9cdd2',null,{roughness:.5,metalness:.2}),floorM=mat('#cfcac0','tile',{roughness:.7}),
+    litM=mat('#fff4dc',null,{emissive:'#fff4dc',emissiveIntensity:1.8}),copeM=mat('#a9adb3',null,{metalness:.7,roughness:.3});
+  const hut=s=>{const zf=s*16.1,X=u=>s*u,Z=v=>zf+s*v,dk=(m,u,y,v,su,h,sv,sh)=>{const o=deco(B.boxGeo(su,h,sv),m,X(u),y,Z(v));o.castShadow=!!sh;return o;};
+    /* a wall run with openings: along u (front and back, at depth c) or along v (the sides, at u=c); each hole [a0,a1,y0,y1,glass] */
+    const run=(alongU,c,a0,a1,holes)=>{const cuts=[a0,a1];for(const h of holes)cuts.push(h[0],h[1]);const us=[...new Set(cuts)].sort((p,q)=>p-q);
+      const put=(a,b,y0,y1)=>{if(b-a<.01||y1-y0<.01)return;const am=(a+b)/2;if(alongU)box(X(am),y0,Z(c),b-a,y1-y0,HT,'#e6decf',{mat:wallM,edges:false});else box(X(c),y0,Z(am),HT,y1-y0,b-a,'#e6decf',{mat:wallM,edges:false});};
+      for(let i=0;i<us.length-1;i++){const a=us[i],b=us[i+1];if(a<a0-1e-6||b>a1+1e-6)continue;const mid=(a+b)/2,hs=holes.filter(h=>mid>h[0]&&mid<h[1]).sort((p,q)=>p[2]-q[2]);let y=0;for(const h of hs){put(a,b,y,h[2]);y=h[3];}put(a,b,y,HH-.3);}
+      for(const [a,b,y0,y1,gl] of holes){const am=(a+b)/2,L=b-a,Hh=y1-y0,o=(du,dv)=>alongU?[X(am+du),Z(c+dv)]:[X(c+dv),Z(am+du)],bx=(du,y,dv,lu,h,lv,m)=>{const q=o(du,dv),d=alongU?[lu,h,lv]:[lv,h,lu];const k=deco(B.boxGeo(d[0],d[1],d[2]),m,q[0],y,q[1]);k.castShadow=false;return k;};
+        if(gl){const q=o(0,0),d=alongU?[L-.02,Hh,.06]:[.06,Hh,L-.02];box(q[0],y0,q[1],d[0],Hh,d[2],'#8fcdef',{mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false});}
+        for(const sd of [-1,1]){const dv=sd*(HT/2+.025);bx(0,y1+.045,dv,L+.18,.09,.05,frameM);bx(-L/2-.045,(y0+y1)/2,dv,.09,Hh,.05,frameM);bx(L/2+.045,(y0+y1)/2,dv,.09,Hh,.05,frameM);
+          if(gl){bx(0,y0-.045,dv,L+.18,.09,.05,frameM);bx(0,y0-.11,sd*(HT/2+.09),L+.3,.06,.18,sillM);if(Hh>1.2)bx(0,(y0+y1)/2,dv,L,.05,.04,frameM);}}}};
+    const fw=Math.abs,inW=HW/2-HT/2;
+    run(true,HT/2,-HW/2,HW/2,[[-1.1,1.1,0,2.4,false],[-3.9,-2.1,1.0,2.3,true],[2.1,3.9,1.0,2.3,true],[-3.9,-.7,4.2,5.5,true],[.7,3.9,4.2,5.5,true]]);
+    run(true,HD-HT/2,-HW/2,HW/2,[[-2.2,2.2,1.0,2.6,true],[-2.2,2.2,3.9,5.6,true]]);
+    for(const sd of [-1,1])run(false,sd*inW,HT,HD-HT,[[3.3,4.8,1.0,2.3,true],[.6,2.6,4.2,5.5,true]]);
+    /* upper floor over the front half, its edge striped, lights under it; the ladder up to it at the edge */
+    box(X(0),FL-.2,Z(HT+(3-HT)/2),HW-2*HT,.2,3-HT,'#cfcac0',{mat:floorM,edges:false});dk(warn,0,FL+.005,2.94,HW-2*HT,.01,.1);
+    for(const u of [-2.2,2.2]){dk(litM,u,FL-.215,1.6,1.4,.02,.5);dk(litM,u,HH-.315,4.5,1.4,.02,.5);}
+    wLadder(X(3.2),Z(3.06),0,FL,0,-s);
+    dk(floorM,0,.01,HD/2,HW-2*HT,.02,HD-2*HT);
+    /* roof slab, gravel top, a parapet with metal coping, and what's up there */
+    box(X(0),HH-.3,Z(HD/2),HW,.3,HD,'#8e9096',{mat:roofM,edges:false});
+    for(const [u,v,su,sv] of [[0,.1,HW,.2],[0,HD-.1,HW,.2],[-HW/2+.1,HD/2,.2,HD-.4],[HW/2-.1,HD/2,.2,HD-.4]]){box(X(u),HH,Z(v),su,.9,sv,'#bdb4a5',{mat:pierM,edges:false});dk(copeM,u,HH+.92,v,su+.06,.04,sv+.06);}
+    box(X(-2.6),HH,Z(4.2),1.3,.55,1.3,'#7b8088',{edges:false});dk(acRail,-2.6,HH+.6,4.2,1.1,.06,1.1,1);
+    for(const [u,v] of [[-1,1.4],[-.5,1.4]]){dk(acRail,u,HH+.4,v,.22,.8,.22);dk(acRail,u,HH+.85,v,.36,.08,.36);}
+    {const cx=2.4,cv=1.6;box(X(cx),HH,Z(cv),1.2,.75,.7,'#d6d9de',{mat:acBody,edges:false});const q=deco(gC(.26,.26,.04,20),acDark,X(cx),HH+.4,Z(cv)-s*.36);q.rotation.x=Math.PI/2;q.castShadow=false;}
+    dk(acRail,3.6,HH+.04,3.4,.25,.08,3.2);
+    /* outside: plinth, corner piers, a band at the upper floor, a downpipe, a lit sign and a lamp over the door, and the ladder to the roof */
+    for(const [a,b] of [[-HW/2,-1.25],[1.25,HW/2]])dk(plinthM,(a+b)/2,.25,-.03,b-a,.5,.06);dk(plinthM,0,.25,HD+.03,HW,.5,.06);for(const sd of [-1,1])dk(plinthM,sd*(HW/2+.03),.25,HD/2,.06,.5,HD);
+    for(const su of [-1,1])for(const sv of [0,HD])dk(pierM,su*(HW/2-.12),(HH-.3)/2,sv+(sv?-.12:.12),.36,HH-.3,.36,1);
+    for(const sv of [-.04,HD+.04])dk(pierM,0,3.6,sv,HW+.1,.14,.1);for(const sd of [-1,1])dk(pierM,sd*(HW/2+.04),3.6,HD/2,.1,.14,HD+.1);
+    {const o=deco(gC(.07,.07,HH,8),acRail,X(-HW/2-.12),HH/2,Z(HD-.5));o.castShadow=false;}
+    rlSign(s>0?'STAIR  A':'STAIR  B','#1c1d22','#ffffff',{stripe:'#f4c22b'},2.4,.4,X(0),2.95,Z(-.03),s>0?Math.PI:0,'#fff1c4');
+    for(const u of [-1.6,1.6]){dk(frameM,u,2.75,-.12,.18,.24,.16);dk(litM,u,2.68,-.2,.14,.06,.08);glowSprite(X(u),2.62,Z(-.24),1.1,'#ffe2a8',.7);}
+    wLadder(X(HW/2+.06),Z(5.45),0,HH,-s,0);
+    /* the glass double doors: they swing in when anyone comes within reach and close behind them; while shut they block movement and shots */
+    {const g0=new THREE.Group();g0.position.set(X(0),0,Z(HT/2));g0.rotation.y=s>0?0:Math.PI;g0.userData.dyn=1;M.group.add(g0);
+      const glM=mat('#a9d6ee',null,{transparent:true,opacity:.35,roughness:.05,metalness:.3,depthWrite:false}),barM=mat('#d9dde3',null,{metalness:.85,roughness:.2}),leaves=[];
+      for(const sd of [-1,1]){const pv=new THREE.Group();pv.position.set(sd*1.08,0,0);g0.add(pv);const L=new THREE.Group();L.position.x=-sd*.535;pv.add(L);
+        const add=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=m!==glM;L.add(o);};
+        add(new THREE.BoxGeometry(1.06,.16,.07),frameM,0,.08,0);add(new THREE.BoxGeometry(1.06,.14,.07),frameM,0,2.31,0);add(new THREE.BoxGeometry(.11,2.38,.07),frameM,-.475,1.19,0);add(new THREE.BoxGeometry(.11,2.38,.07),frameM,.475,1.19,0);
+        add(new THREE.BoxGeometry(.85,2.08,.02),glM,0,1.2,0);for(const z of [-.06,.06])add(new THREE.BoxGeometry(.7,.05,.05),barM,0,1.05,z);leaves.push({pv,sd});}
+      const col={x0:X(0)-1.1,x1:X(0)+1.1,y0:0,y1:2.4,z0:Z(HT/2)-.07,z1:Z(HT/2)+.07,mesh:null,mover:true,door:1};M.boxes.push(col);
+      doors.push({leaves,col,x:X(0),z:Z(HT/2),open:0,want:false});}};
+  for(const s of [1,-1]){hut(s);ac(s*12.5,s*4,false,4);ac(s*6,s*12,true,3);ac(-s*12,s*10,true,2);tank(s*12.5,s*15.5);skylight(-s*7,s*7.5);}
+  /* doors and fans each frame */
+  M.life.push((t,dt)=>{dt=dt||0;for(const f of fans)f.g.rotation.y=t*f.sp;
+    for(const d of doors){const want=FS.some(f=>f.alive&&f.pos.y<2.6&&Math.hypot(f.pos.x-d.x,f.pos.z-d.z)<2.6);if(want&&!d.want&&d.open<.05&&dt)sfx('swing',{x:d.x,y:1.2,z:d.z},{vol:.3,rate:.62,range:12});d.want=want;
+      d.open=clamp(d.open+(want?1:-1)*dt*3.2,0,1);const e=d.open*d.open*(3-2*d.open);for(const L of d.leaves)L.pv.rotation.y=L.sd*1.45*e;
+      const inB=M.boxes.includes(d.col);if(d.open>.15&&inB)M.boxes.splice(M.boxes.indexOf(d.col),1);else if(d.open<.08&&!inB)M.boxes.push(d.col);}});
+  /* antenna with a blinking light on one stairwell roof, a windsock in a corner */
+  deco(gC(.06,.12,7,6),mat('#c3c9d0',null,{metalness:.8}),1.6,HH+3.5,19.9);const blink=glowSprite(1.6,HH+7.1,19.9,2.6,'#ff3030');
   deco(gC(.04,.05,3,6),mat('#c3c9d0'),-16.2,1.5,-20.2);{const ws=deco(new THREE.ConeGeometry(.28,1.6,12,1,true),mat('#ff6a1a',null,{side:2}),-15.5,2.8,-20.2);ws.rotation.z=Math.PI/2;}
   /* a helicopter circling the block and a blimp drifting past */
   const heli=new THREE.Group();heli.userData.dyn=1;M.group.add(heli);const proc=new THREE.Group();proc.scale.setScalar(1.4);heli.add(proc);{const red=mat('#c8322a',null,{roughness:.4,metalness:.3}),add=(g,m,x,y,z)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);proc.add(o);return o;};
@@ -4596,9 +4677,20 @@ function skyHigh(){const X=18.5,Z=22.5;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr
     for(let k=0;k<4;k++){const f=new THREE.Mesh(new THREE.BoxGeometry(4,.3,3),mat('#2a62c9'));f.geometry.translate(0,0,2.6);f.position.set(-11.5,0,0);f.rotation.x=k*Math.PI/2;blimp.add(f);}
     add(new THREE.BoxGeometry(3.5,1.2,1.5),mat('#3a3e45'),0,-4.4,0);}
   blimp.scale.setScalar(2.2);
-  const upd=t=>{const a=t*.11;heli.position.set(Math.cos(a)*62,24+Math.sin(t*.5)*2,Math.sin(a)*62);heli.rotation.set(0,-a-Math.PI/2,.16);heli.userData.rot.rotation.y=t*22;if(heli.userData.beacon)heli.userData.beacon.material.opacity=(t%1.1)<.15?1:0;
-    const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0);M.life.push(upd);
-  const sp=[[-5,17],[7,16.5],[-12,15],[9,19],[0,15.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+  /* the chopper circles the block, and every 80 s comes in over the pad, settles on it for 5 s (rotor turning, downwash kicking up dust; its cabin is solid
+     while it's down, so anyone standing there is shoved out of the way) and lifts off again back into its circuit */
+  const LANDY=PH+2.6,HOV=LANDY+14,LZ=-2.5,LYAW=-Math.PI/2,heliCol={x0:-1.5,x1:1.5,y0:PH,y1:PH+4,z0:LZ-2,z1:LZ+7,mesh:null,mover:true};
+  const orb=t=>{const a=t*.11;return [Math.cos(a)*62,24+Math.sin(t*.5)*2,Math.sin(a)*62,-a-Math.PI/2];},sst=e=>e<=0?0:e>=1?1:e*e*(3-2*e),wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
+  const upd=(t,dt)=>{const o=orb(t),u=(t+22)%80;let px,py,pz,yaw,bank=.16,low=false;
+    if(u<50)[px,py,pz,yaw]=o;
+    else if(u<60){const e=sst((u-50)/10);px=o[0]*(1-e);py=o[1]+(HOV-o[1])*e;pz=o[2]+(LZ-o[2])*e;yaw=o[3]+wrapA(LYAW-o[3])*e;bank=.16*(1-e);}
+    else if(u<73){px=0;pz=LZ;yaw=LYAW;bank=0;low=true;py=u<64?HOV+(LANDY-HOV)*(1-Math.pow(1-(u-60)/4,2)):u<69?LANDY:LANDY+(HOV-LANDY)*sst((u-69)/4);}
+    else{const e=sst((u-73)/7);px=o[0]*e;py=HOV+(o[1]-HOV)*e;pz=LZ+(o[2]-LZ)*e;yaw=LYAW+wrapA(o[3]-LYAW)*e;bank=.16*e;}
+    heli.position.set(px,py,pz);heli.rotation.set(0,yaw,bank);heli.userData.rot.rotation.y=t*22;
+    {const down=low&&py<LANDY+1.2,inB=M.boxes.includes(heliCol);if(down&&!inB)M.boxes.push(heliCol);else if(!down&&inB)M.boxes.splice(M.boxes.indexOf(heliCol),1);}
+    if(low&&dt&&py<LANDY+9&&Math.random()<dt*40){const an=Math.random()*TAU,r=3.5+Math.random()*2.5,k=(1-(py-LANDY)/9)*7+2;emit(Math.cos(an)*r,PH+.15,LZ+2.5+Math.sin(an)*r,{n:2,speed:1,up:.4,size:.38,life:.8,grav:0,vx:Math.cos(an)*k,vz:Math.sin(an)*k,colors:['#d9d2c4','#c4bba9','#e8e2d6']});}if(heli.userData.beacon)heli.userData.beacon.material.opacity=(t%1.1)<.15?1:0;
+    const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0,0);M.life.push(upd);
+  const sp=[[-6.5,17],[7,16.5],[-12,15],[9,19],[0,14.6]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 /* ---------- Lagoon (1v1): two wooden pavilions on stilts over a turquoise lagoon, joined by two wide walkways, at sunset ---------- */
 function lgPalm(g,x,y,z,s,lean,pr,ry){const pg=new THREE.Group();pg.position.set(x,y,z);pg.rotation.y=ry??pr()*TAU;pg.scale.setScalar(s);g.add(pg);
   const bark=mat('#8a6a45',null,{flatShading:true});let px=0,py=0;
@@ -4985,7 +5077,7 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
 function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: fists only, no shop */
-  if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1);return;}const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
+  if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1,p.q);return;}/* q: which way it faces, in quarter turns (front towards +z at 0, +x at 1) */const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
   const openR=(x,z)=>{let r=7;for(const o of tall){if(o.y0>3.6)continue;const dx=Math.max(o.x0-x,0,x-o.x1),dz=Math.max(o.z0-z,0,z-o.z1);const d=Math.hypot(dx,dz);if(d<r)r=d;}return r;};
@@ -5013,7 +5105,7 @@ function vendTex(){if(VEND_TX)return VEND_TX;const T={},cv=(w,h,f)=>{const c=doc
   T.lcd=cv(256,96,(g,w,h)=>{g.fillStyle='#04141a';g.fillRect(0,0,w,h);g.font='bold 44px "Courier New", monospace';g.textAlign='center';g.textBaseline='middle';g.shadowColor='#3de0ff';g.shadowBlur=12;g.fillStyle='#7ff0ff';g.fillText('READY',w/2,h/2+2);});
   T.back=cv(64,256,(g,w,h)=>{const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#fff6e6');gr.addColorStop(1,'#ffd9e6');g.fillStyle=gr;g.fillRect(0,0,w,h);});
   return VEND_TX=T;}
-function buildShop(x,z,gy,k=1){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=Math.hypot(dx,dz)<1?0:Math.round(Math.atan2(dx,dz)/(Math.PI/2)),ry=q*Math.PI/2,ax=q%2!==0;
+function buildShop(x,z,gy,k=1,qf){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,q=qf!=null?qf:Math.hypot(dx,dz)<1?0:Math.round(Math.atan2(dx,dz)/(Math.PI/2)),ry=q*Math.PI/2,ax=q%2!==0;
   const T=vendTex(),W=2.3*k,D=1.3,H=3.4,root=new THREE.Group();root.position.set(x,gy,z);root.rotation.y=ry;root.userData.dyn=1;M.group.add(root);
   const S3=(o)=>{o.castShadow=true;o.receiveShadow=true;root.add(o);return o;};
   const mesh=(geo,m,px,py,pz)=>{const o=new THREE.Mesh(geo,m);o.position.set(px,py,pz);return S3(o);};

@@ -1191,6 +1191,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
               <button role="radio" data-diff="easy" aria-checked="false">Easy</button>
               <button role="radio" data-diff="normal" aria-checked="true">Normal</button>
               <button role="radio" data-diff="hard" aria-checked="false">Hard</button>
+              <button role="radio" data-diff="extreme" aria-checked="false">Extreme</button>
             </div>
             </div>
             <div class="mmaps"><div class="msub">Map</div>
@@ -3029,7 +3030,7 @@ function townLife(cars,o){const R=Math.random;
   const hitsBox=(c,dz)=>{const b=c.boxes[0],m=.4;for(const x of allBoxes()){if(c.boxes.includes(x)||x.y1<.4||x.y0>b.y1+1)continue;
       if(x.x1>b.x0&&x.x0<b.x1&&x.z1>b.z0+dz-m&&x.z0<b.z1+dz+m)return true;}return false;};
   const move=(c,dz)=>{for(const b of c.boxes){b.z0+=dz;b.z1+=dz;}for(const m of c.parts)m.position.z+=dz;c.z+=dz;for(const w of c.wheels)w.rotation.x+=dz/.42;};
-  for(const c of cars)c.restore=()=>{burnCar(c,false);move(c,c.home-c.z);for(const b of c.boxes){b.mover=true;if(!M.boxes.includes(b))M.boxes.push(b);if(!M.movers.includes(b))M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
+  for(const c of cars)c.restore=()=>{burnCar(c,false);move(c,c.home-c.z);for(const b of c.boxes){b.mover=true;if(!M.boxes.includes(b))M.boxes.push(b);if(!M.movers.includes(b))M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.hits=0;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
   M.life.push((t,dt)=>{for(const c of cars){
     if(!c.alive)continue;
     if(c.state==='park'){c.wait-=dt;if(c.wait<=0){let tz;for(let k=0;k<6;k++){tz=(R()*2-1)*o.zLim;if(Math.abs(tz-c.z)>10)break;}c.target=tz;c.vmax=4+R()*9;c.state='drive';}continue;}
@@ -3105,8 +3106,9 @@ function signTex(text,bg,fg,o={}){return canvasTex(1024,128,(g,w,h)=>{g.fillStyl
   g.fillStyle=fg;g.font='bold 84px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,x,h/2+4);});}
 // parked vehicles that are part of the scenery: bullets wear them down, a blast (or enough bullets) blows them up, and they come back later
 function parkVehicle(c){c.alive=true;c.home=c.z;c.state='park';for(const b of c.boxes)b.car=c;(M.cars||(M.cars=[])).push(c);
-  c.restore=()=>{burnCar(c,false);for(const b of c.boxes){if(!M.boxes.includes(b))M.boxes.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.state='park';MM.layer=null;};return c;}
-function hitCar(c,dmg,at){if(!c.alive)return;c.hp=(c.hp??450)-dmg;emit(at.x,at.y,at.z,{n:4,speed:4,up:1.5,size:.08,life:.3,colors:['#ffd23f','#ffffff',c.color]});
+  c.restore=()=>{burnCar(c,false);for(const b of c.boxes){if(!M.boxes.includes(b))M.boxes.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.hits=0;c.state='park';MM.layer=null;};return c;}
+/* a car blows up on the 3rd shot (all the pellets of one shotgun blast count as one shot); it smokes after the 2nd; any blast wrecks it outright */
+function hitCar(c,dmg,at){if(!c.alive)return;const now=S.t;if(now-(c.hitT??-9)>.03){c.hits=(c.hits||0)+1;c.hitT=now;}c.hp=c.hits>=3?0:c.hits>=2?100:300;emit(at.x,at.y,at.z,{n:4,speed:4,up:1.5,size:.08,life:.3,colors:['#ffd23f','#ffffff',c.color]});
   if(c.hp<180){const b=c.boxes[0];emit((b.x0+b.x1)/2,b.y1+.1,(b.z0+b.z1)/2,{n:2,speed:.6,up:2.5,size:.5,life:1.4,grav:-1.2,colors:['#3a3d45','#55585f','#6e665c']});}
   if(c.hp<=0)wreckCar(c,at);}
 function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.random;
@@ -6574,7 +6576,10 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
    miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight */
 const DIFF={easy:{name:'Easy',react:1.5,err:7,head:.01,turn:2.6,strafe:.25,build:.15,settle:.7,sway:1.1,flinch:8,recoil:2.8,lead:0,tol:.2,rof:1.6,burst:3,pause:[.9,1.6],hes:.4,miss:.6},
   normal:{name:'Normal',react:.8,err:3.6,head:.08,turn:5.2,strafe:.5,build:.3,settle:1.2,sway:.65,flinch:4,recoil:1.4,lead:.35,tol:.12,rof:1.4,burst:5,pause:[.5,1],hes:.2,miss:.35},
-  hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15}};
+  hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15},
+  /* Extreme: a step past Hard. Quicker to react, steadier and more often aiming for the head, but still human: it still misses (1 shot in 10),
+     still sways a little and still takes a moment to turn, so you can out-move and out-play it */
+  extreme:{name:'Extreme',react:.3,err:1.15,head:.34,turn:12.5,strafe:1,build:.8,settle:2.3,sway:.26,flinch:1.6,recoil:.38,lead:1,tol:.06,rof:1.08,burst:10,pause:[.15,.35],hes:.03,miss:.1}};
 /* your bot team-mates play at the same level as the enemies; when you're the last one left on your team against two or more, the enemies ease off a little */
 function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
@@ -8102,7 +8107,7 @@ function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.fin
 /* bots aren't perfectly careful: every few seconds each one rolls whether it's playing reckless (more often on Easy, when it's low on health
    or when its target is nearly dead). A reckless bot isn't held back from open edges (Sky High's glass, Lagoon's boards), so like a player it can
    crash through and fall off */
-function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06}[S.diff]??.14;
+function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06,extreme:.04}[S.diff]??.14;
     if(f.hp<35)p+=.15;const T=a.tgt;if(T&&T.alive&&(T.downed||T.hp<35))p+=.12;a.reck=Math.random()<p;}return!!a.reck;}
 /* something to blow up near the target: an explosive drum within its blast of them, or (for rockets and grenade launchers) the destructible
    building they were last seen in. Needs a clear shot from the bot's eye; the bot keeps its distance so it doesn't catch the blast itself */
@@ -8277,7 +8282,7 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
   if(a.railHop){a.railHop=0;jump=true;const sd=Math.sign(f.pos.x)||1;wx+=sd*.85;}
   else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
   // explosives: blow up a drum next to the target (or the building they're hiding in) instead of shooting them, without hesitating
-  let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
+  let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9,extreme:.95}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
     const bm=a.boom;if(bm&&bm.b.alive!==false&&M.boxes.includes(bm.b)){const aim=bm.p.clone().add(new V3(rnd(-1,1),rnd(-.5,.5),rnd(-1,1)).multiplyScalar(.12+dif.err*.01));
       const dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z,wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;
       f.yaw+=clamp(dyaw,-dif.turn*dt,dif.turn*dt);f.pitch=damp(f.pitch,wp,dif.turn,dt);f.ads=false;bmDone=true;
@@ -8746,7 +8751,7 @@ function rdCap(ch,o){const e=ch.root;e.updateMatrixWorld(true);
   o[4].set(0,(ch.hipY+ch.aL.p.position.y)/2,-.34).applyMatrix4(ch.upIn.matrixWorld);o[5].set(0,.42,0).applyMatrix4(ch.headG.matrixWorld);
   o[6].setFromMatrixPosition(ch.aL.e.matrixWorld);o[7].set(0,-ch.aL.fore,0).applyMatrix4(ch.aL.e.matrixWorld);o[8].setFromMatrixPosition(ch.aR.e.matrixWorld);o[9].set(0,-ch.aR.fore,0).applyMatrix4(ch.aR.e.matrixWorld);
   o[10].setFromMatrixPosition(ch.lL.k.matrixWorld);o[11].set(0,-ch.lL.lo,0).applyMatrix4(ch.lL.k.matrixWorld);o[12].setFromMatrixPosition(ch.lR.k.matrixWorld);o[13].set(0,-ch.lR.lo,0).applyMatrix4(ch.lR.k.matrixWorld);}
-function rdStart(f,mode){const ch=f.ch,sc=ch.root.scale.x||1,hL=ch.lL.p.position,hR=ch.lR.p.position,sL=ch.aL.p.position,sR=ch.aR.p.position,V=THREE.Vector3;
+function rdStart(f,mode){if(!(f.ch&&f.ch.lL.k&&f.ch.lR.k&&f.ch.aL.e&&f.ch.aR.e))return;/* rigs without knee/elbow joints (a character whose model hasn't loaded yet) just skip the ragdoll */const ch=f.ch,sc=ch.root.scale.x||1,hL=ch.lL.p.position,hR=ch.lR.p.position,sL=ch.aL.p.position,sR=ch.aR.p.position,V=THREE.Vector3;
   const r=[hL.clone(),hR.clone(),sL.clone(),sR.clone(),new V(0,(ch.hipY+sL.y)/2,-.34),new V(0,ch.headG.position.y+.42,0),
     new V(sL.x,sL.y-ch.aL.up,sL.z),new V(sL.x,sL.y-ch.aL.up-ch.aL.fore,sL.z),new V(sR.x,sR.y-ch.aR.up,sR.z),new V(sR.x,sR.y-ch.aR.up-ch.aR.fore,sR.z),
     new V(hL.x,hL.y-ch.lL.up,hL.z),new V(hL.x,hL.y-ch.lL.up-ch.lL.lo,hL.z),new V(hR.x,hR.y-ch.lR.up,hR.z),new V(hR.x,hR.y-ch.lR.up-ch.lR.lo,hR.z)];
@@ -8797,7 +8802,7 @@ function rdPose(f){const rd=f.rd,ch=f.ch,p=rd.p,V=RDv,r=ch.root,T=V.t,sc=rd.sc;
   V.q.copy(r.quaternion).invert();for(let i=5;i<14;i++)T[i].copy(p[i]).sub(r.position).applyQuaternion(V.q).divideScalar(sc);
   const fz=V.c.set(0,0,1);rdLimb(ch.aL,ch.aL.e,T[6],T[7],1,fz);rdLimb(ch.aR,ch.aR.e,T[8],T[9],1,fz);rdLimb(ch.lL,ch.lL.k,T[10],T[11],-1,fz);rdLimb(ch.lR,ch.lR.k,T[12],T[13],-1,fz);
   T[5].sub(ch.headG.position).normalize();ch.headG.quaternion.setFromUnitVectors(V.up,T[5]);}
-function rdEnd(f){const ch=f.ch;f.rd=null;ch.root.rotation.set(0,f.yaw,0);ch.headG.rotation.set(0,0,0);for(const L of [ch.lL,ch.lR]){L.p.rotation.set(0,0,0);L.k.rotation.set(0,0,0);}}
+function rdEnd(f){const ch=f.ch;f.rd=null;ch.root.rotation.set(0,f.yaw,0);if(ch.headG)ch.headG.rotation.set(0,0,0);for(const L of [ch.lL,ch.lR]){if(L.p)L.p.rotation.set(0,0,0);if(L.k)L.k.rotation.set(0,0,0);}}
 /* runs last in animFighter: the ragdoll, loose parts, eyelids and the contact shadow */
 function bodyFX(f,ch,dt,menu,sp){const m=moOf(f);if(ch.up){const A=f.an||(f.an=[0,0,0,0,0]);A[0]=ch.root.rotation.x;A[1]=ch.lL.p.rotation.x;A[2]=ch.lL.k.rotation.x;A[3]=ch.lR.p.rotation.x;A[4]=ch.lR.k.rotation.x;}
   if(ch.up&&CFX.rag&&!menu){
@@ -8831,7 +8836,8 @@ function blobMesh(){if(!BLOBT){const cv=document.createElement('canvas');cv.widt
 function bodyFXend(){for(const b of BLOBS)b.visible=b.userData.n===CFX.n&&!!b.userData.show&&CFX.blob;CFX.n++;
   if(RIM.env!==ENV){RIM.env=ENV;try{RIM.value.set(ENV.hemi?ENV.hemi[0]:'#cfe0ff').lerp(new THREE.Color('#ffffff'),.45).multiplyScalar(.42);}catch(e){}}}
 /* while a ragdoll drives the model, the animation underneath keeps its own state (the joints it reads back were overwritten) */
-function rdUnder(f,ch){const A=f.an;if(!A)return;ch.root.rotation.set(A[0],0,0);ch.headG.rotation.set(0,0,0);ch.lL.p.rotation.set(A[1],0,0);ch.lL.k.rotation.set(A[2],0,0);ch.lR.p.rotation.set(A[3],0,0);ch.lR.k.rotation.set(A[4],0,0);}
+function rdUnder(f,ch){const A=f.an;if(!A)return;const R=(o,x)=>{if(o&&o.rotation)o.rotation.set(x,0,0);};/* some rigs have no knee or head group: skip the missing parts instead of crashing the frame */
+  R(ch.root,A[0]);R(ch.headG,0);R(ch.lL&&ch.lL.p,A[1]);R(ch.lL&&ch.lL.k,A[2]);R(ch.lR&&ch.lR.p,A[3]);R(ch.lR&&ch.lR.k,A[4]);}
 function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
   // stairs and kerbs move you up or down a step instantly; the body and camera glide over it instead of snapping
   {const v=f.visY??f.pos.y,d=f.pos.y-v;f.visY=f.grounded&&Math.abs(d)<.8&&!f.finishing&&!menu?v+d*(1-Math.exp(-20*dt)):f.pos.y;}

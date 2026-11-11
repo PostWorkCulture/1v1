@@ -3928,6 +3928,24 @@ function wreckCove(){const G=WC.G,X=44,Z=58;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
         LD.push({x0:x-(ax?.4:len/2),x1:x+(ax?.4:len/2),z0:z-(ax?len/2:.4),z1:z+(ax?len/2:.4),y0:0,y1:J,nx,nz,rung:ax?x:z});};
       lad(35.45,zz(10),1,0);}};
   jetty(1);jetty(-1);
+  /* waves slapping the promenade: every 6-14 s a wave bursts into spray against the sea edge of the long walkway, and about half the time
+     it throws water right over the glass, leaving a wet sheen on the boards that dries off over a few seconds */
+  {const SEA=43.9,J=2.9,cols=['#ffffff','#e6fbff','#bfeef5','#9fdcec'];
+    const am=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#000';g.fillRect(0,0,w,h);for(let i=0;i<14;i++){const x=20+Math.random()*88,y=20+Math.random()*88,r=14+Math.random()*30,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h);}});
+    const wets=[0,1,2].map(()=>{const m=new THREE.MeshStandardMaterial({color:'#8fdcf0',emissive:'#2f8fae',emissiveIntensity:.35,alphaMap:am,transparent:true,opacity:0,roughness:.04,metalness:.2,depthWrite:false});
+      const p=new THREE.Mesh(new THREE.PlaneGeometry(7.4,5.5),m);p.rotation.x=-Math.PI/2;p.position.set(39.8,J+.015,0);p.visible=false;p.renderOrder=3;p.userData.dyn=1;M.group.add(p);return{p,m,a:0,t0:-1};});
+    let next=3+R()*5,wi=0;const pend=[];
+    M.life.push((t,dt)=>{
+      for(const w of wets){if(!w.p.visible)continue;const age=t-w.t0;const o=age<.5?age/.5:Math.max(0,1-(age-.5)/7);w.m.opacity=.6*o;
+        if(o>.15&&Math.random()<dt*3)emit(w.p.position.x+(Math.random()-.5)*5,J+.05,w.p.position.z+(Math.random()-.5)*4,{n:1,speed:.3,up:.6,size:.06,life:.4,grav:8,colors:cols});
+        if(age>7.5)w.p.visible=false;}
+      for(let i=pend.length-1;i>=0;i--)if(t>=pend[i].at){const z=pend[i].z,w=wets[wi];wi=(wi+1)%wets.length;w.p.position.z=z;w.p.rotation.z=Math.random()*.4-.2;w.t0=t;w.p.visible=true;
+        emit(40.5,J+.2,z,{n:26,speed:2.2,up:2,size:.13,life:.6,grav:12,vx:-1,colors:cols});pend.splice(i,1);}
+      next-=dt;if(next>0)return;next=6+Math.random()*8;
+      const z=(Math.random()<.5?-1:1)*(4+Math.random()*36),big=Math.random()<.5;
+      for(let k=0;k<3;k++)emit(SEA,.4+k*.6,z+(Math.random()-.5)*3,{n:16,speed:2,up:4.5+k*1.5,size:.15,life:.9,grav:12,vx:-1.2,colors:cols});
+      M.splash&&M.splash(SEA-.6,z,1.2);sfx('splash',new V3(SEA,1,z),{range:34,rate:.75,vol:.8});
+      if(big){emit(SEA,J+.4,z,{n:46,speed:2.4,up:7.5,size:.17,life:1.4,grav:14,vx:-4.2,colors:cols});emit(SEA,J+.4,z,{n:20,speed:1.6,up:5.5,size:.24,life:1.1,grav:12,vx:-2.6,colors:cols});pend.push({at:t+.75,z});}});}
 
   /* ---------- cliffs and the lookout ledge (west) ---------- */
   {const sa=['#b39a7c','#a48b6e','#bfa585'],bush=mat('#3f8a3a'),bush2=mat('#56a546'),bm=mat('#9c8a74','rock');

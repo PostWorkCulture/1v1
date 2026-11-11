@@ -3551,7 +3551,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.edgeN=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -4606,27 +4606,29 @@ function lgWater(){const WY=LG.WY,L=LG;
 float sdB(vec2 p,vec2 c,vec2 h){vec2 q=abs(p-c)-h;return length(max(q,0.))+min(max(q.x,q.y),0.);}
 float lgSd(vec2 p){float pz=(${L.PZ0}.+${L.PZ1}.)*.5,ph=(${L.PZ1}.-${L.PZ0}.)*.5;
   return min(min(sdB(p,vec2(0.,pz),vec2(${L.X}.,ph)),sdB(p,vec2(0.,-pz),vec2(${L.X}.,ph))),min(min(sdB(p,vec2(${(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2)),sdB(p,vec2(${-(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2))),sdB(p,vec2(${(L.NX0+L.NX1)/2},0.),vec2(${(L.NX1-L.NX0)/2},${L.NZ}))));}
+uniform vec4 uWv;/* the rogue wave: x crest z, y +1 coming in from +z (-1 from -z), z height */
+float lgWv(vec2 p){if(uWv.z<.001)return 0.;float d=(p.y-uWv.x)*uWv.y,c=d<0.?exp(-d*d/2.2):exp(-d*d/34.);return uWv.z*c*smoothstep(32.,12.,abs(p.x))*smoothstep(${L.PZ1}.-.4,${L.PZ1}.+2.5,p.y*uWv.y);}
 float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+p.y*.27+t*1.15)+.05*sin(p.x*.9+p.y*.7+t*2.3)+.03*sin(p.x*1.7-p.y*1.3+t*3.1);}
 `;
   // the sandy lagoon bed: shallow and pale round the decks, sloping away into deep water
   {const S=360,n=72,g=new THREE.PlaneGeometry(S,S,n,n);g.rotateX(-Math.PI/2);const p=g.attributes.position,uv=g.attributes.uv,col=new Float32Array(p.count*3),c=new THREE.Color(),sa=new THREE.Color('#ead4a2'),dk=new THREE.Color('#255e6e'),r=onePr(31);
-    for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.hypot(x,z),k=clamp((d-18)/140,0,1);p.setY(i,WY-1.9-k*k*12+(r()-.5)*.25);c.copy(sa).lerp(dk,Math.pow(k,.6));const nz=(r()-.5)*.05;col[i*3]=c.r+nz;col[i*3+1]=c.g+nz;col[i*3+2]=c.b+nz;uv.setXY(i,x/4,z/4);}
+    for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),d=Math.hypot(x,z),k=clamp((d-18)/140,0,1);p.setY(i,WY-3.6-k*k*10+(r()-.5)*.25);c.copy(sa).lerp(dk,Math.pow(k,.6));const nz=(r()-.5)*.05;col[i*3]=c.r+nz;col[i*3+1]=c.g+nz;col[i*3+2]=c.b+nz;uv.setXY(i,x/4,z/4);}
     g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,map:TX.sand,roughness:.95}));m.receiveShadow=true;m.userData.dyn=1;m.userData.water=1;M.group.add(m);}
   const mk=(x0,x1,z0,z1,nx,nz)=>{const g=new THREE.PlaneGeometry(x1-x0,z1-z0,nx,nz);g.rotateX(-Math.PI/2);g.translate((x0+x1)/2,0,(z0+z1)/2);
     const p=g.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),cA=new THREE.Color('#5ff0dc'),cB=new THREE.Color('#1cb8c8'),cC=new THREE.Color('#1a6fa6');
     for(let i=0;i<p.count;i++){const d=Math.hypot(p.getX(i),p.getZ(i));if(d<45)c.copy(cA).lerp(cB,d/45);else c.copy(cB).lerp(cC,Math.min(1,(d-45)/260));col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
     g.setAttribute('color',new THREE.BufferAttribute(col,3));return g;};
-  const uT={value:0};
+  const uT={value:0},uWv=M.lgWave={value:new THREE.Vector4(60,1,0,0)};
   const mt=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.06,metalness:.05,transparent:true,depthWrite:false});
-  mt.onBeforeCompile=sh=>{sh.uniforms.uT=uT;
+  mt.onBeforeCompile=sh=>{sh.uniforms.uT=uT;sh.uniforms.uWv=uWv;
     sh.vertexShader=GL+sh.vertexShader
-      .replace('#include <beginnormal_vertex>',`vec3 wpos=(modelMatrix*vec4(position,1.)).xyz;vWp=wpos;float e=.35,hk=smoothstep(70.,56.,max(abs(wpos.x),abs(wpos.z))),h0=lgH(wpos.xz,uT)*hk;
-        vec3 objectNormal=normalize(vec3(-(lgH(wpos.xz+vec2(e,0.),uT)*hk-h0)/e,1.,-(lgH(wpos.xz+vec2(0.,e),uT)*hk-h0)/e));`)
+      .replace('#include <beginnormal_vertex>',`vec3 wpos=(modelMatrix*vec4(position,1.)).xyz;vWp=wpos;float e=.35,hk=smoothstep(70.,56.,max(abs(wpos.x),abs(wpos.z))),h0=(lgH(wpos.xz,uT)+lgWv(wpos.xz))*hk;
+        vec3 objectNormal=normalize(vec3(-((lgH(wpos.xz+vec2(e,0.),uT)+lgWv(wpos.xz+vec2(e,0.)))*hk-h0)/e,1.,-((lgH(wpos.xz+vec2(0.,e),uT)+lgWv(wpos.xz+vec2(0.,e)))*hk-h0)/e));`)
       .replace('#include <begin_vertex>','vec3 transformed=vec3(position);transformed.y+=h0;');
     sh.fragmentShader=GL+sh.fragmentShader
       // colour: lighter where a crest lifts the water, sun-lit caustics on the sand round the decks, foam at the deck edges
       .replace('#include <color_fragment>',`#include <color_fragment>
-        vec2 P=vWp.xz;float e=lgSd(P),camD=length(vViewPosition),hh=lgH(P,uT);
+        vec2 P=vWp.xz;float e=lgSd(P),camD=length(vViewPosition),wv=lgWv(P),hh=lgH(P,uT)+wv*.4;
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.6,.97,.9),smoothstep(.05,.3,hh)*.3);
         float wFoam=0.;
         if(e<60.){vec2 q=swirl(P,uT);float tx=foamTex(q+vec2(uT*.05,0.));
@@ -4644,7 +4646,8 @@ float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+
           float res=smoothstep(40.,4.,e)*smoothstep(.55,.78,fbm(q*.25+vec2(uT*.03,0.)))*.55;
           wFoam=clamp(edge*(.5+.7*tx)+res*tx,0.,1.);
           // the odd whitecap further out
-          wFoam=max(wFoam,smoothstep(.2,.34,hh)*smoothstep(.6,.8,fbm(P*.06+vec2(0.,uT*.05)))*smoothstep(10.,30.,e)*tx*.8);}
+          wFoam=max(wFoam,smoothstep(.2,.34,hh)*smoothstep(.6,.8,fbm(P*.06+vec2(0.,uT*.05)))*smoothstep(10.,30.,e)*tx*.8);
+          if(uWv.z>.001){float wk=wv/uWv.z,dd=(P.y-uWv.x)*uWv.y;wFoam=max(wFoam,smoothstep(.45,.95,wk)*smoothstep(1.5,-.5,dd)*(.55+.6*tx));}}
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.96,.98,1.),wFoam);
         diffuseColor.a=mix(mix(.55,.94,smoothstep(0.,70.,e)),1.,wFoam);`)
       .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.05,.85,wFoam);')
@@ -4664,7 +4667,7 @@ float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+
           float gl=(pow(nh,1400.)*9.+step(.8,cell)*pt*pow(nh,90.)*14.+pow(nh,40.)*.35)*(1.-wFoam);
           outgoingLight+=vec3(1.,.9,.78)*gl;diffuseColor.a=min(1.,diffuseColor.a+gl*.5);}
         #include <opaque_fragment>`);};
-  mt.customProgramCacheKey=()=>'lgwater1';
+  mt.customProgramCacheKey=()=>'lgwater2';
   // fine mesh round the decks so the swell has shape (faded flat at its edge), four coarse flat strips out to the horizon
   for(const [x0,x1,z0,z1,nx,nz] of [[-70,70,-70,70,120,120],[-700,-70,-700,700,24,60],[70,700,-700,700,24,60],[-70,70,-700,-70,16,24],[-70,70,70,700,16,24]]){const m=new THREE.Mesh(mk(x0,x1,z0,z1,nx,nz),mt);m.position.y=WY;m.receiveShadow=true;m.userData.dyn=1;m.userData.water=1;m.renderOrder=2;m.frustumCulled=false;M.group.add(m);}
   M.life.push(t=>{uT.value=t;});}
@@ -4672,12 +4675,15 @@ float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+
 function lgDeck(x0,x1,z0,z1){floor(x0,x1,z0,z1,'#b88250','wood',0,2);
   deco(new THREE.BoxGeometry(x1-x0+.3,.45,z1-z0+.3),mat('#5a3a22'),(x0+x1)/2,-.25,(z0+z1)/2).castShadow=false;
   const st=mat('#6e4a2c'),nx=Math.max(1,Math.round((x1-x0-2)/4.5)),nz=Math.max(1,Math.round((z1-z0-2)/4.4)),sx=(x1-x0-2)/nx,sz=(z1-z0-2)/nz;
-  for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++)deco(gC(.22,.27,5.6,8),st,x0+1+i*sx,-2.8,z0+1+j*sz);}
-// a rope rail along one edge of the deck; the invisible wall behind it keeps players on the boards but lets bullets through (bots can see past it too)
+  for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++)deco(gC(.22,.27,6.4,8),st,x0+1+i*sx,-3.2,z0+1+j*sz);}
+// a rope rail along one edge of the deck: the posts stay, the rope between each pair of posts is a section that snaps when anyone walks
+// into it, shoots it (bullets still pass, a couple of hits snap it) or blows it up, and you can go over the side into the lagoon.
+// Snapped sections come back after a while or at the next round. Bots can see past the rope
 function lgRail(x0,z0,x1,z1){const rope=mat('#d9c48e'),post=mat('#6e4a2c'),ax=z0===z1,L=ax?x1-x0:z1-z0,cx=(x0+x1)/2,cz=(z0+z1)/2;
-  const b=collider(ax?x0:x0-.2,ax?x1:x0+.2,0,7,ax?z0-.2:z0,ax?z0+.2:z1);b.wood=true;b.see=true;b.edge=true;
-  const n=Math.max(1,Math.round(L/3));for(let i=0;i<=n;i++){const t=-L/2+i*L/n;deco(gC(.1,.12,1.15,6),post,ax?cx+t:cx,.575,ax?cz:cz+t);}
-  for(const y of [.55,1.0]){const r=deco(gC(.035,.035,L,5),rope,cx,y,cz);r.rotation.set(ax?0:Math.PI/2,0,ax?Math.PI/2:0);r.castShadow=false;}}
+  const n=Math.max(1,Math.round(L/3)),sl=L/n;for(let i=0;i<=n;i++){const t=-L/2+i*sl;deco(gC(.1,.12,1.15,6),post,ax?cx+t:cx,.575,ax?cz:cz+t);}
+  for(let i=0;i<n;i++){const t=-L/2+(i+.5)*sl,x=ax?cx+t:cx,z=ax?cz:cz+t;
+    const b=box(x,0,z,ax?sl-.22:.4,1.2,ax?.4:sl-.22,'#c8a56a',{mat:INVIS,edges:false,shadow:false,prop:'rail',hp:30,snd:'wood',wood:true});b.see=true;b.edge=1;b.touch=1;
+    for(const y of [.55,1.0]){const r=new THREE.Mesh(gC(.035,.035,sl-.2,5),rope);r.position.y=y-.6;r.rotation.set(ax?0:Math.PI/2,0,ax?Math.PI/2:0);r.castShadow=false;b.mesh.add(r);}}}
 // a Tripo model standing somewhere on its own (no collider): returns the group the model is put in
 function lgProp(id,x,y,z,ry,sc){const g=new THREE.Group();g.position.set(x,y,z);M.group.add(g);furnInto(id,g,x,y,z,ry||0,sc);return g;}
 // a Tripo model as a loose knock-over: an invisible knock box the size given carries the model
@@ -4686,11 +4692,52 @@ function lgKnock(id,x,y,z,w,h,d,ry,o={}){const K=knock(x,y,z,w,h,d,'#ffffff',Obj
 const lgSdB=(px,pz,cx,cz,hx,hz)=>{const qx=Math.abs(px-cx)-hx,qz=Math.abs(pz-cz)-hz;return Math.hypot(Math.max(qx,0),Math.max(qz,0))+Math.min(Math.max(qx,qz),0);};
 const lgSd=(x,z)=>{const L=LG,pz=(L.PZ0+L.PZ1)/2,ph=(L.PZ1-L.PZ0)/2;return Math.min(lgSdB(x,z,0,pz,L.X,ph),lgSdB(x,z,0,-pz,L.X,ph),lgSdB(x,z,(L.W0+L.W1)/2,0,(L.W1-L.W0)/2,L.PZ0+.2),lgSdB(x,z,-(L.W0+L.W1)/2,0,(L.W1-L.W0)/2,L.PZ0+.2),lgSdB(x,z,(L.NX0+L.NX1)/2,0,(L.NX1-L.NX0)/2,L.NZ));};
 const LG_BZ=11;/* the tiki bars' counters sit this far from the middle */
+/* every so often a rogue wave rolls in from one end of the lagoon, rears up against the back of a pavilion and bursts over the rail:
+   a curtain of spray, water raining down across the terrace, and the boards left wet and shining, drying off patch by patch.
+   Looks only (nobody is pushed about) */
+const LG_WET0=new THREE.Color('#e4f8ff'),LG_WET1=new THREE.Color('#2f5a66');
+function lgRogueWave(pr){const L=LG,U=M.lgWave.value;
+  const mistT=canvasTex(64,64,(c,w,h)=>{const r=onePr(5);for(let i=0;i<9;i++){const x=w*(.3+r()*.4),y=h*(.3+r()*.4),rad=w*(.18+r()*.2);const g=c.createRadialGradient(x,y,0,x,y,rad);g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(.6,'rgba(255,255,255,.25)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,0,w,h);}});
+  /* white water: a pool of soft billowing sprites thrown up over the rail and rushing in across the boards */
+  const SP=[];for(let i=0;i<96;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:mistT,color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));sp.visible=false;sp.renderOrder=3;sp.userData.dyn=1;M.group.add(sp);SP.push({sp,t:-1,v:new V3()});}
+  const wetT=canvasTex(256,128,(c,w,h)=>{const r=onePr(11),im=c.createImageData(w,h);const bl=[];for(let i=0;i<70;i++)bl.push([r()*w,r()*h,8+r()*34,.4+r()*.6]);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let v=0;for(const [bx,by,br,bs] of bl){const d=Math.hypot(x-bx,(y-by)*1.3)/br;if(d<1)v=Math.max(v,bs*(1-d*d));}
+      const edge=y/h;v=Math.min(1,v*.75+edge*edge*.7+.05*r());const k=(y*w+x)*4;im.data[k]=im.data[k+1]=im.data[k+2]=Math.round(v*255);im.data[k+3]=255;}c.putImageData(im,0,0);});
+  const ends=[1,-1].map(dir=>{const z=dir*L.PZ1;
+    const wm=new THREE.MeshStandardMaterial({color:'#dff6ff',transparent:true,opacity:0,roughness:.04,metalness:.35,alphaMap:wetT,alphaTest:.02,depthWrite:false});
+    const wg=new THREE.PlaneGeometry(2*L.X-.2,13,1,1);wg.rotateX(-Math.PI/2);if(dir<0)wg.rotateY(Math.PI);wg.translate(0,0,-dir*6.5);
+    const we=new THREE.Mesh(wg,wm);we.position.set(0,.035,z-dir*.1);we.visible=false;we.userData.dyn=1;we.receiveShadow=true;M.group.add(we);
+    return {dir,z,we,wm,wt:-1};});
+  const W={next:24+pr()*14,on:null,rain:[]};
+  const crash=E=>{const dir=E.dir,z=E.z;E.wt=0;E.we.visible=true;
+    SP.forEach((P,i)=>{const sheet=i>=64,u=sheet?(i-64)/32:i/64;P.t=0;P.delay=sheet?.35+rnd(0,.3):rnd(0,.3);P.life=sheet?rnd(1,1.6):rnd(1.4,2.3);
+      P.sp.position.set(-L.X+u*2*L.X+rnd(-.6,.6),sheet?.4:L.WY+rnd(.4,1.4),sheet?z-dir*rnd(.5,2):z+dir*rnd(.2,1.4));
+      if(sheet)P.v.set(rnd(-.4,.4),rnd(.2,.8),-dir*rnd(4,8));else P.v.set(rnd(-.7,.7),rnd(9,16),-dir*rnd(1.5,4.5));
+      P.s0=sheet?rnd(1.2,2):rnd(1.6,2.6);P.s1=sheet?rnd(3,4.5):rnd(5,8);P.op=sheet?rnd(.45,.7):rnd(.75,1);P.sheet=sheet;P.sp.visible=false;});
+    sfx('splash',{x:0,y:1,z},{range:70,rate:.5,vol:1});setTimeout(()=>sfx('splash',{x:0,y:1,z:z-dir*4},{range:60,rate:.65,vol:.8}),220);
+    for(let x=-L.X+.5;x<=L.X;x+=1.6){emit(x,.3,z+dir*.5,{n:3,speed:2.5,up:rnd(9,13),vz:-dir*rnd(2,4),size:.13,life:1.4,grav:13,colors:['#ffffff','#e6fbff','#a9e8f0']});if(M.splash&&Math.random()<.4)M.splash(x,z+dir*1.4,1.8);}
+    for(let i=0;i<6;i++)W.rain.push({at:.15+i*.08,z,dir});
+    if(ME.alive&&Math.abs(ME.pos.z-z)<14)S.shake=Math.max(S.shake||0,.3);};
+  M.life.push((t,dt)=>{
+    if(!W.on&&t>W.next){const E=ends[Math.random()<.5?0:1];W.on={E,t0:t};}
+    if(W.on){const E=W.on.E,k=t-W.on.t0,z0=64,zEnd=L.PZ1+.5,zc=Math.max(zEnd,z0-10*k);
+      if(zc>zEnd){U.set(E.dir*zc,E.dir,Math.min(1,k/1.5)*(.5+2.2*Math.pow(1-(zc-zEnd)/(z0-zEnd),1.5)),0);}
+      else{if(!W.on.hit){W.on.hit=t;crash(E);}const u=(t-W.on.hit)/.7;U.set(E.dir*zEnd,E.dir,Math.max(0,2.7*(1-u)),0);if(u>=1){U.z=0;W.on=null;W.next=t+32+Math.random()*28;}}}
+    // water thrown up over the rail comes down across the terrace
+    for(let i=W.rain.length-1;i>=0;i--){const R=W.rain[i];R.at-=dt;if(R.at>0)continue;W.rain.splice(i,1);for(let x=-L.X+1;x<L.X;x+=2.2)emit(x+rnd(-.8,.8),rnd(3,5.5),R.z-R.dir*rnd(1,9),{n:2,speed:1,up:-2,vz:-R.dir*rnd(1,3),size:.1,life:.9,grav:16,colors:['#ffffff','#d8f6f8','#9fe3ea']});}
+    for(const P of SP){if(P.t<0)continue;P.t+=dt;const k=P.t-P.delay;if(k<0)continue;const u=k/P.life;if(u>=1){P.t=-1;P.sp.visible=false;continue;}
+      P.sp.visible=true;P.v.y-=(P.sheet?2:9)*dt;P.v.multiplyScalar(Math.exp(-(P.sheet?1.6:.7)*dt));P.sp.position.addScaledVector(P.v,dt);if(P.sp.position.y<.25&&P.sheet)P.sp.position.y=.25;
+      P.sp.scale.setScalar(P.s0+(P.s1-P.s0)*(1-(1-u)*(1-u)));P.sp.material.opacity=P.op*Math.min(1,k/.12)*(1-u)*(1-u*.4);}
+    for(const E of ends){
+      if(E.wt>=0){E.wt+=dt;const w=E.wt,sp=Math.min(1,w/.9);E.we.scale.z=Math.max(.01,sp);E.wm.opacity=w<.6?w/.6*.85:.85-.15*Math.min(1,(w-.6)/2);E.wm.color.copy(LG_WET0).lerp(LG_WET1,Math.min(1,Math.max(0,(w-.4)/1.8)));E.wm.alphaTest=w<3?.02:Math.min(.98,.02+(w-3)/11);
+        if(w<4&&Math.random()<dt*14)emit(rnd(-L.X,L.X),-.05,E.z+E.dir*.15,{n:1,speed:.2,up:-1,size:.08,life:.6,grav:14,colors:['#e8fbff','#bfeef4']});
+        if(w>14){E.wt=-1;E.we.visible=false;E.wm.opacity=0;}}}});}
 function lagoonMap(){const X=17,Z=23,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr=onePr(777);
   /* anything that goes over the rails lands in the lagoon: splashes for shots, blasts and flung bodies (nobody can wade here) */
-  M.deepWater=true;M.waterY=(x,z)=>lgSd(x,z)>.3&&Math.abs(x)<700&&Math.abs(z)<700?WY+lgH(x,z,M.lifeT||0):null;
+  M.deepWater=true;M.edgeDrop=(x,z)=>lgSd(x,z)>.3;M.edgeN=(x,z)=>{const e=.25,gx=lgSd(x+e,z)-lgSd(x-e,z),gz=lgSd(x,z+e)-lgSd(x,z-e),l=Math.hypot(gx,gz)||1;return new V3(gx/l,0,gz/l);};
+  M.waterY=(x,z)=>lgSd(x,z)>.3&&Math.abs(x)<700&&Math.abs(z)<700?WY+lgH(x,z,M.lifeT||0):null;
   waterRings((x,z,t)=>WY+lgH(x,z,t));
-  lgWater();
+  lgWater();lgRogueWave(pr);
   /* the two pavilions, two wide crossovers between them and the shop nook off the east crossover. The decks are kept bare:
      one tiki bar per pavilion is the only cover, facing the other side across the water */
   for(const s of [1,-1])lgDeck(-L.X,L.X,Math.min(s*L.PZ0,s*L.PZ1),Math.max(s*L.PZ0,s*L.PZ1));
@@ -5046,7 +5093,7 @@ function buildGrid(rg){const b=M.bounds;let g=M.grid;
   const boxesAt=(i,j)=>{const k=i+j*nx,L=g.sb[k]||[];if(!dyn.length)return L;const cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS,out=L.slice();for(const o of dyn)if(cx>o.x0-CLR-CS&&cx<o.x1+CLR+CS&&cz>o.z0-CLR-CS&&cz<o.z1+CLR+CS)out.push(o);return out;};
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=i+j*nx,cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS,L=boxesAt(i,j);
     for(let l=0;l<NL;l++)g.h[k*NL+l]=NaN;
-    const cand=[0];for(const bx of L)if(cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1)cand.push(bx.y1);cand.sort((p,q)=>p-q);let n=0,prev=-9;
+    const cand=M.edgeDrop&&M.edgeDrop(cx,cz)?[]:[0];for(const bx of L)if(cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1)cand.push(bx.y1);cand.sort((p,q)=>p-q);let n=0,prev=-9;
     for(const h of cand){if(h-prev<.03)continue;prev=h;let ok=true;
       for(const bx of L){const inC=cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1;
         if(inC&&bx.y0<h+.02&&bx.y1>h+.05){ok=false;break;}
@@ -6250,7 +6297,7 @@ const hhOf=f=>HH*(1-.3*(f.cv||0));
 function overlaps(b,x,z,y,h=HH){return b.x0<x+R&&b.x1>x-R&&b.z0<z+R&&b.z1>z-R&&b.y1>y+.02&&b.y0<y+h;}
 // in the air, a lip up to AIR_STEP above your feet lifts you onto it (catching a ledge at the top of a jump) instead of stopping you dead
 const AIR_STEP=.3;
-function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;const H=hhOf(f),allow=f.grounded?STEP:f.vel.y<6&&!f.downed?AIR_STEP:0;
+function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;if(M.deepWater&&f.bot&&f.grounded&&!(f.thrownT>0)&&M.edgeDrop(nx,nz)&&!M.edgeDrop(f.pos.x,f.pos.z))return false;/* Lagoon: a bot on its feet won't step off the boards */const H=hhOf(f),allow=f.grounded?STEP:f.vel.y<6&&!f.downed?AIR_STEP:0;
   for(const b of allBoxes()){if(!overlaps(b,nx,nz,f.pos.y,H))continue;const need=b.y1-f.pos.y;
     if(need<=allow&&!allBoxes().some(o=>o!==b&&overlaps(o,nx,nz,f.pos.y+need,H)&&o.y1>f.pos.y+need+.02&&o.y0>=f.pos.y+need+.02&&o.y0<f.pos.y+need+H)){lift=Math.max(lift,need);continue;}
     if(overlaps(b,f.pos.x,f.pos.z,f.pos.y,H)&&b.y0<f.pos.y+H*.5){continue;}if(b.touch&&b.alive&&!(NET.role==='client'&&!NET.replay))touchGlass(b,f);return false;}
@@ -6261,15 +6308,26 @@ function flushGlass(){while(TGQ.length){const q=TGQ.shift();if(q.b.alive)breakPr
 /* on a map with an open edge (Sky High) you aren't held inside the map's bounds: the glass is the wall. Bots stay held unless they're knocked or in the air */
 const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||f.thrownT>0||!f.grounded||!!(f.finishing&&f.finishing.fall));
 /* ---------- Man Down: you went through the glass and off the edge. Slow motion, a camera out over the drop, and you lose the round ---------- */
-function startEdgeFall(f){const ax=Math.abs(f.pos.x)/18.5>Math.abs(f.pos.z)/22.5,n=ax?new V3(Math.sign(f.pos.x),0,0):new V3(0,0,Math.sign(f.pos.z));
+function startEdgeFall(f){const ax=Math.abs(f.pos.x)/18.5>Math.abs(f.pos.z)/22.5,n=M.edgeN?M.edgeN(f.pos.x,f.pos.z):ax?new V3(Math.sign(f.pos.x),0,0):new V3(0,0,Math.sign(f.pos.z));
   const out=f.vel.x*n.x+f.vel.z*n.z;if(out<3.2){f.vel.x+=n.x*(3.2-out);f.vel.z+=n.z*(3.2-out);}
   f.edgeFall={t:0,rx:0,spin:(Math.random()<.5?-1:1)*rnd(4.5,6.5)};f.onLadder=null;f.ads=false;f.boostT=0;f.moonT=0;f.glideT=0;f.zipT=0;f.hookT=0;f.reloadT=0;f.crouchOn=false;f.downed=false;
   const e=new V3(f.pos.x,0,f.pos.z),side=new V3(-n.z,0,n.x).multiplyScalar(Math.random()<.5?-1:1);
-  S.manDown={f,n,e,side,rt:0,cut:1};S.slowT=Math.max(S.slowT||0,1.7);S.shake=Math.max(S.shake,.25);vig(.35);
+  S.manDown={f,n,e,side,rt:0,cut:1,water:!!M.deepWater};S.slowT=Math.max(S.slowT||0,M.deepWater?2.4:1.7);S.shake=Math.max(S.shake,.25);vig(.35);
   const el=$('mandown');if(el){el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(startEdgeFall.t);startEdgeFall.t=setTimeout(()=>el.classList.remove('on'),3700);}
   sfx('whiz',null,{rate:.42,vol:1});sfx('glboom',null,{rate:.5,vol:.7});}
+/* Lagoon: a slow topple over the side, a big splash, then sinking deeper and deeper into the blue, fading as you go */
+function waterFallStep(f,E,dt){E.t+=dt;const wy=M.waterY(f.pos.x,f.pos.z)??LG.WY,bed=LG.WY-3.3;f.grounded=false;
+  if(!E.wet){f.vel.y-=GRAV*.75*dt;f.pos.addScaledVector(f.vel,dt);E.rx+=dt*E.spin*.8;const k=S.t*8;
+    f.pose={root:[E.rx,f.yaw,Math.sin(E.rx*.7)*.4],ar:[-2.8,0,.6+Math.sin(k)*.5],al:[-2.8,0,-.6-Math.sin(k)*.5],ll:.6*Math.sin(k*.8),lr:-.6*Math.sin(k*.8)};
+    if(f.pos.y<wy-.2){E.wet=1;E.wt=0;const x=f.pos.x,z=f.pos.z;if(M.splash){M.splash(x,z,2.6);M.splash(x+.6,z-.4,1.6);}sfx('splash',{x,y:wy,z},{range:40,rate:.75,vol:1});
+      for(let i=0;i<3;i++)emit(x,wy+.2,z,{n:16,speed:3+i,up:10-i*2.5,size:.2,life:1.1,grav:14,colors:['#ffffff','#d8f6f8','#9fe3ea']});emit(x,wy,z,{n:14,speed:1.5,up:1,size:.5,life:.9,grav:-1,colors:['#e8fbff','#bfeef4']});}}
+  else{E.wt+=dt;const kh=Math.exp(-3*dt);f.vel.x*=kh;f.vel.z*=kh;f.vel.y=-(.3+2.2*Math.exp(-E.wt*1.3));f.pos.addScaledVector(f.vel,dt);if(f.pos.y<bed)f.pos.y=bed;
+    E.rx+=dt*E.spin*.12*Math.exp(-E.wt*.4);const k=S.t*2.2;f.pose={root:[E.rx,f.yaw,Math.sin(S.t*.9)*.25],ar:[-2.6+Math.sin(k)*.3,0,.9+Math.sin(k)*.25],al:[-2.6-Math.sin(k)*.3,0,-.9-Math.sin(k)*.25],ll:.35*Math.sin(k*.7),lr:-.35*Math.sin(k*.7)};
+    if(Math.random()<dt*9)emit(f.pos.x+rnd(-.3,.3),f.pos.y+1.3,f.pos.z+rnd(-.3,.3),{n:1,speed:.3,up:2.2,size:.09,life:1.2,grav:-2,colors:['#ffffff','#dff8ff']});
+    if(f.ch){const a=Math.max(0,1-E.wt/3.6);setGhost(f,Math.round(a*20)/20);if(f.guns&&a<.45)for(const k in f.guns)f.guns[k].visible=false;if(a<=0)f.ch.root.visible=false;}}
+  if(!E.dead&&f.alive&&!f.finishing&&S.state==='fight'&&((E.wet&&E.wt>.35)||E.t>3)){E.dead=1;const lb=f.lastBy;f.downedBy=lb&&lb!==f&&isFoe(lb,f)&&S.t-(f.lastHurt||-99)<10?lb:null;kill(f,null,false,'fall');}}
 /* the tumble down: arms and legs flailing; partway down it counts as an elimination (credited to whoever last hurt you) and the round is lost */
-function edgeFallStep(f,dt){const E=f.edgeFall;E.t+=dt;f.vel.y-=GRAV*1.2*dt;f.vel.x*=Math.max(0,1-dt*.3);f.vel.z*=Math.max(0,1-dt*.3);f.pos.addScaledVector(f.vel,dt);f.grounded=false;
+function edgeFallStep(f,dt){const E=f.edgeFall;if(M.deepWater){waterFallStep(f,E,dt);return;}E.t+=dt;f.vel.y-=GRAV*1.2*dt;f.vel.x*=Math.max(0,1-dt*.3);f.vel.z*=Math.max(0,1-dt*.3);f.pos.addScaledVector(f.vel,dt);f.grounded=false;
   E.rx+=dt*E.spin;const k=S.t*9;f.pose={root:[E.rx,f.yaw,Math.sin(E.rx*.7)*.45],ar:[-2.8,0,.6+Math.sin(k)*.45],al:[-2.8,0,-.6-Math.sin(k)*.45],ll:.6*Math.sin(k*.8),lr:-.6*Math.sin(k*.8)};
   if(f.pos.y<-90&&f.ch)f.ch.root.visible=false;
   if(!E.dead&&f.alive&&!f.finishing&&S.state==='fight'&&(E.t>1.15||f.pos.y<-26)){E.dead=1;const lb=f.lastBy;f.downedBy=lb&&lb!==f&&isFoe(lb,f)&&S.t-(f.lastHurt||-99)<10?lb:null;kill(f,null,false,'fall');}}
@@ -8690,9 +8748,9 @@ function updCamera(dt){
     camera.lookAt(new V3(c.x,0,c.z).addScaledVector(right,camera.aspect>1?-r*.32:0));camera.fov=50;camera.updateProjectionMatrix();ME.ch.root.visible=true;return;}
   /* Man Down: a camera out over the drop, looking back at the smashed glass and down at the body tumbling away */
   {const D=S.manDown;if(D&&(D.rt<3.4||(D.f===ME&&!ME.alive))&&(S.state==='fight'||S.state==='roundEnd'||S.state==='done')){const v=D.f;D.rt+=dt;const u=Math.min(1,D.rt/3);
-    const want=D.e.clone().addScaledVector(D.n,4.6+u*1.6).addScaledVector(D.side,3.4).add(new V3(0,2.3-u*2.6,0)),tg=new V3(v.pos.x,v.pos.y+1,v.pos.z);
+    const want=D.e.clone().addScaledVector(D.n,4.6+u*1.6).addScaledVector(D.side,3.4).add(new V3(0,D.water?Math.max(LG.WY+1.3,2.3-u*2.6):2.3-u*2.6,0)),tg=new V3(v.pos.x,v.pos.y+1,v.pos.z);
     if(D.cut){D.cut=0;camera.position.copy(D.e).addScaledVector(D.n,-2.2).addScaledVector(D.side,2.4).add(new V3(0,2.6,0));D.look=D.e.clone().add(new V3(0,1,0));}
-    if(!D.hud){D.hud=1;$('duel-hud').classList.add('mdcine');}camera.position.lerp(want,1-Math.exp(-2.6*dt));D.look.lerp(tg,1-Math.exp(-7*dt));camera.lookAt(D.look);camera.fov=damp(camera.fov,62,4,dt);camera.updateProjectionMatrix();if(v.ch&&v.pos.y>-90)v.ch.root.visible=true;return;}
+    if(!D.hud){D.hud=1;$('duel-hud').classList.add('mdcine');}camera.position.lerp(want,1-Math.exp(-2.6*dt));D.look.lerp(tg,1-Math.exp(-7*dt));camera.lookAt(D.look);camera.fov=damp(camera.fov,62,4,dt);camera.updateProjectionMatrix();if(v.ch&&v.pos.y>-90&&!(v.edgeFall&&v.edgeFall.wet&&v.edgeFall.wt>3.6))v.ch.root.visible=true;return;}
     if(D&&D.hud){D.hud=0;$('duel-hud').classList.remove('mdcine');}}
   {const cv=FS.find(x=>x.finishing&&x.finishing.cine&&(x===ME||x.finishing.by===ME));if(cv){const F=cv.finishing,a=F.by;
     const fc=F.focus||new V3((a.pos.x+cv.pos.x)/2,cv.pos.y+1.4,(a.pos.z+cv.pos.z)/2),Dd=F.camD||8.5;

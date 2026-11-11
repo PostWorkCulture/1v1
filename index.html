@@ -8064,7 +8064,10 @@ function updAmb(dt){const X=window.SFX;if(!X||!X.bed)return;const on=D.active&&S
   X.bed('engine',ev,ep);
   for(const L of (on&&M.flockLists)||[])for(const f of L){if(f.chirp)continue;const p=f.g.position;if(Math.hypot(p.x-camera.position.x,p.z-camera.position.z)<22){f.chirp=1;sfx('birds',{x:p.x,y:p.y,z:p.z},{range:30});}}
   if(on&&M.gulls&&M.gulls.length){S.gullT=(S.gullT??4)-dt;if(S.gullT<=0){S.gullT=5+Math.random()*9;const g=M.gulls[Math.floor(Math.random()*M.gulls.length)].position;if(Math.hypot(g.x-camera.position.x,g.z-camera.position.z)<45)sfx('gulls',{x:g.x,y:g.y,z:g.z},{range:30});}}
-  if(on&&M.wade){const c=camera.position,sx=wcShore(c.z),d=Math.max(0,sx-c.x);const a=ambAt(Math.max(c.x,sx),.5,c.z,8);X.bed('waves',clamp(1-d/40,.12,1)*(d<1?1:a.v*1.4),d<1?0:a.pan);}else X.bed('waves',0,0);
+  if(on&&M.wade){const c=camera.position,sx=wcShore(c.z),d=Math.max(0,sx-c.x);const a=ambAt(Math.max(c.x,sx),.5,c.z,8);X.bed('waves',clamp(1-d/40,.12,1)*(d<1?1:a.v*1.4),d<1?0:a.pan);}
+  /* Lagoon: water lapping round the stilts all the time, swelling as a rogue wave rolls in (it peaks just before the crash) */
+  else if(on&&M.deepWater&&M.lgWave){const U=M.lgWave.value,sw=clamp(U.z/2.4,0,1);let pan=0;if(sw>0){const a=ambAt(0,0,U.x,30);pan=a.pan*sw;}X.bed('waves',.28+.55*sw,pan);}
+  else X.bed('waves',0,0);
   let bv=0,bp=0;for(const g of (on&&M.boats)||[]){const p=g.position,a=ambAt(p.x,p.y,p.z,14);if(a.v>bv){bv=a.v;bp=a.pan;}}X.bed('boat',bv,bp);}
 function updWalls(dt){for(const w of M.walls){if(!w.alive)continue;const age=S.t-(w.born??S.t);
   if(age>=WALL_LIFE){w.alive=false;for(const br of w.bricks)br.alive=false;M.group.remove(w.group);const b=w.bb;for(let i=0;i<6;i++)emit(lerp(b.x0,b.x1,Math.random()),w.y0+rnd(.2,2.6),lerp(b.z0,b.z1,Math.random()),{n:4,speed:2,up:1,size:.25,life:.6,grav:2,colors:[w.color,'#d8dbe2']});dirtyGrid(b,.05);continue;}

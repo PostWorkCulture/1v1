@@ -4714,6 +4714,14 @@ function skyHigh(){const X=18.5,Z=22.5;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr
     else if(u<73){px=0;pz=LZ;yaw=LYAW;bank=0;low=true;py=u<64?HOV+(LANDY-HOV)*(1-Math.pow(1-(u-60)/4,2)):u<69?LANDY:LANDY+(HOV-LANDY)*sst((u-69)/4);}
     else{const e=sst((u-73)/7);px=o[0]*e;py=HOV+(o[1]-HOV)*e;pz=LZ+(o[2]-LZ)*e;yaw=LYAW+wrapA(o[3]-LYAW)*e;bank=.16*e;}
     heli.position.set(px,py,pz);heli.rotation.set(0,yaw,bank);heli.userData.rot.rotation.y=t*22;
+    /* anyone stood under the cabin as it comes down is crushed: they burst apart in a blast and are out (the kill goes to whoever last hurt them) */
+    if(low&&u<64&&S.state==='fight'){const bt=py-2.6,m=R*.6;for(const f of FS){if(!f.alive||f.finishing||f.edgeFall)continue;
+      if(f.pos.x>heliCol.x0-m&&f.pos.x<heliCol.x1+m&&f.pos.z>heliCol.z0-m&&f.pos.z<heliCol.z1+m&&f.pos.y>PH-.3&&f.pos.y<bt+.5&&bt<f.pos.y+1.9){
+        const lb=f.lastBy;f.downedBy=lb&&lb!==f&&isFoe(lb,f)&&S.t-(f.lastHurt||-99)<10?lb:null;const at=f.pos.clone();kill(f,null,false,'crush');
+        if(f.finishing){f.finishing.fx='Crushed';f.finishing.dur=1.2;}S.shake=Math.max(S.shake,f===ME?1.2:.6);slowMo(.5,f);vig(f===ME?.6:.2);
+        sfx('explode',at,{range:40,vol:1.1});sfx('smash',at,{range:30});decal(at.x,PH,at.z,1.8,'#2b2622','#5a3a2a');
+        emit(at.x,at.y+1,at.z,{n:70,speed:13,up:4,size:.4,life:.8,grav:3,colors:['#fff1a8','#ffb347','#ff5a1f','#c0281e','#3a3a3a']});
+        emit(at.x,at.y+.4,at.z,{n:30,speed:6,up:1,size:.7,life:1.2,grav:-1,colors:['#4a4540','#2b2826','#6e665c']});}}}
     {const down=low&&py<LANDY+1.2,inB=M.boxes.includes(heliCol);if(down&&!inB)M.boxes.push(heliCol);else if(!down&&inB)M.boxes.splice(M.boxes.indexOf(heliCol),1);}
     if(low&&dt&&py<LANDY+9&&Math.random()<dt*40){const an=Math.random()*TAU,r=3.5+Math.random()*2.5,k=(1-(py-LANDY)/9)*7+2;emit(Math.cos(an)*r,PH+.15,LZ+2.5+Math.sin(an)*r,{n:2,speed:1,up:.4,size:.38,life:.8,grav:0,vx:Math.cos(an)*k,vz:Math.sin(an)*k,colors:['#d9d2c4','#c4bba9','#e8e2d6']});}if(heli.userData.beacon)heli.userData.beacon.material.opacity=(t%1.1)<.15?1:0;
     const b=t*.012+2.2;blimp.position.set(Math.cos(b)*190,58,Math.sin(b)*190);blimp.rotation.y=-b-Math.PI/2;blink.material.opacity=(t%1.4)<.25?1:.08;};upd(0,0);M.life.push(upd);
@@ -5557,7 +5565,7 @@ const CHARS={
   astronaut:{skin:'space_suit',fx:['Rainbow beam','Firework'],name:'Spaceman',desc:'Low-gravity moon jump',abil:'Moon jump',cd:6,hp:100,look:{shirt:'#eceff3',shirtSolid:'#d3d8de',hair:'#2d6fd8'},color:'#ff7a1f'},
   lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',desc:'Throws a heartbreak that bursts for 30 and slows',abil:'Heartbreak',cd:6,hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'},
   isaac:{fx:['Gold statue','Balloon'],name:'Isaac',desc:'Instantly reloads both guns',abil:'Quick reload',cd:8,hp:100,look:{},color:'#9a5a2a'}};
-const ABIL_KILL={fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain',turret:'Sentry'};
+const ABIL_KILL={crush:'crushed by the chopper',fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain',turret:'Sentry'};
 const CHAR_FIRST=['wednesday','crusty','angel','antihero','jet','ghost','dracula','astronaut','lilpink'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))]; // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracula, Spaceman, Lil Pink; then the rest
 function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
 /* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or

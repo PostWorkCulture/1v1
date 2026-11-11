@@ -2613,12 +2613,12 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','round','wall','swap',
-    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','stim','sense','buy','tick','win','lose','heart',
+    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow'];
   const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
-    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
+    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55};
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1;
@@ -6485,8 +6485,8 @@ function depen(f){const H=hhOf(f);for(let it=0;it<4;it++){let moved=false;
 function ladSteer(f,n){const L=n.lad,d=n.up?1:-1;if(L.ruin&&L.ruin.stage===2)return null;f._ladT=S.t;f._ladDir=d;if(f.onLadder===L)return[L.nx*d,L.nz*d];
   const A=ladSpot(L,!n.up),ax=L.nx!==0,cx=(L.x0+L.x1)/2,cz=(L.z0+L.z1)/2,rp=L.rung??(ax?cx:cz),o=n.up?-.55:.35,tx=ax?rp+L.nx*o:cx,tz=ax?cz:rp+L.nz*o,dx=tx-f.pos.x,dz=tz-f.pos.z,l=Math.hypot(dx,dz);
   if(l>.3&&!(n.up&&f.pos.y>L.y0+.4))return[dx/l,dz/l];return[L.nx*d,L.nz*d];}
-/* the same run speed for players and bots (aiming down sights slows you; Stim speeds you up) */
-function moveSpeed(f,id){return (f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):11.25)*MOVE_MUL*stimMul(f);}
+/* the same run speed for players and bots (aiming down sights slows you; the shop speed boost speeds you up) */
+function moveSpeed(f,id){return (f.ads?(id==='sniper'?3.8:id==='sword'?8:5.6):11.25)*MOVE_MUL*boostMul(f);}
 function physics(f,dt,wx,wz,jump,speed,jumpPress){if(f.edgeFall){edgeFallStep(f,dt);return;}if(f.bot&&f._jl){const J=f._jl;if(J.eave&&f.pos.y<J.h+.05&&S.t-J.t<1.2){wx=0;wz=0;}if(S.t-J.t>1.6||(J.air&&f.grounded)){const miss=J.e&&f.pos.y<J.h-.3&&Math.hypot(f.pos.x-J.x,f.pos.z-J.z)<1.6;if(miss&&++J.e.fail>=3){const g=M.grid,A=g&&g.lk&&g.lk.get(J.from);if(A){const q=A.indexOf(J.e);if(q>=0)A.splice(q,1);}}if(miss&&f.ai){f.ai.path=null;f.ai.goalT=0;}f._jl=null;}else if(f.grounded&&!J.air){jump=true;jumpPress=true;J.air=1;}else if(!f.grounded){J.air=1;if(J.dh>1.2&&!J.dj&&f.vel.y<2.5){jump=true;jumpPress=true;J.dj=1;}}}if(f.stamLock&&!f.downed)speed*=.75;if(f.dazeT>0)speed*=.25;const v=Math.max(Math.hypot(f.vel.x,f.vel.z),(speed||0)*1.25*((CHARS[f.char]||{}).speed||1)*(f.zipT>0?1.6:1))+Math.abs(f.vel.y)*.5;
   const n=Math.min(5,Math.max(1,Math.ceil(dt*60-.05),Math.ceil(v*dt/.45)));if(n===1){physics1(f,dt,wx,wz,jump,speed,jumpPress);}else for(let i=0;i<n;i++)physics1(f,dt/n,wx,wz,jump,speed,i===0&&jumpPress);
   if(TGQ.length)flushGlass();const bd=M.bounds;if(bd&&!freeEdge(f)){f.pos.x=clamp(f.pos.x,bd.x0+R,bd.x1-R);f.pos.z=clamp(f.pos.z,bd.z0+R,bd.z1-R);}
@@ -7718,7 +7718,6 @@ function useAbility(f,aimDir){if(f.edgeFall||S.simple||S.mode==='rumble'||!f.ali
 /* ================= consumables ================= */
 const CONS={
   grenade:{name:'Grenade',short:'Grenade',desc:'BOOM!',uses:2,meta:'2 per round'},
-  stim:{name:'Stim',short:'Stim',desc:'45% Speed 6s',cd:20,dur:6,meta:'20s cooldown'},
   stun:{name:'Stun Grenade',short:'Stun',desc:'Stunned 1s',uses:2,meta:'2 per round'},
   sense:{name:'HeartBeat',short:'HeartBeat',desc:'Locate 6s',cd:25,dur:6,meta:'25s cooldown'},
   flash:{name:'Flash Bang',short:'Flash',desc:'Blinded 1s',uses:2,meta:'2 per round'},
@@ -7726,9 +7725,9 @@ const CONS={
   cluster:{name:'Cluster Grenade',short:'Cluster',desc:'Multi BOOM!!!',uses:2,meta:'2 per round'},
   gold:{name:'Golden Armour',short:'Gold Armour',desc:'Armour + Rebuilds',passive:true,meta:'Always on'}};
 const THROWN=new Set(['grenade','stun','flash','cluster','bomblet']),AIMED=new Set(['grenade','stun','flash','cluster']);
-const CONS_FIRST=['cluster','mine','gold'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='grenade'&&k!=='stim'&&k!=='sense')]; /* loadout order: Cluster, Mine, Gold Armour first */
+const CONS_FIRST=['cluster','mine','gold'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='grenade'&&k!=='sense')]; /* loadout order: Cluster, Mine, Gold Armour first */
 let flashA=0;
-function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.stimT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
+function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
 const GOLD_ARMOUR=30;
 function consReady(f){const c=CONS[f.cons];if(!c||c.passive)return false;return f.consT<=0&&(!c.uses||f.consN>0||(f.cons==='grenade'&&f.nades>0));}
 function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
@@ -7764,7 +7763,7 @@ function previewThrow(){let id=null,from,dir;
 function useCons(f,dir){if(!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight'||!consReady(f))return false;const id=f.cons,c=CONS[id];
   if(id==='mine'){if(!layMine(f))return false;f.consN--;f.consT=.9;f.swingT=.32;}
   else if(AIMED.has(id)){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=throwFrom(f);sfx('throw',f);spawnProj(f,id,from,dir||throwDirFor(f));if(f.consN>0)f.consN--;else f.nades--;f.consT=.9;f.swingT=.32;}
-  else if(id==='stim'){sfx('stim',f,{range:6});f.stimT=c.dur;f.consT=c.cd;emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:26,speed:4,size:.18,life:.5,grav:-1,colors:['#b6ff3b','#3bff8a','#ffffff']});if(f===ME)S.shake=Math.max(S.shake,.12);}
+
   else if(id==='sense'){sfx('sense',f,{range:6});f.senseT=c.dur;f.consT=c.cd;const o=f.pos;for(let i=0;i<36;i++){const a=i/36*TAU;emit(o.x+Math.cos(a)*1.2,o.y+1.2,o.z+Math.sin(a)*1.2,{n:1,speed:.4,vx:Math.cos(a)*9,vz:Math.sin(a)*9,size:.16,life:.5,grav:0,colors:['#36f3ff','#ffffff']});}}
   return true;}
 /* flash bang: anyone facing the blast is whited out for 1 second in total (0.6 if looking away); bots lose track of you for that long */
@@ -7797,7 +7796,7 @@ function stunBlast(src,at){blastMarks(at,null,GUNS.stun.radius*.45);sfx('stun',a
     const k=1-d/R;if(f!==src)hitAny=true;f.dazeT=Math.max(f.dazeT||0,f===src?.5:1);if(f.ads)f.ads=false;
     if(f===ME){const v=new V3();camera.getWorldDirection(v);const to=at.clone().sub(camera.position).normalize();if(flashA<.3)FXG.after=true;flashA=Math.max(flashA,clamp(.55+.45*k+(v.dot(to)>.3?.3:0),0,1));S.shake=Math.max(S.shake,.3);}}
   if(src===ME&&hitAny)hitMarker(false);}
-function tickCons(f,dt){f.consT-=dt;tickStam(f,dt);if(f.shopCD>0)f.shopCD=Math.max(0,f.shopCD-dt);f.nadeT=(f.nadeT||0)-dt;if(f.speedT>0){f.speedT=Math.max(0,f.speedT-dt);if(Math.hypot(f.vel.x,f.vel.z)>4&&Math.random()<.4)emit(f.pos.x,f.pos.y+.15,f.pos.z,{n:1,speed:.3,size:.14,life:.3,grav:0,colors:['#f08a24','#ffd23f']});}if(f.stimT>0){f.stimT-=dt;if(Math.hypot(f.vel.x,f.vel.z)>3&&Math.random()<.7)emit(f.pos.x+rnd(-.3,.3),f.pos.y+rnd(.3,1.8),f.pos.z+rnd(-.3,.3),{n:1,speed:.2,size:.12,life:.35,grav:0,colors:['#b6ff3b','#3bff8a']});}
+function tickCons(f,dt){f.consT-=dt;tickStam(f,dt);if(f.shopCD>0)f.shopCD=Math.max(0,f.shopCD-dt);f.nadeT=(f.nadeT||0)-dt;if(f.speedT>0){f.speedT=Math.max(0,f.speedT-dt);if(Math.hypot(f.vel.x,f.vel.z)>4&&Math.random()<.4)emit(f.pos.x,f.pos.y+.15,f.pos.z,{n:1,speed:.3,size:.14,life:.3,grav:0,colors:['#f08a24','#ffd23f']});}
   if(f.senseT>0)f.senseT-=dt;if(f.blindT>0)f.blindT-=dt;}
 /* stamina and health regen */
 const DJ_COST=15,AUTO_RELOAD_DELAY=.35,STAM_MAX=100,STAM_DRAIN=20,STAM_REGEN=40,STAM_DELAY=.5,STAM_MIN=25,SPRINT_MUL=1.4,MOVE_MUL=1.25/* everyone moves 25% faster than the original 11.25 m/s */,REGEN_DELAY=3,REGEN_RATE=10;
@@ -7812,7 +7811,7 @@ function tickStam(f,dt){if(f===ME&&S.state==='fight'&&f.alive&&!f.downed&&f.hp<f
   if(S.state==='fight'&&f.alive&&!f.downed&&!f.finishing&&f.hp<f.hpMax&&S.t-f.lastHurt>REGEN_DELAY)f.hp=Math.min(f.hpMax,f.hp+REGEN_RATE*dt);
   // automatic reload: an empty gun in your hands starts reloading after a short beat, even if a reload was cancelled by switching or being downed
   {const id=gunOf(f),g=GUNS[id];if(f.alive&&!f.downed&&g&&isFinite(g.mag)&&!g.noReload&&!(f.ammo[id]>0)&&f.reloadT<=0&&f.switchT<=0){f.autoRT=(f.autoRT??AUTO_RELOAD_DELAY)-dt;if(f.autoRT<=0){f.autoRT=null;startReload(f);}}else f.autoRT=null;}}
-const stimMul=f=>(f.stimT>0?1.45:1)*(f.speedT>0?1.25:1);
+const boostMul=f=>f.speedT>0?1.25:1;
 /* ================= shop ================= */
 // walk up to the kiosk and the menu pops up; pick one item, then the shop is on a 30s cooldown for you
 const SHOP_CD=30;
@@ -8174,7 +8173,6 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
     if(cid==='mine'&&(!see&&a.lostT>1.5||see&&dist<9)&&Math.random()<dt*.35)useCons(f);
     else if(AIMED.has(cid)&&a.lastSeen&&dist>6&&dist<22&&Math.random()<dt*(see?.45:.6)){const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.max(.1,Math.hypot(dx,dz));const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
       const ang=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;f.yaw=Math.atan2(dx,dz);useCons(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}
-    else if(cid==='stim'&&((!see&&dist>14)||(see&&(f.hp<45||dist>12)))&&Math.random()<dt*.5)useCons(f);
     else if(cid==='sense'&&a.lostT>3&&Math.random()<dt*.4)useCons(f);}
   if(f.secondary==='grenade'&&f.slot===0&&f.ammo.grenade>0&&a.lastSeen&&dist>7&&dist<24&&f.fireT<=0&&Math.random()<dt*(see?.25:.6)){
     const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.hypot(dx,dz);const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
@@ -8565,7 +8563,6 @@ const ICON={
   mine:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="9" ry="4" fill="#3a3d45" stroke="#14161c" stroke-width="1.6"/><path d="M6 15c0-3 2.7-5 6-5s6 2 6 5" fill="#55585f" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="9" r="2" fill="#ff2a2a" stroke="#14161c" stroke-width="1.2"/></svg>',
   cluster:'<svg viewBox="0 0 24 24"><circle cx="11" cy="14" r="6" fill="#ff8a1f" stroke="#14161c" stroke-width="1.6"/><circle cx="4" cy="8" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="20" cy="9" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="19" cy="20" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><rect x="9" y="4" width="5" height="4" rx="1" fill="#2b2d33" stroke="#14161c" stroke-width="1.4"/></svg>',
   gold:'<svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffc61a" stroke="#14161c" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 6v12M7 10h10" stroke="#fff3b0" stroke-width="1.6"/></svg>',
-  stim:'<svg viewBox="0 0 24 24"><path d="M5 19 15 9l2 2L7 21z" fill="#b6ff3b" stroke="#14161c" stroke-width="1.6" stroke-linejoin="round"/><path d="m14 6 4 4M16 4l4 4M3 21l2-2" stroke="#14161c" stroke-width="1.8" stroke-linecap="round"/></svg>',
   sense:'<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="#fff" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="#36c3ff" stroke="#14161c" stroke-width="1.4"/></svg>',
   wall:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="#e8463a" stroke="#14161c" stroke-width="1.6"/><path d="M3 10h18M3 15h18M9 5v5M15 10v5M9 15v4" stroke="#14161c" stroke-width="1.4"/></svg>',
   turret:'<svg viewBox="0 0 24 24"><path d="M12 13 5 22M12 13l7 9M12 13v9" stroke="#2b2d33" stroke-width="2" stroke-linecap="round"/><rect x="6" y="5" width="10" height="8" rx="2" fill="#ffc61a" stroke="#14161c" stroke-width="1.6"/><path d="M16 8h6M16 11h6" stroke="#14161c" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="8" r="1.4" fill="#ff2a3a"/></svg>',
@@ -8942,7 +8939,7 @@ function updCamera(dt){
     for(const [ox,oy] of [[0,0],[.28,0],[-.28,0],[0,.24],[0,-.24]]){const o=pivot.clone().addScaledVector(side,ox).add(new V3(0,oy,0));const h=rayBoxes(o,d,L+.4);if(h)use=Math.min(use,h.t-.4);}
     // pull in at once when something gets between you and the camera, ease back out after (no popping past posts and trees)
     use=Math.max(.35,use);S.camUse=!isFinite(S.camUse)||use<S.camUse?use:damp(S.camUse,use,7,dt);use=S.camUse;camera.position.copy(pivot).addScaledVector(d,use);if(camera.position.y<.3)camera.position.y=.3;f.ch.root.visible=use>1.0;
-    if(!f.ads){camera.fov=damp(camera.fov,70+8*ind+(f.stimT>0?7:0)+(f.sprinting?6:0),10,dt);camera.updateProjectionMatrix();}
+    if(!f.ads){camera.fov=damp(camera.fov,70+8*ind+(f.sprinting?6:0),10,dt);camera.updateProjectionMatrix();}
     let lk=head.clone().addScaledVector(right,sh).addScaledVector(dir,60);
     if(VM.raise>0){const e=VM.raise*VM.raise*(3-2*VM.raise);const fp=head.clone().add(new V3(0,.12,0)).addScaledVector(dir,.3);camera.position.lerp(fp,e);lk.lerp(head.clone().addScaledVector(dir,60),e);if(e>.12)f.ch.root.visible=false;}
     if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}camera.lookAt(lk);return;}
@@ -9462,7 +9459,6 @@ const HERO={
   m60:{bg:['#170512','#3d0f2c','#d6338a']},
   duals:{bg:['#0b0d12','#252a36','#8a95ab']},
   c_grenade:{bg:['#0d1208','#27341a','#6f9a3a']},
-  c_stim:{bg:['#06130a','#103b1e','#2fd06a']},
   c_stun:{bg:['#060b17','#13254a','#4f8dff']},
   c_sense:{bg:['#05121a','#0b3446','#22c7f0']},
   c_flash:{bg:['#14140a','#3a3a20','#f0e27a']},
@@ -10224,12 +10220,12 @@ function heroModelV2(id,RB,vm){
 /* ================= detailed lethal models (menu previews + the thrown / laid objects in game) =================
    Same design language as the guns: real-world shapes (M67 frag, MK3 concussion, M84 flash bang, auto-injector,
    handheld heartbeat sensor, AP disc mine, plate carrier) in gunmetal, chrome small parts and one vivid body colour.
-   Built y-up (the stim lies along z, the sensor and vest face +z). lite=true skips the tiny parts for in-game copies. */
+   Built y-up (the sensor and vest face +z). lite=true skips the tiny parts for in-game copies. */
 const LETH_TEX={};
 function lethTex(key,w,h,draw){if(LETH_TEX[key])return LETH_TEX[key];const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);
   const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return LETH_TEX[key]=t;}
 function lethalModel(id,RB,lite){
-  const IDS=['c_grenade','c_stim','c_stun','c_sense','c_flash','c_mine','c_cluster','c_gold','bomblet'];
+  const IDS=['c_grenade','c_stun','c_sense','c_flash','c_mine','c_cluster','c_gold','bomblet'];
   if(!IDS.includes(id))return null;
   const g=new THREE.Group();
   const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:0},o||{}));
@@ -10342,24 +10338,7 @@ function lethalModel(id,RB,lite){
       if(!lite){const rim=add(new THREE.TorusGeometry(.036,.006,6,18),chrome,Math.cos(a)*.142,y,Math.sin(a)*.142);rim.rotation.y=Math.PI/2-a;rim.scale.set(1,1.35,1);}}
     fuze(.25,[[.17,.13],[.17,.05],[.17,-.05],[.167,-.13]]);
   }
-  else if(id==='c_stim'){ // auto-injector along z: safety cap at the back, label, clear window over the glowing dose, orange needle shroud
-    const wh=M('#f2f5f8',{roughness:.32}),or=M('#ff6a1a',{roughness:.35}),dk=M('#1d2025',{roughness:.55}),
-      clear=M('#d8fff0',{transparent:true,opacity:.28,roughness:.05,metalness:.2,depthWrite:false}),fl=glow('#3bff8a',1.6);
-    const L=(pts,m,seg=40)=>{const me=lathe(pts,m,seg);me.rotation.x=Math.PI/2;return me;}; // lathe built along y, laid along z (+y -> +z)
-    L([[0,-.47],[.06,-.47],[.085,-.455],[.092,-.43],[.092,-.31],[.085,-.3],[0,-.3]],M('#2f7fe0',{roughness:.35})); // blue safety release
-    if(!lite)for(let i=0;i<8;i++){const a=i/8*Math.PI*2;box(.012,.012,.12,Math.cos(a)*.092,Math.sin(a)*.092,-.39,M('#1d4fb8'),.004);}
-    L([[0,-.3],[.09,-.3],[.096,-.28],[.096,-.1],[0,-.1]],wh); // rear body
-    L([[0,.12],[.096,.12],[.096,.2],[.085,.24],[.088,.27],[.07,.29],[0,.29]],wh); // front body
-    L([[.094,-.1],[.094,.12]],clear,40);const v=L([[0,-.095],[.058,-.095],[.058,.095],[0,.095]],fl,24); // window + dose
-    L([[.06,.02],[.062,.04]],M('#eafff3'),24); // fill line
-    const lab=lethTex('stim2',512,160,(c,w,h)=>{c.fillStyle='#f2f5f8';c.fillRect(0,0,w,h);for(const u of [.25,.75]){const x=w*u;c.save();c.translate(x,h/2);c.rotate(-Math.PI/2);
-      c.fillStyle='#d11a36';c.fillRect(-70,-30,22,60);c.fillRect(-89,-11,60,22);c.font='bold 34px Arial, Helvetica, sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText('STIM',-18,-8);
-      c.fillStyle='#2a2e36';c.font='bold 14px Arial, Helvetica, sans-serif';c.fillText('AUTO-INJECTOR',-18,22);c.restore();}
-      c.fillStyle='#d11a36';c.fillRect(0,0,w,8);c.fillRect(0,h-8,w,8);});const b=band(.097,.19,0,lab);b.rotation.x=Math.PI/2;b.position.z=-.2;
-    L([[0,.27],[.07,.27],[.075,.3],[.07,.4],[.055,.43],[0,.43]],or); // needle shroud
-    if(!lite){for(let i=0;i<4;i++){const t=tor(.098,.008,0,0,.135+i*.03,dk,Math.PI*2,40);}
-      box(.026,.02,.24,0,.104,-.13,chrome,.008);box(.03,.03,.03,0,.098,-.25,chrome,.008);} // pocket clip
-  }
+
   else if(id==='c_sense'){ // HeartBeat sensor: handheld scanner, radar screen facing +z, pistol grip, antenna
     const sh=M('#232a33',{roughness:.4,metalness:.45}),cy=glow('#36f3ff',2),dk=M('#11151a',{roughness:.6}),acc=M('#22c7f0',{roughness:.35,metalness:.2});
     const scr=lethTex('hb',512,340,(c,w,h)=>{c.fillStyle='#03161b';c.fillRect(0,0,w,h);const cx=w/2,cy0=h*.94;

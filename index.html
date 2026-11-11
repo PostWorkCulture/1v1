@@ -920,6 +920,10 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .stage.rand .st-q{display:block;animation:stQ 3.6s ease-in-out infinite}
 .stage.rand.go .st-q{animation:stQIn .65s cubic-bezier(.2,.9,.25,1.12) both,stQ 3.6s .65s ease-in-out infinite}
 .stage.rand .st-fig{display:none}
+/* Random: the spinning circle sits in the middle of the picture with the ? standing in it, and no explanation text */
+#menu .stage.rand .st-floor,#menu .stage.rand .st-wave{left:50%!important}
+#menu .stage.rand .st-q{left:50%!important;bottom:9%}
+#menu .stage.rand .st-side{display:none}
 @keyframes stQIn{0%{opacity:0;transform:translateX(-50%) translateY(46px) scale(.6)}100%{opacity:1;transform:translateX(-50%)}}
 @keyframes stQ{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-10px)}}
 @media (max-width:720px){.st-q{left:50%!important;font-size:170px}}
@@ -2733,7 +2737,7 @@ const store={get(k,d){try{const v=localStorage.getItem('blockrush:'+k);return v=
 const renderer=B.renderer,canvas=renderer.domElement;
 /* sound: positional helper (distance falloff + stereo pan from the camera) */
 const SFXv=new V3();
-function sfx(n,at,o){const X=window.SFX;if(!X)return null;o=Object.assign({},o);
+function sfx(n,at,o){const X=window.SFX;if(!X)return null;if((n==='horn'||n==='trainhorn')&&S.state==='menu')return null;/* no car or train horns behind the menu */o=Object.assign({},o);
   if(at&&at!==ME){const p=at.pos||at,c=camera.position,dx=p.x-c.x,dz=p.z-c.z,dy=(p.y||0)-c.y,d=Math.hypot(dx,dy,dz);
     o.vol=(o.vol==null?1:o.vol)/(1+Math.max(0,d-2)/(o.range||14));camera.getWorldDirection(SFXv);const h=Math.hypot(dx,dz)||1;o.pan=(dx*-SFXv.z+dz*SFXv.x)/h*.7;}
   return X.play(n,o);}
@@ -10954,7 +10958,7 @@ function stageBuild(el){el.className='stage';
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
   if(STG.id===k)return;STG.id=k;const c=k&&CHARS[k];
   el.classList.remove('boxed','go','rand');
-  if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='<p>A surprise fighter every match. Pick one from the list to choose for yourself.</p>';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
+  if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
   el.classList.toggle('empty',!c);
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;

@@ -2613,12 +2613,12 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','round','wall','swap',
-    'step1','step2','step3','step4','step5','impact','wood','whiz','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','stim','sense','buy','tick','win','lose','heart',
+    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','stim','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow'];
   const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.32,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,round:.45,wall:.5,swap:.32,
-    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
+    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,stim:.5,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,thumper:.62};
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1;
@@ -6841,7 +6841,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:w?5:3,speed:3,up:1,size:.1,life:.4,colors:w?[w.wall.color,'#ffffff']:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
       if(w)damageBrick(w,g.dmg*(g.pellets>1?1:1.2)*2,d);else if(hb.box.turret)hitTurret(hb.box.turret,g.dmg*(g.pellets>1?1:1.2),f);else if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end,d);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
-    {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<2.6&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.12){S.whizT=S.t;sfx('whiz',q,{vol:1-m/2.6*.6});}}
+    {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<.9&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.6){S.whizT=S.t;sfx('nearmiss',q,{vol:1-m/.9*.4});}}
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q,d);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
     if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(p<3||Math.random()<.4)tracer(mz,end,f===ME?'#fff3b0':'#ffd0c0',id==='sniper'?.08:.045);}

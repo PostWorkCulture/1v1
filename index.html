@@ -2628,10 +2628,10 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 (function(){
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
     'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','sense','buy','tick','win','lose','heart',
-    'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow'];
-  const LOOPS={waves:1,engine:1,boat:1}; // seamless loops ship as .wav so they don't click at the seam
+    'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli'];
+  const LOOPS={waves:1,engine:1,boat:1,heli:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
+  const MIX={heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fireball:.5,blink:.45,shield:.45,vanish:.4,heal:.45,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55};
   const MAXV=6; // voices per sound
@@ -3565,7 +3565,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.edgeN=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -4697,7 +4697,7 @@ function skyHigh(){const X=18.5,Z=22.5;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const pr
   deco(gC(.06,.12,7,6),mat('#c3c9d0',null,{metalness:.8}),1.6,HH+3.5,19.9);const blink=glowSprite(1.6,HH+7.1,19.9,2.6,'#ff3030');
   deco(gC(.04,.05,3,6),mat('#c3c9d0'),-16.2,1.5,-20.2);{const ws=deco(new THREE.ConeGeometry(.28,1.6,12,1,true),mat('#ff6a1a',null,{side:2}),-15.5,2.8,-20.2);ws.rotation.z=Math.PI/2;}
   /* a helicopter circling the block and a blimp drifting past */
-  const heli=new THREE.Group();heli.userData.dyn=1;M.group.add(heli);const proc=new THREE.Group();proc.scale.setScalar(1.4);heli.add(proc);{const red=mat('#c8322a',null,{roughness:.4,metalness:.3}),add=(g,m,x,y,z)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);proc.add(o);return o;};
+  const heli=new THREE.Group();heli.userData.dyn=1;M.group.add(heli);M.heli=heli;/* its rotor sound follows it (updAmb) */const proc=new THREE.Group();proc.scale.setScalar(1.4);heli.add(proc);{const red=mat('#c8322a',null,{roughness:.4,metalness:.3}),add=(g,m,x,y,z)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);proc.add(o);return o;};
     add(new THREE.SphereGeometry(1.4,20,12),red,0,0,0).scale.set(1.9,1,1);add(new THREE.SphereGeometry(1.05,16,10),mat('#223a55',null,{roughness:.1,metalness:.6}),1.3,.15,0).scale.set(1,.8,.9);
     add(new THREE.BoxGeometry(2.4,.28,2.9),mat('#f0f0f0'),-.3,-.25,0);const tb=add(new THREE.CylinderGeometry(.22,.45,5,10),red,-4,.25,0);tb.rotation.z=Math.PI/2;add(new THREE.BoxGeometry(.9,1.3,.1),mat('#f0f0f0'),-6.4,.8,0);
     for(const z of [-.95,.95])add(new THREE.BoxGeometry(3.4,.08,.1),mat('#333333'),0,-1.55,z);
@@ -8031,6 +8031,9 @@ function updAmb(dt){const X=window.SFX;if(!X||!X.bed)return;const on=D.active&&S
     if(ME.alive&&Math.hypot(ME.pos.x-x,ME.pos.z-c.z)<4.2&&S.t-(c.honkT||-9)>4){c.honkT=S.t;sfx('horn',{x,y:1,z:c.z},{range:20});}}
   for(const T of (on&&M.trains)||[]){if(T.z<-9000)continue;const c=camera.position,za=Math.min(T.z,T.z-T.dir*T.len),zb=Math.max(T.z,T.z-T.dir*T.len),a=ambAt(T.x,2,clamp(c.z,za,zb),16),v=a.v*.7;/* Railed's train rumble at half its old level */if(v>ev){ev=v;ep=a.pan;}}
   X.bed('engine',ev,ep);
+  /* Sky High's chopper: a rotor loop (Freesound 172667 'MILITARY ROTOR LOOP' by UnderlinedDesigns, CC0) that's a distant chop while it circles and
+     swells to a roar as it comes down onto the helipad */
+  {const h=on&&M.heli;if(h){const p=h.position,a=ambAt(p.x,p.y,p.z,22);X.bed('heli',Math.min(1.25,a.v*1.35),a.pan);}else X.bed('heli',0,0);}
   for(const L of (on&&M.flockLists)||[])for(const f of L){if(f.chirp)continue;const p=f.g.position;if(Math.hypot(p.x-camera.position.x,p.z-camera.position.z)<22){f.chirp=1;sfx('birds',{x:p.x,y:p.y,z:p.z},{range:30});}}
   if(on&&M.gulls&&M.gulls.length){S.gullT=(S.gullT??4)-dt;if(S.gullT<=0){S.gullT=5+Math.random()*9;const g=M.gulls[Math.floor(Math.random()*M.gulls.length)].position;if(Math.hypot(g.x-camera.position.x,g.z-camera.position.z)<45)sfx('gulls',{x:g.x,y:g.y,z:g.z},{range:30});}}
   if(on&&M.wade){const c=camera.position,sx=wcShore(c.z),d=Math.max(0,sx-c.x);const a=ambAt(Math.max(c.x,sx),.5,c.z,8);X.bed('waves',clamp(1-d/40,.12,1)*(d<1?1:a.v*1.4),d<1?0:a.pan);}

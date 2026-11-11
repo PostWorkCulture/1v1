@@ -1,4 +1,5 @@
 # Checks the game, then publishes it to GitHub Pages. If the check fails, nothing is published and the last good version stays live.
+# Pinned to ubuntu-24.04: ubuntu-latest is moving to Ubuntu 26, where the Playwright browser install fails. Runs queue rather than cancel, so the newest push always ends up live.
 name: Check and publish
 on:
   push:
@@ -10,10 +11,11 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,13 +24,15 @@ jobs:
       - name: Syntax check
         run: node tools/check.js
       - name: Smoke test (page loads, Duels starts)
+        timeout-minutes: 6
         run: |
           npm i --no-save playwright@1.48.2
           npx playwright install --with-deps chromium
           node tools/check.js --smoke
   deploy:
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

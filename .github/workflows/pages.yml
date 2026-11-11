@@ -1,5 +1,7 @@
 # Checks the game, then publishes it to GitHub Pages. If the check fails, nothing is published and the last good version stays live.
-# Pinned to ubuntu-24.04: ubuntu-latest is moving to Ubuntu 26, where the Playwright browser install fails. Runs queue rather than cancel, so the newest push always ends up live.
+# Pinned to ubuntu-24.04 (ubuntu-latest is moving to Ubuntu 26). The browser is installed without --with-deps: the runner image already has
+# Chrome's libraries, and the apt step hung for 10 minutes whenever the Ubuntu package mirror was down. Runs queue rather than cancel,
+# so the newest push always ends up live.
 name: Check and publish
 on:
   push:
@@ -27,7 +29,7 @@ jobs:
         timeout-minutes: 6
         run: |
           npm i --no-save playwright@1.48.2
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
           node tools/check.js --smoke
   deploy:
     needs: check

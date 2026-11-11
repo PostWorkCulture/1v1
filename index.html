@@ -5400,7 +5400,7 @@ function slab(ox,oy,oz,dx,dy,dz,hx,y0,y1,hz){let t0=0,t1=1e9;const A=[[ox,dx,-hx
   for(const [o,d,mn,mx] of A){if(Math.abs(d)<1e-9){if(o<mn||o>mx)return -1;continue;}let a=(mn-o)/d,b=(mx-o)/d;if(a>b){const q=a;a=b;b=q;}if(a>t0)t0=a;if(b<t1)t1=b;if(t0>t1)return -1;}return t0;}
 function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Math.sin(f.yaw);const wx=o.x-f.pos.x,wz=o.z-f.pos.z,oy=o.y-f.pos.y;
   const ox=wx*c-wz*s,oz=wx*s+wz*c,dx=d.x*c-d.z*s,dz=d.x*s+d.z*c;const sc=f.scale||1,cy=sc*(1-.27*(f.cv||0));
-  if(f.downed){const tl=slab(ox,oy,oz-1.0*sc,dx,d.y,dz,.75*sc,0,.85*sc,1.35*sc);return tl>=0?{t:tl,part:'body'}:null;}
+  if(f.downed){let tl=slab(ox,oy,oz-1.0*sc,dx,d.y,dz,.75*sc,0,.85*sc,1.35*sc);const e=downHit(o,d,f);if(e>=0&&(tl<0||e<tl))tl=e;return tl>=0?{t:tl,part:'body'}:null;}
   const th=slab(ox,oy,oz,dx,d.y,dz,.38*sc,2.0*cy,2.68*cy,.36*sc);const tb=slab(ox,oy,oz,dx,d.y,dz,1.0*sc,0,2.02*cy,.34*sc);
   if(th>=0&&(tb<0||th<=tb+.05))return{t:th,part:'head'};if(tb>=0)return{t:tb,part:'body'};return null;}
 
@@ -8742,11 +8742,22 @@ function hitMark(f,dmg,src,gun,head){try{if(!f.ch||!f.pos)return;const m=moOf(f)
   const sy=Math.sin(f.yaw),cy=Math.cos(f.yaw),lx=wx*cy-wz*sy,lz=wx*sy+wz*cy,pw=clamp(dmg/26,.3,1.7)*(bl?1.6:1);
   if(CFX.flinch){m.fxv+=lz*pw*7.5;m.fzv-=lx*pw*7.5;m.fyv+=(Math.random()<.5?-1:1)*pw*3;m.hxv+=lz*pw*(head?13:5.5);m.pxv+=lx*pw*1.4;m.pzv+=lz*pw*1.4;}
   f.hitW={x:wx,y:wy,z:wz,pw:pw*(bl?2.4:1),t:S.t,head:!!head};}catch(e){}}
+/* downed hit test: the fixed box in rayFighter lies along the aim direction, but the body you see may be turned away from a wall, still
+   collapsing, or have its head up. So a shot also lands if it passes through the visible body: spheres on the head, chest, hips, knees and feet. */
+const DHv=[];for(let i=0;i<7;i++)DHv.push(new THREE.Vector3());
+function downHit(o,d,f){const ch=f.ch;if(!ch||!ch.up||!ch.lL.k)return -1;const k=(ch.root.scale.x||1)/.8,P=DHv,R=[.46,.52,.46,.34,.34,.3,.3];
+  if(f.rd){const p=f.rd.p;P[0].copy(p[5]);P[1].copy(p[4]);P[2].addVectors(p[0],p[1]).multiplyScalar(.5);P[3].copy(p[10]);P[4].copy(p[12]);P[5].copy(p[11]);P[6].copy(p[13]);}
+  else{P[0].set(0,.4,0).applyMatrix4(ch.headG.matrixWorld);P[1].set(0,(ch.hipY+ch.aL.p.position.y)/2,0).applyMatrix4(ch.upIn.matrixWorld);
+    P[2].setFromMatrixPosition(ch.lL.p.matrixWorld);P[3].setFromMatrixPosition(ch.lR.p.matrixWorld);P[2].add(P[3]).multiplyScalar(.5);
+    P[3].setFromMatrixPosition(ch.lL.k.matrixWorld);P[4].setFromMatrixPosition(ch.lR.k.matrixWorld);P[5].set(0,-ch.lL.lo,0).applyMatrix4(ch.lL.k.matrixWorld);P[6].set(0,-ch.lR.lo,0).applyMatrix4(ch.lR.k.matrixWorld);}
+  let best=-1;for(let i=0;i<7;i++){const c=P[i],r=R[i]*k,x=o.x-c.x,y=o.y-c.y,z=o.z-c.z;if(Math.hypot(c.x-f.pos.x,c.z-f.pos.z)>4)continue;/* stale pose (not drawn yet) */
+    const b=x*d.x+y*d.y+z*d.z,cc=x*x+y*y+z*z-r*r,q=b*b-cc;if(q<0)continue;let t=-b-Math.sqrt(q);if(t<0){if(cc>0)continue;t=0;}if(best<0||t<best)best=t;}
+  return best;}
 /* downed: arms reach forward in turn and pull, head up to look where you're crawling */
 function crawlPose(f,ch,dt,sp){const a=Math.sin(f.phase||0)*clamp(sp/2,0,1),A=ch.aR,B_=ch.aL;
   A.p.rotation.set(-2.55+.4*a,0,-.5);B_.p.rotation.set(-2.55-.4*a,0,.5);
   if(A.e){A.e.rotation.set(-(.75-.45*a),0,0);B_.e.rotation.set(-(.75+.45*a),0,0);}
-  ch.headG.rotation.set(-.85,0,0);}
+  ch.headG.rotation.set(-.5,0,0);}
 /* ---- ragdoll ----
    14 points: 0 1 hips, 2 3 shoulders, 4 back, 5 head, 6 7 left elbow and hand, 8 9 right, 10 11 left knee and foot, 12 13 right.
    Sticks keep the lengths, the torso is a rigid frame, knees and elbows only bend the right way, and every point collides with the floor
@@ -8769,7 +8780,7 @@ function rdStart(f,mode){if(!(f.ch&&f.ch.lL.k&&f.ch.lR.k&&f.ch.aL.e&&f.ch.aR.e))
   const rd={p,q,C,sc,mode,t:0,still:0,sleep:false,R:[.23,.23,.2,.2,.24,.33,.12,.11,.12,.11,.15,.13,.15,.13].map(x=>x*sc),near:[],nt:0,ct:new Uint8Array(14)};
   // start with the body's own motion plus the push of the last hit (chest and head take most of it)
   const h=f.hitW&&S.t-f.hitW.t<.35?f.hitW:null,W=[.5,.5,1,1,1,1.1,.5,.4,.5,.4,.25,.15,.25,.15],dt=1/60;
-  for(let i=0;i<14;i++){let vx=f.vel.x*.6,vy=Math.min(f.vel.y,4)*.6,vz=f.vel.z*.6;if(h){const s_=h.pw*(mode==='down'?1.9:ch.root.rotation.x>.9?1.1:2.6)*W[i]*(i===5&&h.head?1.7:1);vx+=h.x*s_+(Math.random()-.5)*.5;vy+=Math.max(h.y,-.1)*s_*.6+.25*h.pw;vz+=h.z*s_+(Math.random()-.5)*.5;}
+  for(let i=0;i<14;i++){let vx=f.vel.x*.6,vy=Math.min(f.vel.y,4)*.6,vz=f.vel.z*.6;if(h){const s_=h.pw*(mode==='down'?.7:ch.root.rotation.x>.9?1.1:2.6)*W[i]*(i===5&&h.head?1.7:1);vx+=h.x*s_+(Math.random()-.5)*.5;vy+=Math.max(h.y,-.1)*s_*.6+.25*h.pw;vz+=h.z*s_+(Math.random()-.5)*.5;}
     q[i].set(p[i].x-vx*dt,p[i].y-vy*dt,p[i].z-vz*dt);}
   return f.rd=rd;}
 function rdStep(f,dt,tgt,pull){const rd=f.rd,p=rd.p,q=rd.q,R=rd.R,V=RDv;if(rd.sleep)return;rd.t+=dt;
@@ -8818,8 +8829,8 @@ function bodyFX(f,ch,dt,menu,sp){const m=moOf(f);if(ch.up){const A=f.an||(f.an=[
     if(dead){if(!f.rd)rdStart(f,'dead');else if(f.rd.mode!=='dead'){f.rd.mode='dead';f.rd.t=0;f.rd.still=0;}rdStep(f,dt);rdPose(f);}
     else if(f.rd&&f.rd.mode==='down'&&down){/* collapse, then be drawn into the crawl pose (in the air: only loosely, until you land) */
       const rd=f.rd;rdCap(ch,RDv.t2||(RDv.t2=RDv.t.map(v=>v.clone())));if(!f.grounded)rd.t=Math.min(rd.t,.25);
-      const u=smooth(.3,1.05,rd.t),pull=f.grounded?1-Math.exp(-(1+34*u*u)*dt):1-Math.exp(-2.5*dt);rdStep(f,dt,RDv.t2,pull);
-      if(rd.t>1.15)rdEnd2(f);else rdPose(f);}
+      const u=smooth(.15,.75,rd.t),pull=f.grounded?1-Math.exp(-(2+38*u*u)*dt):1-Math.exp(-2.5*dt);rdStep(f,dt,RDv.t2,pull);
+      if(rd.t>.85)rdEnd2(f);else rdPose(f);}
     else if(f.rd)rdEnd(f);}
   else if(f.rd)rdEnd(f);
   // loose parts: each follows its anchor on a spring; the lag becomes a sway of the loose vertices

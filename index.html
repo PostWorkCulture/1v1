@@ -4,7 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="imok 1v1: a blocky 1v1 Duels shooter (plus a parkour mode), built with three.js.">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* ---------- options pack: crosshair styles, key binding list, option rows ---------- */
+.d-cross{--cl:10px;--ct:2px;--cd:4px}
+.d-cross i:nth-child(1){left:calc(var(--ct) / -2);top:calc(-1 * var(--g) - var(--cl));width:var(--ct);height:var(--cl)}
+.d-cross i:nth-child(2){left:calc(var(--ct) / -2);top:var(--g);width:var(--ct);height:var(--cl)}
+.d-cross i:nth-child(3){top:calc(var(--ct) / -2);left:calc(-1 * var(--g) - var(--cl));width:var(--cl);height:var(--ct)}
+.d-cross i:nth-child(4){top:calc(var(--ct) / -2);left:var(--g);width:var(--cl);height:var(--ct)}
+.d-cross:not(.reddot):not(.chev):not(.ring):not(.xs-circle) b{left:calc(var(--cd) / -2);top:calc(var(--cd) / -2);width:var(--cd);height:var(--cd)}
+.d-cross.xs-cross b{display:none}
+.d-cross.xs-tee i:nth-child(1){display:none}
+.d-cross.xs-dot i{display:none}
+.d-cross.xs-dot b{--cd:calc(var(--ct) * 2 + 2px)}
+.d-cross.xs-circle i{display:none}
+.d-cross.xs-circle b{left:calc(-1 * var(--g) - 2px);top:calc(-1 * var(--g) - 2px);width:calc(2 * var(--g) + 4px);height:calc(2 * var(--g) + 4px);border-radius:50%;background:transparent;border:var(--ct) solid var(--cc,#fff);box-shadow:0 0 0 1.5px rgba(10,10,14,.6),inset 0 0 0 1.5px rgba(10,10,14,.6)}
+.d-cross.xno i,.d-cross.xno b{box-shadow:none!important}
+.xh-prev{display:inline-block;position:relative;width:44px;height:44px;margin-left:10px;vertical-align:middle;border-radius:8px;background:#5a6470;box-shadow:inset 0 0 0 1px #464646}
+.xh-prev .d-cross{--g:6px}
+.seg.xh-cols button{min-width:34px;padding-left:6px;padding-right:6px}
+.seg.xh-cols button i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:middle;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+.pm-row .btn.sm{flex:none}
+#opt-reset.armed{background:linear-gradient(90deg,#ff3b30,#d6221a)!important;border-color:#fff!important;color:#fff}
+.kb-box{margin:0 0 14px;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--panel-ink) 5%,transparent);text-align:left}
+#duel-pause[data-touch="1"] .kb-box{display:none}
+.kb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 18px;margin-top:8px}
+.kb-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 13px/1.2 var(--f-body)}
+.kb-row button{min-width:74px;padding:6px 10px;border-radius:7px;background:#202020;color:#f5f5f5;border:1px solid #464646;font:700 13px/1 var(--f-body);cursor:pointer}
+.kb-row button:hover{border-color:#fff}
+.kb-row button.cap{background:#fff;color:#000;border-color:#fff}
+.kb-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font:500 12px/1.3 var(--f-body);color:var(--muted)}
+</style>
 <title>imok 1v1</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#16171c">
@@ -1331,7 +1360,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
             <div class="wdet" id="d-sdet"></div>
           </div>
           <div id="d-consrow" class="wgroup">
-            <div class="msub"><b class="slotk">G</b>Lethal <span class="eyebrow-note">press G in a match</span></div>
+            <div class="msub"><b class="slotk" data-kb="leth">E</b>Lethal <span class="eyebrow-note">press <span data-kb="leth">E</span> in a match</span></div>
             <div class="d-guns cons" id="d-consl"></div>
             <div class="wdet" id="d-cdet"></div>
           </div>
@@ -1465,7 +1494,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
       <div class="sh-foot">Press a number. One item, then the shop restocks in 30s.</div>
     </div>
     <div class="panel d-br">
-      <div class="d-slots"><span id="d-slot1" class="on"><kbd>1</kbd> <em id="d-slot1n">Sniper</em></span><span id="d-slot2"><kbd>2</kbd> <em id="d-slot2n">Pistol</em></span></div>
+      <div class="d-slots"><span id="d-slot1" class="on"><kbd data-kb="prim">1</kbd> <em id="d-slot1n">Sniper</em></span><span id="d-slot2"><kbd data-kb="sec">2</kbd> <em id="d-slot2n">Pistol</em></span></div>
       <div class="d-ammo"><b id="d-ammo">5</b><span id="d-mag">/ 5</span></div>
       <div class="d-wname" id="d-wname">Sniper</div>
       <span class="d-rl"><i id="d-rl"></i></span>
@@ -1508,31 +1537,33 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           <label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0" max="10" step="1"><b data-sens-val="cam">5</b></label>
           <label class="sens" for="sens-ads-d"><span>Aim sensitivity (other guns)</span><input type="range" id="sens-ads-d" data-sens="ads" min="0" max="10" step="1"><b data-sens-val="ads">5</b></label><label class="sens" for="sens-snp-d"><span>Sniper scope sensitivity</span><input type="range" id="sens-snp-d" data-sens="snipe" min="0" max="10" step="1"><b data-sens-val="snipe">5</b></label>
           <label class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label><label class="sens" for="wvol-d"><span>Weapons volume</span><input type="range" id="wvol-d" data-wvol min="0" max="1" step="0.1"><b data-wvol-val>100%</b></label><label class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.1"><b data-mvol-val>50%</b></label>
+          <label class="sens" for="opt-fov"><span>Field of view</span><input type="range" id="opt-fov" data-optr="fov" min="60" max="100" step="5"><b data-optv="fov">70°</b></label><label class="sens" for="opt-bright"><span>Brightness</span><input type="range" id="opt-bright" data-optr="bright" min="0.5" max="1.5" step="0.05"><b data-optv="bright">100%</b></label><div class="pm-row"><span>Crosshair<i class="xh-prev"><span class="d-cross" id="xh-prev"><i></i><i></i><i></i><i></i><b></b></span></i></span><div class="seg" role="radiogroup" aria-label="Crosshair style" data-opt="xs"><button role="radio" data-v="crossdot" aria-checked="false">Cross + dot</button><button role="radio" data-v="cross" aria-checked="false">Cross</button><button role="radio" data-v="tee" aria-checked="false">T</button><button role="radio" data-v="dot" aria-checked="false">Dot</button><button role="radio" data-v="circle" aria-checked="false">Circle</button></div></div><div class="pm-row"><span>Crosshair colour</span><div class="seg xh-cols" role="radiogroup" aria-label="Crosshair colour" data-opt="xc"><button role="radio" data-v="#ffffff" aria-checked="false" title="White" aria-label="White"><i style="background:#ffffff"></i></button><button role="radio" data-v="#3dff6e" aria-checked="false" title="Green" aria-label="Green"><i style="background:#3dff6e"></i></button><button role="radio" data-v="#ffe53d" aria-checked="false" title="Yellow" aria-label="Yellow"><i style="background:#ffe53d"></i></button><button role="radio" data-v="#3de0ff" aria-checked="false" title="Cyan" aria-label="Cyan"><i style="background:#3de0ff"></i></button><button role="radio" data-v="#ff4fd8" aria-checked="false" title="Pink" aria-label="Pink"><i style="background:#ff4fd8"></i></button></div></div><div class="pm-row"><span>Crosshair size</span><div class="seg" role="radiogroup" aria-label="Crosshair size" data-opt="xz"><button role="radio" data-v="s" aria-checked="false">Small</button><button role="radio" data-v="m" aria-checked="false">Medium</button><button role="radio" data-v="l" aria-checked="false">Large</button></div></div><div class="pm-row"><span>Crosshair outline <small>a thin dark edge so it shows on bright maps</small></span><div class="seg" role="radiogroup" aria-label="Crosshair outline" data-opt="xo"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Hit sound</span><div class="seg" role="radiogroup" aria-label="Hit sound" data-opt="hs"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Hitmarker <small>the flash round the crosshair when you land a hit</small></span><div class="seg" role="radiogroup" aria-label="Hitmarker" data-opt="hm"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Kill commentary <small>callouts like Double kill and Payback</small></span><div class="seg" role="radiogroup" aria-label="Kill commentary" data-opt="kc"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Reset all settings <small>everything on this menu, keys and HUD layout; your level and records stay</small></span><button class="btn sm" id="opt-reset">Reset</button></div>
         </div>
         <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
       </div>
       <div class="pv" data-pv="controls" hidden>
         <div class="pv-head"><button class="btn sm" data-go="main">‹ Back</button><h3>Controls</h3><span></span></div>
         <div class="dt-guide">Left stick moves. Drag anywhere on the screen (or on Fire) to look.</div>
+      <div class="kb-box"><div class="eyebrow">Keys · click one, then press the new key (Esc cancels)</div><div class="kb-list" id="kb-list"></div><div class="kb-foot"><span id="kb-msg">Picking a key that is already in use swaps the two.</span><button class="btn sm" id="kb-reset">Reset keys</button></div></div>
       <div class="pk-groups">
         <div class="pk-g"><div class="eyebrow">Move</div><div class="pause-keys">
-          <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><em>Move</em>
-          <span><kbd>Space</kbd></span><em>Jump (press again in mid-air to double jump, needs over half stamina)</em>
-          <span><kbd>C</kbd></span><em>Crouch (press again to stand)</em>
-          <span><kbd>Space</kbd> in the air</span><em>Double jump (uses some stamina; walking, aiming and getting shot drain it, standing still refills it)</em>
+          <span><kbd data-kb="fwd">W</kbd><kbd data-kb="left">A</kbd><kbd data-kb="back">S</kbd><kbd data-kb="right">D</kbd></span><em>Move</em>
+          <span><kbd data-kb="jump">Space</kbd></span><em>Jump (press again in mid-air to double jump, needs over half stamina)</em>
+          <span><kbd data-kb="crouch">C</kbd></span><em>Crouch (press again to stand)</em>
+          <span><kbd data-kb="jump">Space</kbd> in the air</span><em>Double jump (uses some stamina; walking, aiming and getting shot drain it, standing still refills it)</em>
           <span>Mouse</span><em>Look (click the game to lock)</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">Fight</div><div class="pause-keys">
           <span>Left click</span><em><i class="gun-k">Fire</i><i class="rumble-k">Punch (15)</i></em>
           <span class="gun-k">Right click</span><em class="gun-k">Aim down sights / scope</em>
-          <span class="gun-k"><kbd>R</kbd></span><em class="gun-k">Reload early (empty guns reload on their own)</em>
-          <span class="gun-k"><kbd>1</kbd> <kbd>2</kbd></span><em class="gun-k">Primary / secondary</em>
+          <span class="gun-k"><kbd data-kb="reload">R</kbd></span><em class="gun-k">Reload early (empty guns reload on their own)</em>
+          <span class="gun-k"><kbd data-kb="prim">1</kbd> <kbd data-kb="sec">2</kbd></span><em class="gun-k">Primary / secondary</em>
           <span class="rumble-k">Falling punch</span><em class="rumble-k">20 damage, both knocked back, they're stunned 1s</em>
-          <span class="gun-k"><kbd>Q</kbd></span><em class="gun-k">Build a wall (4 per round)</em>
-          <span class="gun-k"><kbd>G</kbd></span><em class="gun-k">Character ability</em>
-          <span class="gun-k"><kbd>E</kbd></span><em class="gun-k">Use your lethal (hold to aim a throwable, release to throw; lays a mine)</em>
+          <span class="gun-k"><kbd data-kb="wall">Q</kbd></span><em class="gun-k">Build a wall (4 per round)</em>
+          <span class="gun-k"><kbd data-kb="abil">G</kbd></span><em class="gun-k">Character ability</em>
+          <span class="gun-k"><kbd data-kb="leth">E</kbd></span><em class="gun-k">Use your lethal (hold to aim a throwable, release to throw; lays a mine)</em>
           <span class="gun-k">Shop</span><em class="gun-k">Walk up to the kiosk in the middle, press 1–4 to pick (30s cooldown)</em>
-          <span class="gun-k"><kbd>T</kbd></span><em class="gun-k">Throw a grenade from the shop</em>
+          <span class="gun-k"><kbd data-kb="nade">T</kbd></span><em class="gun-k">Throw a grenade from the shop</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">When you're downed</div><div class="pause-keys">
           <span>Crawl</span><em>Slowly; you take full damage while down</em>
@@ -1541,7 +1572,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           <span>2v2</span><em>If your teammate is out while you're down, you're out too</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">Finishing a downed opponent</div><div class="pause-keys">
-          <span><kbd>F</kbd></span><em>Finishing move (random each time); firing or getting shot cancels it</em>
+          <span><kbd data-kb="fin">F</kbd></span><em>Finishing move (random each time); firing or getting shot cancels it</em>
         </div></div>
       </div>
       
@@ -8259,7 +8290,7 @@ function killNotes(v,cr){if(!cr||cr===v||!isFoe(cr,v))return;const K=S.kc&&S.kc.
   else{const who=nm(cr);if(firstOfGame)lines.push(['FIRST BLOOD',who+' drew first blood','bad']);if(revenge)lines.push(['PAYBACK',who+' got their revenge','bad']);
     if(cr.multi>=2)lines.push([MULTI[Math.min(cr.multi,5)],who,'bad']);else if(SPREE[cr.streak])lines.push([SPREE[cr.streak],who+' · '+cr.streak+' in a row','bad']);}
   if(lines.length)killCall(lines);}
-function killCall(lines){let box=$('d-call');if(!box){box=document.createElement('div');box.id='d-call';document.body.appendChild(box);}box.innerHTML='';
+function killCall(lines){if(OPT.kc!=='1')return;let box=$('d-call');if(!box){box=document.createElement('div');box.id='d-call';document.body.appendChild(box);}box.innerHTML='';
   lines.slice(0,2).forEach(([big,sub,cls],i)=>{const b=document.createElement('div');b.className='kc'+(cls?' '+cls:'');b.textContent=big;b.style.animationDelay=(i*.35)+'s';b.style.opacity=i?0:'';box.appendChild(b);
     if(sub){const t=document.createElement('div');t.className='ks';t.textContent=sub;t.style.animationDelay=(i*.35)+'s';t.style.opacity=i?0:'';box.appendChild(t);}});
   clearTimeout(killCall.t);killCall.t=setTimeout(()=>{box.innerHTML='';},2600);}
@@ -8491,10 +8522,65 @@ function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts)
   if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up'){if(ME.aimNade){ME.aimNade=false;throwNade(ME);}}else if(a==='KeyV')deployTurret(ME);else if(a==='Digit1')equip(ME,0);else if(a==='Digit2')equip(ME,1);else if(a==='KeyR')startReload(ME);else if(a==='KeyQ')buildWall(ME);
   else if(a==='KeyE'){if(!ME.downed)useAbility(ME);}else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
   else if(a==='KeyF'){const v=finishable(ME);if(v)finish(ME,v);}else if(a==='KeyC'){if(!ME.downed)ME.crouchOn=!ME.crouchOn;}}}
+/* ---------- player options: key bindings, field of view, crosshair, hit feedback, brightness, kill commentary (pause menu) ---------- */
+const OPT_DEF={fov:70,bright:1,xs:'crossdot',xc:'#ffffff',xz:'m',xo:'1',hs:'1',hm:'1',kc:'1'};
+const OPT=Object.assign({},OPT_DEF,store.get('duel:opts',{}));
+/* bindable actions: [id, name, the game's own key for it (what the rest of the code listens for), default key]. Ability and lethal are
+   named KeyE / KeyG inside the game but sit on G / E by default */
+const BIND_ACTS=[['fwd','Move forward','KeyW'],['back','Move back','KeyS'],['left','Move left','KeyA'],['right','Move right','KeyD'],['jump','Jump','Space'],['crouch','Crouch','KeyC'],
+  ['reload','Reload','KeyR'],['prim','Primary','Digit1'],['sec','Secondary','Digit2'],['abil','Ability','KeyE','KeyG'],['leth','Lethal','KeyG','KeyE'],['wall','Build a wall','KeyQ'],
+  ['fin','Finishing move','KeyF'],['nade','Shop grenade','KeyT'],['sentry','Place sentry','KeyV']];
+const BIND_DEF={};for(const a of BIND_ACTS)BIND_DEF[a[0]]=a[3]||a[2];
+const BIND=Object.assign({},BIND_DEF,store.get('duel:keys',{}));
+const KB={phys:{},taken:new Set(),cap:null};
+function kbBuild(){KB.phys={};KB.taken=new Set();for(const a of BIND_ACTS){KB.phys[BIND[a[0]]]=a[2];KB.taken.add(a[2]);KB.taken.add(BIND_DEF[a[0]]);}}
+kbBuild();
+const KN=c=>!c?'—':c.startsWith('Key')?c.slice(3):c.startsWith('Digit')?c.slice(5):c.startsWith('Numpad')?'Num '+c.slice(6):({Space:'Space',ShiftLeft:'L Shift',ShiftRight:'R Shift',ControlLeft:'L Ctrl',ControlRight:'R Ctrl',AltLeft:'L Alt',AltRight:'R Alt',
+  ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Tab:'Tab',CapsLock:'Caps',Enter:'Enter',Backspace:'Bksp',Backquote:'`',Minus:'-',Equal:'=',BracketLeft:'[',BracketRight:']',
+  Semicolon:';',Quote:"'",Backslash:'\\',Comma:',',Period:'.',Slash:'/'})[c]||c;
+const keyOf=id=>KN(BIND[id]);window.KN=keyOf;
+/* a real key press: bound keys turn into the game's key for that action, and a default key that's been moved elsewhere does nothing.
+   Touch buttons send made-up key presses with the game's keys, so they skip this */
+const KEYSWAP={KeyE:'KeyG',KeyG:'KeyE'};
+function mapKey(e){if(!e.isTrusted)return KEYSWAP[e.code]||e.code;const c=e.code;if(c in KB.phys)return KB.phys[c];if(KB.taken.has(c))return 'Unbound:'+c;return c;}
+function kbRender(){const L=$('kb-list');if(L){L.innerHTML='';for(const a of BIND_ACTS){const r=document.createElement('div');r.className='kb-row';const t=document.createElement('span');t.textContent=a[1];
+      const b=document.createElement('button');b.type='button';b.dataset.bind=a[0];b.textContent=KB.cap===a[0]?'Press a key…':KN(BIND[a[0]]);b.classList.toggle('cap',KB.cap===a[0]);r.append(t,b);L.appendChild(r);}}
+  document.querySelectorAll('[data-kb]').forEach(k=>{const v=KN(BIND[k.dataset.kb]);if(k.textContent!==v)k.textContent=v;});if(typeof renderItems==='function')renderItems.sig=null;}
+function kbMsg(t){const m=$('kb-msg');if(m)m.textContent=t;}
+function kbSave(){const out={};for(const k in BIND)if(BIND[k]!==BIND_DEF[k])out[k]=BIND[k];store.set('duel:keys',out);kbBuild();kbRender();}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-bind]');if(b){e.preventDefault();KB.cap=KB.cap===b.dataset.bind?null:b.dataset.bind;kbMsg(KB.cap?'Press the new key for '+BIND_ACTS.find(a=>a[0]===KB.cap)[1]+' (Esc cancels)':'Picking a key that is already in use swaps the two.');kbRender();return;}
+  if(e.target.closest&&e.target.closest('#kb-reset')){for(const k in BIND_DEF)BIND[k]=BIND_DEF[k];KB.cap=null;kbSave();kbMsg('Keys are back to the defaults.');}});
+window.addEventListener('keydown',e=>{if(!KB.cap||!e.isTrusted)return;e.preventDefault();e.stopImmediatePropagation();const id=KB.cap,c=e.code;
+  if(c==='Escape'){KB.cap=null;kbMsg('Picking a key that is already in use swaps the two.');kbRender();return;}
+  if(c==='KeyP'||!c){kbMsg('P is kept for pause. Pick another key.');return;}
+  const other=Object.keys(BIND).find(k=>k!==id&&BIND[k]===c);const nm=k=>BIND_ACTS.find(a=>a[0]===k)[1];
+  if(other){BIND[other]=BIND[id];kbMsg(nm(id)+' is now '+KN(c)+'; '+nm(other)+' moved to '+KN(BIND[other])+'.');}else kbMsg(nm(id)+' is now '+KN(c)+'.');
+  BIND[id]=c;KB.cap=null;kbSave();},true);
+window.addEventListener('keyup',e=>{if(KB.cap&&e.isTrusted)e.stopImmediatePropagation();},true);
+/* field of view, brightness, crosshair look */
+const XZ={s:['7px','2px','3px'],m:['10px','2px','4px'],l:['14px','3px','6px']};
+function xhClass(){return ' xs-'+OPT.xs+(OPT.xo==='1'?'':' xno');}
+function optApply(){const cv=$('c');if(cv){const f=Math.abs(OPT.bright-1)<.001?'':'brightness('+OPT.bright+')';if(cv.style.filter!==f)cv.style.filter=f;}
+  const z=XZ[OPT.xz]||XZ.m;for(const el of [$('d-cross'),$('xh-prev')]){if(!el)continue;el.style.setProperty('--cl',z[0]);el.style.setProperty('--ct',z[1]);el.style.setProperty('--cd',z[2]);}
+  const pv=$('xh-prev');if(pv){pv.className='d-cross'+xhClass();pv.style.setProperty('--cc',OPT.xc);}
+  const cr=$('d-cross');if(cr){delete cr.dataset.cc;}
+  document.querySelectorAll('[data-opt]').forEach(g=>{const v=String(OPT[g.dataset.opt]);g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===v)));});
+  document.querySelectorAll('[data-optr]').forEach(i=>{const k=i.dataset.optr;if(+i.value!==+OPT[k])i.value=OPT[k];});
+  document.querySelectorAll('[data-optv]').forEach(b=>{const k=b.dataset.optv;b.textContent=k==='fov'?OPT.fov+'°':Math.round(OPT.bright*100)+'%';});}
+function optSave(){const out={};for(const k in OPT)if(OPT[k]!==OPT_DEF[k])out[k]=OPT[k];store.set('duel:opts',out);optApply();}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-opt] button');if(!b)return;const k=b.closest('[data-opt]').dataset.opt;OPT[k]=b.dataset.v;optSave();
+  if(k==='hs'&&OPT.hs==='1')sfx('hit',null,{rate:1.05});});
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.optr;if(!k)return;OPT[k]=+e.target.value;optSave();});
+/* reset everything on the settings menus (sensitivity, volumes, graphics, touch, aim, these options, keys and HUD layout). Level, records and menu picks stay */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#opt-reset');if(!b)return;
+  if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Tap again to reset';clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('armed');b.textContent='Reset';},3500);return;}
+  const keep=/^blockrush:(sens|vol|wvol|musvol|gfx|gfx:autolv|gfx:fps|gfx:saver|gfx:showfps|duel:aa|duel:autoads|duel:gyro|duel:touch|duel:opts|duel:keys|duel:hud.*)$/;
+  try{const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(keep.test(k))ks.push(k);}ks.forEach(k=>localStorage.removeItem(k));}catch(err){}
+  b.textContent='Restarting…';setTimeout(()=>location.reload(),150);});
+optApply();kbRender();document.addEventListener('DOMContentLoaded',()=>{optApply();kbRender();});
 /* keyboard: E throws/uses your lethal and G fires your character ability (the game's actions are still named KeyE = ability, KeyG = lethal internally,
    so the two physical keys are swapped here; touch buttons are unaffected) */
-const KEYSWAP={KeyE:'KeyG',KeyG:'KeyE'};
-window.addEventListener('keydown',e=>{const code=KEYSWAP[e.code]||e.code;if(!D.active||S.state==='menu'||S.state==='off')return;keys[code]=true;
+window.addEventListener('keydown',e=>{const code=mapKey(e),raw=e.code;if(!D.active||S.state==='menu'||S.state==='off')return;keys[code]=true;
   if(['Space','KeyW','KeyA','KeyS','KeyD','KeyE','KeyF','KeyC','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(code))e.preventDefault();
   if(code==='Space'&&!e.repeat)ME.jumpPress=true;
   if(e.repeat)return;
@@ -8502,12 +8588,12 @@ window.addEventListener('keydown',e=>{const code=KEYSWAP[e.code]||e.code;if(!D.a
   if(S.replayOpen){if(code==='Escape'||code==='KeyP')closeReplay();return;}
   if(code==='KeyP'||(code==='Escape'&&!S.locked)){S.paused?resume():pause();return;}
   if(S.paused)return;
-  if(S.shopOpen&&/^Digit[1-9]$/.test(code)){buyShop(+code.slice(5)-1);return;}
+  if(S.shopOpen&&/^Digit[1-9]$/.test(raw)){buyShop(+raw.slice(5)-1);return;}
   if(CR.run&&S.state==='roundEnd'&&(code==='Space'||code==='Enter')){S.t0=Math.min(S.t0,.05);return;}
-  if(S.state==='roundEnd'&&!$('d-rend').hidden){if(/^Digit[1-9]$/.test(code)&&RP.bar){const c=RP.bar[+code.slice(5)-1];if(c){openReplay(RP.clips.indexOf(c));return;}}if(code==='KeyH'){$('d-rend').hidden=true;leave();return;}}
+  if(S.state==='roundEnd'&&!$('d-rend').hidden){if(/^Digit[1-9]$/.test(raw)&&RP.bar){const c=RP.bar[+raw.slice(5)-1];if(c){openReplay(RP.clips.indexOf(c));return;}}if(code==='KeyH'){$('d-rend').hidden=true;leave();return;}}
   if(['KeyT','KeyV','Digit1','Digit2','KeyR','KeyQ','KeyE','KeyG','KeyF','KeyC'].includes(code))queueAct(code);
 },true);
-window.addEventListener('keyup',e=>{const code=KEYSWAP[e.code]||e.code;keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');if(code==='KeyT'&&D.active&&!S.paused)queueAct('KeyT:up');});
+window.addEventListener('keyup',e=>{const code=mapKey(e);keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');if(code==='KeyT'&&D.active&&!S.paused)queueAct('KeyT:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
 canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){mouseL=true;}/* snipers fire straight from the hip on left click (right click scopes); the hold-to-scope quick-scope stays on the touch fire button */if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
@@ -8581,7 +8667,7 @@ $('dt-pause').addEventListener('pointerdown',e=>{e.preventDefault();if(D.active&
 const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 const hc={};const txt=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}};
 let vigA=0;function vig(a){vigA=Math.max(vigA,a);}
-function hitMarker(head){sfx(head?'headshot':'hit',null,{rate:head?1:1.05});const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');requestAnimationFrame(()=>h.classList.add('on'));} // restart next frame (forcing a layout here caused hitches)
+function hitMarker(head){if(OPT.hs==='1')sfx(head?'headshot':'hit',null,{rate:head?1:1.05});if(OPT.hm!=='1')return;const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');requestAnimationFrame(()=>h.classList.add('on'));} // restart next frame (forcing a layout here caused hitches)
 const nums=[],numPool=[];function dmgNumber(f,n,head){const el=numPool.pop()||$('d-nums').appendChild(document.createElement('div'));el.className='dmg'+(head?' head':'');el.textContent=n;el.style.opacity='';el.hidden=false;
   nums.push({el,p:new V3(f.pos.x+rnd(-.4,.4),f.pos.y+2.9*SC,f.pos.z+rnd(-.4,.4)),t:0});}
 function feedMsg(html){const el=document.createElement('div');el.className='panel feed';el.innerHTML=html;const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
@@ -8711,11 +8797,11 @@ const ICON={
   turret:'<svg viewBox="0 0 24 24"><path d="M12 13 5 22M12 13l7 9M12 13v9" stroke="#2b2d33" stroke-width="2" stroke-linecap="round"/><rect x="6" y="5" width="10" height="8" rx="2" fill="#ffc61a" stroke="#14161c" stroke-width="1.6"/><path d="M16 8h6M16 11h6" stroke="#14161c" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="8" r="1.4" fill="#ff2a3a"/></svg>',
   boots:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="#f08a24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
-  const ru=S.mode==='rumble',ab=ME.abilT>0;if(!ru&&!S.simple)L.push(['ability','G',ab?Math.ceil(ME.abilT)+'s':'',ab]);
-  const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',cc.passive?'':'E',cc.passive?String(Math.ceil(ME.armor||0)):cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),cc.passive?false:!rd]);}
-  if((ME.nades>0||ME.goldNade>0)&&!merge)L.push(['grenade','T',String((ME.nades||0)+(ME.goldNade||0)),ME.nadeT>0]);
-  if(ME.turretKit>0)L.push(['turret','V',String(ME.turretKit),false]);
-  if(!ru)L.push(['wall','Q',String(ME.walls),ME.walls<=0]);
+  const ru=S.mode==='rumble',ab=ME.abilT>0;if(!ru&&!S.simple)L.push(['ability',keyOf('abil'),ab?Math.ceil(ME.abilT)+'s':'',ab]);
+  const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',cc.passive?'':keyOf('leth'),cc.passive?String(Math.ceil(ME.armor||0)):cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),cc.passive?false:!rd]);}
+  if((ME.nades>0||ME.goldNade>0)&&!merge)L.push(['grenade',keyOf('nade'),String((ME.nades||0)+(ME.goldNade||0)),ME.nadeT>0]);
+  if(ME.turretKit>0)L.push(['turret',keyOf('sentry'),String(ME.turretKit),false]);
+  if(!ru)L.push(['wall',keyOf('wall'),String(ME.walls),ME.walls<=0]);
   if(ME.speedT>0)L.push(['boots','',Math.ceil(ME.speedT)+'s',false]);
   const sig=L.map(x=>x.join(',')).join('|');if(sig===renderItems.sig)return;renderItems.sig=sig;
   $('d-items').innerHTML=L.map(([ic,k,n,dim])=>`<span class="it${dim?' dim':k?' glow':''}">${ICON[ic]}${k?`<kbd>${k}</kbd>`:''}<b>${n}</b></span>`).join('');}
@@ -8759,7 +8845,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='
       const tg=lk.querySelector('.tag'),tx=lockT?'LOCK':'SEARCH';if(tg.textContent!==tx)tg.textContent=tx;const rg=lk.querySelector('.rng'),rt=lockT?Math.round(hf.t)+' m':'';if(rg.textContent!==rt)rg.textContent=rt;
       const am=ME.ammo.swarm||0,left=am>4?am-4:am;lk.querySelectorAll('.pips b').forEach((b,i)=>b.classList.toggle('l',i<left));}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':'')+(id==='sting'&&ME.ads&&VM.raise>.3?' chev':'');cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'||(id==='sting'&&ME.ads)?1:clamp(1-VM.raise*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':'#ffffff';if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
+  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(id==='sniper'||id==='scout'?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':xhClass())+(id==='sting'&&ME.ads&&VM.raise>.3?' chev':'');cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'||(id==='sting'&&ME.ads)?1:clamp(1-VM.raise*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*1.65);$('d-flash').style.opacity=flashA.toFixed(3);{const ao=(Math.min(1,flashA*1.5)*.55).toFixed(3);const ae=$('d-after');if(ae.style.opacity!==ao)ae.style.opacity=ao;}{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.hidden=true;numPool.push(n.el);nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -9117,7 +9203,7 @@ function updCamera(dt){S.camFollow=0;
     const want=new V3(c.x+Math.sin(a)*r,c.y+2.6+Math.sin(C.t*.7)*.6,c.z+Math.cos(a)*r);const h=rayBoxes(new V3(c.x,c.y+1.6,c.z),want.clone().sub(new V3(c.x,c.y+1.6,c.z)).normalize(),want.distanceTo(new V3(c.x,c.y+1.6,c.z)));
     if(h)want.copy(new V3(c.x,c.y+1.6,c.z)).addScaledVector(want.clone().sub(new V3(c.x,c.y+1.6,c.z)).normalize(),Math.max(1.5,h.t-.4));camera.position.lerp(want,1-Math.exp(-4*dt));camera.lookAt(c.x,c.y+1.3+(C.kind==='rise'?1.6:0),c.z);for(const w of C.who)w.ch.root.visible=true;camera.fov=damp(camera.fov,62,4,dt);camera.updateProjectionMatrix();return;}
   const f=ME;const id=gunOf(f);const holo=holoOn(f);const scoped=(f.ads&&(id==='sniper'||id==='scout')&&f.alive)||holo;
-  const fov=holo?GUNS[id].zoom*.85:scoped?GUNS[id].zoom:f.ads?GUNS[id].zoom:70;camera.fov=damp(camera.fov,fov,scoped?30:f.ads&&GUNS[id].ads?3.2/GUNS[id].ads:14,dt);camera.updateProjectionMatrix();
+  const fov=holo?GUNS[id].zoom*.85:scoped?GUNS[id].zoom:f.ads?GUNS[id].zoom:OPT.fov;camera.fov=damp(camera.fov,fov,scoped?30:f.ads&&GUNS[id].ads?3.2/GUNS[id].ads:14,dt);camera.updateProjectionMatrix();
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
   const head=new V3(f.pos.x,(f.visY??f.pos.y)+2.25*SC*(1-.27*(f.cv||0)),f.pos.z);
   if(!f.alive){const k=specOf()||f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);const bs=S.players==='1v1'?f:k;camera.position.lerp(new V3(bs.pos.x,bs.pos.y+7,bs.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}
@@ -9131,7 +9217,7 @@ function updCamera(dt){S.camFollow=0;
     for(const [ox,oy] of [[0,0],[.28,0],[-.28,0],[0,.24],[0,-.24]]){const o=pivot.clone().addScaledVector(side,ox).add(new V3(0,oy,0));const h=rayBoxes(o,d,L+.4);if(h)use=Math.min(use,h.t-.4);}
     // pull in at once when something gets between you and the camera, ease back out after (no popping past posts and trees)
     use=Math.max(.35,use);S.camUse=!isFinite(S.camUse)||use<S.camUse?use:damp(S.camUse,use,7,dt);use=S.camUse;camera.position.copy(pivot).addScaledVector(d,use);if(camera.position.y<.3)camera.position.y=.3;f.ch.root.visible=use>1.0;
-    if(!f.ads){camera.fov=damp(camera.fov,70+8*ind+(f.sprinting?6:0),10,dt);camera.updateProjectionMatrix();}
+    if(!f.ads){camera.fov=damp(camera.fov,OPT.fov+8*ind+(f.sprinting?6:0),10,dt);camera.updateProjectionMatrix();}
     let lk=head.clone().addScaledVector(right,sh).addScaledVector(dir,60);
     if(VM.raise>0){const e=VM.raise*VM.raise*(3-2*VM.raise);const fp=head.clone().add(new V3(0,.12,0)).addScaledVector(dir,.3);camera.position.lerp(fp,e);lk.lerp(head.clone().addScaledVector(dir,60),e);if(e>.12)f.ch.root.visible=false;}
     if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}camera.lookAt(lk);return;}
@@ -11168,7 +11254,7 @@ function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelect
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
   STG.tag.textContent='Ready for battle';STG.name.textContent=c.name;
-  STG.abil.innerHTML=`${S.simple?'No abilities in Simple 1v1':`<kbd>${S.touch?'E':'G'}</kbd>${c.abil}`}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span></div>`;
+  STG.abil.innerHTML=`${S.simple?'No abilities in Simple 1v1':`<kbd>${S.touch?'E':(window.KN?window.KN('abil'):'G')}</kbd>${c.abil}`}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span></div>`;
   void el.offsetWidth;el.classList.add('go');STG.burst=1;}
 function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');let last=0;
   const tick=t=>{if(STG!==G)return;requestAnimationFrame(tick);const cv=G.cv;

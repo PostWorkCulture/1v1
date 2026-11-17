@@ -1401,7 +1401,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
       </div>
       <div class="sens-box"><label class="sens" for="sens-cam-pk"><span>Camera sensitivity</span><input type="range" id="sens-cam-pk" data-sens="cam" min="0" max="10" step="1"><b data-sens-val="cam">5</b></label><label class="sens" for="vol-pk"><span>Sound volume</span><input type="range" id="vol-pk" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label><label class="sens" for="wvol-pk"><span>Weapons volume</span><input type="range" id="wvol-pk" data-wvol min="0" max="1" step="0.1"><b data-wvol-val>100%</b></label><label class="sens" for="mvol-pk"><span>Music volume</span><input type="range" id="mvol-pk" data-mvol min="0" max="1" step="0.1"><b data-mvol-val>50%</b></label></div>
       <div class="pm-set gfx-set"><div class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
-          <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
+          <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="-1" aria-checked="false">Auto</button><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
           <div class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
           <div class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
           <p class="gfx-note" hidden></p></div>
@@ -1509,7 +1509,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
         <div class="pm-btns"><button class="btn primary" id="dp-resume">Resume</button><button class="btn" data-go="controls">Controls</button><button class="btn" data-go="hud">HUD layout</button><button class="btn" id="dp-leave">Home</button></div>
         <div class="pm-set">
           <div class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
-          <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
+          <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="-1" aria-checked="false">Auto</button><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
           <div class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
           <div class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
           <p class="gfx-note" hidden></p>
@@ -1695,7 +1695,7 @@ const GFX=(()=>{
            low:{dpr:1,shadow:0,soft:false,every:1,lights:false,replay:null}};
   let pick=store.get('gfx','auto');if(pick!=='auto'&&!LV.includes(pick))pick='auto';
   let autoLv=store.get('gfx:autolv',mobile?'med':'high');if(!LV.includes(autoLv))autoLv=mobile?'med':'high';
-  let fps=store.get('gfx:fps',null);if(![0,30,60].includes(fps))fps=mobile?60:0;
+  let fps=store.get('gfx:fps',null);if(![0,30,60,-1].includes(fps))fps=-1;/* -1 = Auto */
   let saver=!!store.get('gfx:saver',false),showFps=!!store.get('gfx:showfps',false);const FC={n:0,t:0,el:null};
   // strong phone GPUs (recent Adreno, Xclipse, Mali-G7xx+, Apple) start Auto on High
   {let gpu='';try{const c=document.createElement('canvas').getContext('webgl');const d=c&&c.getExtension('WEBGL_debug_renderer_info');gpu=d?c.getParameter(d.UNMASKED_RENDERER_WEBGL):'';}catch(e){}
@@ -1707,6 +1707,9 @@ const GFX=(()=>{
   const lv=()=>saver?'low':pick==='auto'?autoLv:pick,q=()=>Q[lv()];
   // frame-rate watcher (only while actually playing, so menus and loading hitches don't count)
   const W={n:0,t:0,good:0,cool:0};
+  /* Auto frame rate: runs uncapped on computers and at 60 on phones; if the game still can't hold about 45 fps once Auto graphics has gone as low as it goes
+     (or graphics is set by hand), it settles on a steady 30, which feels smoother than a jumpy 40. About every 45 s at 30 it tries the higher rate again for a few seconds and keeps it if it holds */
+  const A0=mobile?60:0,A={cap:A0,slow:0,probe:0,trial:false};const capNow=()=>saver?30:fps===-1?A.cap:fps;
   function apply(){if(!r)return;const c=q(),on=c.shadow>0,type=c.soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
     r.setPixelRatio(Math.max(.6,Math.min(window.devicePixelRatio||1,c.dpr)*res));
     const changed=r.shadowMap.enabled!==on||r.shadowMap.type!==type;r.shadowMap.enabled=on;r.shadowMap.type=type;
@@ -1720,16 +1723,21 @@ const GFX=(()=>{
     addScene(sc,sun){scenes.push(sc);if(sun)suns.push(sun);apply();},
     light(l){l.userData.gfxLight=1;l.visible=q().lights;return l;},
     set(p){pick=p;store.set('gfx',p);res=1;W.n=W.t=W.good=0;W.cool=2;apply();},
-    setFps(f){fps=f;store.set('gfx:fps',f);W.n=W.t=W.good=0;G2.ui();},
+    setFps(f){fps=f;store.set('gfx:fps',f);W.n=W.t=W.good=0;A.cap=A0;A.slow=A.probe=0;A.trial=false;G2.ui();},get fpsNow(){return capNow();},
     // true when this animation frame should be drawn (frame-rate cap)
     idle:false,
     get saver(){return saver;},setSaver(v){saver=!!v;store.set('gfx:saver',saver);res=1;apply();},
-    gate(now){const f0=saver?30:fps,cap=G2.idle?(f0?Math.min(f0,20):20):f0;if(!cap){lastT=now;return true;}const iv=1000/cap,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
+    gate(now){const f0=capNow(),cap=G2.idle?(f0?Math.min(f0,20):20):f0;if(!cap){lastT=now;return true;}const iv=1000/cap,el=now-lastT;if(el<iv-1.5)return false;lastT=el>iv*2.5?now:lastT+iv;return true;},
     // called once per drawn frame
-    tick(dt,live){fno++;if(showFps){FC.n++;FC.t+=dt;if(FC.t>=.5){if(!FC.el){FC.el=document.createElement('div');FC.el.id='fps-meter';document.body.appendChild(FC.el);}FC.el.textContent=Math.round(FC.n/FC.t)+' fps · '+NAME[lv()]+(res<1?' '+Math.round(res*100)+'%':'');FC.n=FC.t=0;}}const c=q();if(c.every>1&&fno%c.every===0)for(const s of suns)s.shadow.needsUpdate=true;
-      if(pick!=='auto'||saver||!live||document.hidden||dt>.25){W.n=W.t=0;return;}
+    tick(dt,live){fno++;if(showFps){FC.n++;FC.t+=dt;if(FC.t>=.5){if(!FC.el){FC.el=document.createElement('div');FC.el.id='fps-meter';document.body.appendChild(FC.el);}FC.el.textContent=Math.round(FC.n/FC.t)+' fps · '+NAME[lv()]+(res<1?' '+Math.round(res*100)+'%':'')+(fps===-1&&!saver?' · cap '+(A.cap||'max'):'');FC.n=FC.t=0;}}const c=q();if(c.every>1&&fno%c.every===0)for(const s of suns)s.shadow.needsUpdate=true;
+      if((pick!=='auto'&&fps!==-1)||saver||!live||document.hidden||dt>.25){W.n=W.t=0;return;}
       W.n++;W.t+=dt;if(W.t<2.5)return;const f=W.n/W.t;W.n=W.t=0;if(W.cool>0){W.cool--;return;}
-      const target=Math.min(fps||60,60)*.83;
+      if(fps===-1){const floor=pick!=='auto'||(autoLv==='low'&&res<=.71);
+        if(A.trial){A.trial=false;if(f<45){A.cap=30;G2.ui();return;}A.cap=A0;G2.ui();}
+        else if(A.cap===30){if(++A.probe>=18){A.probe=0;A.cap=60;A.trial=true;W.cool=1;G2.ui();}return;}
+        else if(f<45&&floor){if(++A.slow>=2){A.slow=0;A.probe=0;A.cap=30;G2.ui();return;}}else A.slow=0;}
+      if(pick!=='auto')return;
+      const target=Math.min(capNow()||60,60)*.83;
       if(f<target){W.good=0;W.cool=1;
         if(res>.71)res=Math.round((res-.1)*100)/100;
         else{const i=LV.indexOf(autoLv);if(i>0){autoLv=LV[i-1];store.set('gfx:autolv',autoLv);res=.9;}}
@@ -1739,7 +1747,7 @@ const GFX=(()=>{
     // keeps every graphics control on the page in step
     ui(){document.querySelectorAll('[data-gfx]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.gfx===pick)));
       document.querySelectorAll('[data-fps]').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.fps===fps)));document.querySelectorAll('[data-saver]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.saver==='1')===saver)));document.querySelectorAll('[data-showfps]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.showfps==='1')===showFps)));if(FC.el)FC.el.hidden=!showFps;
-      const note=saver?'Battery saver is on: 30 fps and Low graphics.':(pick==='auto'?`Auto is using ${NAME[autoLv]}${res<1?` at ${Math.round(res*100)}% resolution`:''}.`:'')+(mobile&&lv()==='high'&&r&&!r.getContextAttributes().antialias?' Smoother edges after a reload.':'');
+      const note=saver?'Battery saver is on: 30 fps and Low graphics.':(pick==='auto'?`Auto is using ${NAME[autoLv]}${res<1?` at ${Math.round(res*100)}% resolution`:''}.`:'')+(fps===-1?` Frame rate Auto: ${A.cap===30?'steady 30':A.cap===60?'60':'uncapped'}.`:'')+(mobile&&lv()==='high'&&r&&!r.getContextAttributes().antialias?' Smoother edges after a reload.':'');
       document.querySelectorAll('.gfx-note').forEach(e=>{e.textContent=note;e.hidden=!note;});}};
   document.addEventListener('click',e=>{const b=e.target.closest('[data-gfx],[data-fps],[data-saver],[data-showfps]');if(!b)return;if(b.dataset.showfps){showFps=b.dataset.showfps==='1';store.set('gfx:showfps',showFps);G2.ui();}else if(b.dataset.saver)G2.setSaver(b.dataset.saver==='1');else if(b.dataset.gfx)G2.set(b.dataset.gfx);else G2.setFps(+b.dataset.fps);});
   return G2;})();

@@ -8779,7 +8779,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='
    Ragdoll a small particle skeleton for dead bodies, and for the collapse into the downed crawl.
    Extras  springy hair, chain and trouser hems (vertex sway), rim light, relief from the texture, contact shadow, blink.
    ===================================================================== */
-const CFX={legs:1,spine:1,rag:1,jig:1,look:1,blob:1,flinch:1,n:0};
+const CFX={legs:1,spine:1,rag:1,jig:1,look:1,blob:1,flinch:1,lerp:1,yaw:1,n:0};
 const RIM={value:new THREE.Color(.32,.36,.44),env:null};
 /* per-character extras. jig: which vertices are loose (weights are worked out once from the model's shape and texture colour).
    blink: [left eye x,y], [right eye x,y], face z, [lid w,h], skin colour */
@@ -8837,8 +8837,8 @@ function moOf(f){return f.mo||(f.mo={dx:0,dz:1,w:0,air:0,sq:0,sqv:0,wasG:true,vy
   fx:0,fxv:0,fy:0,fyv:0,fz:0,fzv:0,hx:0,hxv:0,px:0,pxv:0,pz:0,pzv:0});}
 const MOv={a:new THREE.Vector3(),b:new THREE.Vector3(),c:new THREE.Vector3(),pl:new THREE.Vector3(),m:new THREE.Matrix4(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),e:new THREE.Euler(),s:new THREE.Vector3()};
 /* two-bone leg IK: hip L.p, knee L.k; T is the sole target and pole the way the knee points, both in the hips' parent space */
-function legIK(L,T,pole){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
-  V.d.subVectors(T,S);let D=V.d.length();V.n.copy(V.d).divideScalar(D||1);D=clamp(D,Math.abs(a-b)+.02,a+b-.002);
+function legIK(L,T,pole,soft){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
+  V.d.subVectors(T,S);let D=V.d.length();V.n.copy(V.d).divideScalar(D||1);if(soft){const mx=a+b-.002,sf=.07*(a+b),s0=mx-sf;if(D>s0)D=s0+sf*(1-Math.exp(-(D-s0)/sf));}D=clamp(D,Math.abs(a-b)+.02,a+b-.002);
   V.p.copy(pole).addScaledVector(V.n,-V.n.dot(pole));if(V.p.lengthSq()<1e-6)V.p.set(0,0,1);V.p.normalize();
   const cA=clamp((a*a+D*D-b*b)/(2*a*D),-1,1),sA=Math.sqrt(1-cA*cA);
   V.u.copy(V.n).multiplyScalar(cA).addScaledVector(V.p,sA);V.e.copy(S).addScaledVector(V.u,a);V.v.copy(V.n).multiplyScalar(D).add(S).sub(V.e).normalize();
@@ -8847,7 +8847,7 @@ function legIK(L,T,pole){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
 /* legs and pelvis. Returns how far the body leans forward (the arms, head and gun lean back by the same amount to stay on aim). */
 function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded||menu),sc=ch.root.scale.x||1,L=ch.lL,R=ch.lR;m.t+=dt;
   const special=!CFX.legs||f.downed||!f.alive||f.finishing||f.pose||f.onLadder||f.ladK>.01||f.dangle||f.tumble||f.carriedBy||f.skySlam||CR.run;
-  if(special){m.w=0;m.air=0;m.sq=0;m.sqv=0;m.wasG=g;m.ax=m.az=0;const lean=KN.lean*cv;
+  if(special){m.w=0;m.air=0;m.sq=0;m.sqv=0;m.wasG=g;m.ax=m.az=0;m.mv=false;if(m.ft){m.ft[0].cx=m.ft[1].cx=undefined;}const lean=KN.lean*cv;
     ch.body.rotation.set(lean,0,0);ch.body.position.set(0,-1.25-KN.drop*cv+KN.hip*(1-Math.cos(lean)),-KN.hip*Math.sin(lean)-KN.back*cv);
     if(f.downed&&!f.finishing&&CFX.legs){/* downed: prone, legs trailing with a small alternate kick as you crawl */
       const a=Math.sin(f.phase||0)*clamp(sp/2,0,1);
@@ -8857,7 +8857,7 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
     L.p.rotation.set(damp(L.p.rotation.x,(g?sw:.5*(1-cv))+KN.fT*cv-lean,16,dt),0,0);R.p.rotation.set(damp(R.p.rotation.x,(g?-sw:-.3*(1-cv))+KN.rT*cv-lean,16,dt),0,0);
     L.k.rotation.set(damp(L.k.rotation.x,KN.fK*cv+(g?Math.max(0,s)*.7*run:.6*(1-cv)),16,dt),0,0);R.k.rotation.set(damp(R.k.rotation.x,KN.rK*cv+(g?Math.max(0,-s)*.7*run:.3*(1-cv)),16,dt),0,0);return lean;}
   // velocity in the character's own frame, in model units (x = the character's left, z = forward)
-  const sy=Math.sin(f.yaw),cy=Math.cos(f.yaw),lx=(f.vel.x*cy-f.vel.z*sy)/sc,lz=(f.vel.x*sy+f.vel.z*cy)/sc,v=Math.hypot(lx,lz),k=clamp(sp/13.5,0,1.2),st=1-cv;
+  const sy=Math.sin(f.yaw),cy=Math.cos(f.yaw),lx=(f.vel.x*cy-f.vel.z*sy)/sc,lz=(f.vel.x*sy+f.vel.z*cy)/sc,v=Math.hypot(lx,lz),spA=m.spA=damp(m.spA??sp,sp,11,dt),k=clamp(spA/15.2,0,1.2),st=1-cv;
   if(v>.5){const a=1-Math.exp(-14*dt);m.dx+=(lx/v-m.dx)*a;m.dz+=(lz/v-m.dz)*a;}
   const dn=Math.hypot(m.dx,m.dz)||1,dx=m.dx/dn,dz=m.dz/dn;
   m.w=damp(m.w,g&&sp>.7?1:0,g?9:22,dt);m.air=damp(m.air,g?0:1,g?20:12,dt);
@@ -8867,18 +8867,40 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
   // lean into the run and into changes of speed
   const idt=1/Math.max(dt,1e-3),ax=clamp((lx-m.pvx)*idt,-70,70),az=clamp((lz-m.pvz)*idt,-70,70);m.pvx=lx;m.pvz=lz;m.ax=damp(m.ax,ax,7,dt);m.az=damp(m.az,az,7,dt);
   const kk=k*m.w*st,gk=g?1:.35,leanX=(.12*kk*dz+clamp(m.az*.003,-.09,.11))*gk-m.sq*.3*st,leanZ=-(.08*kk*dx+clamp(m.ax*.0028,-.08,.08))*gk;
-  const ph=f.phase||0,c=((ph/(2*Math.PI))%1+1)%1,Ls=(.7+.18*sp)/sc,beta=Math.min(lerp(.6,.2,clamp(k,0,1)),1.3/(2*Ls)),Sd=2*Ls*beta,H=.1+.44*Math.min(k,1);
+  const mv=g&&sp>.7,Ls=(.7+.18*spA)/sc,len=L.up+L.lo,hh=KN.hip-(.03+.15*Math.min(k,1))*st,RL=Math.sqrt(Math.max(.16,len*len-hh*hh))*1.06,beta=Math.min(lerp(.6,.2,clamp(k,0,1)),RL/Ls),Sd=2*Ls*beta,H=(.1+.44*Math.min(k,1))*len/1.46;
+  if(mv&&!m.mv)f.phase=Math.PI*beta;/* setting off: the left foot is mid-stance, right where it stands */m.mv=mv;
+  const ph=f.phase||0,c=((ph/(2*Math.PI))%1+1)%1;
   const bob=-(.012+.05*k)*m.w*st*Math.cos(4*Math.PI*(c-beta/2)),drop=(.03+.15*Math.min(k,1)*m.w)*st,idle=(1-m.w)*st*(g?1:0),lean=KN.lean*cv+leanX;
   ch.body.rotation.set(lean,g?.1*Math.cos(ph)*kk*dz:0,leanZ);
   ch.body.position.set(.014*Math.sin(m.t*.7)*idle+m.px,-1.25-KN.drop*cv+KN.hip*(1-Math.cos(lean))-drop+bob+m.sq+.006*Math.sin(m.t*1.9)*idle,-KN.hip*Math.sin(lean)-KN.back*cv+m.pz-Math.sin(m.ux)*(EYE_TARGET-ch.hipY)*.8*st);/* hips go the other way to the chest, so the head stays over its hitbox */
-  // foot targets in the root's space (ground = 0): planted and sliding back at ground speed in stance, lifted and swung forward otherwise
-  const up=clamp(.5+f.vel.y/16,0,1),V=MOv;
-  const foot=(o,side,cc,out)=>{let al,h;if(cc<beta){al=Sd*(.5-cc/beta);h=0;}else{const u=(cc-beta)/(1-beta),e=u*u*(3-2*u);al=Sd*(e-.5);h=H*Math.sin(Math.PI*Math.pow(u,.8));}
-    const bx=o.p.position.x*1.1,rz=side<0?.1:-.08,w=m.w;out.set(bx+dx*al*w,h*w,rz*(1-w)*st+dz*al*w);
-    if(m.air>.001){const ay=side<0?lerp(.16,.6,up):lerp(.24,.1,up),az2=side<0?lerp(.16,.36,up):lerp(-.14,-.38,up);out.x+=(bx-out.x)*m.air;out.y+=(ay-out.y)*m.air;out.z+=(az2-out.z)*m.air;}};
-  foot(L,-1,c,V.a);foot(R,1,(c+.5)%1,V.b);
+  /* foot targets in the root's space (ground = 0). Each foot is either planted (held at a point in the world, so it stays put through turns,
+     stops and changes of speed) or stepping. Running: the stride's stance half plants it, the swing half carries it from where it left the
+     ground to where it lands next, leaving and arriving at ground speed. Standing: a foot that ends up out of place (after a stop or a turn on
+     the spot) takes a small step back under the hip, one foot at a time. In the air both feet ease into the tuck. */
+  const up=clamp(.5+f.vel.y/16,0,1),V=MOv,P=f.pos,yw=ch.root.rotation.y,cyw=Math.cos(yw),syw=Math.sin(yw),FT=m.ft||(m.ft=[{t:-1},{t:-1}]);
+  const toW=(x,z,o)=>{o.wx=P.x+(x*cyw+z*syw)*sc;o.wz=P.z+(-x*syw+z*cyw)*sc;},toR=(o,out)=>{const X=(o.wx-P.x)/sc,Z=(o.wz-P.z)/sc;out.x=X*cyw-Z*syw;out.z=X*syw+Z*cyw;};
+  const dc=(()=>{const d=((c-(m.pc??c))%1+1)%1;m.pc=c;return d>.5?0:d;})(),Dsw=2*Ls*(1-beta)*.62;/* how far the body travels during a swing (most of it is taken out of the foot's path, so it leaves and lands close to ground speed) */
+  const foot=(i,o,side,cc,out)=>{const F=FT[i],bx=o.p.position.x*1.1,rz=(side<0?.1:-.08)*st;if(F.cx===undefined){F.cx=bx;F.cy=0;F.cz=rz;F.t=-1;F.lock=0;F.sw=0;F.need=0;}
+    const qx=F.cx-lx*dt,qz=F.cz-lz*dt;/* where it was a step ago, seen from where the body is now */
+    if(!g){F.lock=0;F.t=-1;F.sw=0;const ay=side<0?lerp(.16,.6,up):lerp(.24,.1,up),az2=side<0?lerp(.16,.36,up):lerp(-.14,-.38,up);out.set(damp(F.cx,bx,13,dt),damp(F.cy,ay,13,dt),damp(F.cz,az2,13,dt));}
+    else if(mv){F.t=-1;
+      if(F.sw){/* a swing, once begun, runs its course at the stride's pace (the stance share changes with speed, and must not cut it short) */
+        F.v+=dc/(1-beta)*F.k;if(F.v>=1){F.sw=0;F.need=1;}
+        else{const v=F.v,e=v*v*(3-2*v),dr=Dsw/F.k*(e-v);out.set(lerp(F.sx,bx+dx*Sd*.5,e)+dx*dr,F.sy*(1-v)*(1-v)+H*(1-Math.cos(2*Math.PI*Math.pow(v,.85)))*.5,lerp(F.sz,dz*Sd*.5,e)+dz*dr);}}
+      if(!F.sw){if(cc<beta)F.need=0;
+        if(cc>=beta&&!F.need){/* lift off */if(F.lock){toR(F,out);F.sx=out.x;F.sz=out.z;}else{F.sx=qx;F.sz=qz;}F.lock=0;F.sw=1;F.sy=F.cy;F.v=0;F.k=1/Math.max(.2,1-(cc-beta)/(1-beta));out.set(F.sx,F.sy,F.sz);}
+        else{if(!F.lock){toW(qx,qz,F);F.lock=1;}toR(F,out);
+          const ex=out.x-bx,ez=out.z,d2=Math.hypot(ex,ez);if(d2>RL){/* left behind (a sharp turn, a shove): let it slide back within reach */const k2=1-(1-RL/d2)*Math.min(1,dt*12);out.x=bx+ex*k2;out.z=ez*k2;toW(out.x,out.z,F);}
+          out.y=damp(F.cy,0,30,dt);}}}
+    else{F.sw=0;
+      if(F.t>=0){F.t+=dt/.2;const v=Math.min(F.t,1),e=v*v*v*(v*(v*6-15)+10);out.set(lerp(F.sx,bx,e),F.sy*(1-e)+.11*(1-Math.cos(2*Math.PI*v))*.5,lerp(F.sz,rz,e));if(F.t>=1){F.t=-1;toW(bx,rz,F);F.lock=1;}}
+      else if(!F.lock&&F.cy>.05){/* stopped with this foot in the air: carry it on down to its place */F.t=0;F.sx=qx;F.sy=F.cy;F.sz=qz;out.set(qx,F.cy,qz);}
+      else{if(!F.lock){toW(qx,qz,F);F.lock=1;}toR(F,out);out.y=damp(F.cy,0,30,dt);
+        const dev=Math.hypot(out.x-bx,out.z-rz);if((dev>.22&&FT[1-i].t<0&&out.y<.03)||dev>.75){F.t=0;F.sx=out.x;F.sy=out.y;F.sz=out.z;F.lock=0;}}}
+    F.cx=out.x;F.cy=out.y;F.cz=out.z;};
+  foot(0,L,-1,c,V.a);foot(1,R,1,(c+.5)%1,V.b);
   ch.flip.updateMatrix();ch.body.updateMatrix();V.m.multiplyMatrices(ch.flip.matrix,ch.body.matrix).invert();V.a.applyMatrix4(V.m);V.b.applyMatrix4(V.m);
-  legIK(L,V.a,V.pl.set(-.1,0,1));legIK(R,V.b,V.pl.set(.1,0,1));
+  legIK(L,V.a,V.pl.set(-.1,0,1),1);legIK(R,V.b,V.pl.set(.1,0,1),1);
   if(cv>.001){/* blend into the ready kneel */const e=cv*cv*(3-2*cv),sw=g?s*.35:0;
     V.q.setFromEuler(V.e.set(sw+KN.fT-lean,0,0));L.p.quaternion.slerp(V.q,e);L.k.rotation.x=lerp(L.k.rotation.x,KN.fK,e);
     V.q.setFromEuler(V.e.set(-sw+KN.rT-lean,0,0));R.p.quaternion.slerp(V.q,e);R.k.rotation.x=lerp(R.k.rotation.x,KN.rK,e);}
@@ -8890,6 +8912,18 @@ function spineMo(f,ch,dt,menu){const m=moOf(f),up=ch.up;
   const calm=f.downed||f.onLadder||f.ladK>.01||f.dangle||f.tumble||f.carriedBy||f.skySlam,aim=calm?0:(menu?-.15:f.pitch||0);
   const tx=calm?0:-clamp(aim,-1,1)*.45+.014*Math.sin(m.t*1.9)-m.sq*.45;m.ux=damp(m.ux,tx,calm?9:24,dt);
   const fl=calm?0:1;up.rotation.set(m.ux+m.fx*fl,-ch.body.rotation.y+m.fy*fl,-ch.body.rotation.z*.6+m.fz*fl);return m.ux;}
+/* other fighters' bodies turn towards their aim over a few frames instead of snapping (bots flick their aim; yours follows your camera exactly) */
+function visYaw(f,dt,menu){if(f===ME||menu||!CFX.yaw||!f.alive)return f.vyaw=f.yaw;let v=f.vyaw??f.yaw,d=f.yaw-v;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)>2.2)v=f.yaw;else v+=d*(1-Math.exp(-24*dt));return f.vyaw=v;}
+/* The simulation runs 60 times a second whatever the screen does, so on a 90, 120 or 144 Hz screen (or when a frame runs long) the drawn frames
+   fell on uneven steps and movement juddered. Just before each frame is drawn, every body (and your camera with yours) is moved back to where
+   it was part-way between the last two steps; straight after, it is put back, so nothing in the game itself changes. */
+const DL={o:[],n:0};
+function drawLerp(on){if(!on){for(let i=0;i<DL.n;i++){const o=DL.o[i],r=o.f.ch.root.position;r.x-=o.x;r.y-=o.y;r.z-=o.z;if(o.b){o.b.position.x-=o.x;o.b.position.z-=o.z;}if(o.cam){camera.position.x-=o.x;camera.position.y-=o.y;camera.position.z-=o.z;}}DL.n=0;return;}
+  DL.n=0;const k=1-clamp(simAcc/SIM,0,1);if(!CFX.lerp||k<.01||S.state==='menu'||CR.run||S.paused){if(CFX.onDraw)CFX.onDraw();return;}
+  for(const f of FS){const p=f.pp;if(!p||f.rd||!f.ch||f.finishing)continue;const x=(p.x-f.pos.x)*k,z=(p.z-f.pos.z)*k,y=((f.pvy??f.pos.y)-(f.visY??f.pos.y))*k,d=x*x+y*y+z*z;if(d>.6||d<1e-10)continue;
+    const o=DL.o[DL.n]||(DL.o[DL.n]={});DL.n++;o.f=f;o.x=x;o.y=y;o.z=z;const r=f.ch.root.position;r.x+=x;r.y+=y;r.z+=z;o.b=f.blob&&f.blob.visible?f.blob:null;if(o.b){o.b.position.x+=x;o.b.position.z+=z;}
+    o.cam=f===ME&&S.camFollow?1:0;if(o.cam){camera.position.x+=x;camera.position.y+=y;camera.position.z+=z;}}
+  if(CFX.onDraw)CFX.onDraw();}
 /* a hit: which way it travelled (for the flinch and for the ragdoll if it kills) */
 let BLAST=null;
 function hitMark(f,dmg,src,gun,head){try{if(!f.ch||!f.pos)return;const m=moOf(f);let ox,oy,oz,bl=false;
@@ -9015,7 +9049,7 @@ function rdUnder(f,ch){const A=f.an;if(!A)return;const R=(o,x)=>{if(o&&o.rotatio
 function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
   // stairs and kerbs move you up or down a step instantly; the body and camera glide over it instead of snapping
   {const v=f.visY??f.pos.y,d=f.pos.y-v;f.visY=f.grounded&&Math.abs(d)<.8&&!f.finishing&&!menu?v+d*(1-Math.exp(-20*dt)):f.pos.y;}
-  ch.root.position.copy(f.pos);ch.root.position.y=f.visY+(f.celLift||0);if(!f.finishing||f.finishing.fx!=='Disco')ch.root.rotation.y=f.downed&&!f.finishing?downYaw(f):f.yaw;if(!(f.finishing&&f.finishing.move&&f.finishing.done))ch.root.rotation.x=damp(ch.root.rotation.x,f.downed?1.3:f.corpse&&!f.alive||f.finishing&&f.finishing.fx==='Fall'?(CFX.rag&&ch.up&&!menu?ch.root.rotation.x:1.5):0,f.corpse?11:8,dt);if(f.downed||f.corpse&&(!f.alive||f.finishing&&f.finishing.fx==='Fall'))ch.root.position.y+=CFX.rag&&ch.up&&!menu?.32*clamp(ch.root.rotation.x/1.3,0,1):.32;const sp=Math.hypot(f.vel.x,f.vel.z);
+  ch.root.position.copy(f.pos);ch.root.position.y=f.visY+(f.celLift||0);if(!f.finishing||f.finishing.fx!=='Disco')ch.root.rotation.y=f.downed&&!f.finishing?downYaw(f):visYaw(f,dt,menu);if(!(f.finishing&&f.finishing.move&&f.finishing.done))ch.root.rotation.x=damp(ch.root.rotation.x,f.downed?1.3:f.corpse&&!f.alive||f.finishing&&f.finishing.fx==='Fall'?(CFX.rag&&ch.up&&!menu?ch.root.rotation.x:1.5):0,f.corpse?11:8,dt);if(f.downed||f.corpse&&(!f.alive||f.finishing&&f.finishing.fx==='Fall'))ch.root.position.y+=CFX.rag&&ch.up&&!menu?.32*clamp(ch.root.rotation.x/1.3,0,1):.32;const sp=Math.hypot(f.vel.x,f.vel.z);
   if(f.grounded){f.phase+=sp*dt*(ch.up&&CFX.legs?Math.PI/(.7+.18*sp):1.15);if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;sfx('step'+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
   const KN=ch.knee,cv=KN&&ch.up&&CFX.legs&&f.downed?0:(f.cv||0);let lean=KN?KN.lean*cv:0,lean2=lean;
   if(KN&&ch.up){lean=legsMo(f,ch,dt,sp,s,cv,menu);lean2=lean+spineMo(f,ch,dt,menu);}
@@ -9061,7 +9095,7 @@ function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
   if(f.jolt){ch.root.rotation.z+=f.jolt*.6;f.jolt=Math.abs(f.jolt)<.02?0:f.jolt*Math.exp(-dt*12);}
   bodyFX(f,ch,dt,menu,sp);
 }
-function updCamera(dt){
+function updCamera(dt){S.camFollow=0;
   if(S.state==='menu'){S.menuT+=dt*.12;const c=M.center,b=M.bounds;const r=Math.max(b.x1-b.x0,b.z1-b.z0)*.55;const a=S.menuT+.6;
     camera.position.set(c.x+Math.sin(a)*r,r*.62,c.z+Math.cos(a)*r);const right=new V3(Math.cos(a),0,-Math.sin(a));
     camera.lookAt(new V3(c.x,0,c.z).addScaledVector(right,camera.aspect>1?-r*.32:0));camera.fov=50;camera.updateProjectionMatrix();ME.ch.root.visible=true;return;}
@@ -9087,7 +9121,7 @@ function updCamera(dt){
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
   const head=new V3(f.pos.x,(f.visY??f.pos.y)+2.25*SC*(1-.27*(f.cv||0)),f.pos.z);
   if(!f.alive){const k=specOf()||f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);const bs=S.players==='1v1'?f:k;camera.position.lerp(new V3(bs.pos.x,bs.pos.y+7,bs.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}
-  if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
+  S.camFollow=1;if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
   else{// indoors (ceiling overhead) the camera tucks in closer and lower and widens its view
     const up=rayBoxes(head,new V3(0,1,0),3.2);S.indoor=damp(S.indoor||0,up?1:0,6,dt);const ind=S.indoor;
     let sh=lerp(f.ads?1.0:1.45,f.ads?.7:.9,ind);const rs=rayBoxes(head,right,sh+.4);if(rs)sh=Math.max(0,rs.t-.4);
@@ -9420,7 +9454,7 @@ const lvlOf=x=>Math.floor(x/100)+1;
 function xpBar(prefix){const x=S.xp||0,nu=nextUnlock(),i=FX_XP.indexOf(nu);$(prefix+'-lvl').textContent='Level '+lvlOf(x);$(prefix+'-bar').style.transform=`scaleX(${(x%100)/100})`;
   $(prefix+'-txt').textContent=`${x%100}/100 XP to level ${lvlOf(x)+1}`;}
 
-function step(rdt){pfBudget=24000;
+function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).copy(f.pos);f.pvy=f.visY??f.pos.y;}
   if(S.paused||S.replayOpen){render();return;}
   if(S.slowT>0){S.slowT-=rdt;S.ts=damp(S.ts,.25,18,rdt);}else S.ts=damp(S.ts,1,5,rdt);const dt=rdt*S.ts;S.t+=dt;
   if(NET.role==='client'){if(S.state==='countdown'){const c=Math.ceil(S.t0);if(c>0)center(String(c),'Round '+S.round,'cd');}}
@@ -9475,7 +9509,7 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
 function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}if(S.camOv){camera.position.set(...S.camOv.p);camera.lookAt(...S.camOv.t);}renderer.render(scene,camera);if(!S.camOv)renderVM();fxGrab();}
 const SIM=1/60;let simAcc=0;
 function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;step(SIM);n++;}
-  if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;render();capFrame(rdt);}
+  if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;drawLerp(1);render();drawLerp(0);capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip
 /* kill replays: a rolling few seconds of exactly what you see (scope included) at up to 1280x720 and 30 fps; frames are cropped to 16:9 and

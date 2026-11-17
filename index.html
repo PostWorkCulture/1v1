@@ -5278,7 +5278,7 @@ const MAPS={
 };
 // red explosive drums on every duel map (current and future): small clusters on open ground tucked beside cover,
 // clear of spawns, shops, ladders, stairs, water and the train lines; same spots each time a map is built
-function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||md.drums===0)return false;const g=M.grid;if(!g)return false;
+function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble'||md.drums===0)return false;const g=M.grid;if(!g)return false;
   let sd=0;for(const ch of M.id)sd=(sd*31+ch.charCodeAt(0))|0;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
   const b=M.bounds,area=(b.x1-b.x0)*(b.z1-b.z0),want=md.drums||Math.round(Math.min(5,Math.max(3,area/2500))),placed=[],far=(x,z,L,d)=>L.every(p=>Math.hypot(p.x-x,p.z-z)>=d);
   for(const B of M.boxes)if(B.boom)placed.push({x:(B.x0+B.x1)/2,z:(B.z0+B.z1)/2});
@@ -5302,9 +5302,9 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||!md.modes.includes('duel')||
     for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
     placed.push({x,z});}
   return true;}
-function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
+function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;M.ru=S.mode==='rumble';/* shop, armour and barrels depend on the mode, not the map */applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
-function placeShop(){M.shop=null;M.shops=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: fists only, no shop */
+function placeShop(){M.shop=null;M.shops=[];if(S.mode==='rumble')return;/* Rumble: fists only, no shop (any map) */
   if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1,p.q);return;}/* q: which way it faces, in quarter turns (front towards +z at 0, +x at 1) */const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
   const tall=M.boxes.filter(o=>o.y1>.4);const low=M.boxes.filter(o=>o.y1<=.4);
   // open radius = distance to the nearest thing taller than a kerb, capped at 7
@@ -6765,7 +6765,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const mapOK=m=>!!m&&(S.one?!!m.in1v1:m.modes.includes(S.mode)&&!m.one)/* 1v1 (Simple and Normal): Sky High, Lagoon and Arena */,oneTop=e=>!!e[1].one,mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const mapOK=m=>!!m/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(6,+store.get('duel:ffan',4)||4),char:'blaze',diff:store.get('duel:diff','normal'),randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
@@ -6951,7 +6951,7 @@ function breakProp(b,at){if(!b.alive)return;knockOn(b,b.y1);sfx(b.snd||(b.prop==
    from the spawns by walking, climbing stairs, dropping and jumping. A pool of those hard spots is kept; plates stand in different
    areas of the map from each other, and one that's taken comes back 60 s later somewhere else in the pool (away from where it was and
    from the other plates). They're shuffled to fresh spots at every round start. */
-function placePlates(){M.plates=[];if(MAPS[M.id]&&!MAPS[M.id].modes.includes('duel'))return;/* Rumble: no armour */const g=M.grid;if(!g||!g.comp)return;const nx=g.nx,nz=g.nz,N=nx*nz,NN=N*NL,seen=new Uint8Array(NN),q=[];
+function placePlates(){M.plates=[];if(S.mode==='rumble')return;/* Rumble: no armour (any map) */const g=M.grid;if(!g||!g.comp)return;const nx=g.nx,nz=g.nz,N=nx*nz,NN=N*NL,seen=new Uint8Array(NN),q=[];
   const base=M.spawns.filter(s=>!s.bld);for(const sp of base){const id=nearestNode(sp.x,sp.y||0,sp.z);if(id>=0&&!seen[id]){seen[id]=1;q.push(id);}}
   while(q.length){const id=q.pop(),k=(id/NL)|0,i=k%nx,j=(k-i)/nx,h=g.h[id];for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const a=i+di,b=j+dj;if(a<1||b<1||a>=nx-1||b>=nz-1)continue;const k2=a+b*nx,far=Math.abs(di+dj)>1;
     for(let l=0;l<g.n[k2];l++){const n2=k2*NL+l;if(seen[n2])continue;const dh=g.h[n2]-h;if(far&&dh<=STEP)continue;if(dh<=STEP+.02||dh<=2.1||g.st.has(id*NN+n2)||(dh<0&&canDrop(g,k2,g.h[n2],h))){seen[n2]=1;q.push(n2);}}}}
@@ -9239,7 +9239,7 @@ function startMatch(){if(S.one)S.players='1v1';if(S.randMap)rollMap();if(S.randC
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
     if(S.mode==='rumble')b.primary=b.secondary='fists';if(S.simple)Object.assign(b,SIMPLE_KIT);tagFor(b);}
   const P=S.players;if(P!=='1v1')txt('d-botname',P==='2v2'?'Enemy team':'Bots');document.querySelector('.d-side.you .eyebrow').textContent=P==='2v2'?'Your team':'You';
-  $('d-feed').innerHTML='';if(M.id!==S.map)buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
+  $('d-feed').innerHTML='';if(M.id!==S.map||M.ru!==(S.mode==='rumble'))buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
   const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1 · Normal'):'Duels'} · ${S.one?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':'')+' · '}${MAPS[S.map].name}`;
   $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · first to 10 kills wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · fists only':S.simple?' · M4, sword & grenade · no abilities':'');
   h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}

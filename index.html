@@ -5155,6 +5155,23 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
   
     /* six pillars spread round the floor in a staggered layout, each mirrored through the centre so both ends play the same */
     for(const sg of [1,-1]){pillar(sg*14.5,sg*8,3.2);pillar(-sg*13.5,sg*15,3);pillar(sg*6,sg*18,2.8);}
+    /* two portals set into the faces of the big mirrored pillars (each facing the middle): walk into one and you step straight out of the other,
+       on the far side of the arena, facing out of it with your speed carried through. Orange one end, blue the other; a short cooldown stops you bouncing straight back */
+    {const PO=[{x:14.5,z:8-1.6,nz:-1,col:'#ff8a2a'},{x:-14.5,z:-8+1.6,nz:1,col:'#3aa8ff'}];
+     for(const P of PO){const g=new THREE.Group();g.position.set(P.x,0,P.z+P.nz*.012);g.rotation.y=P.nz>0?0:Math.PI;M.group.add(g);
+       const rec=new THREE.Mesh(new THREE.PlaneGeometry(1.9,2.9),new THREE.MeshBasicMaterial({color:'#05060a'}));rec.position.y=1.45;g.add(rec);
+       const el=new THREE.Group();el.position.set(0,1.45,.01);el.scale.set(.86,1.36,1);g.add(el);
+       const sw=new THREE.Mesh(new THREE.CircleGeometry(1,48),new THREE.MeshBasicMaterial({map:canvasTex(256,256,(c,w,h)=>{const gr=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w/2);gr.addColorStop(0,'#ffffff');gr.addColorStop(.25,P.col);gr.addColorStop(.85,'#10131c');gr.addColorStop(1,P.col);c.fillStyle=gr;c.fillRect(0,0,w,h);
+         c.translate(w/2,h/2);c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=5;for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.beginPath();for(let t=0;t<1;t+=.02){const r=t*w*.48,an=t*5;c.lineTo(Math.cos(an)*r,Math.sin(an)*r);}c.stroke();}}),transparent:true,opacity:.92,toneMapped:false,depthWrite:false}));
+       sw.userData.dyn=1;el.add(sw);P.sw=sw;
+       const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,10,64),new THREE.MeshBasicMaterial({color:P.col,toneMapped:false}));ring.position.z=.02;el.add(ring);
+       glowSprite(P.x,1.45,P.z+P.nz*.3,3.4,P.col,.55);const L=new THREE.PointLight(P.col,6,9,1.8);L.position.set(P.x,1.6,P.z+P.nz*1);window.GFX&&GFX.light(L);M.group.add(L);}
+     M.life.push((t,dt)=>{for(const P of PO)P.sw.rotation.z-=dt*2.2*P.nz;
+       for(const f of FS){if(!f.alive||f.downed||S.t-(f._ptT||-9)<1)continue;
+         for(let i=0;i<2;i++){const A=PO[i],O=PO[1-i];if(f.pos.y>2.2||Math.abs(f.pos.x-A.x)>.85||(f.pos.z-A.z)*A.nz>.7||(f.pos.z-A.z)*A.nz<-.2)continue;
+           const sp=Math.max(4,Math.hypot(f.vel.x,f.vel.z));emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:8,speed:2,up:.5,size:.18,life:.4,colors:[A.col,'#ffffff']});
+           f.pos.set(O.x,f.pos.y,O.z+O.nz*1.1);f.vel.x=0;f.vel.z=O.nz*sp;f.yaw=O.nz>0?0:Math.PI;f._ptT=S.t;if(f.prev)f.prev.copy(f.pos);
+           emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:8,speed:2,up:.5,size:.18,life:.4,colors:[O.col,'#ffffff']});sfx('respawn',f,{vol:.55,rate:1.3,range:16});break;}}});}
     /* raised walkways along both long sides: 5 m wide, 4.4 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
        and breakable glass all along the inner edge */
     const H=4.4,W=5,D0=-10,D1=10,RL=10,n=18,cols=['#d9dce1','#d9dce1'];/* walkways in the same grey as the floor */

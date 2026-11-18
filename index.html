@@ -1294,6 +1294,262 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 #menu #d-prof .st-side{left:auto;right:30px;top:auto;bottom:26px;transform:none;width:min(44%,440px)}
 #menu #d-prof .st-desc{color:#d2d2d2}
 @media (max-width:720px){#menu #d-prof .crg{height:calc(60% - 18px)}#menu #d-prof .st-info{left:16px;bottom:14px;max-width:46%}#menu #d-prof .st-side{right:12px;bottom:14px;width:50%}#menu #d-prof .st-name{font-size:30px}}
+/* ===== in-game HUD and pop-ups: monochrome, matching the menus (black panels, white highlights, red only for the enemy, danger and accents) ===== */
+#duel-hud{--panel:rgba(10,10,10,.86);--panel-ink:#f5f5f5;--muted:#8a8a8a;--edge:#2e2e2e;--accent:#ff3b30;--accent-2:#ffffff;--good:#ffffff;--gold:#ffffff;--radius:10px;--bw:1px;--shadow:none;--mono-red:#ff3b30}
+#duel-hud .panel{background:rgba(10,10,10,.86);color:#f5f5f5;border:1px solid #2e2e2e;box-shadow:none;border-radius:10px}
+#duel-hud .eyebrow{font:600 10px/1 var(--f-body);letter-spacing:.16em;color:#8a8a8a}
+#duel-hud kbd{background:#141414;border:1px solid #4a4a4a;color:#d0d0d0;box-shadow:none;border-radius:5px}
+#d-homebtn{background:rgba(10,10,10,.86);border:1px solid #2e2e2e;box-shadow:none;border-radius:10px}
+#d-homebtn svg path{fill:#ffffff}
+#d-homebtn:hover{background:#1c1c1c}
+/* score: your score white, theirs red, a row of five pips under each (first to 5) */
+#duel-hud .d-score{gap:22px;padding:9px 18px 10px;min-width:400px;justify-content:space-between}
+#duel-hud .d-side{flex-direction:column;align-items:flex-start;gap:4px;min-width:96px}
+#duel-hud .d-side.bot{align-items:flex-end}
+#duel-hud .d-side b{font:700 34px/1 var(--f-body);min-width:0;text-align:left}
+#duel-hud .d-side.you b{color:#ffffff}
+#duel-hud .d-side.bot b{color:var(--mono-red);order:-1}
+#duel-hud .d-side.bot .eyebrow{order:-2}
+#duel-hud .d-side .d-pips{order:3}
+#duel-hud #d-time{font:700 22px/1 var(--f-body)}
+.d-pips{display:flex;gap:4px;height:4px}.d-pips:empty{display:none}
+.d-pips i{width:14px;height:4px;border-radius:2px;background:#3a3a3a}
+.d-pips i.on{background:#ffffff}.d-side.bot .d-pips i.on{background:var(--mono-red)}
+#duel-hud.dm #d-goal{display:block}
+#duel-hud:not(.dm) #d-goal{display:none}
+/* leaderboard */
+#duel-hud .d-lb{padding:8px 11px}
+#duel-hud .d-lb th{color:#8a8a8a;font-weight:600;letter-spacing:.14em}
+/* minimap: dark ground with a thin double ring */
+#duel-hud .d-mm{border-radius:50%;background:#121212;border:1px solid #3a3a3a;box-shadow:0 0 0 4px rgba(10,10,10,.86),0 0 0 5px #2e2e2e}
+/* vitals: white health (red when low or down), grey armour in two halves, thin grey stamina */
+#duel-hud .d-vit{gap:9px;padding:12px 14px 13px}
+#duel-hud .vrow{grid-template-columns:62px 1fr 36px;gap:10px;font:600 10px/1 var(--f-body);letter-spacing:.16em;color:#8a8a8a}
+#duel-hud .vrow b{font:700 15px/1 var(--f-body);color:#f5f5f5}
+#duel-hud .vrow.hp b{font-size:16px}
+#duel-hud .vbar{height:6px;border-radius:3px;background:#2a2a2a}
+#duel-hud .vrow.hp .vbar i{background:#ffffff}
+#duel-hud .vrow.hp.low .vbar i,#duel-hud .vrow.hp.down .vbar i{background:var(--mono-red)}
+#duel-hud .vrow.hp.low b,#duel-hud .vrow.hp.down b{color:var(--mono-red)}
+#duel-hud .vrow.ar .vbar{background:repeating-linear-gradient(90deg,#2a2a2a 0 calc(50% - 1px),#0a0a0a calc(50% - 1px) 50%)}
+#duel-hud .vrow.ar .vbar i{background:#9aa3ad}
+#duel-hud .vrow.ar.gold .vbar i{background:linear-gradient(90deg,#d9d9d9,#ffffff)}
+#duel-hud .vrow.st .vbar{height:4px}
+#duel-hud .vrow.st .vbar i{background:#6b6b6b}
+#duel-hud .vrow.st.low .vbar i{background:#454545}
+#duel-hud .vrow.st b{color:#8a8a8a;font-size:13px}
+#duel-hud .vrow.fu .vbar i{background:#ffffff}
+/* items: key chips */
+#duel-hud .d-items{gap:6px;padding:7px 9px}
+#duel-hud .d-items .it{display:flex;align-items:center;gap:7px;padding:5px 9px 5px 7px;border:1px solid #2e2e2e;border-radius:7px;font:700 13px/1 var(--f-body);color:#f5f5f5;background:none;box-shadow:none}
+#duel-hud .d-items .it svg{width:17px;height:17px;filter:grayscale(1) brightness(1.6)}
+#duel-hud .d-items .it.glow{border-color:#ffffff;animation:none;box-shadow:none;background:none}
+/* weapon: slots on top, gun name bottom-left, big ammo bottom-right, reload line */
+#duel-hud .d-br{display:grid;grid-template-columns:1fr auto;column-gap:16px;align-items:end;padding:10px 13px 11px;min-width:280px;text-align:left}
+#duel-hud .d-slots{grid-column:1/-1;justify-content:stretch}
+#duel-hud .d-slots span{flex:1 1 0;display:flex;align-items:center;gap:6px;padding:5px 8px 5px 6px;border:1px solid #2e2e2e;border-radius:7px;color:#8a8a8a;white-space:nowrap}
+#duel-hud .d-slots span.on{flex-grow:1.7;border-color:#ffffff;color:#ffffff;background:#1c1c1c}
+#duel-hud .d-slots span.on kbd{border-color:#ffffff;color:#ffffff}
+#duel-hud .d-slots span[hidden]{display:none}
+#duel-hud .d-ammo{grid-column:2;grid-row:2;margin-top:8px;text-align:right}
+#duel-hud .d-ammo b{font:700 40px/1 var(--f-body)}
+#duel-hud .d-ammo span{font:500 17px/1 var(--f-body);color:#8a8a8a;margin-left:4px}
+#duel-hud .d-ammo.low b{color:var(--mono-red)}
+#duel-hud .d-wname{grid-column:1;grid-row:2;margin:0 0 5px;font:600 11px/1 var(--f-body);letter-spacing:.16em;color:#d0d0d0}
+#duel-hud .d-rl{grid-column:1/-1;height:3px;margin-top:9px;background:#2a2a2a}
+#duel-hud .d-rl i{background:#ffffff}
+#duel-hud.touch .d-br{min-width:240px}
+/* damage numbers: clean white, headshots red */
+#duel-hud .dmg{font:800 14px/1 var(--f-body);text-shadow:1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000,0 0 6px rgba(0,0,0,.5)}
+#duel-hud .dmg.head{color:var(--mono-red);font-size:18px}
+/* touch: finish button goes white, pause button dark */
+#duel-hud .dt-btns [data-k=KeyF]{background:#ffffff;color:#0a0a0a;border-color:#ffffff}
+#duel-hud .dt-pause{color:#ffffff}
+/* ----- pop-ups: callouts, Eliminated, round results ----- */
+#duel-hud #d-big{font:800 clamp(34px,5.6vw,72px)/1 var(--f-body);letter-spacing:.03em;text-transform:uppercase;color:#ffffff;
+  text-shadow:0 2px 14px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.6)}
+#duel-hud #d-big:not(.cd)::after{content:'';display:block;width:min(36%,180px);min-width:90px;height:3px;border-radius:2px;background:var(--mono-red);margin:12px auto 0}
+#duel-hud #d-big.lose{color:var(--mono-red)}
+#duel-hud #d-big.lose::after{background:#ffffff}
+#duel-hud #d-big.win{color:#ffffff}
+#duel-hud #d-big.sm,#duel-hud #d-center.elim #d-big{font-size:clamp(22px,2.7vw,34px);text-shadow:0 2px 12px rgba(0,0,0,.6)}
+#duel-hud #d-big.sm::after,#duel-hud #d-center.elim #d-big::after{width:110px;min-width:0;margin-top:8px}
+#duel-hud #d-center.top #d-big{font-size:clamp(28px,4.2vw,56px)}
+#duel-hud #d-center.elim #d-big{font-size:clamp(30px,4vw,52px)}
+#duel-hud #d-big.title{font-size:clamp(34px,6.4vw,84px)}
+#duel-hud #d-sub,#duel-hud #d-center.sm #d-sub,#duel-hud #d-center.elim #d-sub{font:600 11px/1 var(--f-body);letter-spacing:.18em;text-transform:uppercase;color:#d0d0d0;background:rgba(10,10,10,.86);border:1px solid #2e2e2e;padding:7px 11px;border-radius:7px}
+/* countdown: a red number in a ring that runs down each second, then FIGHT */
+#duel-hud #d-big.cd{position:relative;width:118px;height:118px;display:grid;place-items:center;border-radius:50%;font:800 64px/1 var(--f-body);color:var(--mono-red);
+  background:rgba(10,10,10,.55);box-shadow:inset 0 0 0 4px rgba(255,255,255,.14);text-shadow:none}
+#d-big .cdr{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+#d-big .cdr circle{fill:none;stroke:#ff3b30;stroke-width:4;stroke-linecap:round;stroke-dasharray:352;animation:cdDash 1s linear forwards}
+@keyframes cdDash{from{stroke-dashoffset:0}to{stroke-dashoffset:352}}
+#duel-hud #d-big.cd.out .cdr{display:none}
+#duel-hud #d-big.cd.go{width:auto;height:auto;background:none;box-shadow:none;border-radius:0;font:800 italic clamp(40px,5.4vw,70px)/1 var(--f-body);color:#ffffff;letter-spacing:.03em;text-shadow:0 2px 14px rgba(0,0,0,.55)}
+#duel-hud #d-big.cd.go::after{content:'';display:block;width:90px;height:3px;border-radius:2px;background:var(--mono-red);margin:10px auto 0}
+/* kill feed: black chips, top right under the minimap */
+#duel-hud:not(.touch) #d-feed{left:auto;right:max(16px,env(safe-area-inset-right,0px));transform:none;align-items:flex-end;top:calc(env(safe-area-inset-top,0px) + 168px);opacity:1}
+#duel-hud .feed{padding:6px 10px;font:600 12px/1 var(--f-body);border-radius:7px}
+#duel-hud .feed .y{color:#ffffff;font-weight:700}
+#duel-hud .feed .o{color:var(--mono-red)}
+#duel-hud .feed em{font-size:11px;color:#8a8a8a;font-weight:500;border:1px solid #333;border-radius:4px;padding:3px 5px}
+#duel-hud .feed .hs{background:#ffffff;color:#0a0a0a}
+/* messages (prompts, hints) */
+#duel-hud #d-prompt{font:600 14px/1.25 var(--f-body);color:#f5f5f5;border-radius:9px}
+/* lucky dip pickup: a small card with the item, what it is and what it does */
+.d-toast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);transform:translateX(-50%);display:flex;align-items:center;gap:13px;padding:11px 17px 11px 11px;
+  background:rgba(10,10,10,.92);border:1px solid #2e2e2e;border-radius:12px;color:#f5f5f5;pointer-events:none;animation:toastIn .22s ease-out;transition:opacity .3s,transform .3s}
+.d-toast.out{opacity:0;transform:translateX(-50%) translateY(8px)}
+.d-toast .ic{width:42px;height:42px;border-radius:9px;background:#ffffff;color:#0a0a0a;display:grid;place-items:center;font:800 20px/1 var(--f-body)}
+.d-toast .lb{font:600 10px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--mono-red,#ff3b30)}
+.d-toast .nm{font:700 18px/1 var(--f-body);margin-top:5px}
+.d-toast .ds{font:500 12px/1.2 var(--f-body);color:#a8a8a8;margin-top:4px}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%)}}
+#duel-hud.touch .d-toast{bottom:calc(env(safe-area-inset-bottom,0px) + 16px);zoom:.85}
+/* round end card: score pips and the next-round countdown under the big result */
+.d-rcard{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);display:flex;align-items:center;gap:22px;padding:13px 20px;
+  background:rgba(10,10,10,.9);border:1px solid #2e2e2e;border-radius:12px;color:#f5f5f5;pointer-events:none}
+.d-rcard[hidden]{display:none}
+.d-rcard .sd{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:60px}
+.d-rcard .sd b{font:700 30px/1 var(--f-body)}
+.d-rcard .sd.o b{color:var(--mono-red,#ff3b30)}
+.d-rcard .lbl{font:600 10px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
+.d-rcard .sep{width:1px;align-self:stretch;background:#2e2e2e}
+.d-rcard .nx b{display:block;font:700 26px/1 var(--f-body);color:var(--mono-red,#ff3b30);margin-top:6px;text-align:center}
+#duel-hud.touch .d-rcard{bottom:auto;top:calc(50% / .66);zoom:.66}
+/* ===== pause menu: full-screen, Paused + buttons on the left, live score and loadout on the right; settings in tabs ===== */
+#duel-pause{background:rgba(0,0,0,.62)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);align-items:center!important;justify-content:center!important;pointer-events:auto!important;padding:max(20px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))!important;overflow:auto}
+#duel-pause .card.dpause{text-align:left;width:min(1080px,100%);background:none!important;border:0!important;box-shadow:none!important;padding:0;margin:auto;color:#f5f5f5;font-family:'Rubik','Segoe UI',system-ui,sans-serif;--f-body:'Rubik','Segoe UI',system-ui,sans-serif}
+#duel-pause .pv:not(.pz-main):not(.pz-set){background:#0a0a0a;border:1px solid #2c2c2c;border-radius:12px;padding:22px 24px}
+.pz-main:not([hidden]){display:grid;grid-template-columns:minmax(260px,400px) minmax(0,520px);justify-content:space-between;align-items:center;gap:40px}
+.pz-tag{align-self:flex-start;display:inline-block;background:#fff;color:#0a0a0a;font:700 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;padding:6px 9px;border-radius:5px}
+.pz-l{display:flex;flex-direction:column}
+.pz-l h2{font:500 clamp(48px,6vw,74px)/1 var(--f-body);letter-spacing:-.01em;margin:16px 0 0;color:#fff;text-align:left}
+.pz-rule{display:block;width:150px;height:3px;border-radius:2px;background:#ff3b30;margin-top:12px}
+.pz-meta{margin-top:14px;font:500 14px/1.3 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#bdbdbd}
+#duel-pause .pz-btns{display:flex;flex-direction:column;gap:9px;margin-top:26px}
+#duel-pause .pz-btns .btn{display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 18px;border-radius:10px;border:1px solid #333;background:#161616;color:#f5f5f5;font:600 16px/1 var(--f-body);box-shadow:none;text-shadow:none;width:100%}
+#duel-pause .pz-btns .btn:hover{background:#1f1f1f;border-color:#555}
+#duel-pause .pz-btns .btn.primary{background:linear-gradient(90deg,#ff3b30,#d9261c);border-color:#ff5a4f;font-size:18px}
+#duel-pause .pz-btns .btn kbd{font:600 10px/1 var(--f-body);color:#fff;border:1px solid rgba(255,255,255,.5);background:none;border-radius:5px;padding:4px 6px;box-shadow:none}
+#duel-pause .pz-btns .btn .chev{color:#666;font-size:18px}
+#duel-pause .pz-btns .btn.ghost{background:transparent;color:#bdbdbd}
+#duel-pause .pz-l .pk-foot{margin-top:14px;color:#8a8a8a}
+.pz-r{display:flex;flex-direction:column;gap:14px}
+.pz-card{background:#0a0a0a;border:1px solid #2c2c2c;border-radius:12px;padding:20px 22px}
+.pz-card:empty{display:none}
+.pz-card .lbl{font:600 10px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
+.pz-sc{display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px}
+.pz-sc .sd b{display:block;font:700 54px/1 var(--f-body);margin-top:6px}
+.pz-sc .sd.o{text-align:right}.pz-sc .sd.o b{color:#ff3b30}
+.pz-sc .sd .nm{font:600 13px/1 var(--f-body);color:#bdbdbd;letter-spacing:.06em;text-transform:uppercase}
+.pz-sc .d-pips{display:flex;gap:5px;margin-bottom:12px}
+.pz-sc .d-pips i{width:22px;height:5px;border-radius:3px;background:#333}.pz-sc .d-pips i.on{background:#fff}.pz-sc .d-pips.o i.on{background:#ff3b30}
+.pz-tb{display:grid;grid-template-columns:1fr 46px 46px 46px;row-gap:9px;margin-top:18px;padding-top:16px;border-top:1px solid #222;font:500 14px/1 var(--f-body)}
+.pz-tb span:not(:nth-child(4n+1)){text-align:right;font-variant-numeric:tabular-nums}
+.pz-tb .me{font-weight:700;color:#fff}.pz-tb .ot{color:#bdbdbd}
+.pz-ld{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:13px}
+.pz-ld div{border:1px solid #333;border-radius:9px;padding:11px 10px;min-width:0}
+.pz-ld div.on{border:1.5px solid #fff}
+.pz-ld .lbl{font-size:9px}
+.pz-ld b{display:block;font:700 14px/1.1 var(--f-body);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* settings: tabs on the left, one page at a time on the right */
+.pz-set:not([hidden]){display:flex;flex-direction:row;gap:0;background:#0a0a0a;border:1px solid #2c2c2c;border-radius:12px;overflow:hidden;height:min(600px,calc(100vh - 48px));height:min(600px,calc(100dvh - 48px))}
+.st-rail{flex:0 0 228px;border-right:1px solid #222;padding:24px 16px;display:flex;flex-direction:column;gap:5px}
+.st-title{display:flex;align-items:center;gap:8px;padding:0 6px 16px}
+.st-title h3{font:500 26px/1 var(--f-body);color:#fff;margin:0}
+.st-back{background:none;border:0;color:#8a8a8a;font:600 22px/1 var(--f-body);cursor:pointer;padding:0 4px}
+.st-tab{text-align:left;padding:12px 13px;border-radius:9px;border:0;background:none;color:#bdbdbd;font:600 14px/1 var(--f-body);cursor:pointer}
+.st-tab:hover{background:#161616}
+.st-tab.on{background:#fff;color:#0a0a0a;font-weight:700}
+.st-gap{flex:1}
+#duel-pause .st-reset{background:none;border:1px solid #2c2c2c;color:#8a8a8a;font:600 12px/1 var(--f-body);padding:12px;border-radius:9px;box-shadow:none}
+.st-body{flex:1;min-width:0;display:flex;flex-direction:column;padding:26px 32px 22px}
+.st-h{font:600 11px/1 var(--f-body);letter-spacing:.16em;color:#8a8a8a;margin-bottom:6px}
+#duel-pause .pz-set .pm-set{flex:1;overflow:auto;background:none!important;box-shadow:none!important;padding:0;margin:0;display:flex;flex-direction:column;gap:0;border-radius:0}
+#duel-pause .pz-set .pm-set>*{padding:13px 0;border-bottom:1px solid #1d1d1d;margin:0}
+#duel-pause .pz-set .pm-set>*:last-child{border-bottom:0}
+#duel-pause .pz-set .pm-set>.gfx-note{border:0;padding:4px 0 8px;color:#8a8a8a;font:400 13px/1.4 var(--f-body)}
+.pz-set .pm-set[data-show="gfx"] [data-tab]:not([data-tab="gfx"]),.pz-set .pm-set[data-show="sound"] [data-tab]:not([data-tab="sound"]),.pz-set .pm-set[data-show="aim"] [data-tab]:not([data-tab="aim"]),
+.pz-set .pm-set[data-show="xh"] [data-tab]:not([data-tab="xh"]),.pz-set .pm-set[data-show="touch"] [data-tab]:not([data-tab="touch"]){display:none!important}
+#duel-pause .pz-set .pm-row>span,#duel-pause .pz-set .sens>span{font:600 15px/1.2 var(--f-body);color:#f5f5f5}
+#duel-pause .pz-set .pm-row small{display:block;font:400 12px/1.3 var(--f-body);color:#8a8a8a;margin-top:3px}
+#duel-pause .pz-set .seg{display:flex;flex:0 1 330px;background:#1a1a1a;border-radius:10px;padding:3px}
+#duel-pause .pz-set .seg button{flex:1 1 0;white-space:nowrap}
+#duel-pause .pz-set .seg[data-opt="xs"]{flex-basis:400px}
+#duel-pause .pz-set .seg button{color:#8a8a8a;font:600 13px/1 var(--f-body);border-radius:8px;padding:9px 8px}
+#duel-pause .pz-set .seg button[aria-checked="true"]{background:#fff;color:#0a0a0a}
+#duel-pause .pz-set input[type=range]{accent-color:#ffffff}
+#duel-pause .pz-set .sens b{font:700 14px/1 var(--f-body);color:#fff}
+.st-foot{display:flex;justify-content:flex-end;gap:10px;padding-top:16px}
+#duel-pause .st-foot .btn{height:46px;min-width:140px;border-radius:10px;font:600 15px/1 var(--f-body);box-shadow:none;text-shadow:none;border:1px solid #333;background:#161616;color:#f5f5f5}
+#duel-pause .st-foot .btn.primary{background:linear-gradient(90deg,#ff3b30,#d9261c);border-color:#ff5a4f;min-width:170px}
+@media (max-width:820px),(max-height:520px){
+  .pz-main:not([hidden]){grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:20px}
+  .pz-l h2{font-size:44px;margin-top:10px}.pz-meta{margin-top:10px;font-size:12px}
+  #duel-pause .pz-btns{margin-top:14px;gap:6px}#duel-pause .pz-btns .btn{height:40px;font-size:14px}#duel-pause .pz-btns .btn.primary{font-size:15px}
+  .pz-card{padding:13px 15px}.pz-sc .sd b{font-size:36px}.pz-tb{margin-top:10px;padding-top:10px;row-gap:6px;font-size:12px}.pz-ld b{font-size:12px}.pz-ld div{padding:8px}
+  #duel-pause .pz-l .pk-foot{display:none}
+  .st-rail{flex-basis:170px;padding:14px 10px}.st-title h3{font-size:20px}.st-tab{padding:10px 11px;font-size:13px}.st-body{padding:16px 18px 14px}
+  .pz-set:not([hidden]){height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+}
+/* ===== match results: full screen, big Victory / Defeat on the left, your match card on the right, buttons along the bottom ===== */
+#duel-done{background:rgba(0,0,0,.6)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);align-items:center!important;justify-content:center!important;pointer-events:auto!important;padding:max(20px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))!important;overflow:auto}
+#duel-done .card.ddh.dz{text-align:left;width:min(1120px,100%);max-width:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,470px);gap:30px 44px;align-items:start;background:none!important;border:0!important;box-shadow:none!important;padding:0;margin:auto;color:#f5f5f5;font-family:'Rubik','Segoe UI',system-ui,sans-serif;--f-body:'Rubik','Segoe UI',system-ui,sans-serif}
+.dz .lbl{font:600 10px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
+.dz-l{display:flex;flex-direction:column;align-items:flex-start}
+#duel-done .dz #dd-title{display:block;font:800 clamp(64px,9vw,118px)/1 var(--f-body);letter-spacing:-.02em;text-transform:uppercase;color:#fff;margin:16px 0 0}
+#duel-done .dz.lost #dd-title{color:#ff3b30}
+.dz .pz-rule{width:260px}
+.dz-sc{display:flex;align-items:baseline;gap:18px;margin-top:20px;flex-wrap:wrap}
+#duel-done .dz .dd-score{font:700 44px/1 var(--f-body)}
+#duel-done .dz .dd-wl{font:500 15px/1.2 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#bdbdbd;margin:0}
+.dz-rlog{margin-top:22px}.dz-rlog:empty{display:none}
+.dz-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dz-pills i{display:grid;place-items:center;width:32px;height:32px;border-radius:7px;font:700 13px/1 var(--f-body);font-style:normal}
+.dz-pills i.W{background:#fff;color:#0a0a0a}.dz-pills i.L{border:1px solid #444;color:#ff3b30}.dz-pills i.D{border:1px solid #444;color:#8a8a8a}
+.dz-pills i.last.W{box-shadow:0 0 16px rgba(255,255,255,.55)}
+.dz-r{background:#0a0a0a;border:1px solid #2c2c2c;border-radius:12px;padding:22px 24px}
+#duel-done .dz .res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-flow:row;grid-template-rows:none;gap:9px;margin-top:14px;text-align:left}
+#duel-done .dz .res div{border:1px solid #2c2c2c;border-radius:9px;padding:12px 13px}
+#duel-done .dz .res span{display:block;font:600 9.5px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
+#duel-done .dz .res b{display:block;font:700 27px/1 var(--f-body);margin-top:8px;text-align:left;color:#fff}
+#duel-done .dz .dd-side{margin-top:20px;padding-top:16px;border-top:1px solid #222;min-width:0;gap:10px}
+#duel-done .dz .xpbar{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center}
+#duel-done .dz .xpbar b{font:600 15px/1 var(--f-body);color:#fff}
+#duel-done .dz .xpbar .xpn{text-align:right;font:600 12px/1 var(--f-body);color:#8a8a8a}
+#duel-done .dz .xpbar .xpt{grid-column:1/-1;grid-row:2;height:8px;border-radius:4px;background:#262626;overflow:hidden}
+#duel-done .dz .xpbar .xpt i{background:#fff!important}
+#duel-done .dz .newbest{font:500 13px/1.3 var(--f-body);color:#fff}
+.dz-btns{grid-column:1/-1}
+#duel-done .dz .btns{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;flex-wrap:wrap}
+#duel-done .dz .btns .btn{height:50px;padding:0 26px;border-radius:10px;font:600 16px/1 var(--f-body);border:1px solid #333;background:#161616;color:#f5f5f5;box-shadow:none;text-shadow:none;width:auto}
+#duel-done .dz .btns .btn.primary{min-width:230px;font-size:18px;background:linear-gradient(90deg,#ff3b30,#d9261c)!important;border-color:#ff5a4f}
+#duel-done .dz .btns .btn.dd-vid{width:58px;height:50px;padding:0}
+#duel-done .dz .btns .btn:focus{outline:none}#duel-done .dz .btns .btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#duel-done .dz .dd-vid b{background:#ff3b30}
+#duel-done .dz .dd-auto{position:static;margin-left:auto;font:600 11px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
+#duel-done .dz .dd-rp{grid-column:1/-1;justify-content:flex-start}
+@media (max-width:820px),(max-height:520px){
+  #duel-done .card.ddh.dz{grid-template-columns:minmax(0,1fr) minmax(260px,380px);gap:14px 22px}
+  #duel-done .dz #dd-title{font-size:56px;margin-top:10px}.dz-sc{margin-top:12px}#duel-done .dz .dd-score{font-size:32px}.dz-rlog{margin-top:12px}.dz-pills i{width:26px;height:26px;font-size:11px}
+  .dz-r{padding:14px 16px}#duel-done .dz .res b{font-size:20px}#duel-done .dz .res div{padding:9px}#duel-done .dz .dd-side{margin-top:12px;padding-top:10px}
+  #duel-done .dz .btns .btn{height:42px;padding:0 16px;font-size:14px}#duel-done .dz .btns .btn.primary{min-width:160px;font-size:15px}
+}
+
+/* the corner Home button steps aside while the pause and results screens are up (both have their own Home / Leave) */
+body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])) #d-homebtn{display:none!important}
+.pz-sc .sd .nm{display:block;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pz-ld .lbl{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-height:520px){
+  #duel-pause,#duel-done{padding-top:max(10px,env(safe-area-inset-top,0px))!important;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))!important}
+  .pz-l h2{font-size:36px;margin-top:8px}.pz-rule{margin-top:8px}.pz-meta{margin-top:8px}
+  #duel-pause .pz-btns{margin-top:10px;gap:5px}#duel-pause .pz-btns .btn{height:36px;font-size:13px;padding:0 13px}#duel-pause .pz-btns .btn.primary{font-size:14px}
+  .pz-sc .sd b{font-size:30px}.pz-sc .d-pips i{width:16px}.pz-ld .lbl{font-size:8px}
+  .pz-set:not([hidden]){height:calc(100vh - 20px);height:calc(100dvh - 20px)}
+  #duel-pause .pz-set .pm-set>*{padding:9px 0}#duel-pause .pz-set .pm-row>span,#duel-pause .pz-set .sens>span{font-size:13px}
+  .st-foot{padding-top:10px}#duel-pause .st-foot .btn{height:38px;min-width:110px;font-size:13px}#duel-pause .st-foot .btn.primary{min-width:130px}
+}
 </style>
 
 </head>
@@ -1505,9 +1761,9 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
     <div class="d-hit" id="d-hit"><i></i><i></i></div>
     <div class="d-top">
       <div class="panel d-score">
-        <div class="d-side you"><span class="eyebrow">You</span><b id="d-s1">0</b></div>
+        <div class="d-side you"><span class="eyebrow">You</span><b id="d-s1">0</b><span class="d-pips" id="d-p1"></span></div>
         <div class="d-mid"><span class="eyebrow" id="d-round">Round 1</span><span id="d-time">1:30</span><span class="eyebrow" id="d-goal">First to 5</span></div>
-        <div class="d-side bot"><b id="d-s2">0</b><span class="eyebrow" id="d-botname">Bot</span></div>
+        <div class="d-side bot"><b id="d-s2">0</b><span class="eyebrow" id="d-botname">Bot</span><span class="d-pips" id="d-p2"></span></div>
       </div>
       <div class="panel d-xpbar"><div class="xpbar"><b id="hx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="hx-bar"></i></span><span id="hx-txt" class="xpn">0/100 XP</span></div><span id="hx-gain" class="xpgain"></span></div>
     </div>
@@ -1515,6 +1771,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
     <div class="panel d-mm" id="d-mm"><canvas id="d-mmc" width="264" height="264"></canvas></div>
     <div id="d-feed"></div>
     <div id="d-center"><div id="d-big"></div><div id="d-sub"></div></div>
+    <div class="d-rcard" id="d-rcard" hidden></div>
     <div id="mandown" aria-live="assertive"><b>Man Down</b></div>
     <div id="d-intro" hidden><div class="in-pic" id="in-pic"></div><div class="in-cap"><span class="chip" id="in-chip"></span><span class="t" id="in-t"></span><i class="rule"></i><span class="b" id="in-b"></span></div></div>
     <div class="panel" id="d-prompt" hidden></div>
@@ -1566,42 +1823,70 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 
   <div id="duel-pause" class="screen" hidden>
     <div class="panel card dpause">
-      <div class="pv" data-pv="main">
-        <h2>Paused</h2>
-        <div class="pm-btns"><button class="btn primary" id="dp-resume">Resume</button><button class="btn" data-go="controls">Controls</button><button class="btn" data-go="hud">HUD layout</button><button class="btn" id="dp-leave">Home</button></div>
-        <div class="pm-set">
-          <div class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
-          <div class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="-1" aria-checked="false">Auto</button><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
-          <div class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
-          <div class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
-          <p class="gfx-note" hidden></p>
-          <div class="pm-row"><span>Touch controls</span>
+      <div class="pv pz-main" data-pv="main">
+        <div class="pz-l">
+          <span class="pz-tag" id="dp-tag"></span>
+          <h2>Paused</h2><i class="pz-rule"></i>
+          <div class="pz-meta" id="dp-meta"></div>
+          <div class="pm-btns pz-btns"><button class="btn primary" id="dp-resume">Resume <kbd>Esc</kbd></button><button class="btn" data-go="settings">Settings <span class="chev">›</span></button><button class="btn" data-go="controls">Controls <span class="chev">›</span></button><button class="btn" data-go="hud">HUD layout <span class="chev">›</span></button><button class="btn ghost" id="dp-leave">Leave match</button></div>
+          <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
+        </div>
+        <div class="pz-r"><div class="pz-card" id="dp-score"></div><div class="pz-card" id="dp-load"></div></div>
+      </div>
+      <div class="pv pz-set" data-pv="settings" hidden>
+        <div class="st-rail">
+          <div class="st-title"><button class="st-back" data-go="main" aria-label="Back">‹</button><h3>Settings</h3></div>
+          <button class="st-tab on" data-st="gfx">Graphics</button><button class="st-tab" data-st="sound">Sound</button><button class="st-tab" data-st="aim">Aim &amp; sensitivity</button><button class="st-tab" data-st="xh">Crosshair &amp; hits</button><button class="st-tab" data-st="touch">Touch controls</button>
+          <span class="st-gap"></span>
+          <button class="btn sm st-reset" id="opt-reset" title="Everything on this menu, keys and HUD layout; your level and records stay">Reset all settings</button>
+        </div>
+        <div class="st-body">
+          <div class="eyebrow st-h" id="st-h">Graphics</div>
+          <div class="pm-set" data-show="gfx">
+          <div data-tab="gfx" class="pm-row gfx-row"><span>Graphics</span><div class="seg" role="radiogroup" aria-label="Graphics quality"><button role="radio" data-gfx="auto" aria-checked="true">Auto</button><button role="radio" data-gfx="low" aria-checked="false">Low</button><button role="radio" data-gfx="med" aria-checked="false">Med</button><button role="radio" data-gfx="high" aria-checked="false">High</button></div></div>
+          <div data-tab="gfx" class="pm-row gfx-row"><span>Frame rate</span><div class="seg" role="radiogroup" aria-label="Frame rate limit"><button role="radio" data-fps="-1" aria-checked="false">Auto</button><button role="radio" data-fps="30" aria-checked="false">30</button><button role="radio" data-fps="60" aria-checked="false">60</button><button role="radio" data-fps="0" aria-checked="true">Max</button></div></div>
+          <div data-tab="gfx" class="pm-row gfx-row"><span>Battery saver</span><div class="seg" role="radiogroup" aria-label="Battery saver"><button role="radio" data-saver="1" aria-checked="false">On</button><button role="radio" data-saver="0" aria-checked="true">Off</button></div></div>
+          <div data-tab="gfx" class="pm-row gfx-row"><span>Show FPS</span><div class="seg" role="radiogroup" aria-label="Show frame rate"><button role="radio" data-showfps="1" aria-checked="false">On</button><button role="radio" data-showfps="0" aria-checked="true">Off</button></div></div>
+          <p data-tab="gfx" class="gfx-note" hidden></p>
+          <label data-tab="gfx" class="sens" for="opt-fov"><span>Field of view</span><input type="range" id="opt-fov" data-optr="fov" min="60" max="100" step="5"><b data-optv="fov">70°</b></label>
+          <label data-tab="gfx" class="sens" for="opt-bright"><span>Brightness</span><input type="range" id="opt-bright" data-optr="bright" min="0.5" max="1.5" step="0.05"><b data-optv="bright">100%</b></label>
+          <label data-tab="sound" class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label>
+          <label data-tab="sound" class="sens" for="wvol-d"><span>Weapons volume</span><input type="range" id="wvol-d" data-wvol min="0" max="1" step="0.1"><b data-wvol-val>100%</b></label>
+          <label data-tab="sound" class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.1"><b data-mvol-val>50%</b></label>
+          <div data-tab="sound" class="pm-row"><span>Hit sound</span><div class="seg" role="radiogroup" aria-label="Hit sound" data-opt="hs"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
+          <div data-tab="sound" class="pm-row"><span>Kill commentary <small>callouts like Double kill and Payback</small></span><div class="seg" role="radiogroup" aria-label="Kill commentary" data-opt="kc"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
+          <label data-tab="aim" class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0" max="10" step="1"><b data-sens-val="cam">5</b></label>
+          <label data-tab="aim" class="sens" for="sens-ads-d"><span>Aim sensitivity (other guns)</span><input type="range" id="sens-ads-d" data-sens="ads" min="0" max="10" step="1"><b data-sens-val="ads">5</b></label>
+          <label data-tab="aim" class="sens" for="sens-snp-d"><span>Sniper scope sensitivity</span><input type="range" id="sens-snp-d" data-sens="snipe" min="0" max="10" step="1"><b data-sens-val="snipe">5</b></label>
+          <div data-tab="xh" class="pm-row"><span>Crosshair<i class="xh-prev"><span class="d-cross" id="xh-prev"><i></i><i></i><i></i><i></i><b></b></span></i></span><div class="seg" role="radiogroup" aria-label="Crosshair style" data-opt="xs"><button role="radio" data-v="crossdot" aria-checked="false">Cross + dot</button><button role="radio" data-v="cross" aria-checked="false">Cross</button><button role="radio" data-v="tee" aria-checked="false">T</button><button role="radio" data-v="dot" aria-checked="false">Dot</button><button role="radio" data-v="circle" aria-checked="false">Circle</button></div></div>
+          <div data-tab="xh" class="pm-row"><span>Crosshair colour</span><div class="seg xh-cols" role="radiogroup" aria-label="Crosshair colour" data-opt="xc"><button role="radio" data-v="#ffffff" aria-checked="false" title="White" aria-label="White"><i style="background:#ffffff"></i></button><button role="radio" data-v="#3dff6e" aria-checked="false" title="Green" aria-label="Green"><i style="background:#3dff6e"></i></button><button role="radio" data-v="#ffe53d" aria-checked="false" title="Yellow" aria-label="Yellow"><i style="background:#ffe53d"></i></button><button role="radio" data-v="#3de0ff" aria-checked="false" title="Cyan" aria-label="Cyan"><i style="background:#3de0ff"></i></button><button role="radio" data-v="#ff4fd8" aria-checked="false" title="Pink" aria-label="Pink"><i style="background:#ff4fd8"></i></button></div></div>
+          <div data-tab="xh" class="pm-row"><span>Crosshair size</span><div class="seg" role="radiogroup" aria-label="Crosshair size" data-opt="xz"><button role="radio" data-v="s" aria-checked="false">Small</button><button role="radio" data-v="m" aria-checked="false">Medium</button><button role="radio" data-v="l" aria-checked="false">Large</button></div></div>
+          <div data-tab="xh" class="pm-row"><span>Crosshair outline <small>a thin dark edge so it shows on bright maps</small></span><div class="seg" role="radiogroup" aria-label="Crosshair outline" data-opt="xo"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
+          <div data-tab="xh" class="pm-row"><span>Hitmarker <small>the flash round the crosshair when you land a hit</small></span><div class="seg" role="radiogroup" aria-label="Hitmarker" data-opt="hm"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
+          <div data-tab="touch" class="pm-row"><span>Touch controls</span>
             <div class="seg" role="radiogroup" aria-label="Touch controls" id="dp-touch">
               <button role="radio" data-t="1" aria-checked="false">On</button>
               <button role="radio" data-t="0" aria-checked="true">Off</button>
             </div></div>
-          <div class="pm-row t-only"><span>Aim assist</span>
+          <div data-tab="touch" class="pm-row t-only"><span>Aim assist</span>
             <div class="seg" role="radiogroup" aria-label="Aim assist" id="dp-aa">
               <button role="radio" data-aa="off" aria-checked="false">Off</button>
               <button role="radio" data-aa="on" aria-checked="true">On</button>
               <button role="radio" data-aa="strong" aria-checked="false">Strong</button>
             </div></div>
-          <div class="pm-row t-only"><span>Aim when firing <small>holding Fire also aims down sights</small></span>
+          <div data-tab="touch" class="pm-row t-only"><span>Aim when firing <small>holding Fire also aims down sights</small></span>
             <div class="seg" role="radiogroup" aria-label="Aim when firing" id="dp-autoads">
               <button role="radio" data-v="1" aria-checked="false">On</button>
               <button role="radio" data-v="0" aria-checked="true">Off</button>
             </div></div>
-          <div class="pm-row t-only"><span>Gyro aim <small>tilt the phone to fine-tune</small></span>
+          <div data-tab="touch" class="pm-row t-only"><span>Gyro aim <small>tilt the phone to fine-tune</small></span>
             <div class="seg" role="radiogroup" aria-label="Gyro aim" id="dp-gyro">
               <button role="radio" data-g="1" aria-checked="false">On</button>
               <button role="radio" data-g="0" aria-checked="true">Off</button>
             </div></div>
-          <label class="sens" for="sens-cam-d"><span>Camera sensitivity</span><input type="range" id="sens-cam-d" data-sens="cam" min="0" max="10" step="1"><b data-sens-val="cam">5</b></label>
-          <label class="sens" for="sens-ads-d"><span>Aim sensitivity (other guns)</span><input type="range" id="sens-ads-d" data-sens="ads" min="0" max="10" step="1"><b data-sens-val="ads">5</b></label><label class="sens" for="sens-snp-d"><span>Sniper scope sensitivity</span><input type="range" id="sens-snp-d" data-sens="snipe" min="0" max="10" step="1"><b data-sens-val="snipe">5</b></label>
-          <label class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label><label class="sens" for="wvol-d"><span>Weapons volume</span><input type="range" id="wvol-d" data-wvol min="0" max="1" step="0.1"><b data-wvol-val>100%</b></label><label class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.1"><b data-mvol-val>50%</b></label>
-          <label class="sens" for="opt-fov"><span>Field of view</span><input type="range" id="opt-fov" data-optr="fov" min="60" max="100" step="5"><b data-optv="fov">70°</b></label><label class="sens" for="opt-bright"><span>Brightness</span><input type="range" id="opt-bright" data-optr="bright" min="0.5" max="1.5" step="0.05"><b data-optv="bright">100%</b></label><div class="pm-row"><span>Crosshair<i class="xh-prev"><span class="d-cross" id="xh-prev"><i></i><i></i><i></i><i></i><b></b></span></i></span><div class="seg" role="radiogroup" aria-label="Crosshair style" data-opt="xs"><button role="radio" data-v="crossdot" aria-checked="false">Cross + dot</button><button role="radio" data-v="cross" aria-checked="false">Cross</button><button role="radio" data-v="tee" aria-checked="false">T</button><button role="radio" data-v="dot" aria-checked="false">Dot</button><button role="radio" data-v="circle" aria-checked="false">Circle</button></div></div><div class="pm-row"><span>Crosshair colour</span><div class="seg xh-cols" role="radiogroup" aria-label="Crosshair colour" data-opt="xc"><button role="radio" data-v="#ffffff" aria-checked="false" title="White" aria-label="White"><i style="background:#ffffff"></i></button><button role="radio" data-v="#3dff6e" aria-checked="false" title="Green" aria-label="Green"><i style="background:#3dff6e"></i></button><button role="radio" data-v="#ffe53d" aria-checked="false" title="Yellow" aria-label="Yellow"><i style="background:#ffe53d"></i></button><button role="radio" data-v="#3de0ff" aria-checked="false" title="Cyan" aria-label="Cyan"><i style="background:#3de0ff"></i></button><button role="radio" data-v="#ff4fd8" aria-checked="false" title="Pink" aria-label="Pink"><i style="background:#ff4fd8"></i></button></div></div><div class="pm-row"><span>Crosshair size</span><div class="seg" role="radiogroup" aria-label="Crosshair size" data-opt="xz"><button role="radio" data-v="s" aria-checked="false">Small</button><button role="radio" data-v="m" aria-checked="false">Medium</button><button role="radio" data-v="l" aria-checked="false">Large</button></div></div><div class="pm-row"><span>Crosshair outline <small>a thin dark edge so it shows on bright maps</small></span><div class="seg" role="radiogroup" aria-label="Crosshair outline" data-opt="xo"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Hit sound</span><div class="seg" role="radiogroup" aria-label="Hit sound" data-opt="hs"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Hitmarker <small>the flash round the crosshair when you land a hit</small></span><div class="seg" role="radiogroup" aria-label="Hitmarker" data-opt="hm"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Kill commentary <small>callouts like Double kill and Payback</small></span><div class="seg" role="radiogroup" aria-label="Kill commentary" data-opt="kc"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div><div class="pm-row"><span>Reset all settings <small>everything on this menu, keys and HUD layout; your level and records stay</small></span><button class="btn sm" id="opt-reset">Reset</button></div>
+          </div>
+          <div class="st-foot"><button class="btn" data-go="main">‹ Back</button><button class="btn primary" data-resume>Resume</button></div>
         </div>
-        <p class="pk-foot"><kbd>P</kbd> or <kbd>Esc</kbd> pauses and resumes</p>
       </div>
       <div class="pv" data-pv="controls" hidden>
         <div class="pv-head"><button class="btn sm" data-go="main">‹ Back</button><h3>Controls</h3><span></span></div>
@@ -1624,7 +1909,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
           <span class="gun-k"><kbd data-kb="wall">Q</kbd></span><em class="gun-k">Build a wall (4 per round)</em>
           <span class="gun-k"><kbd data-kb="abil">G</kbd></span><em class="gun-k">Character ability</em>
           <span class="gun-k"><kbd data-kb="leth">E</kbd></span><em class="gun-k">Use your lethal (hold to aim a throwable, release to throw; lays a mine)</em>
-          <span class="gun-k">Shop</span><em class="gun-k">Walk up to the kiosk in the middle, press 1–4 to pick (30s cooldown)</em>
+          <span class="gun-k">Shop</span><em class="gun-k">Walk up to the shop in the middle: it goes bing and gives you a random pickup (30s cooldown)</em>
           <span class="gun-k"><kbd data-kb="nade">T</kbd></span><em class="gun-k">Throw a grenade from the shop</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">When you're downed</div><div class="pause-keys">
@@ -1653,13 +1938,21 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
     <div class="rv-bar"><button class="btn sm" id="rv-play">Pause</button><span class="rv-prog"><i id="rv-prog"></i></span><button class="btn sm primary" id="rv-save">Save video</button></div>
   </div></div>
   <div id="duel-done" class="screen" hidden>
-    <div class="panel card ddh">
-      <div class="dd-head"><h2 id="dd-title" hidden>You win</h2><h2 class="dd-wl" id="dd-sub"></h2><div class="dd-score" id="dd-score">5 – 2</div></div>
-      <div class="res" id="dd-res"></div>
-      <div class="dd-side"><div class="newbest" id="dd-unlock"></div>
-        <div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div></div>
-      <div class="btns">
+    <div class="panel card ddh dz">
+      <div class="dz-l">
+        <span class="pz-tag" id="dd-tag"></span>
+        <h2 id="dd-title">Victory</h2><i class="pz-rule"></i>
+        <div class="dz-sc"><span class="dd-score" id="dd-score">5 – 2</span><h3 class="dd-wl" id="dd-sub"></h3></div>
+        <div class="dz-rlog" id="dd-rlog"></div>
+      </div>
+      <div class="dz-r">
+        <span class="lbl">Your match</span>
+        <div class="res" id="dd-res"></div>
+        <div class="dd-side"><div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div><div class="newbest" id="dd-unlock"></div></div>
+      </div>
+      <div class="btns dz-btns">
         <button class="btn primary" id="dd-again">Rematch</button>
+        <button class="btn" id="dd-load">Change loadout</button>
         <button class="btn" id="dd-home">Home</button>
         <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
       </div>
@@ -4354,7 +4647,7 @@ function wreckCove(){const G=WC.G,X=45,Z=60;/* 90 x 120 m (Biggest size) */M.bou
   M.reachSpawns=id=>{const g=M.grid,k=(id/NL)|0,i=k%g.nx,x=g.x0+(i+.5)*CS,z=g.z0+((k-i)/g.nx+.5)*CS;if(!M.spawnOK(x,z))return false;if(!g.comp)return true;
     const sp=M.spawns[0],s0=nearestNode(sp.x,sp.y||0,sp.z);return s0<0||g.comp[id]===g.comp[s0];};
   M.shopOK=(x,z)=>x<wcShore(z)-4&&x>-34;
-  M.mmPaint=(g,k,b)=>{g.fillStyle='#efe0b5';g.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);g.fillStyle='#8fd6e4';for(let z=b.z0;z<b.z1;z+=1){const xs=wcShore(z+.5);g.fillRect((xs-b.x0)*k,(z-b.z0)*k,(b.x1-xs)*k,k+1);}};
+  M.mmPaint=(g,k,b)=>{g.fillStyle='#2a2723';g.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);g.fillStyle='#16242c';for(let z=b.z0;z<b.z1;z+=1){const xs=wcShore(z+.5);g.fillRect((xs-b.x0)*k,(z-b.z0)*k,(b.x1-xs)*k,k+1);}};
   /* twelve spawn points spread over the sand, all well up the beach from the water and clear of the Tiki Bar, the two end huts and the loungers */
   /* the shop stands in the Tiki Bar's back corner on the land side, against the woven back wall and clear of the bar and the bottle shelves */
   M.shopAt=[{x:-27.6,z:-7.55,y:G+.45,q:0}];
@@ -8167,11 +8460,17 @@ function shopPress(f,it){const sh=(M.shops||[]).reduce((a,b)=>!a||Math.hypot(f.p
 function buyShop(i){if(NET.role==='client'&&S.shopOpen&&ME.shopCD<=0){queueAct('buy:'+i);}const it=shopList()[i];if(!it||!S.shopOpen||!canShopNow()||ME.shopCD>0||!it.can(ME))return;
   it.buy(ME);shopPress(ME,it);sfx('cash');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;closeShop();S.shopMsg=`Got ${it.name}! Shop restocks in ${SHOP_CD}s`;S.shopMsgT=2.2;
   emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
+/* round card pips (5 = first to 5) */
+const pp5=(n,o)=>Array.from({length:5},(_,i)=>`<i${i<n?' class="on"':''}></i>`).join('');
+/* lucky dip pickup card: the item's icon tile, a red "Lucky dip" label, its name and what it does */
+function shopToast(it){const old=document.querySelector('.d-toast');if(old)old.remove();clearTimeout(shopToast.t);const el=document.createElement('div');el.className='d-toast';
+  el.innerHTML=`<div class="ic">${it.ic}</div><div><div class="lb">Lucky dip</div><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div>`;$('duel-hud').appendChild(el);
+  shopToast.t=setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320);},2600);}
 /* the shop is a lucky dip: stand at it and it goes bing and hands you a random pickup (only ones you can use right now) */
 function shopRoll(){const L=shopList(),ok=[];L.forEach((it,i)=>{if(it.can(ME))ok.push(i);});
   if(!ok.length){if(!(S.shopMsgT>0)){S.shopMsg='Nothing new for you here right now';S.shopMsgT=1.5;}return;}
   const i=ok[Math.floor(Math.random()*ok.length)],it=L[i];if(NET.role==='client')queueAct('buy:'+i);
-  it.buy(ME);shopPress(ME,it);sfx('bing');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;S.shopMsg=`You got ${it.name}! ${it.desc}`;S.shopMsgT=2.8;
+  it.buy(ME);shopPress(ME,it);sfx('bing');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;shopToast(it);
   emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
 // bots shop too: what they'd want right now (index into the shop list, or -1)
 function botShopWant(f){const L=shopList();const want=id=>{const i=L.findIndex(it=>it.id===id);return i>=0&&L[i].can(f)?i:-1;};
@@ -8791,7 +9090,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.active&&
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});
 document.addEventListener('pointerlockerror',()=>{S.lockOK=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseL=mouseR=false;});
-function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;ME.aimNade=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
+function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');$('d-rcard').hidden=true;{const t=document.querySelector('.d-toast');if(t)t.remove();}try{pauseFill();}catch(e){}S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;ME.aimNade=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
 function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.touch)lock();}
 /* ---- touch controls ---- */
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;
@@ -8862,7 +9161,7 @@ function feed(you,gun,head){const el=document.createElement('div');el.className=
   if(head)el.innerHTML+='<span class="hs">HEADSHOT</span>';const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
 /* end of the countdown: the 1 dissolves, then Fight pops in for a moment */
 function cdGo(){const b=$('d-big');$('d-sub').textContent='';b.className='cd out';clearTimeout(cdGo.t);cdGo.t=setTimeout(()=>{if(S.state!=='fight')return;center('Fight','','cd go');cdGo.t=setTimeout(()=>{if(S.state==='fight'&&$('d-big').textContent==='Fight')center('','');},700);},380);}
-function center(big,sub,cls){const b=$('d-big');b.textContent=big||'';b.className=cls||'';$('d-sub').textContent=sub||'';$('d-center').classList.toggle('sm',/\bsm\b/.test(cls||''));$('d-center').classList.toggle('top',/\btop\b/.test(cls||''));{const el=big==='Eliminated',dc=$('d-center');dc.classList.toggle('elim',el);/* tuck it just under the score panel */const sb=el&&document.querySelector('#duel-hud .d-top .d-score');const r=sb&&sb.getBoundingClientRect();dc.style.top=el&&r&&r.height?Math.round(r.bottom+6)+'px':'';}}
+function center(big,sub,cls){const b=$('d-big'),cd=/^cd$/.test(cls||'');/* countdown numbers sit in a red ring that runs down each second */if(cd){if(b.dataset.n!==big){b.dataset.n=big;b.innerHTML=big+'<svg class="cdr" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56"/></svg>';}}else{b.dataset.n='';b.textContent=big||'';}b.className=cls||'';$('d-sub').textContent=sub||'';$('d-center').classList.toggle('sm',/\bsm\b/.test(cls||''));$('d-center').classList.toggle('top',/\btop\b/.test(cls||''));{const el=big==='Eliminated',dc=$('d-center');dc.classList.toggle('elim',el);/* tuck it just under the score panel */const sb=el&&document.querySelector('#duel-hud .d-top .d-score');const r=sb&&sb.getBoundingClientRect();dc.style.top=el&&r&&r.height?Math.round(r.bottom+6)+'px':'';}}
 /* hit direction marker: where the last few hits came from, shown as a short red arc round the crosshair */
 const HD_LIFE=.9,HDS=[];
 function hitDir(src){const now=S.t;let h=HDS.find(x=>x.src===src);if(!h){h=HDS.length<4?null:HDS.reduce((a,b)=>a.t<b.t?a:b);
@@ -8898,16 +9197,16 @@ function updLB(){const rows=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(
 /* minimap: map layout around you, turning with you; enemies only show as a tiny red dot where they last fired */
 const MM={layer:null,id:null,k:2,range:80};
 function mmLayer(){if(MM.id===M.id&&MM.layer)return MM.layer;const P=MM.range+8,B0=M.bounds,b={x0:B0.x0-P,x1:B0.x1+P,z0:B0.z0-P,z1:B0.z1+P},k=MM.k,cv=document.createElement('canvas');cv.width=Math.ceil((b.x1-b.x0)*k);cv.height=Math.ceil((b.z1-b.z0)*k);const g=cv.getContext('2d');MM.ox=b.x0;MM.oz=b.z0;/* ground runs past the map edge so the minimap is one full circle, no rectangle inside it */
-  g.fillStyle='#dfe6d6';g.fillRect(0,0,cv.width,cv.height);if(M.mmPaint)M.mmPaint(g,k,b);
-  const e=1.2;for(const o of M.boxes){if(o.ground||o.y1<.25||o.y0>3)continue;if(o.x1<=B0.x0+e||o.x0>=B0.x1-e||o.z1<=B0.z0+e||o.z0>=B0.z1-e)continue;/* edge walls/fences and outside scenery would trace a rectangle */const tall=o.y1-o.y0>1.4;g.fillStyle=o.wood?(tall?'#b08a62':'#cbb08e'):(tall?'#5b606b':'#a9aeb7');g.fillRect((o.x0-b.x0)*k,(o.z0-b.z0)*k,Math.max(1,(o.x1-o.x0)*k),Math.max(1,(o.z1-o.z0)*k));}
+  g.fillStyle='#141414';g.fillRect(0,0,cv.width,cv.height);if(M.mmPaint)M.mmPaint(g,k,b);
+  const e=1.2;for(const o of M.boxes){if(o.ground||o.y1<.25||o.y0>3)continue;if(o.x1<=B0.x0+e||o.x0>=B0.x1-e||o.z1<=B0.z0+e||o.z0>=B0.z1-e)continue;/* edge walls/fences and outside scenery would trace a rectangle */const tall=o.y1-o.y0>1.4;g.fillStyle=tall?'#555555':'#333333';g.fillRect((o.x0-b.x0)*k,(o.z0-b.z0)*k,Math.max(1,(o.x1-o.x0)*k),Math.max(1,(o.z1-o.z0)*k));}
   MM.layer=cv;MM.id=M.id;return cv;}
 function updMinimap(){{const now=performance.now();if(now-(updMinimap.t||0)<30)return;updMinimap.t=now;}const cv=$('d-mmc'),g=cv.getContext('2d'),W=cv.width,C=W/2,b=M.bounds;if(!b)return;const sc=C/MM.range;const yaw=ME.yaw,cs=Math.cos(yaw),sn=Math.sin(yaw);
   const px=ME.pos.x,pz=ME.pos.z;const A=-cs*sc,Bq=-sn*sc,Cq=sn*sc,Dq=-cs*sc; // world (x,z) -> screen, facing up
   const toS=(x,z)=>[A*(x-px)+Cq*(z-pz)+C,Bq*(x-px)+Dq*(z-pz)+C];
-  g.setTransform(1,0,0,1,0,0);g.fillStyle='#dfe6d6';g.fillRect(0,0,W,W);
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#141414';g.fillRect(0,0,W,W);
   {const L=mmLayer(),ox=MM.ox,oz=MM.oz;g.setTransform(A/MM.k,Bq/MM.k,Cq/MM.k,Dq/MM.k,C-(A*px+Cq*pz)+(A*ox+Cq*oz),C-(Bq*px+Dq*pz)+(Bq*ox+Dq*oz));g.drawImage(L,0,0);}
   g.setTransform(1,0,0,1,0,0);
-  for(const sh of M.shops||[]){const [x,y]=toS(sh.x,sh.z);g.fillStyle='#ffc61a';g.strokeStyle='#14161c';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12);}
+  for(const sh of M.shops||[]){const [x,y]=toS(sh.x,sh.z);g.fillStyle='#ffffff';g.strokeStyle='#000000';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12);}
   for(const f of FS){if(f===ME||!f.alive)continue;if(!isFoe(ME,f)){const [x,y]=toS(f.pos.x,f.pos.z);g.fillStyle='#2f7fe0';g.beginPath();g.arc(x,y,6,0,TAU);g.fill();continue;}
     const age=S.t-(f.shotT??-99);if(age>2.5||!f.shotP)continue;const [x,y]=toS(f.shotP.x,f.shotP.z);g.globalAlpha=Math.max(0,1-age/2.5);g.fillStyle='#ff2a2a';g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.globalAlpha=1;}
   for(const m of S.deathMarks||[]){const age=S.t-m.t;if(age>3)continue;const [x,y]=toS(m.x,m.z);g.globalAlpha=age>2.4?(3-age)/.6:1;g.strokeStyle='#14161c';g.lineWidth=5;g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x+5,y+5);g.moveTo(x+5,y-5);g.lineTo(x-5,y+5);g.stroke();g.strokeStyle='#ff3b3b';g.lineWidth=2.5;g.stroke();g.globalAlpha=1;}
@@ -8994,9 +9293,10 @@ function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
 // who you're watching while you're out: a teammate if one's up, otherwise whoever is still playing (in deathmatch, whoever got you)
 function specOf(){if(ME.alive||!D.active)return null;if(isDM()&&ME.lastBy&&ME.lastBy.alive)return ME.lastBy;return FS.find(x=>x!==ME&&x.alive&&!isFoe(ME,x))||FS.find(x=>x!==ME&&x.alive)||null;}
 function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the pause menu and the end-of-match bar */const hb=$('d-homebtn');if(!hb.hidden)hb.hidden=true;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0||ME.dazeT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st){if(st==='freeze')frostTex();if(e.className!=='d-edge on '+st)e.className='d-edge on '+st;}else if(e.classList.contains('on'))e.classList.remove('on');FXG.on=st==='blast'||st==='stun';FXG.blast=st==='blast';}if(S.hud.mm!==false)updMinimap();updHitDir();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
-  {const my=S.score[ME.team]||0;let ot=0,oi=-1;S.score.forEach((v,i)=>{if(i!==ME.team&&v>=ot&&v!=null){ot=v;oi=i;}});txt('d-s1',String(my));txt('d-s2',String(ot));if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
+  {const my=S.score[ME.team]||0;let ot=0,oi=-1;S.score.forEach((v,i)=>{if(i!==ME.team&&v>=ot&&v!=null){ot=v;oi=i;}});txt('d-s1',String(my));txt('d-s2',String(ot));{const dm=isDM(),hud=$('duel-hud');if(hud.classList.contains('dm')!==dm)hud.classList.toggle('dm',dm);const pk=dm?'':my+'|'+ot;if(pk!==updHUD.pk){updHUD.pk=pk;const pp=n=>dm?'':Array.from({length:5},(_,i)=>`<i${i<n?' class="on"':''}></i>`).join('');$('d-p1').innerHTML=pp(my);$('d-p2').innerHTML=pp(ot);}
+    const rc=$('d-rcard'),show=S.state==='roundEnd'&&!S.matchOver&&!dm&&S.t0>0;if(rc.hidden===show)rc.hidden=!show;if(show){const h=`<div class="sd"><span class="lbl">You</span><b>${my}</b><span class="d-pips">${pp5(my)}</span></div><span class="sep"></span><div class="sd o"><span class="lbl">${$('d-botname').textContent}</span><b>${ot}</b><span class="d-pips">${pp5(ot,1)}</span></div><span class="sep"></span><div class="nx"><span class="lbl">Next round</span><b>${Math.max(1,Math.ceil(S.t0))}</b></div>`;if(rc._h!==h){rc._h=h;rc.innerHTML=h;}}}if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
-  {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);
+  {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);{const lo=!V.downed&&pct<=.3,rw=hp.parentElement.parentElement;if(rw.classList.contains('low')!==lo)rw.classList.toggle('low',lo);}
     const ar=V.armor||0;{const rw=$('v-ar').parentElement.parentElement,gd=V.cons==='gold';if(rw.classList.contains('gold')!==gd)rw.classList.toggle('gold',gd);}$('v-ar').style.transform=`scaleX(${clamp(ar/100,0,1)})`;txt('v-ar-n',String(Math.ceil(ar)));
     const st=V.stam??STAM_MAX;$('v-st').style.transform=`scaleX(${st/STAM_MAX})`;txt('v-st-n',String(Math.round(st)));$('v-st').parentElement.parentElement.classList.toggle('low',!!V.stamLock);}
   renderItems();
@@ -9415,7 +9715,7 @@ function updCamera(dt){S.camFollow=0;
 
 /* ================= round flow ================= */
 function startMatch(){if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!PRIMARIES.includes(S.gun))S.gun='gar';if(!SECONDARIES.includes(S.sec))S.sec='smg';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
-  const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
+  const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.rlog=[];S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='fists';if(S.simple)Object.assign(ME,SIMPLE_KIT);
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
     if(S.mode==='rumble')b.primary=b.secondary='fists';if(S.simple)Object.assign(b,SIMPLE_KIT);tagFor(b);}
@@ -9698,7 +9998,7 @@ function poseCrown(){const R=CR.run,t=R.t,T=THREE,V=V3;const ease=u=>u*u*(3-2*u)
     const lift=rf*(d-push)*tn;cam.position.set(0,top*.5+.4+d*.03+lift,d-push);cam.lookAt(0,top*.5-.1+lift,0);}
   else{const f=R.who[shot],hg=f.ch.headG,h=hg.localToWorld(new V(0,.35,0)),tt=t-cuts[shot],k=R.seats[shot].k;cam.fov=30;cam.position.set(h.x+(.75-.1*tt)*k,h.y+.15*k,h.z+(2.4-.12*tt)*k);cam.lookAt(h.x+.05*k,h.y-.02*k,h.z);}
   cam.updateProjectionMatrix();}
-function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;S.lastWin=winner;for(const x of FS)if(x.team!==winner)x.stamBoost=false;const won=winner===ME.team;for(const f of FS)if(f.team!==winner){f.armor=0;f.nades=0;f.goldNade=0;f.turretKit=0;f.speedT=0;f.scopeKit=false;}if(won){S.stats.kills++;addXP(10);}else addXP(5);
+function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.state!=='fight')return;S.state='roundEnd';S.t0=3.2;if(winner>=0)S.score[winner]++;S.lastWin=winner;(S.rlog||(S.rlog=[])).push(winner===ME.team?'W':winner<0?'D':'L');for(const x of FS)if(x.team!==winner)x.stamBoost=false;const won=winner===ME.team;for(const f of FS)if(f.team!==winner){f.armor=0;f.nades=0;f.goldNade=0;f.turretKit=0;f.speedT=0;f.scopeKit=false;}if(won){S.stats.kills++;addXP(10);}else addXP(5);
   const done=winner>=0&&S.score[winner]>=5;
   const sc=scoreLine();
   if(!won&&winner>=0)setTimeout(()=>sfx('lose'),450);
@@ -9713,10 +10013,12 @@ function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=
 function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.hidden=!RP.clips.length;b.setAttribute('aria-expanded','false');$('dd-clipn').textContent=RP.clips.length;}if(document.pointerLockElement)document.exitPointerLock();const won=S.score[ME.team]>=(isDM()?DM_KILLS:5);
   const rk=S.players==='1v1'?S.diff:S.diff+':'+S.players;const r=S.record[rk]||[0,0];r[won?0:1]++;S.record[rk]=r;store.set('duel:record',S.record);
   const wt=S.score.findIndex(v=>v>=(isDM()?DM_KILLS:5)),ld=f=>`${CHARS[f.char].name} (${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
-  $('dd-title').textContent=won?(S.players==='2v2'?'Your team wins':'You win'):teamName(wt)+(S.players==='1v1'?' wins':' wins');$('dd-score').textContent=scoreLine();
-  $('dd-sub').textContent=won?'You caught the W!':'Took the L this time :(';
+  $('dd-title').textContent=won?'Victory':'Defeat';document.querySelector('#duel-done .dz').classList.toggle('lost',!won);$('dd-score').textContent=scoreLine();
+  $('dd-sub').textContent=won?(S.players==='2v2'?'Your team caught the W':'You caught the W'):(S.players==='1v1'?'Took the L this time':teamName(wt)+' wins');
+  $('dd-tag').textContent=`${S.mode==='rumble'?'Rumble':S.one?'1v1':'Duels'}${S.one?'':' · '+PLAYERS[S.players]} · ${MAPS[S.map]?MAPS[S.map].name:''}`;
+  {const rl=S.rlog||[];$('dd-rlog').innerHTML=isDM()||!rl.length?'':`<div class="dz-pills">${rl.map((r,i)=>`<i class="${r}${i===rl.length-1?' last':''}">${r}</i>`).join('')}</div><span class="lbl">Round by round</span>`;}
   const st=S.stats,acc=st.shots?Math.round(st.hits/st.shots*100):0;
-  $('dd-res').innerHTML=[['Kills',st.elims],['Damage',Math.round(st.dmg)],['Accuracy',acc+'%'],['Headshots',st.heads]].map(([a,b])=>`<span>${a}</span><b>${b}</b>`).join('');
+  $('dd-res').innerHTML=[['Kills',st.elims],['Damage',Math.round(st.dmg).toLocaleString('en-GB')],['Accuracy',acc+'%'],['Headshots',st.heads],['Deaths',ME.d||0],['K/D',((st.elims||0)/Math.max(1,ME.d||0)).toFixed(1)]].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
   $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();startAutoHome();}
 // no choice on the end-of-match bar within 10 s: back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
@@ -11570,8 +11872,20 @@ $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.lengt
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}
 $('duel-pause').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)showPV(g.dataset.go);});
-$('dp-resume').addEventListener('click',resume);$('dp-leave').addEventListener('click',leave);
-$('dd-again').addEventListener('click',startMatch);$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
+$('dp-resume').addEventListener('click',resume);
+/* pause: settings tabs and the second Resume button */
+$('duel-pause').addEventListener('click',e=>{const t=e.target.closest('.st-tab');if(t){document.querySelectorAll('#duel-pause .st-tab').forEach(b=>b.classList.toggle('on',b===t));const ps=document.querySelector('#duel-pause .pz-set .pm-set');ps.dataset.show=t.dataset.st;ps.scrollTop=0;$('st-h').textContent=t.textContent;}if(e.target.closest('[data-resume]'))resume();});
+/* pause: mode/map tag, round and time, the live score with pips, the K/A/D table and your loadout */
+function pauseFill(){const dm=isDM(),ru=S.mode==='rumble';$('dp-tag').textContent=`${ru?'Rumble':S.one?'1v1':'Duels'}${S.one?'':' · '+PLAYERS[S.players]} · ${MAPS[S.map]?MAPS[S.map].name:''}`;
+  $('dp-meta').textContent=`${dm?'Deathmatch':'Round '+S.round} · ${fmt(S.timer)} left`;
+  const my=S.score[ME.team]||0;let ot=0;S.score.forEach((v,i)=>{if(i!==ME.team&&v!=null&&v>ot)ot=v;});const on=$('d-botname').textContent,pp=(n,o)=>dm?'':`<span class="d-pips${o?' o':''}">${pp5(n)}</span>`;
+  const rows=[...FS].sort((a,b)=>(b.k||0)-(a.k||0)).slice(0,4).map(f=>{const c=f===ME?'me':'ot';return `<span class="${c}">${f===ME?'You':f.name}</span><span class="${c}">${f.k||0}</span><span class="${c}">${f.as||0}</span><span class="${c}">${f.d||0}</span>`;}).join('');
+  $('dp-score').innerHTML=`<div style="display:flex;justify-content:space-between"><span class="lbl">${dm?'Kills · first to '+DM_KILLS:'Score · first to 5'}</span><span class="lbl" style="color:#bdbdbd">${dm?'Deathmatch':'Round '+S.round}</span></div>
+    <div class="pz-sc"><div class="sd"><span class="nm">You</span><b>${my}</b></div>${pp(my)}${dm?'':'<span style="width:12px"></span>'}${pp(ot,1)}<div class="sd o"><span class="nm">${on}</span><b>${ot}</b></div></div>
+    <div class="pz-tb"><span class="lbl">Player</span><span class="lbl">K</span><span class="lbl">A</span><span class="lbl">D</span>${rows}</div>`;
+  const g=id=>GUNS[id]?GUNS[id].name:'',sl=ME.slot,cc=CONS[ME.cons],L=ru?[['3 · Melee','Fists',true]]:[['1 · Primary',g(ME.primary),sl===0],['2 · Secondary',g(ME.secondary||'smg'),sl===1],['3 · Melee','Fists',sl===2]].concat(cc?[[keyOf('leth')+' · Lethal',cc.short||cc.name,false]]:[]);
+  $('dp-load').innerHTML=`<span class="lbl">Your loadout</span><div class="pz-ld">${L.map(([l,n,o])=>`<div${o?' class="on"':''}><span class="lbl">${l}</span><b>${n}</b></div>`).join('')}</div>`;}$('dp-leave').addEventListener('click',leave);
+$('dd-again').addEventListener('click',startMatch);$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});$('dd-load').addEventListener('click',()=>{leave();menuStep('loadout');if(typeof renderDuelMenu==='function')renderDuelMenu();});$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
 
 /* ================= online: play a friend (peer-to-peer) =================
    The host's game runs the match exactly as it does against bots; the friend takes the place of the first enemy bot.

@@ -5684,16 +5684,17 @@ function backyard(){const X=13,Z=17,G=-.8;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const
    M.life.push(t=>{ring.position.set((1.6+Math.sin(t*.21)*1.1)*KX,WY+.05+Math.sin(t*1.7)*.03,(3.6+Math.cos(t*.17)*1.4)*KZ);lilo.position.set((-1.2+Math.sin(t*.15+1)*.6)*KX,WY+.06+Math.sin(t*1.4+1)*.03,(1+Math.cos(t*.12)*1.2)*KZ);lilo.rotation.y=Math.sin(t*.1)*.6;});}
   /* loungers along the west side of the pool */
   for(const z of [.6,3.4])box(-5,0,z,.9,.45,2,'#ffffff',{edges:false});
-  /* two trampolines: land on one and it throws you back up a couple of metres, so you can keep shooting from the top of each bounce */
-  const tramps=[];for(const [x,z,rim] of [[-9,-3.5,'#2f7fe0'],[9.2,2.5,'#f4c22b']]){const Ht=.75,Rr=1.6;box(x,0,z,2.9,Ht,2.9,'#16171c',{mat:INVIS,edges:false,shadow:false});
-    const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.1,.13,8,32),mat(rim,null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.position.set(x,Ht,z);M.group.add(pad);
-    const matt=new THREE.Mesh(new THREE.CircleGeometry(Rr-.2,32),mat('#141518',null,{roughness:.9}));matt.rotation.x=-Math.PI/2;matt.position.set(x,Ht-.02,z);matt.userData.dyn=1;M.group.add(matt);
-    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;deco(gC(.05,.05,Ht,6),dark,x+Math.cos(a)*(Rr-.1),Ht/2,z+Math.sin(a)*(Rr-.1));}
-    const net=new THREE.Mesh(new THREE.CylinderGeometry(Rr-.05,Rr-.05,1.6,24,1,true),new THREE.MeshBasicMaterial({color:'#222',transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));net.position.set(x,Ht+.8,z);M.group.add(net);
-    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;deco(gC(.035,.035,1.7,6),mat(rim),x+Math.cos(a)*(Rr-.05),Ht+.85,z+Math.sin(a)*(Rr-.05));}
-    tramps.push({x,z,y:Ht,r:Rr-.25,m:matt,t:9});}
-  M.life.push((t,dt)=>{for(const T of tramps){T.t+=dt;T.m.position.y=T.y-.02-(T.t<.35?Math.sin(T.t/.35*Math.PI)*.22:0);}
-    for(const f of FS){if(!f.alive||f.downed||!f.grounded)continue;for(const T of tramps)if(Math.abs(f.pos.y-T.y)<.06&&Math.hypot(f.pos.x-T.x,f.pos.z-T.z)<T.r){f.vel.y=Math.max(f.vel.y,10.5);f.grounded=false;T.t=0;sfx('land',f,{rate:1.7,vol:.4,range:14});break;}}});
+  /* two trampolines sunk flush into the lawn: just walk (or land) on one and it flings you high into the air, twice the height of a full double jump,
+     so you can shoot down from the top of the arc or launch yourself across the garden */
+  const tramps=[],TRV=Math.sqrt(2*GRAV*2*((JUMP*JUMP+(JUMP*1.05)**2)/(2*GRAV)));
+  for(const [x,z,rim] of [[-9,-3.5,'#2f7fe0'],[9.2,2.5,'#f4c22b']]){const Rr=1.6;
+    const pit=new THREE.Mesh(new THREE.CircleGeometry(Rr+.12,40),mat('#2b2d33',null,{roughness:.9}));pit.rotation.x=-Math.PI/2;pit.position.set(x,.006,z);M.group.add(pit);
+    const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.05,.13,8,40),mat(rim,null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.scale.z=.45;pad.position.set(x,.03,z);M.group.add(pad);
+    const matt=new THREE.Mesh(new THREE.CircleGeometry(Rr-.15,40),mat('#141518',null,{roughness:.9}));matt.rotation.x=-Math.PI/2;matt.position.set(x,.014,z);matt.userData.dyn=1;M.group.add(matt);
+    for(let i=0;i<16;i++){const a=i/16*Math.PI*2,sp=deco(new THREE.BoxGeometry(.2,.02,.05),mat('#c9cdd2',null,{metalness:.7,roughness:.3}),x+Math.cos(a)*(Rr-.22),.022,z+Math.sin(a)*(Rr-.22));sp.rotation.y=-a;sp.castShadow=false;}
+    tramps.push({x,z,y:0,r:Rr-.1,m:matt,t:9});}
+  M.life.push((t,dt)=>{for(const T of tramps){T.t+=dt;T.m.position.y=.014-(T.t<.4?Math.sin(T.t/.4*Math.PI)*.18:0);}
+    for(const f of FS){if(!f.alive||f.downed||!f.grounded||f.pos.y>.1||S.t-(f._trT||-9)<.25)continue;for(const T of tramps)if(Math.hypot(f.pos.x-T.x,f.pos.z-T.z)<T.r){f.vel.y=TRV;f.grounded=false;f.airJ=1;f._trT=S.t;T.t=0;sfx('land',f,{rate:1.8,vol:.7,range:18});break;}}});
   /* the raised terrace in the north-west corner: a solid brick block with an open cedar deck on top (no roof), a brick parapet with stone coping on three sides
      to shoot over, and one flight of simple, wide stone steps (the full width of the terrace) up the front */
   {const x0=-11.8,x1=-7.4,z0=11.4,z1=15.8,y=2.2,cx=(x0+x1)/2,cz=(z0+z1)/2;bk(cx,cz,x1-x0,y-.2,z1-z0);box(cx,y-.2,cz,x1-x0+.1,.2,z1-z0+.1,'#b9784a',{tx:'cedar'});

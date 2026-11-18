@@ -4119,13 +4119,14 @@ function houseB(cx,cz,flip,wall,trim,k=1,roofC){const S=St(cx,cz,flip,k),H=4.1,F
   S.floor(-5.85,5.85,-5.35,5.35,.02,'#d6c3a5','wood');
   S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(-1.2,4.2),WIN(3)],wall);
   S.wall('v',-5.5,-5.85,5.85,0,H,[WIN(-2.5,1.6),WIN(3.2,1.6)],wall);S.wall('v',5.5,-5.85,5.85,0,H,[WIN(-2.5,1.6)],wall);
-  S.slab(-6.15,6.15,-5.65,5.65,H,F,trim);if(roofC)S.floor(-5.85,5.85,-5.35,5.35,F+.02,roofC);
+  S.slab(-6.15,6.15,-5.65,5.65,H,F,trim);if(roofC)S.floor(-5.85,5.85,-5.35,5.35,F+.05,roofC);/* sits clear of the slab top so it doesn't flicker from far away */
   const P=F+1.3,slit=c=>({c,w:1.6,y0:F+.75,y1:F+1.15});
-  S.wall('u',-6,-5.65,5.65,F,P,[slit(-3),slit(0),slit(3)],trim,.3);S.wall('u',6,-5.65,5.65,F,P,[slit(0)],trim,.3);
-  S.wall('v',-5.5,-5.85,5.85,F,P,[slit(-2.5),slit(2.5)],trim,.3);S.wall('v',5.5,-5.85,5.85,F,P,[{c:1.1,w:3.2,y0:F,y1:P},slit(-3.5)],trim,.3);
-  {const wd={tx:'wood',prop:'fence',hp:60},cr={tx:'wood',prop:'crate',hp:80};
-    S.box(-4.6,-2.2,-1.2,-1.05,F,F+1.2,'#b07a4a',wd);S.box(-.1,.05,-4.9,-2.5,F,F+1.2,'#b07a4a',wd);S.box(2.4,4.8,1.6,1.75,F,F+1.2,'#b07a4a',wd);S.box(-3.6,-3.45,2.2,4.6,F,F+1.2,'#b07a4a',wd);
-    S.box(3.4,4.6,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(3.4,4.6,-4.6,-3.4,F+1.2,F+2.4,'#b9895a',cr);S.box(2.2,3.4,-4.6,-3.4,F,F+1.2,'#c99a5b',cr);S.box(-5.2,-4,3.6,4.8,F,F+1.2,'#c99a5b',cr);}
+  /* the parapet round the open roof deck: solid at the ends, breakable glass in the middle of each side, so it's only partial cover against snipers;
+     nothing else up there (no crates or wooden screens) */
+  const GL={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false},gap=(c,w)=>({c,w,y0:F,y1:P});
+  S.wall('u',-6,-5.65,5.65,F,P,[gap(0,4.4)],trim,.3);S.wall('u',6,-5.65,5.65,F,P,[gap(0,4.4)],trim,.3);
+  S.wall('v',-5.5,-5.85,5.85,F,P,[gap(0,4.4)],trim,.3);S.wall('v',5.5,-5.85,5.85,F,P,[{c:1.1,w:3.2,y0:F,y1:P},gap(-3.4,2.6)],trim,.3);
+  for(const u of [-6,6])S.box(u-.05,u+.05,-2.2,2.2,F,P-.05,'#8fcdef',GL);S.box(-2.2,2.2,-5.55,-5.45,F,P-.05,'#8fcdef',GL);S.box(-4.7,-2.1,5.45,5.55,F,P-.05,'#8fcdef',GL);
   S.stairs(5.8,-1,5.65,8.45,0,9,F/9,.5,'#9aa0a8');S.box(-.2,1.3,5.65,8.45,F-.3,F,'#9aa0a8');S.box(-.2,1.3,8.3,8.45,F,F+1,'#ffffff');S.box(-.35,-.2,5.65,8.45,F,F+1,'#ffffff');S.box(-.3,.1,7.9,8.4,0,F-.3,'#9aa0a8');
   S.box(-5.6,-4.6,2.8,5.2,0,.9,'#3bb54a');S.box(-3.4,-2.2,3.8,5.2,0,.75,'#7a4c2a');S.box(.5,4,-5.3,-4.3,0,1.05,'#ffffff');S.box(3,5.6,3,5.2,0,.7,'#ff8fab');}
 function fence(x0,z0,x1,z1,h,color,gap,o){const L=Math.hypot(x1-x0,z1-z0),alongX=Math.abs(x1-x0)>Math.abs(z1-z0);
@@ -5596,26 +5597,30 @@ function lagoonMap(){const X=15,Z=20,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     flatGroup(g);M.life.push(t=>{wt.offset.y=t*.9;});glowSprite(-35+Math.sin(.25)*12,WY+3,-175+Math.cos(.25)*12,24,'#ffffff',.45);}
   const sp=[[-6,17],[6,17],[-10.5,14.5],[10.5,14.5],[0,17.5]];M.spawns=[...sp,...sp.map(([x,z])=>[-x,-z])].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   M.life.push(t=>{for(let i=0;i<flames.length;i++){const k=1+.18*Math.sin(t*13+i*1.7)+.1*Math.sin(t*23+i);flames[i].scale.set(1,k,1);}});}
-/* Street Life's own street lamp: a tapered graphite pole on a cast base, a slim arm reaching over the fence, a flat LED head with a glowing lens
-   and a warm pool of light on the grass below. One shot smashes the lens: glass bursts, the head goes dark; it's back next round */
+/* Street Life's own street lamp: a white Victorian lantern post. Flared hexagonal foot, a fluted column with collars, a six-sided glass lantern with a
+   filament bulb inside, a flared hexagonal hood with a scalloped skirt and a finial. One shot smashes the glass: shards burst, the bulb goes dark; back next round */
 const SLAMP={};
-function streetLamp(x,z,ry){if(!SLAMP.pole){SLAMP.pole=mat('#2b2e35',null,{metalness:.7,roughness:.35});SLAMP.on=new THREE.MeshBasicMaterial({color:'#fff4dc',toneMapped:false});
-    SLAMP.off=mat('#3a3d45',null,{roughness:.25,metalness:.5});SLAMP.pool=canvasTex(128,128,(g,w,h)=>{const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,.9)');r.addColorStop(.5,'rgba(255,255,255,.3)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,w,h);});}
-  const H=6,AR=1.6,g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;g.userData.dyn=1;M.group.add(g);
-  const add=(geo,m,px,py,pz)=>{const o=new THREE.Mesh(geo,m);o.position.set(px,py,pz);o.castShadow=true;g.add(o);return o;};
-  add(new THREE.CylinderGeometry(.24,.3,.5,12),SLAMP.pole,0,.25,0);add(new THREE.CylinderGeometry(.075,.12,H,12),SLAMP.pole,0,H/2,0);
-  add(new THREE.CylinderGeometry(.11,.11,.12,12),SLAMP.pole,0,H-.05,0);
-  {const c=new THREE.QuadraticBezierCurve3(new V3(0,H-.1,0),new V3(0,H+.35,AR*.35),new V3(0,H+.2,AR));add(new THREE.TubeGeometry(c,12,.05,8,false),SLAMP.pole,0,0,0);}
-  const head=add(B.boxGeo(.42,.12,.95),SLAMP.pole,0,H+.14,AR+.25);
-  const lens=add(B.boxGeo(.34,.03,.8),SLAMP.on,0,H+.065,AR+.25);lens.castShadow=false;
-  const glow=glowSprite(0,0,0,2.4,'#ffe2b0',.85);M.group.remove(glow);glow.position.set(0,H-.05,AR+.25);g.add(glow);
-  const hx=x+Math.sin(ry)*(AR+.25),hz=z+Math.cos(ry)*(AR+.25);
-  const pool=new THREE.Mesh(new THREE.PlaneGeometry(7,7),new THREE.MeshBasicMaterial({map:SLAMP.pool,color:'#ffd9a0',transparent:true,opacity:.3,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));
-  pool.rotation.x=-Math.PI/2;pool.position.set(hx,.03,hz);pool.renderOrder=2;pool.userData.dyn=1;M.group.add(pool);
-  collider(x-.12,x+.12,0,H,z-.12,z+.12);
-  const b=box(hx,H-.2,hz,.7,.6,.7,'#2b2e35',{mat:INVIS,edges:false,shadow:false,prop:'lamp',hp:1,snd:'frost',wood:false});
-  const on=v=>{lens.material=v?SLAMP.on:SLAMP.off;glow.visible=pool.visible=v;};
-  b.fell=()=>{on(false);emit(hx,H,hz,{n:30,speed:6,up:2,size:.11,life:1.1,grav:16,colors:['#ffffff','#fff3d6','#e8f6ff','#ffd9a0']});emit(hx,H,hz,{n:6,speed:2,up:.4,size:.8,life:.3,grav:0,colors:['#fff8e0','#ffffff']});sfx('smash',{x:hx,y:H,z:hz},{range:45,vol:.7});};
+function streetLamp(x,z){if(!SLAMP.paint){SLAMP.paint=mat('#f2f1ec',null,{metalness:.35,roughness:.4});SLAMP.on=new THREE.MeshBasicMaterial({color:'#ffe6b0',toneMapped:false});
+    SLAMP.off=mat('#4a4740',null,{roughness:.3,metalness:.4});SLAMP.glass=new THREE.MeshStandardMaterial({color:'#fff6e2',transparent:true,opacity:.35,roughness:.05,metalness:.2,emissive:'#ffcf80',emissiveIntensity:.35,side:2,depthWrite:false});
+    SLAMP.pool=canvasTex(128,128,(g,w,h)=>{const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,.9)');r.addColorStop(.5,'rgba(255,255,255,.3)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,w,h);});}
+  const P=SLAMP.paint,g=new THREE.Group();g.position.set(x,0,z);g.userData.dyn=1;M.group.add(g);
+  const add=(geo,m,py,ry)=>{const o=new THREE.Mesh(geo,m);o.position.y=py;if(ry)o.rotation.y=ry;o.castShadow=m!==SLAMP.glass;g.add(o);return o;};
+  add(new THREE.CylinderGeometry(.24,.42,.22,6),P,.11);add(new THREE.CylinderGeometry(.2,.3,.55,6),P,.5);add(new THREE.CylinderGeometry(.14,.2,.18,12),P,.86);
+  add(new THREE.CylinderGeometry(.075,.085,2.2,12),P,2.05);for(const y of [1.05,3.12])add(new THREE.CylinderGeometry(.12,.12,.08,12),P,y);
+  add(new THREE.CylinderGeometry(.11,.075,.28,12),P,3.3);add(new THREE.CylinderGeometry(.06,.06,.22,8),P,3.55);
+  const LY=3.66,LH=.72;add(new THREE.CylinderGeometry(.26,.18,.1,6),P,LY);
+  const glass=add(new THREE.CylinderGeometry(.34,.24,LH,6,1,true),SLAMP.glass,LY+.05+LH/2);
+  for(let k=0;k<6;k++){const a=k/6*Math.PI*2,o=new THREE.Mesh(B.boxGeo(.035,LH+.04,.035),P);const rr=.29;o.position.set(Math.cos(a)*rr,LY+.05+LH/2,Math.sin(a)*rr);o.rotation.z=Math.cos(a)*.14;o.rotation.x=-Math.sin(a)*.14;g.add(o);}
+  const bulb=add(new THREE.SphereGeometry(.085,12,10),SLAMP.on,LY+.32);add(new THREE.CylinderGeometry(.035,.045,.14,8),SLAMP.off,LY+.18);
+  add(new THREE.CylinderGeometry(.36,.36,.05,6),P,LY+LH+.1);add(new THREE.ConeGeometry(.46,.34,6,1,true),P,LY+LH+.3).material.side=2;
+  add(new THREE.ConeGeometry(.22,.26,6),P,LY+LH+.55);add(new THREE.SphereGeometry(.05,8,6),P,LY+LH+.71);add(new THREE.ConeGeometry(.03,.16,6),P,LY+LH+.82);
+  const glow=glowSprite(0,0,0,2.2,'#ffd9a0',.8);M.group.remove(glow);glow.position.set(0,LY+.38,0);g.add(glow);
+  const pool=new THREE.Mesh(new THREE.PlaneGeometry(6,6),new THREE.MeshBasicMaterial({map:SLAMP.pool,color:'#ffd9a0',transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));
+  pool.rotation.x=-Math.PI/2;pool.position.set(x,.03,z);pool.renderOrder=2;pool.userData.dyn=1;M.group.add(pool);
+  collider(x-.2,x+.2,0,3.6,z-.2,z+.2);
+  const b=box(x,LY,z,.8,1.05,.8,'#f2f1ec',{mat:INVIS,edges:false,shadow:false,prop:'lamp',hp:1,snd:'frost',wood:false});
+  const on=v=>{bulb.material=v?SLAMP.on:SLAMP.off;glass.visible=glow.visible=pool.visible=v;};
+  b.fell=()=>{on(false);const y=LY+.4;emit(x,y,z,{n:34,speed:6,up:2,size:.11,life:1.1,grav:16,colors:['#ffffff','#fff3d6','#e8f6ff','#ffd9a0']});emit(x,y,z,{n:6,speed:2,up:.4,size:.8,life:.3,grav:0,colors:['#fff8e0','#ffffff']});sfx('smash',{x,y,z},{range:45,vol:.7});};
   b.onRestore=()=>on(true);return b;}
 /* layoutRemap: fit a map that was laid out at one size into a new footprint without retyping its coordinates. Everything the builder added after the
    snapshot (meshes, groups, lights, sprites, colliders, ladders/lifts, spawns, shop spots) is moved through fx/fz, each of which takes a world coordinate
@@ -5810,9 +5815,11 @@ const MAPS={
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f6fd6',null,null,'#c8322b','#c9ced6','#2f63c8'];
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
-  const L=[[-1,13,'C','#3b4048',2,'home'],[1,-11,'C',RC[5],3,'hospital']];/* well apart across the big plot: long sightlines between the two bases */
-  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1,cx=side*(20+6*hk),hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
-    if(kind==='B'){const r=ruinBegin(),wc=cols[(ci*2+1)%cols.length],tc=trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);
+  const L=[[-1,2.5,'C','#3b4048',2,'home'],[1,-2.5,'C',RC[5],3,'hospital'],
+    /* a smaller flat-roofed house with an open roof deck either side of each big building, halfway between it and the end fence, in the big one's colours */
+    [-1,31,'B','#c9ced6',4,'homeB'],[-1,-28.5,'B','#c9ced6',5,'homeB'],[1,28.5,'B','#f4f5f7',6,'hospB'],[1,-31,'B','#f4f5f7',7,'hospB']];/* the two big ones face each other across the road, a few metres off true */
+  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1.1,cx=side*33.5,hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
+    if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);
     /* a mailbox beside the path, not on it */
     box(side*17.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*17.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   /* the boundary is a white picket fence (white-washed vertical slats with gaps you can see through, two rails) on an invisible wall */
@@ -5823,14 +5830,14 @@ const MAPS={
     [-71,-39,'blossom',6.5,.1],[-74,-12,'oak',8,2],[-70,12,'pine',9,5.3],[-74,36,'bonsai',7.5,4.4],
     [-39,58,'block',7.5,3.5,1.2],[-10,61,'oak',8.5,1.1],[18,56,'pine',9,.7],[47,60,'blossom',6.5,3.1],
     [-49,-58,'pine',8.5,2.6],[13,-61,'oak',8,5.6],[42,-56,'tall',9,1.9],[67,58,'bonsai',7.5,.9],[-67,-60,'oak',7.5,3.3]])glbTree(id,x,z,h,ry,tw);
-  /* the play area: just a swing set on the hospital's lawn (the blue climbing frame with slides is gone). The towers (and the swings' A-frame) are invisible
+  /* (no play area: the climbing frame and the swing set are both gone). The towers (and the swings' A-frame) are invisible
      blocks that take fire like a prop (the slides and swings are open to walk round); once they've taken enough (or a blast goes off close by) the whole frame crashes over and sinks away, back next round */
-  playFrame('swings',33,31,Math.PI,[[1.25,1.41,2.5,2.5,4.8],[-2.95,1.4,.6,2.2,3.4]]);
-  /* outside the fence (scenery only): a big red barn, a windmill with its sails turning, our own street lamps along the fence and a hot-air balloon drifting round the sky */
-  scenery('barn',-88,0,Math.PI/2);windmill(86,-18,-Math.PI/2);
+  
+  /* outside the fence (scenery only): a windmill with its sails turning, our own street lamps along the fence and a hot-air balloon drifting round the sky */
+  windmill(86,-18,-Math.PI/2);/* (the red barn is gone) */
   /* the lamps are lit: a warm glow round each lantern */
-  for(const x of [-52,-34,-16,-7.5,7.5,16,34,52])for(const z of [-Z-1.6,Z+1.6])streetLamp(x,z,z>0?Math.PI:0);/* our own lamps, arms reaching over the fence, smashable heads */
-  for(const z of [-30,0,30])for(const x of [-X-1.6,X+1.6])streetLamp(x,z,x>0?-Math.PI/2:Math.PI/2);
+  for(const x of [-52,-34,-16,-7.5,7.5,16,34,52])for(const z of [-Z-1.6,Z+1.6])streetLamp(x,z);/* white lantern posts just outside the fence; one shot smashes the glass *//* our own lamps, arms reaching over the fence, smashable heads */
+  for(const z of [-30,0,30])for(const x of [-X-1.6,X+1.6])streetLamp(x,z);
   {const g=scenery('balloon',0,-100,0,22);M.life.push(t=>{const a=t*.03;g.position.set(Math.sin(a)*100,21+Math.sin(t*.21)*2.5,-Math.cos(a)*100);g.rotation.y=t*.05;});}
   /* a wrecked van stays a burnt-out shell until the next round */
   /* just two vans on the road: the white one and a light grey one (the same model, tinted) */

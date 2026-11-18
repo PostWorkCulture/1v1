@@ -479,8 +479,8 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .d-rend[hidden]{display:none}
 .rp-b{display:flex;align-items:center;gap:7px;padding:7px 11px 7px 8px;border:2px solid #14161c;border-radius:9px;background:#fff;color:#14161c;font:700 12.5px/1 var(--f-body);cursor:pointer;white-space:nowrap}
 .rp-b:hover{background:#fff7d6}.rp-b svg{width:18px;height:18px}
-/* home: a small icon button that's always there in a game, just under the minimap */
-#d-homebtn{position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 14px);width:40px;height:40px;padding:0;display:grid;place-items:center;cursor:pointer;z-index:40;pointer-events:auto}
+/* (the floating Home icon has been removed; kept hidden) */
+#d-homebtn{display:none!important;position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 14px);width:40px;height:40px;padding:0;display:grid;place-items:center;cursor:pointer;z-index:40;pointer-events:auto}
 #d-homebtn[hidden]{display:none}#d-homebtn svg{width:22px;height:22px}#d-homebtn:hover{background:#fff7d6}
 .dd-rp{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.dd-rp:empty{display:none}
 /* replay viewer */
@@ -1641,6 +1641,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
         <div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div></div>
       <div class="btns">
         <button class="btn primary" id="dd-again">Rematch</button>
+        <button class="btn" id="dd-home">Home</button>
         <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
       </div>
       <div class="dd-rp" id="dd-rp" hidden></div>
@@ -8967,7 +8968,7 @@ function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
   $('d-items').innerHTML=L.map(([ic,k,n,dim])=>`<span class="it${dim?' dim':k?' glow':''}">${ICON[ic]}${k?`<kbd>${k}</kbd>`:''}<b>${n}</b></span>`).join('');}
 // who you're watching while you're out: a teammate if one's up, otherwise whoever is still playing (in deathmatch, whoever got you)
 function specOf(){if(ME.alive||!D.active)return null;if(isDM()&&ME.lastBy&&ME.lastBy.alive)return ME.lastBy;return FS.find(x=>x!==ME&&x.alive&&!isFoe(ME,x))||FS.find(x=>x!==ME&&x.alive)||null;}
-function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='done'&&S.state!=='roundEnd';if(hb.hidden!==hide)hb.hidden=hide;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0||ME.dazeT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st){if(st==='freeze')frostTex();if(e.className!=='d-edge on '+st)e.className='d-edge on '+st;}else if(e.classList.contains('on'))e.classList.remove('on');FXG.on=st==='blast'||st==='stun';FXG.blast=st==='blast';}if(S.hud.mm!==false)updMinimap();updHitDir();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
+function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the pause menu and the end-of-match bar */const hb=$('d-homebtn');if(!hb.hidden)hb.hidden=true;}{const h=$('duel-hud'),re=S.state==='roundEnd'||S.state==='done';if(h.classList.contains('rend')!==re)h.classList.toggle('rend',re);}{if(ME.blastT>0)ME.blastT-=dt;const st=!ME.alive?'':ME.blastT>0?'blast':ME.stunT>0||ME.dazeT>0?'stun':ME.slowT>0?'freeze':'';const e=$('d-edge');if(st){if(st==='freeze')frostTex();if(e.className!=='d-edge on '+st)e.className='d-edge on '+st;}else if(e.classList.contains('on'))e.classList.remove('on');FXG.on=st==='blast'||st==='stun';FXG.blast=st==='blast';}if(S.hud.mm!==false)updMinimap();updHitDir();updTouchLabels();if(S.xpFlash>0){S.xpFlash-=dt;}xpBar('hx');$('hx-gain').textContent=S.xpFlash>0?'+'+S.xpGain+' XP':'';
   {const my=S.score[ME.team]||0;let ot=0,oi=-1;S.score.forEach((v,i)=>{if(i!==ME.team&&v>=ot&&v!=null){ot=v;oi=i;}});txt('d-s1',String(my));txt('d-s2',String(ot));if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
   {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);
@@ -11553,7 +11554,7 @@ $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');i
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}
 $('duel-pause').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)showPV(g.dataset.go);});
 $('dp-resume').addEventListener('click',resume);$('dp-leave').addEventListener('click',leave);
-$('dd-again').addEventListener('click',startMatch);$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
+$('dd-again').addEventListener('click',startMatch);$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
 
 /* ================= online: play a friend (peer-to-peer) =================
    The host's game runs the match exactly as it does against bots; the friend takes the place of the first enemy bot.

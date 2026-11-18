@@ -1,9 +1,9 @@
 /* imok 1v1 offline cache.
    The page itself is fetched fresh whenever there's a connection (so updates show up straight away) and falls back to the cached copy offline.
    Sounds, icons, three.js and fonts are served from the cache after the first visit. Music streams normally (browsers fetch it in ranges). */
-const CACHE='imok-1v1-v186';
+const CACHE='imok-1v1-v187';
 const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png',
-  'chars/blink.glb','chars/brute_p.webp','chars/brute_c.webp','chars/jet_p.webp','chars/jet_c.webp','chars/blink_p.webp','chars/blink_c.webp','chars/ghost_p.webp','chars/ghost_c.webp','chars/patch_p.webp','chars/patch_c.webp','chars/crusty_p.webp','chars/crusty_c.webp','chars/wednesday_p.webp','chars/wednesday_c.webp','chars/antihero_p.webp','chars/antihero_c.webp',
+  'chars/brute_p.webp','chars/brute_c.webp','chars/jet_p.webp','chars/jet_c.webp','chars/ghost_p.webp','chars/ghost_c.webp','chars/patch_p.webp','chars/patch_c.webp','chars/crusty_p.webp','chars/crusty_c.webp','chars/wednesday_p.webp','chars/wednesday_c.webp','chars/antihero_p.webp','chars/antihero_c.webp',
   'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

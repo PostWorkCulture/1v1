@@ -7230,7 +7230,7 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladD
     // still holding? jump, or E for the player (touch Ability button counts as E); bots always burn the whole tank
     const held=f.bot||jump||(f===ME&&(keys.KeyE||keys.Space)),room=(f.jetTop??1e9)-f.pos.y,vCap=Math.sqrt(2*GRAV*Math.max(0,room));if(f.downed||(!held&&f.boostAge>.15)||room<=.05)f.boostT=0;
     else{const ramp=Math.min(1,f.boostAge/.6);f.vel.y=Math.min(JET_VMAX,vCap,Math.max(f.vel.y,0)+(GRAV*1.05+JET_ACC*ramp)*dt);f.grounded=false;f.jetOn=.1;for(let k=0;k<2;k++)emit(f.pos.x-Math.sin(f.yaw)*.4,f.pos.y+.6,f.pos.z-Math.cos(f.yaw)*.4,{n:3,speed:2,up:-10,size:.32,life:.4,grav:2,colors:['#ffb347','#ff7a1f','#ffffff']});}}
-  if(f.boostT<=0&&f.jetSnd){const g=f.jetSnd.g.gain,t0=g.context.currentTime;try{g.cancelScheduledValues(t0);g.setValueAtTime(g.value,t0);g.linearRampToValueAtTime(0,t0+.18);f.jetSnd.s.stop(t0+.2);}catch(e){}f.jetSnd=null;} /* letting go or topping out cuts the roar */
+  if(f.boostT<=0&&f.jetSnd){try{window.SFX&&window.SFX.stop(f.jetSnd,.18);}catch(e){}f.jetSnd=null;} /* letting go or topping out cuts the roar */
   const vy0=f.vel.y;if(!f.grounded)f.vel.y-=GRAV*dt*(f.vel.y<0?1.2:1)*(f.moonT>0?.32:1);if(f.moonT>0){f.moonT-=dt;if(f.grounded&&f.vel.y<=0)f.moonT=0;}if(f.glideT>0){f.glideT-=dt;if(f.grounded&&f.vel.y<=0)f.glideT=0;else if(f.vel.y<-2.6)f.vel.y=-2.6;}
   if(!moveAxis(f,f.vel.x*dt,0))f.vel.x=0;if(!moveAxis(f,0,f.vel.z*dt))f.vel.z=0;
   // average of start and end velocity = exact for constant gravity, so jump height is the same at any frame rate
@@ -10097,7 +10097,8 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
     const want=far?1:0;if(o.layers.mask!==1<<want)o.layers.set(want);});}
 function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}if(S.camOv){camera.position.set(...S.camOv.p);camera.lookAt(...S.camOv.t);}renderer.render(scene,camera);if(!S.camOv)renderVM();fxGrab();}
 const SIM=1/60;let simAcc=0;
-function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;step(SIM);n++;}
+/* a bug in one game step is logged once and skipped, so it can't freeze the whole game on the last picture */
+function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;try{step(SIM);}catch(err){const m=String(err&&err.message);if(!frame.seen)frame.seen=new Set();if(!frame.seen.has(m)){frame.seen.add(m);console.error('step failed:',err);}}n++;}
   if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;drawLerp(1);render();drawLerp(0);capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip

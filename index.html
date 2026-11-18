@@ -33,6 +33,21 @@
 .kb-row button:hover{border-color:#fff}
 .kb-row button.cap{background:#fff;color:#000;border-color:#fff}
 .kb-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font:500 12px/1.3 var(--f-body);color:var(--muted)}
+
+/* Random map: every map as a small picture; a soft white glow wanders between them while it "chooses", and lands (in red) on the pick when you go on */
+#menu .mrg{position:absolute;left:84px;right:84px;top:18px;bottom:43%;display:grid;grid-template-columns:repeat(var(--cols,4),1fr);grid-auto-rows:1fr;gap:10px;z-index:1}
+#menu .mrg-t{position:relative;border-radius:9px;overflow:hidden;background:#1c1c1c;box-shadow:0 0 0 1px #464646;filter:brightness(.62) saturate(.85);transition:box-shadow .7s ease,filter .7s ease,transform .7s ease}
+#menu .mrg-t img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#menu .mrg-t span{position:absolute;left:8px;bottom:6px;font:700 11px/1 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#f5f5f5;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+#menu .mrg-t.on{box-shadow:0 0 0 2px #fff,0 0 24px 5px rgba(255,255,255,.5);filter:none;transform:scale(1.035)}
+#menu .mrg.picking .mrg-t{transition:box-shadow .08s,filter .08s,transform .08s}
+#menu .mrg-t.pick{box-shadow:0 0 0 3px #ff3b30,0 0 30px 8px rgba(255,59,48,.6);filter:none;transform:scale(1.07);z-index:2;transition:box-shadow .25s,transform .25s}
+#menu .mcar.rand .mcar-nav{z-index:3}
+#menu .stage .crg{display:none}
+#menu .stage.rand .crg{position:absolute;left:5%;right:5%;top:31%;bottom:7%;display:grid;grid-template-columns:repeat(var(--cols,6),1fr);grid-auto-rows:1fr;gap:9px;z-index:6}
+#menu .stage.rand .st-q{display:none!important}
+#menu .stage .crg .mrg-t{background:#d9dce1}#menu .stage .crg .mrg-t span{left:0;right:0;bottom:0;padding:16px 7px 6px;background:linear-gradient(transparent,rgba(0,0,0,.78))}#menu .stage .crg .mrg-t img{object-fit:cover;object-position:50% 20%}
+#menu .mcar.rand .mcar-stage .mcar-cap .t{font-size:46px}#menu .mcar.rand .mcar-stage .mcar-cap{padding-top:20px}
 </style>
 <title>imok 1v1</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -1344,7 +1359,6 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
               <button role="radio" data-diff="easy" aria-checked="false">Easy</button>
               <button role="radio" data-diff="normal" aria-checked="true">Normal</button>
               <button role="radio" data-diff="hard" aria-checked="false">Hard</button>
-              <button role="radio" data-diff="extreme" aria-checked="false">Extreme</button>
             </div>
             </div>
             <div class="mmaps"><div class="msub">Map</div>
@@ -6921,17 +6935,14 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
    miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight */
 const DIFF={easy:{name:'Easy',react:1.5,err:7,head:.01,turn:2.6,strafe:.25,build:.15,settle:.7,sway:1.1,flinch:8,recoil:2.8,lead:0,tol:.2,rof:1.6,burst:3,pause:[.9,1.6],hes:.4,miss:.6},
   normal:{name:'Normal',react:.8,err:3.6,head:.08,turn:5.2,strafe:.5,build:.3,settle:1.2,sway:.65,flinch:4,recoil:1.4,lead:.35,tol:.12,rof:1.4,burst:5,pause:[.5,1],hes:.2,miss:.35},
-  hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15},
-  /* Extreme: a step past Hard. Quicker to react, steadier and more often aiming for the head, but still human: it still misses (1 shot in 10),
-     still sways a little and still takes a moment to turn, so you can out-move and out-play it */
-  extreme:{name:'Extreme',react:.3,err:1.15,head:.34,turn:12.5,strafe:1,build:.8,settle:2.3,sway:.26,flinch:1.6,recoil:.38,lead:1,tol:.06,rof:1.08,burst:10,pause:[.15,.35],hes:.03,miss:.1}};
+  hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15}};
 /* your bot team-mates play at the same level as the enemies; when you're the last one left on your team against two or more, the enemies ease off a little */
 function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
 const MAP_SIZE={wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[1,'40 × 30 m'],house:[1,'40 × 30 m'],club:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture) */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),char:'wednesday',diff:store.get('duel:diff','normal'),randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -8357,7 +8368,7 @@ function los(a,b){const d=tmpC.copy(b).sub(a);const L=d.length();d.divideScalar(
 /* Bots pick the gun that suits the distance: a shotgun, SMG or sword up close, a rifle or sniper further out. rangeFit scores a gun at a
    distance (1 = its sweet spot, falling off the further the fight is from it, either way; a holstered empty gun scores lower by its reload time, a rocket up close scores low). How often
    a bot rethinks, and how much better the other gun must be before it swaps, depend on difficulty: Easy bots often stay on the wrong gun,
-   Extreme ones swap almost as soon as the range changes. */
+   Hard ones swap almost as soon as the range changes. */
 function rangeFit(f,id,d,style){const g=GUNS[id];if(!g)return -9;let s;
   if(id==='sword'||id==='fists')s=d<3.5?1.3:-2;
   else if(id==='flamer')s=d<11?1.2-d/25:-2;
@@ -8365,7 +8376,7 @@ function rangeFit(f,id,d,style){const g=GUNS[id];if(!g)return -9;let s;
     if(id==='rocket'&&d<7)s-=1.5;if((id==='sniper'||id==='scout'||id==='crossbow')&&d<8)s-=.5;if(CLOSE(id)&&d>prefRange(id)*2.5)s-=.6;}
   if(style==='breacher'&&CLOSE(id))s+=.25;if(style==='sniper'&&(id==='sniper'||id==='scout'))s+=.25;
   if(id!==gunOf(f)&&(f.ammo[id]??1)<=0)s-=.35+(GUNS[id].reload||1.5)*.12;return s;}
-const BOT_SWAP={easy:{t:[2.5,4.5],p:.35,m:.5},normal:{t:[1.2,2],p:.7,m:.3},hard:{t:[.6,1],p:.9,m:.2},extreme:{t:[.35,.6],p:1,m:.12}};
+const BOT_SWAP={easy:{t:[2.5,4.5],p:.35,m:.5},normal:{t:[1.2,2],p:.7,m:.3},hard:{t:[.6,1],p:.9,m:.2}};
 const NO_RANGE_SWAP=new Set(['grenade','stun','flash','cluster','bomblet','mine','heart','fireball','sword']);
 function botGunPick(f,a,dist,see){const sec=f.secondary;
   if(!see||!sec||f.switchT>0||f.burstN>0||NO_RANGE_SWAP.has(sec)||NO_RANGE_SWAP.has(f.primary)||S.t<(a.gpT||0))return;
@@ -8436,7 +8447,7 @@ function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.fin
 /* bots aren't perfectly careful: every few seconds each one rolls whether it's playing reckless (more often on Easy, when it's low on health
    or when its target is nearly dead). A reckless bot isn't held back from open edges (Sky High's glass, Lagoon's boards), so like a player it can
    crash through and fall off */
-function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06,extreme:.04}[S.diff]??.14;
+function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06}[S.diff]??.14;
     if(f.hp<35)p+=.15;const T=a.tgt;if(T&&T.alive&&(T.downed||T.hp<35))p+=.12;a.reck=Math.random()<p;}return!!a.reck;}
 /* something to blow up near the target: an explosive drum within its blast of them, or (for rockets and grenade launchers) the destructible
    building they were last seen in. Needs a clear shot from the bot's eye; the bot keeps its distance so it doesn't catch the blast itself */
@@ -8606,7 +8617,7 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
   if(a.railHop){a.railHop=0;jump=true;const sd=Math.sign(f.pos.x)||1;wx+=sd*.85;}
   else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
   // explosives: blow up a drum next to the target (or the building they're hiding in) instead of shooting them, without hesitating
-  let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9,extreme:.95}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
+  let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
     const bm=a.boom;if(bm&&bm.b.alive!==false&&M.boxes.includes(bm.b)){const aim=bm.p.clone().add(new V3(rnd(-1,1),rnd(-.5,.5),rnd(-1,1)).multiplyScalar(.12+dif.err*.01));
       const dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z,wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;
       f.yaw+=clamp(dyaw,-dif.turn*dt,dif.turn*dt);f.pitch=damp(f.pitch,wp,dif.turn,dt);f.ads=false;bmDone=true;
@@ -9358,7 +9369,7 @@ function updCamera(dt){S.camFollow=0;
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){if(S.one)S.players='1v1';if(S.randMap)rollMap();if(S.randChar)rollChar();rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!PRIMARIES.includes(S.gun))S.gun='gar';if(!SECONDARIES.includes(S.sec))S.sec='smg';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!PRIMARIES.includes(S.gun))S.gun='gar';if(!SECONDARIES.includes(S.sec))S.sec='smg';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='fists';if(S.simple)Object.assign(ME,SIMPLE_KIT);
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -11380,7 +11391,7 @@ function stageBuild(el){el.className='stage';
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
   if(STG.id===k)return;STG.id=k;const c=k&&CHARS[k];
   el.classList.remove('boxed','go','rand');
-  if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
+  if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');{let g=el.querySelector('.crg');if(!g){g=document.createElement('div');g.className='crg';el.appendChild(g);}g.classList.remove('picking');const ids=CHAR_IDS.filter(c=>CHARS[c]);g.style.setProperty('--cols',Math.ceil(ids.length/3));g.innerHTML=ids.map(c=>`<div class="mrg-t" data-rk="${c}"><img src="${PREV['c_'+c]||`chars/${c}_p.webp`}" alt=""><span>${CHARS[c].name}</span></div>`).join('');}STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
   el.classList.toggle('empty',!c);
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
@@ -11417,7 +11428,7 @@ function renderDuelMenu(){
   $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-rulesrow').hidden=!rulesOn();$('d-rules-lbl').textContent=(S.players==='2v2'?'2v2':'1v1')+' rules';$('d-sinfo-t').textContent=S.players==='2v2'?'Simple 2v2: everyone, your teammate and both bots, gets the same loadout and there are no abilities.':'Simple 1v1: everyone gets the same loadout and there are no abilities. Just you against one bot.';document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
   const mlist=Object.entries(MAPS).filter(([k,m])=>mapOK(m));{/* maps: one big picture you flick through with the arrows (or a swipe), a strip of dots under it with a small ? for Random */
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
-    setHTML('d-maps',`<div class="mcar${S.randMap?' rand':''}"><div class="mcar-stage">${cur?(thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:''):'<b class="mcar-q" aria-hidden="true">?</b>'}
+    if(!S.picking)setHTML('d-maps',`<div class="mcar${S.randMap?' rand':''}"><div class="mcar-stage">${cur?(thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:''):`<div class="mrg" style="--cols:${Math.ceil(L.length/2)}">${L.map(([k,mm])=>`<div class="mrg-t" data-rk="${k}">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}<span>${mm.name}</span></div>`).join('')}</div>`}
       ${L.length>1?'<button class="mcar-nav prev" data-nav="-1" aria-label="Previous map">&#8249;</button><button class="mcar-nav next" data-nav="1" aria-label="Next map">&#8250;</button>':''}
       <div class="mcar-bars"></div>${cur&&MAP_SIZE[cur[0]]?`<span class="mcar-size">${MAP_SIZE[cur[0]][1]}</span>`:''}<div class="mcar-cap"><span class="chip">${mapChip()}</span><span class="t">${cur?m.name:'Random'}</span><i class="rule"></i><span class="b">${cur?(MAP_TAG[cur[0]]||m.desc):MAP_TAG.random}</span></div></div>
       <div class="mcar-dots">${L.map(([k,mm])=>`<button class="mcar-d" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}" title="${(mm.desc||mm.name)+(MAP_SIZE[k]?' ('+MAP_SIZE[k][1]+')':'')}">${mm.name}</button>`).join('')+(L.length<2?'':`<button class="mcar-r" data-map="random" aria-pressed="${!!S.randMap}" title="Random: a surprise map every match"><b aria-hidden="true">?</b><span>Random</span></button>`)}</div></div>`);}
@@ -11481,9 +11492,31 @@ $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]')
 $('d-ffan').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;S.ffaN=+b.dataset.n;store.set('duel:ffan',S.ffaN);renderDuelMenu();setTag();});
 $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]');if(!b)return;S.diff=b.dataset.diff;store.set('duel:diff',S.diff);renderDuelMenu();});
 const flagNeed=need=>{const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}};
-$('d-next').addEventListener('click',()=>{if(S.mode==='rumble'||S.simple){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);if(!S.map)menuStep('setup');return;}menuStep('loadout');});
+$('d-next').addEventListener('click',()=>{if(S.picking)return;
+  /* Random character: stop the glow on the fighter it picked before moving on */
+  const cg=S.randChar&&!S.cpDone&&document.querySelector('#d-prof.rand .crg');if(cg&&cg.children.length&&(S.mode==='rumble'||S.simple||!lobbyNeeds().length)){rollChar();S.randCharPre=S.char;S.picking=true;
+    pickSpin(cg,S.char,()=>{S.picking=false;S.cpDone=true;$('d-next').click();S.cpDone=false;setTimeout(()=>{if(STG&&STG.id==='__rand')STG.name.textContent='Random';},700);},()=>{if(STG&&CHARS[S.char])STG.name.textContent=CHARS[S.char].name;});return;}
+  if(S.mode==='rumble'||S.simple){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);if(!S.map)menuStep('setup');return;}menuStep('loadout');});
 $('d-back').addEventListener('click',()=>menuStep('char'));$('d-back1').addEventListener('click',()=>menuStep('setup'));
-$('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a map']);return;}menuStep('char');});
+/* the Random picker: the glow speeds up, hops round the pictures, slows and stops (in red) on the pick, then calls done */
+function pickSpin(g,pick,done,onLand){const tiles=[...g.children];const ti=Math.max(0,tiles.findIndex(t=>t.dataset.rk===pick));g.classList.add('picking');
+  const seq=[];let last=-1;for(let n=0;n<13;n++){let r;do r=(Math.random()*tiles.length)|0;while(tiles.length>1&&(r===last||(n===12&&r===ti)));seq.push(r);last=r;}seq.push(ti);
+  let n=0,d=60;const hop=()=>{tiles.forEach(t=>t.classList.remove('on'));const t=tiles[seq[n]];
+    if(n===seq.length-1){t.classList.add('pick');onLand&&onLand();sfx('hit',null,{rate:.8,vol:.6});setTimeout(()=>{g.classList.remove('picking');t.classList.remove('pick');done();},1100);return;}
+    t.classList.add('on');sfx('hit',null,{rate:1.5,vol:.25});n++;d*=1.17;setTimeout(hop,d);};hop();}
+$('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a map']);return;}
+  /* Random map: the glow speeds up, hops round the pictures, slows and stops on the map it picked, then on to Character */
+  const g=S.randMap&&document.querySelector('#d-maps .mrg');if(g&&!S.picking){if(g.classList.contains('picking'))return;
+    const tiles=[...g.children];rollMap();const pick=S.map;S.randPre=pick;const ti=Math.max(0,tiles.findIndex(t=>t.dataset.rk===pick));S.picking=true;g.classList.add('picking');
+    const seq=[];let last=-1;for(let n=0;n<13;n++){let r;do r=(Math.random()*tiles.length)|0;while(tiles.length>1&&(r===last||(n===12&&r===ti)));seq.push(r);last=r;}seq.push(ti);
+    let n=0,d=60;const hop=()=>{tiles.forEach(t=>t.classList.remove('on'));const t=tiles[seq[n]];
+      if(n===seq.length-1){t.classList.add('pick');const cap=document.querySelector('#d-maps .mcar-cap');if(cap&&MAPS[pick]){const tt=cap.querySelector('.t'),bb=cap.querySelector('.b');if(tt)tt.textContent=MAPS[pick].name;if(bb)bb.textContent=MAP_TAG[pick]||MAPS[pick].desc||'';}
+        sfx('hit',null,{rate:.8,vol:.6});setTimeout(()=>{S.picking=false;menuStep('char');},1100);return;}
+      t.classList.add('on');sfx('hit',null,{rate:1.5,vol:.25});n++;d*=1.17;setTimeout(hop,d);};hop();return;}
+  if(S.picking)return;menuStep('char');});
+/* while Random is showing, a soft glow wanders slowly from picture to picture, as if it's still choosing */
+setInterval(()=>{if(document.hidden)return;for(const g of document.querySelectorAll('#d-maps .mrg:not(.picking),#d-prof.rand .crg:not(.picking)')){if(!g.offsetParent)continue;const t=[...g.children];if(!t.length)continue;const cur=t.findIndex(x=>x.classList.contains('on'));
+  let r;do r=(Math.random()*t.length)|0;while(t.length>1&&r===cur);t.forEach(x=>x.classList.remove('on'));t[r].classList.add('on');}},1300);
 $('m-quick').addEventListener('click',()=>{S.randMap=S.randChar=S.randGun=S.randSec=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();})/* Quick start: random everything, keeps the chosen mode, players and bots */;
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});

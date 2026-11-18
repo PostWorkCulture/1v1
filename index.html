@@ -7625,7 +7625,8 @@ const FLING_G=34;
 // pick where to send the body: whenever there's a fence, railing or low wall to lob it over, or a roof edge or ledge to send it off, use one of those;
 // otherwise a random direction that lands back on the map (slamming into a tall wall is fine). Returns the direction and the upward speed needed to clear
 // the map's invisible boundary walls; on a map with a drop beyond them (a rooftop) a flung body may sail over them and off the edge
-const edgeBox=bx=>{const b=M.bounds;return !!bx.edge||bx.x0>=b.x1-.6||bx.x1<=b.x0+.6||bx.z0>=b.z1-.6||bx.z1<=b.z0+.6;};
+const edgeBox=bx=>{const b=M.bounds;if(bx.edge)return true;if(!b||bx.mesh||bx.touch)return false;const w=bx.x1-bx.x0,d=bx.z1-bx.z0;
+  if(w<1.2&&d>(b.z1-b.z0)*.6&&(bx.x0>=b.x1-.6||bx.x1<=b.x0+.6))return true;if(d<1.2&&w>(b.x1-b.x0)*.6&&(bx.z0>=b.z1-.6||bx.z1<=b.z0+.6))return true;return false;};
 // highest visible map surface under a point (null if there's nothing within `len` below)
 function meshGround(x,z,y,len){const rc=new THREE.Raycaster(new V3(x,y,z),new V3(0,-1,0),0,len);rc.camera=camera;try{const i=rc.intersectObject(M.group,true).find(i=>i.object.isMesh&&i.object.visible&&!i.object.userData.water);return i?i.point.y:null;}catch(e){return 0;}}
 // is there a long drop somewhere in the first few metres past (x,z) along d?
@@ -7634,10 +7635,14 @@ function dropBeyond(x,z,y,d){for(const s of [0,1.5,3,4.5,6]){const px=x+(d?d.x*s
 function topAt(x,z,BX){let top=-1e9;for(const b of BX)if(x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)top=Math.max(top,b.y1);return top;}
 // a throw that takes the body right out of the arena: over the edge of a rooftop, into the sea or out past the fences.
 // tries every direction, works out the speed and height needed to clear whatever is in the way, and picks one of the cheapest
-function flingOut(F,from,upMin){const o=from||F.v0,b=M.bounds,cs=[],a0=rnd(0,TAU),BX=allBoxes().filter(q=>!edgeBox(q)&&q.y1>o.y+.5);
+function flingOut(F,from,upMin){{const o=from||F.v0,roof=rayBoxes(new V3(o.x,o.y+1.2,o.z),new V3(0,1,0),9);
+    if(roof&&!roof.box.touch){let best=null;const a0=rnd(0,TAU);for(let i=0;i<16;i++){const y=a0+i/16*TAU,d=new V3(Math.sin(y),0,Math.cos(y)),w=rayBoxes(new V3(o.x,o.y+1,o.z),d,12);const L=w?w.t:12;if(L>1.2&&(!best||L<best.L))best={y,d,L};}
+      if(best)return {dir:best.d,up:Math.min(4,Math.max(1.5,(roof.t-.6)*2.4)),spd:15,yaw:best.y,pass:false};}}
+const o=from||F.v0,b=M.bounds,cs=[],a0=rnd(0,TAU),BX=allBoxes().filter(q=>!edgeBox(q)&&q.y1>o.y+.5);
   for(let i=0;i<32;i++){const y=a0+i/32*TAU,dx=Math.sin(y),dz=Math.cos(y);
     const tx=dx>1e-6?(b.x1-o.x)/dx:dx<-1e-6?(b.x0-o.x)/dx:1e9,tz=dz>1e-6?(b.z1-o.z)/dz:dz<-1e-6?(b.z0-o.z)/dz:1e9,Lb=Math.max(1,Math.min(tx,tz)),R=Lb+7;
     const tops=[];for(let s=1.5;s<=Lb+2;s+=1.5)tops.push([s,topAt(o.x+dx*s,o.z+dz*s,BX)]);
+    for(const s of [Lb+1.5,Lb+4]){const g=meshGround(o.x+dx*s,o.z+dz*s,o.y+40,80);if(g!=null)tops.push([s,g]);}
     let up=upMin,spd=R*FLING_G/(2*up);
     for(let it=0;it<3;it++){let need=upMin;for(const [s,top] of tops){const tt=s/spd;need=Math.max(need,(top-(o.y+1)+1.2+FLING_G/2*tt*tt)/tt);}
       if(need<=up+.01)break;up=Math.min(40,need);spd=R*FLING_G/(2*up);}
@@ -7653,9 +7658,12 @@ function flingUpd(v,F,t,dt,big,sub,lose,sh){const a=F.by,P=F.fall,prev=new V3(v.
   const bd=M.bounds,out=v.pos.x<bd.x0-2||v.pos.x>bd.x1+2||v.pos.z<bd.z0-2||v.pos.z>bd.z1+2,gs0=out?null:surfaceAt(v.pos.x,v.pos.z,prev.y-1.0*SC),gs=gs0!=null?gs0:meshGround(v.pos.x,v.pos.z,prev.y,40),gy=gs==null?-1e9:gs;
   if(!wh&&M.waterY&&!M.wade){const wy=M.waterY(v.pos.x,v.pos.z);if(wy!=null&&v.pos.y+.6<wy){F.done=1;F.gone=1;v.ch.root.visible=false;F.imp=v.pos.clone();F.abyss=1;S.shake=.4;if(M.splash)M.splash(v.pos.x,v.pos.z,2.2);sfx('splash',v,{range:30});say(a,v,big,sub,lose,false);F.dur=Math.max(F.dur,t+.9);a.finishT=Math.max(a.finishT,F.dur-t);return true;}}
   if(!wh&&gs==null&&(v.pos.y<F.v0.y-25||t-P.t0>3.5)){F.done=1;F.gone=1;v.ch.root.visible=false;F.imp=v.pos.clone();F.abyss=1;S.shake=.3;say(a,v,big,sub,lose,false);F.dur=Math.max(F.dur,t+.8);a.finishT=Math.max(a.finishT,F.dur-t);return true;}
-  let hit=null;if(wh)hit={p:prev.clone().addScaledVector(dd,wh.t),wall:true};else if((P.v.y<0&&v.pos.y<=gy)||t-P.t0>4)hit={p:new V3(v.pos.x,Math.max(gs??v.pos.y,v.pos.y),v.pos.z),wall:false};
+  // outside the arena there are no collision boxes, only scenery (stands, walls, buildings, trees): test the flight against the visible models there
+  let mh=null;if(!wh&&out&&L>1e-4){const rc=new THREE.Raycaster(prev,dd,0,L+.35*SC);rc.camera=camera;try{const x=rc.intersectObject(M.group,true).find(i=>i.object.isMesh&&i.object.visible&&i.face);
+      if(x){const wy=M.waterY?M.waterY(x.point.x,x.point.z):null;if(wy==null||x.point.y>wy+.3){const n=x.face.normal.clone().transformDirection(x.object.matrixWorld);mh={p:x.point.clone(),flat:n.y>.6};}}}catch(e){}}
+  let hit=null;if(mh)hit={p:mh.p,wall:!mh.flat,fl:mh.flat?mh.p.y:null};else if(wh)hit={p:prev.clone().addScaledVector(dd,wh.t),wall:true};else if((P.v.y<0&&v.pos.y<=gy)||t-P.t0>4)hit={p:new V3(v.pos.x,Math.max(gs??v.pos.y,v.pos.y),v.pos.z),wall:false};
   if(!hit)return false;
-  F.done=1;const c=hit.p,fl=!hit.wall&&gs!=null?gs:groundAt(c.x,c.z,c.y);if(sh.onHit)sh.onHit(c,hit.wall);S.shake=1.1;slowMo(.5,a,v);vig(.25);F.imp=c.clone();
+  F.done=1;const c=hit.p,fl=hit.fl!=null?hit.fl:!hit.wall&&gs!=null?gs:groundAt(c.x,c.z,c.y);if(sh.onHit)sh.onHit(c,hit.wall);S.shake=1.1;slowMo(.5,a,v);vig(.25);F.imp=c.clone();
   if(!hit.wall){v.pos.y=fl;decal(c.x,fl,c.z,2.0,'#2b2622','#8a7f72');spray(new V3(c.x,fl+.3,c.z),{n:36,cols:['#8a7f72','#6e665c','#a89c8a','#4a4540'],s0:.12,s1:.32,box:new V3(1.2,.2,1.2),power:7,up:9,floor:fl});
     for(let i=0;i<24;i++){const an=i/24*TAU;emit(c.x+Math.cos(an)*.8,fl+.2,c.z+Math.sin(an)*.8,{n:2,speed:8,up:1,size:.4,life:.7,grav:0,colors:['#c9bfae','#9a8f80']});}
     shatter(v,{power:sh.power,up:sh.up,floor:fl,from:new V3(c.x,fl-.5,c.z)});}
@@ -7711,7 +7719,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     const held=t>.3&&t<1.8,wind=t>1.6&&t<1.8;
     a.pose={ar:held?(wind?[-2.9,0,-.1]:[-1.95,0,-.1]):t<.3?[-.3,0,0]:t<2.1?[-1.2,0,-.2]:[-.6,0,1.2],al:held?(wind?[-2.9,0,.1]:[-1.95,0,.1]):t<.3?[-.3,0,0]:t<2.1?[-1.2,0,.2]:[-.6,0,-1.2],lr:flying?.2:undefined,ll:flying?-.1:undefined};
     if(held){const lift=wind?.9*segT(t,1.6,1.8):0;v.pos.set(a.pos.x+fa.x*(.95-lift*.6),a.pos.y+.25+lift*1.6,a.pos.z+fa.z*(.95-lift*.6));v.yaw=a.yaw+Math.PI;const k=S.t*9;v.pose={ar:[-2.6+Math.sin(k)*.4,0,.3],al:[-2.6-Math.sin(k)*.4,0,-.3],ll:Math.sin(k*1.3)*.5,lr:-Math.sin(k*1.3)*.5};}
-    else if(t>=1.8&&!F.done){if(!F.fall)flingStart(v,F,t,new V3(fa.x,0,fa.z).normalize(),F.tyK?F.tyK.spd:17,F.tyK?F.tyK.up:6,true);flingUpd(v,F,t,dt,'Sky drop!','Sky drop','You got dropped from the sky',{power:10,up:7});}
+    else if(t>=1.8&&!F.done){if(!F.fall)flingStart(v,F,t,new V3(fa.x,0,fa.z).normalize(),F.tyK?F.tyK.spd:17,F.tyK?F.tyK.up:6,F.tyK?F.tyK.pass:true);flingUpd(v,F,t,dt,'Sky drop!','Sky drop','You got dropped from the sky',{power:10,up:7});}
     F.camD=t<1.8?11:13;F.camK=t>1.8&&!F.imp?6:3.5;
     F.focus=t<1.8?new V3(a.pos.x+fa.x*.5,a.pos.y+1.3,a.pos.z+fa.z*.5):F.imp&&!F.abyss?F.imp.clone().add(new V3(0,1.2,0)):new V3(v.pos.x,Math.max(v.pos.y,F.v0.y-12)+1.2,v.pos.z);}
   else if(fx==='Heartbreaker'){
@@ -7768,7 +7776,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     if(!F.done&&!F.fall){F.jolt=Math.max(0,(F.jolt||0)-dt*8);const j=F.jolt;v.pose={root:[1.3+rnd(-.06,.06)*j,yawA,rnd(-.08,.08)*j]};}
     if(t>=3.25&&!F.fall){S.shake=.9;vig(.2);decal(C.x,F.v0.y,C.z,1.3,'#2b2622','#8a7f72');
       for(let i=0;i<20;i++){const an=i/20*TAU;emit(C.x+Math.cos(an)*.6,F.v0.y+.2,C.z+Math.sin(an)*.6,{n:2,speed:7,up:1,size:.35,life:.6,grav:0,colors:['#c9bfae','#9a8f80']});}
-      {const k=flingOut(F,v.pos.clone(),15);flingStart(v,F,t,k.dir,k.spd,k.up,true);}}
+      {const k=flingOut(F,v.pos.clone(),15);flingStart(v,F,t,k.dir,k.spd,k.up,k.pass);}}
     if(F.fall&&!F.done)flingUpd(v,F,t,dt,'Knockout!','Knockout','You got knocked out',{power:8,up:7});
     F.focus=new V3((a.pos.x+C.x)/2,F.v0.y+(look?2.6:1.2),(a.pos.z+C.z)/2);F.camD=6.5;F.camSide=.9;F.camBack=.35;}
   else if(fx==='Roast'){
@@ -7867,7 +7875,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       tracer(tip,p,'#e9e2c8',.02);}else F.sp.visible=false;
     // the uppercut
     if(t>=1.8&&!F.fall){flashBall(chest.clone(),'#ffe08a',1.4);emit(chest.x,chest.y,chest.z,{n:30,speed:9,size:.16,life:.35,grav:0,colors:['#ffffff','#ffd23f']});S.shake=1;slowMo(.35,a,v);vig(.2);
-      const k=flingOut(F,v.pos.clone(),18);flingStart(v,F,t,k.dir,k.spd,k.up,true);}
+      const k=flingOut(F,v.pos.clone(),18);flingStart(v,F,t,k.dir,k.spd,k.up,k.pass);}
     if(F.fall&&!F.done)flingUpd(v,F,t,dt,'Combat!','Combat','You got harpooned and uppercut',{power:9,up:6});
     F.focus=new V3((a.pos.x+v.pos.x)/2,F.v0.y+1.4,(a.pos.z+v.pos.z)/2);F.camD=8;}
   else if(fx==='Pancake'){
@@ -7889,7 +7897,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
         spray(g.clone().add(new V3(0,.2,0)),{n:12,cols:['#8a7f72','#a89c8a','#6e665c'],s0:.08,s1:.2,box:new V3(.5,.1,.5),power:4,up:6,floor:F.v0.y});
         for(let i=0;i<12;i++){const an=i/12*TAU;emit(g.x+Math.cos(an)*.4,g.y+.15,g.z+Math.sin(an)*.4,{n:1,speed:5,up:1,size:.35,life:.5,grav:0,colors:['#c9bfae','#9a8f80']});}}};
     hit(1.15,'h1');hit(1.75,'h2');
-    if(F.toss&&t>=2.45&&!F.fall){S.shake=Math.max(S.shake,.6);slowMo(.3,a,v);const k=flingOut(F,v.pos.clone(),12);flingStart(v,F,t,k.dir,k.spd,k.up,true);}
+    if(F.toss&&t>=2.45&&!F.fall){S.shake=Math.max(S.shake,.6);slowMo(.3,a,v);const k=flingOut(F,v.pos.clone(),12);flingStart(v,F,t,k.dir,k.spd,k.up,k.pass);}
     if(F.fall&&!F.done)flingUpd(v,F,t,dt,'Pancake!','Pancake','You got thrown out',{power:9,up:6});
     if(!F.toss&&t>=2.55&&!F.done){F.done=1;F.flatT=t;const feet=new V3(a.pos.x,F.v0.y,a.pos.z).addScaledVector(fw,1.75);F.flat=new V3(feet.x,F.v0.y+.06,feet.z);const c=F.flat.clone().addScaledVector(fw,1.55);
       decal(c.x,F.v0.y,c.z,1.8,'#2b2622','#8a7f72');spray(c.clone().add(new V3(0,.3,0)),{n:44,cols:['#8a7f72','#6e665c','#a89c8a','#4a4540'],s0:.12,s1:.34,box:new V3(1.3,.2,1.3),power:7,up:9,floor:F.v0.y});

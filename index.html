@@ -8744,15 +8744,15 @@ function updLB(){const rows=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(
   $('d-lb').innerHTML='<table><tr><th>'+(S.players==='2v2'?'Teams':'Players')+'</th><th>K</th><th>A</th><th>D</th></tr>'+(S.players==='ffa'?rows.slice(0,3):rows).map(f=>`<tr class="${f===ME?'me':''}${f.alive?'':' out'}"><td><i style="background:${col(f)}"></i>${f===ME?'You':f.name}</td><td>${f.k||0}</td><td>${f.as||0}</td><td>${f.d||0}</td></tr>`).join('')+'</table>';}
 /* minimap: map layout around you, turning with you; enemies only show as a tiny red dot where they last fired */
 const MM={layer:null,id:null,k:2,range:80};
-function mmLayer(){if(MM.id===M.id&&MM.layer)return MM.layer;const b=M.bounds,k=MM.k,cv=document.createElement('canvas');cv.width=Math.ceil((b.x1-b.x0)*k);cv.height=Math.ceil((b.z1-b.z0)*k);const g=cv.getContext('2d');
+function mmLayer(){if(MM.id===M.id&&MM.layer)return MM.layer;const P=MM.range+8,B0=M.bounds,b={x0:B0.x0-P,x1:B0.x1+P,z0:B0.z0-P,z1:B0.z1+P},k=MM.k,cv=document.createElement('canvas');cv.width=Math.ceil((b.x1-b.x0)*k);cv.height=Math.ceil((b.z1-b.z0)*k);const g=cv.getContext('2d');MM.ox=b.x0;MM.oz=b.z0;/* ground runs past the map edge so the minimap is one full circle, no rectangle inside it */
   g.fillStyle='#dfe6d6';g.fillRect(0,0,cv.width,cv.height);if(M.mmPaint)M.mmPaint(g,k,b);
-  for(const o of M.boxes){if(o.ground||o.y1<.25||o.y0>3)continue;const tall=o.y1-o.y0>1.4;g.fillStyle=o.wood?(tall?'#b08a62':'#cbb08e'):(tall?'#5b606b':'#a9aeb7');g.fillRect((o.x0-b.x0)*k,(o.z0-b.z0)*k,Math.max(1,(o.x1-o.x0)*k),Math.max(1,(o.z1-o.z0)*k));}
+  const e=1.2;for(const o of M.boxes){if(o.ground||o.y1<.25||o.y0>3)continue;if(o.x1<=B0.x0+e||o.x0>=B0.x1-e||o.z1<=B0.z0+e||o.z0>=B0.z1-e)continue;/* edge walls/fences and outside scenery would trace a rectangle */const tall=o.y1-o.y0>1.4;g.fillStyle=o.wood?(tall?'#b08a62':'#cbb08e'):(tall?'#5b606b':'#a9aeb7');g.fillRect((o.x0-b.x0)*k,(o.z0-b.z0)*k,Math.max(1,(o.x1-o.x0)*k),Math.max(1,(o.z1-o.z0)*k));}
   MM.layer=cv;MM.id=M.id;return cv;}
 function updMinimap(){{const now=performance.now();if(now-(updMinimap.t||0)<30)return;updMinimap.t=now;}const cv=$('d-mmc'),g=cv.getContext('2d'),W=cv.width,C=W/2,b=M.bounds;if(!b)return;const sc=C/MM.range;const yaw=ME.yaw,cs=Math.cos(yaw),sn=Math.sin(yaw);
   const px=ME.pos.x,pz=ME.pos.z;const A=-cs*sc,Bq=-sn*sc,Cq=sn*sc,Dq=-cs*sc; // world (x,z) -> screen, facing up
   const toS=(x,z)=>[A*(x-px)+Cq*(z-pz)+C,Bq*(x-px)+Dq*(z-pz)+C];
-  g.setTransform(1,0,0,1,0,0);g.fillStyle='#c9d1bf';g.fillRect(0,0,W,W);
-  g.setTransform(A/MM.k,Bq/MM.k,Cq/MM.k,Dq/MM.k,C-(A*px+Cq*pz)+(A*b.x0+Cq*b.z0),C-(Bq*px+Dq*pz)+(Bq*b.x0+Dq*b.z0));g.drawImage(mmLayer(),0,0);
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#dfe6d6';g.fillRect(0,0,W,W);
+  {const L=mmLayer(),ox=MM.ox,oz=MM.oz;g.setTransform(A/MM.k,Bq/MM.k,Cq/MM.k,Dq/MM.k,C-(A*px+Cq*pz)+(A*ox+Cq*oz),C-(Bq*px+Dq*pz)+(Bq*ox+Dq*oz));g.drawImage(L,0,0);}
   g.setTransform(1,0,0,1,0,0);
   for(const sh of M.shops||[]){const [x,y]=toS(sh.x,sh.z);g.fillStyle='#ffc61a';g.strokeStyle='#14161c';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12);}
   for(const f of FS){if(f===ME||!f.alive)continue;if(!isFoe(ME,f)){const [x,y]=toS(f.pos.x,f.pos.z);g.fillStyle='#2f7fe0';g.beginPath();g.arc(x,y,6,0,TAU);g.fill();continue;}

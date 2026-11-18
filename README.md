@@ -55,6 +55,8 @@ Characters (16), each a sculpted 3D model: Blaze (a fire brawler; fireballs), Go
 
 **Damage** – every weapon and ability hits 20% harder than it used to (Blaze's fireball 54, Thor's bolt 36, Gorillaz's smash up to 48; Murda Medic heals 48 and Xero reflects 60%), so fights end a little quicker. On top of that, every primary and secondary gun (not fists, the sword, abilities or lethals) does 25% more damage per hit, rounded to whole numbers; the loadout cards show the new figures.
 
+**Crossbow and breakables** – the Crossbow's bolt flies at 200 m/s with only a slight drop (it used to be 75 m/s, slow enough that a moving target had stepped out of the way before it arrived), leaving a faint green streak. Every weapon can break things: bolts and Ninja Stars smash glass, lamps and barrels, set off mines and knock loose items along their path; the Sword and Fists smash glass, barrels and other breakables at head or waist height when a swing meets no one; and the Flamethrower burns through glass and props and sets off barrels where its jet lands (guns and explosives already did).
+
 **Reviving** – stand over a downed teammate and they glow green and revive twice as fast (2.5 seconds instead of 5).
 
 **End of match** – "You caught the W!" or "Took the L this time :(" in big letters, the score and four stats: Kills, Damage, Accuracy, Headshots. Rematch and, if any clips were saved, a video icon (with the number of clips on it) that pops up beside it; tap it for the list of clips. Clips are only offered at the end of the game, never between rounds. If you pick nothing within 10 seconds (a small "Home in Ns" countdown shows on the right) it takes you back to the home screen; clicking anywhere on the bar stops the countdown. Home is the permanent house icon.

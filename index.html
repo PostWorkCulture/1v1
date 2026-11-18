@@ -7582,7 +7582,8 @@ function movePlate(P,keepAway=true){const pool=M.plateSpots||[];if(!pool.length)
     if(ok.length){const c=ok[Math.floor(GR()*ok.length)];P.x=c.x;P.y=c.y;P.z=c.z;P.grp.position.set(c.x,c.y+.9,c.z);return;}}}
 /* Bat pickup: in Rumble one bat lies in the middle of the map each round (any map can opt in with bat:1). Walk over it to take it: it replaces your fists
    (in Rumble that's your weapon; elsewhere it's the slot-3 option). Get downed and you drop it where you fall; the round ending takes it away. Only ever one bat. */
-const BAT={on:false,grp:null,spin:null,x:0,y:0,z:0,vis:false};
+const BAT={on:false,grp:null,spin:null,x:0,y:0,z:0,vis:false,wait:0};
+const PICKUP_DELAY=10; /* bat and Neon Runners only show up 10 s into each round */
 const batOn=()=>S.mode==='rumble'||!!(MAPS[M.id]&&MAPS[M.id].bat);
 function batHome(){const bb=M.bounds,g=M.grid,cx=(bb.x0+bb.x1)/2,cz=(bb.z0+bb.z1)/2;if(!g)return{x:cx,y:0,z:cz};let best=null,bs=1e9;
   for(let r=0;r<=14;r+=1.5){const n=r?Math.ceil(r*4):1;for(let a=0;a<n;a++){const an=a/n*TAU,x=cx+Math.cos(an)*r,z=cz+Math.sin(an)*r,id=nearestNode(x,0,z);if(id<0)continue;
@@ -7598,8 +7599,8 @@ function placeBat(at){BAT.on=batOn();if(!BAT.on){if(BAT.grp)BAT.grp.visible=fals
   p=p||batHome();BAT.x=p.x;BAT.y=p.y;BAT.z=p.z;BAT.grp.position.set(p.x,p.y,p.z);BAT.grp.visible=true;BAT.vis=true;}
 function setBat(f,on){if(!!f.bat===on)return;const was=gunOf(f);f.bat=on;if(f.guns&&gunOf(f)!==was){const s=f.slot;f.slot=-9;equip(f,s<0?0:s);}}
 function dropBat(f){if(!f.bat)return;setBat(f,false);if(BAT.on)placeBat({x:f.pos.x,y:f.pos.y,z:f.pos.z});}
-function resetBat(){for(const f of FS)setBat(f,false);placeBat();}
-function updBat(dt){if(!BAT.vis||!BAT.grp)return;BAT.spin.rotation.y+=dt*1.8;BAT.spin.position.y=.12+Math.sin(S.t*2.4)*.1;BAT.ring.material.opacity=.55+Math.sin(S.t*4)*.2;
+function resetBat(){for(const f of FS)setBat(f,false);BAT.on=batOn();BAT.vis=false;if(BAT.grp)BAT.grp.visible=false;BAT.wait=BAT.on?PICKUP_DELAY:0;}
+function updBat(dt){if(BAT.wait>0&&S.state==='fight'){BAT.wait-=dt;if(BAT.wait<=0)placeBat();}if(!BAT.vis||!BAT.grp)return;BAT.spin.rotation.y+=dt*1.8;BAT.spin.position.y=.12+Math.sin(S.t*2.4)*.1;BAT.ring.material.opacity=.55+Math.sin(S.t*4)*.2;
   if(S.state!=='fight')return;for(const f of FS){if(!f.alive||f.downed||f.finishing||f.bat)continue;if(Math.hypot(f.pos.x-BAT.x,f.pos.z-BAT.z)<1.2&&Math.abs(f.pos.y-BAT.y)<1.6){
     setBat(f,true);BAT.vis=false;BAT.grp.visible=false;emit(BAT.x,BAT.y+.9,BAT.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#ff2a34','#ffffff','#ffd0d2']});sfx('swordswing',f,{range:10});
     if(f===ME)feedMsg('<span class="y">You</span><em>picked up the bat</em>');else feedMsg(`${tg(f)}<em>picked up the bat</em>`);break;}}}
@@ -7660,7 +7661,7 @@ function shoeSpot(loose){const g=M.grid,bb=M.bounds;if(!g)return null;const cx=(
   return c.length?c[(Math.random()*c.length)|0]:loose?null:shoeSpot(true);} /* small maps: relax the distances rather than skip the pickup */
 function placeShoes(){if(!SHOE.grp||SHOE.grp.parent!==M.group){SHOE.grp=shoeGroup();M.group.add(SHOE.grp);}const p=shoeSpot();if(!p){SHOE.grp.visible=false;SHOE.vis=false;SHOE.back=0;return;}
   SHOE.x=p.x;SHOE.y=p.y;SHOE.z=p.z;SHOE.grp.position.set(p.x,p.y,p.z);SHOE.grp.visible=true;SHOE.vis=true;SHOE.back=0;}
-function resetShoes(){for(const f of FS)f.shoeT=0;SHOE.vis=false;placeShoes();}
+function resetShoes(){for(const f of FS)f.shoeT=0;if(!SHOE.grp||SHOE.grp.parent!==M.group){SHOE.grp=shoeGroup();M.group.add(SHOE.grp);}SHOE.vis=false;SHOE.grp.visible=false;SHOE.back=PICKUP_DELAY;} /* first pair arrives 10 s in */
 function updShoes(dt){SHOE.t+=dt;
   for(const f of FS){if(!(f.shoeT>0))continue;f.shoeT=Math.max(0,f.shoeT-dt);if(f.alive&&!f.downed&&f.grounded){f.shoeFx=(f.shoeFx||0)-dt;const sp=Math.hypot(f.vel.x,f.vel.z);if(f.shoeFx<=0&&sp>1){f.shoeFx=.03;
       emit(f.pos.x-f.vel.x*.02,f.pos.y+.12,f.pos.z-f.vel.z*.02,{n:2,speed:.3,up:.15,size:.05,life:.3,grav:0,colors:[SHOE_CY,'#ffffff','#8ff4ff']});}}

@@ -2803,7 +2803,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 (function(){
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
     'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fireball','blink','shield','vanish','heal','sense','buy','tick','win','lose','heart',
-    'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli'];
+    'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli','bing'];
   const LOOPS={waves:1,engine:1,boat:1,heli:1}; // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
@@ -8280,10 +8280,16 @@ function shopPress(f,it){const sh=(M.shops||[]).reduce((a,b)=>!a||Math.hypot(f.p
 function buyShop(i){if(NET.role==='client'&&S.shopOpen&&ME.shopCD<=0){queueAct('buy:'+i);}const it=shopList()[i];if(!it||!S.shopOpen||!canShopNow()||ME.shopCD>0||!it.can(ME))return;
   it.buy(ME);shopPress(ME,it);sfx('cash');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;closeShop();S.shopMsg=`Got ${it.name}! Shop restocks in ${SHOP_CD}s`;S.shopMsgT=2.2;
   emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
+/* the shop is a lucky dip: stand at it and it goes bing and hands you a random pickup (only ones you can use right now) */
+function shopRoll(){const L=shopList(),ok=[];L.forEach((it,i)=>{if(it.can(ME))ok.push(i);});
+  if(!ok.length){if(!(S.shopMsgT>0)){S.shopMsg='Nothing new for you here right now';S.shopMsgT=1.5;}return;}
+  const i=ok[Math.floor(Math.random()*ok.length)],it=L[i];if(NET.role==='client')queueAct('buy:'+i);
+  it.buy(ME);shopPress(ME,it);sfx('bing');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;S.shopMsg=`You got ${it.name}! ${it.desc}`;S.shopMsgT=2.8;
+  emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
 // bots shop too: what they'd want right now (index into the shop list, or -1)
 function botShopWant(f){const L=shopList();const want=id=>{const i=L.findIndex(it=>it.id===id);return i>=0&&L[i].can(f)?i:-1;};
   let i;if(f.hp<f.hpMax*.6&&(i=want('health'))>=0)return i;if((f.armor||0)<50&&(i=want('armor'))>=0)return i;if(Math.random()<.3&&(i=want('gold'))>=0)return i;if(Math.random()<.25&&(i=want('turret'))>=0)return i;if(Math.random()<.2&&(i=want('flamer'))>=0)return i;if((f.nades||0)<3&&(i=want('nades'))>=0)return i;if(!(f.speedT>0)&&(i=want('speed'))>=0)return i;if((i=want('stamina'))>=0)return i;return -1;}
-function botBuy(f){const i=botShopWant(f),it=shopList()[i];if(!it||f.shopCD>0)return false;it.buy(f);shopPress(f,it);f.shopCD=SHOP_CD;sfx('cash',f);
+function botBuy(f){if(botShopWant(f)<0||f.shopCD>0)return false;const L=shopList().filter(it=>it.can(f)),it=L[Math.floor(Math.random()*L.length)];if(!it)return false;it.buy(f);shopPress(f,it);f.shopCD=SHOP_CD;sfx('bing',f,{range:14});
   emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:20,speed:4,size:.2,life:.5,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});return true;}
 function throwNade(f){if(!(f.nades>0||f.goldNade>0)||f.nadeT>0||!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight')return false;
   const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=e.addScaledVector(fw,.7).add(new V3(0,-.2,0));sfx('throw',f);spawnProj(f,'grenade',from,throwDirFor(f));if(f.goldNade>0){f.goldNade--;const P=projs[projs.length-1];P.gold=true;P.mesh.traverse(o=>{if(o.isMesh){o.material=GOLD_NADE_M;}});}else f.nades--;f.nadeT=.9;f.swingT=.32;return true;}
@@ -9119,7 +9125,7 @@ function updHUD(dt){updLB();{const hb=$('d-homebtn'),hide=!!S.touch&&S.state!=='
   
   let pr='';if(!ME.alive&&S.state==='fight'&&isDM()&&ME.respawnT>0)pr=`Respawning in ${Math.ceil(ME.respawnT)}`;else if(!ME.alive)pr='';else if(ME.alive&&!ME.downed&&FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0))pr='An enemy used HeartBeat: they can see you';else if(ME.alive&&ME.downed&&!ME.finishing)pr=`Down · reviving ${Math.round(ME.revive*100)}% · click to tag an enemy`;
   // shop: menu pops up at the kiosk when your pick is ready
-  {const near=nearShop(ME)&&canShopNow(),ready=!(ME.shopCD>0);if(near&&ready)openShop();else closeShop();if(S.shopOpen)renderShop(false);
+  {const near=nearShop(ME)&&canShopNow(),ready=!(ME.shopCD>0);closeShop();if(near&&ready)shopRoll();
     if(S.shopMsgT>0){S.shopMsgT-=dt;if(!pr)pr=S.shopMsg;}else if(!pr&&near&&!ready)pr=`Shop restocks in ${Math.ceil(ME.shopCD)}s`;
     }
   if(!pr&&!S.touch&&!S.locked&&S.lockOK&&ME.alive&&(S.state==='fight'||S.state==='countdown')&&!S.replayOpen)pr='Click to look around';

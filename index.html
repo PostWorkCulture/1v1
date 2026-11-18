@@ -1550,6 +1550,43 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
   #duel-pause .pz-set .pm-set>*{padding:9px 0}#duel-pause .pz-set .pm-row>span,#duel-pause .pz-set .sens>span{font-size:13px}
   .st-foot{padding-top:10px}#duel-pause .st-foot .btn{height:38px;min-width:110px;font-size:13px}#duel-pause .st-foot .btn.primary{min-width:130px}
 }
+
+/* ---- pickers laid out in flow (no overlapping): the pictures fill the top of the box, the caption sits underneath them, never on top ---- */
+#menu .mpick .mcar-stage{display:flex;flex-direction:column;height:clamp(240px,calc(100vh - 290px),600px)}
+#menu .mpick .mrg{position:relative;left:auto;right:auto;top:auto;bottom:auto;flex:1 1 0;min-height:0;margin:16px 16px 0}
+#menu .mpick .mcar-stage .mcar-cap{position:relative;inset:auto;flex:none;padding:12px 26px 16px;background:none;gap:0}
+#menu .mpick .mcar-stage .mcar-cap .t{font-size:clamp(26px,4.2vh,46px)}
+#menu .mpick .mcar-stage .mcar-cap .b{font-size:13px;padding:4px 9px;margin-top:6px}
+#menu .mpick .mcar-cap .rule{margin:6px 0 4px}
+@media (max-height:520px){#menu .mpick .mcar-stage{height:calc(100vh - 150px)}#menu .mpick .mcar-stage .mcar-cap{padding:6px 14px 8px}#menu .mpick .mcar-stage .mcar-cap .b{display:none}}
+/* the character box: a column too, clickable (the old stage ignored the mouse), portraits shown whole */
+#menu #d-prof{display:flex;flex-direction:column;padding:16px 16px 0}
+#menu #d-prof>.crg{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;height:auto;flex:1 1 0;min-height:0;pointer-events:auto}
+#menu #d-prof .crg .mrg-t{background:#e9eaee}
+#menu #d-prof .crg .mrg-t img{object-fit:contain;object-position:50% 50%;padding:4px 4px 22px}
+#menu #d-prof .crg .mrg-t.rnd{background:#141414}
+#menu #d-prof>.st-info,#menu #d-prof>.st-side{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;transform:none;max-width:none;width:auto}
+#menu #d-prof .cfoot{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:12px 10px 16px;flex:none;position:relative}
+#menu #d-prof .cfoot>.st-info{flex:1 1 auto;min-width:0}#menu #d-prof .cfoot>.st-side{flex:0 1 46%;min-width:0;position:relative;inset:auto;transform:none;width:auto}
+#menu #d-prof .cfoot>.st-info{position:relative;inset:auto;transform:none;max-width:none}
+#menu #d-prof .st-name{font-size:clamp(28px,4.4vh,52px)}
+@media (max-height:520px){#menu #d-prof .st-desc,#menu #d-prof .st-stats,#menu #d-prof .st-tag{display:none}#menu #d-prof .cfoot{padding:6px 6px 8px}}
+
+#menu #d-prof>.crg,#menu .mpick .mrg{grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);overflow:hidden;padding:4px;margin-top:-4px}
+#menu .mpick .mrg{margin:12px 12px 0}
+#menu .mpick .mrg-t span,#menu #d-prof .crg .mrg-t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 12px)}
+/* phones held sideways: the floating Character / Loadout button sits below the boxes, not over them */
+@media (pointer:coarse) and (max-height:520px){#menu .mpick .mcar-stage{height:calc(100vh - 205px)}#menu #d-prof{margin-bottom:56px}}
+
+#menu .mrg-t img{box-sizing:border-box}
+#menu .mpick .mrg-t.rnd b{font-size:clamp(18px,7vh,46px);margin-bottom:clamp(4px,1.6vh,12px)}
+@media (max-height:520px){#menu .mpick .mrg-t span,#menu #d-prof .crg .mrg-t span{font-size:8.5px;letter-spacing:.4px;left:5px;bottom:4px}#menu .mpick .mrg{gap:6px}}
+@media (pointer:coarse) and (max-height:520px){#menu #d-prof{margin-bottom:0}#menu .mfull.duels[data-step="char"] .d-lob{padding-bottom:58px;box-sizing:border-box}}
+
+@media (max-height:520px){#menu .mpick .mrg-t.rnd b{display:none}#menu .mpick .mrg-t.rnd span::before{content:'? '}}
+#duel-pause:not([data-from="menu"]) .st-ctl,#duel-pause[data-from="menu"] [data-resume]{display:none}
+#duel-pause .st-ctl{margin-top:10px;justify-content:space-between}
+#duel-pause[data-from="menu"]{background:rgba(0,0,0,.72);pointer-events:auto;padding-left:max(16px,env(safe-area-inset-left,0px));z-index:60}
 </style>
 
 </head>
@@ -1602,13 +1639,11 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
         <button class="mquick" id="m-quick" type="button" title="Quick start: random map, character and weapons, straight into a match"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Quick start</button>
         <div class="micons">
           <button class="micon" id="m-net-btn" aria-haspopup="true" aria-expanded="false" aria-controls="m-net-pop" title="Play a friend" aria-label="Play a friend"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/></svg></button>
-          <button class="micon" id="m-opt-btn" aria-haspopup="true" aria-expanded="false" aria-controls="m-opt-pop" title="Options" aria-label="Options"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          <button class="micon" id="m-opt-btn" title="Options" aria-label="Options"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
           <div class="mpop" id="m-net-pop" hidden>
         <div class="mnet" id="mnet"><b>Play a friend</b><button class="btn sm" id="net-host">Host game</button><span class="net-or">or</span><input id="net-code" maxlength="4" placeholder="CODE" aria-label="Room code" autocomplete="off" autocapitalize="characters"><button class="btn sm" id="net-join">Join</button><span id="net-msg" class="net-msg"></span></div>
           </div>
-          <div class="mpop" id="m-opt-pop" hidden><b class="mpop-h">Options</b>
-        <div class="mvol" aria-label="Volume"><label title="Sound effects volume"><span>Sound</span><input type="range" data-vol min="0" max="1" step="0.1" aria-label="Sound effects volume"><b data-vol-val>100%</b></label><label title="Weapons volume"><span>Weapons</span><input type="range" data-wvol min="0" max="1" step="0.1" aria-label="Weapons volume"><b data-wvol-val>100%</b></label><label title="Music volume"><span>Music</span><input type="range" data-mvol min="0" max="1" step="0.1" aria-label="Music volume"><b data-mvol-val>50%</b></label></div>
-          </div>
+          
         </div>
       </header>
       <div class="m3">
@@ -1837,6 +1872,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
         <div class="st-rail">
           <div class="st-title"><button class="st-back" data-go="main" aria-label="Back">‹</button><h3>Settings</h3></div>
           <button class="st-tab on" data-st="gfx">Graphics</button><button class="st-tab" data-st="sound">Sound</button><button class="st-tab" data-st="aim">Aim &amp; sensitivity</button><button class="st-tab" data-st="xh">Crosshair &amp; hits</button><button class="st-tab" data-st="touch">Touch controls</button>
+          <button class="btn sm st-ctl" data-go="controls">Controls <span class="chev">›</span></button>
           <span class="st-gap"></span>
           <button class="btn sm st-reset" id="opt-reset" title="Everything on this menu, keys and HUD layout; your level and records stay">Reset all settings</button>
         </div>
@@ -1850,6 +1886,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <p data-tab="gfx" class="gfx-note" hidden></p>
           <label data-tab="gfx" class="sens" for="opt-fov"><span>Field of view</span><input type="range" id="opt-fov" data-optr="fov" min="60" max="100" step="5"><b data-optv="fov">70°</b></label>
           <label data-tab="gfx" class="sens" for="opt-bright"><span>Brightness</span><input type="range" id="opt-bright" data-optr="bright" min="0.5" max="1.5" step="0.05"><b data-optv="bright">100%</b></label>
+          <div data-tab="gfx" class="pm-row"><span>Name tags <small>the names over other players' heads</small></span><div class="seg" role="radiogroup" aria-label="Name tags" data-opt="nt"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
           <label data-tab="sound" class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label>
           <label data-tab="sound" class="sens" for="wvol-d"><span>Weapons volume</span><input type="range" id="wvol-d" data-wvol min="0" max="1" step="0.1"><b data-wvol-val>100%</b></label>
           <label data-tab="sound" class="sens" for="mvol-d"><span>Music volume</span><input type="range" id="mvol-d" data-mvol min="0" max="1" step="0.1"><b data-mvol-val>50%</b></label>
@@ -9020,7 +9057,7 @@ function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts)
   else if(a==='KeyE'){if(!ME.downed)useAbility(ME);}else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
   else if(a==='KeyF'){const v=finishable(ME);if(v)finish(ME,v);}else if(a==='KeyC'){if(!ME.downed)ME.crouchOn=!ME.crouchOn;}}}
 /* ---------- player options: key bindings, field of view, crosshair, hit feedback, brightness, kill commentary (pause menu) ---------- */
-const OPT_DEF={fov:70,bright:1,xs:'crossdot',xc:'#ffffff',xz:'m',xo:'1',hs:'1',hm:'1',kc:'1'};
+const OPT_DEF={fov:70,bright:1,xs:'crossdot',xc:'#ffffff',xz:'m',xo:'1',hs:'1',hm:'1',kc:'1',nt:'1'};
 const OPT=Object.assign({},OPT_DEF,store.get('duel:opts',{}));
 /* bindable actions: [id, name, the game's own key for it (what the rest of the code listens for), default key]. Ability and lethal are
    named KeyE / KeyG inside the game but sit on G / E by default */
@@ -9102,7 +9139,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.active&&
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});
 document.addEventListener('pointerlockerror',()=>{S.lockOK=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseL=mouseR=false;});
-function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');$('d-rcard').hidden=true;{const t=document.querySelector('.d-toast');if(t)t.remove();}try{pauseFill();}catch(e){}S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;ME.aimNade=false;applyTouch();$('duel-pause').dataset.mode=S.mode;$('duel-pause').hidden=false;mouseL=mouseR=false;}
+function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeUp(false);showPV('main');$('d-rcard').hidden=true;{const t=document.querySelector('.d-toast');if(t)t.remove();}try{pauseFill();}catch(e){}S.paused=true;if(document.pointerLockElement)document.exitPointerLock();closeShop();S.paused=true;ME.aimThrow=false;ME.aimNade=false;applyTouch();$('duel-pause').dataset.mode=S.mode;delete $('duel-pause').dataset.from;$('duel-pause').hidden=false;mouseL=mouseR=false;}
 function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.touch)lock();}
 /* ---- touch controls ---- */
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;
@@ -9350,7 +9387,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
     n.el.style.opacity=String(1-Math.max(0,n.t-.5)/.4);n.el.style.transform=`translate(${sc[0]}px,${sc[1]}px) translate(-50%,-50%) scale(${1+Math.max(0,.15-n.t)*3})`;}
   for(const f of FS){if(f===ME)continue;const tag=tagFor(f),foe=isFoe(ME,f);const tp=f.alive?toScreen(new V3(f.pos.x,f.pos.y+3.15*SC,f.pos.z)):null;
     const vis=tp&&S.state!=='menu'&&(!foe||los(camera.position,new V3(f.pos.x,f.pos.y+2.4*SC,f.pos.z)))&&!(foe&&f.ghostT>0);
-    tag.style.opacity=vis?1:0;if(tp)tag.style.transform=`translate(${tp[0]}px,${tp[1]}px) translate(-50%,-100%)`;tag._b.style.width=(f.downed?f.dhp/60*100:f.hp/f.hpMax*100)+'%';
+    tag.style.opacity=vis&&OPT.nt==='1'?1:0;if(tp)tag.style.transform=`translate(${tp[0]}px,${tp[1]}px) translate(-50%,-100%)`;tag._b.style.width=(f.downed?f.dhp/60*100:f.hp/f.hpMax*100)+'%';
     const n=f.downed?'DOWNED':f.name;if(tag._n.textContent!==n)tag._n.textContent=n;tag.classList.toggle('ally',!foe);{const c=tagCol(f);if(tag._c!==c){tag._c=c;tag._n.style.color=c;}}}
 }
 
@@ -11749,7 +11786,7 @@ function stageBuild(el){el.className='stage';
   stageLoop(STG);}
 /* the character picker: every fighter (plus Random) as a small portrait in the stage; the picked one has a red edge and a soft glow wanders between them */
 function crgBuild(el){const ids=CHAR_IDS.filter(c=>CHARS[c]),key=ids.join(',');let g=el.querySelector('.crg');if(g&&g._k===key)return g;
-  if(!g){g=document.createElement('div');g.className='crg mpick';el.appendChild(g);}g._k=key;g.classList.remove('picking');g.style.setProperty('--cols',Math.ceil((ids.length+1)/2));
+  if(!g){g=document.createElement('div');g.className='crg mpick';el.insertBefore(g,el.firstChild);const ft=document.createElement('div');ft.className='cfoot';const inf=el.querySelector('.st-info'),sd=el.querySelector('.st-side');if(inf)ft.appendChild(inf);if(sd)ft.appendChild(sd);el.appendChild(ft);}g._k=key;g.classList.remove('picking');g.style.setProperty('--cols',Math.ceil((ids.length+1)/2));
   g.innerHTML=ids.map(c=>`<button class="mrg-t" data-rk="${c}" data-char="${c}" title="${CHARS[c].name}"><img src="${PREV['c_'+c]||`chars/${c}_p.webp`}" alt=""><span>${CHARS[c].name}</span></button>`).join('')+`<button class="mrg-t rnd" data-char="random" title="Random: let it pick a fighter for you"><b aria-hidden="true">?</b><span>Random</span></button>`;return g;}
 function crgMark(){const g=document.querySelector('#d-prof .crg');if(!g||g.classList.contains('picking'))return;for(const t of g.children){const on=t.dataset.char==='random'?!!S.randChar:!S.randChar&&t.dataset.char===S.char;t.classList.toggle('sel',on);t.setAttribute('aria-pressed',String(on));}}
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
@@ -11848,7 +11885,7 @@ $('d-fback1').addEventListener('click',()=>$('d-back1').click());$('d-fback2').a
 $('d-wtabs').addEventListener('click',e=>{const b=e.target.closest('[data-wtab]');if(!b)return;S.wtab=b.dataset.wtab;renderDuelMenu();});
 $('d-consl').addEventListener('click',e=>{const b=e.target.closest('[data-cons]');if(!b)return;if(b.dataset.cons==='random'){S.randCons=true;}else{S.randCons=false;S.cons=b.dataset.cons;}renderDuelMenu();});
 setDuelMode(S.mode);
-{const pops=[['m-opt-btn','m-opt-pop'],['m-net-btn','m-net-pop']];
+{const pops=[['m-net-btn','m-net-pop']];
   const close=()=>pops.forEach(([b,p])=>{$(p).hidden=true;$(b).setAttribute('aria-expanded','false');});
   pops.forEach(([b,p])=>$(b).addEventListener('click',e=>{e.stopPropagation();const open=$(p).hidden;close();$(p).hidden=!open;$(b).setAttribute('aria-expanded',String(open));if(open){const f=$(p).querySelector('input,button');f&&f.focus();}}));
   document.addEventListener('click',e=>{if(!e.target.closest('.mpop'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});}
@@ -11897,7 +11934,15 @@ function pauseFill(){const dm=isDM(),ru=S.mode==='rumble';$('dp-tag').textConten
     <div class="pz-sc"><div class="sd"><span class="nm">You</span><b>${my}</b></div>${pp(my)}${dm?'':'<span style="width:12px"></span>'}${pp(ot,1)}<div class="sd o"><span class="nm">${on}</span><b>${ot}</b></div></div>
     <div class="pz-tb"><span class="lbl">Player</span><span class="lbl">K</span><span class="lbl">A</span><span class="lbl">D</span>${rows}</div>`;
   const g=id=>GUNS[id]?GUNS[id].name:'',sl=ME.slot,cc=CONS[ME.cons],L=ru?[['3 · Melee','Fists',true]]:[['1 · Primary',g(ME.primary),sl===0],['2 · Secondary',g(ME.secondary||'smg'),sl===1],['3 · Melee','Fists',sl===2]].concat(cc?[[keyOf('leth')+' · Lethal',cc.short||cc.name,false]]:[]);
-  $('dp-load').innerHTML=`<span class="lbl">Your loadout</span><div class="pz-ld">${L.map(([l,n,o])=>`<div${o?' class="on"':''}><span class="lbl">${l}</span><b>${n}</b></div>`).join('')}</div>`;}$('dp-leave').addEventListener('click',leave);
+  $('dp-load').innerHTML=`<span class="lbl">Your loadout</span><div class="pz-ld">${L.map(([l,n,o])=>`<div${o?' class="on"':''}><span class="lbl">${l}</span><b>${n}</b></div>`).join('')}</div>`;}/* home screen Options cog: opens the same Settings screen as the in-game pause menu (tabs and all). Back and Esc return to the menu; Controls (keys) is reachable from the rail */
+function menuOptsOn(){const p=$('duel-pause');return p.dataset.from==='menu'&&!p.hidden;}
+function menuOpts(){const p=$('duel-pause');p.dataset.from='menu';p.dataset.mode=S.mode;p.dataset.touch=S.touch?'1':'0';showPV('settings');p.hidden=false;const t=p.querySelector('.st-tab.on');t&&t.focus();}
+function menuOptsClose(){const p=$('duel-pause');p.hidden=true;delete p.dataset.from;showPV('main');const c=$('m-opt-btn');c&&c.focus();}
+function menuOptsBack(){const v=document.querySelector('#duel-pause .pv:not([hidden])');if(v&&v.dataset.pv!=='settings')showPV('settings');else menuOptsClose();}
+$('m-opt-btn').addEventListener('click',e=>{e.stopPropagation();menuOpts();});
+$('duel-pause').addEventListener('click',e=>{if(!menuOptsOn())return;if(e.target===e.currentTarget){menuOptsClose();return;}if(e.target.closest('[data-go="main"]')){e.stopPropagation();menuOptsBack();}},true);
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!menuOptsOn()||(typeof KB!=='undefined'&&KB.cap))return;menuOptsBack();});
+$('dp-leave').addEventListener('click',leave);
 $('dd-again').addEventListener('click',startMatch);$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});$('dd-load').addEventListener('click',()=>{leave();menuStep('loadout');if(typeof renderDuelMenu==='function')renderDuelMenu();});$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
 
 /* ================= online: play a friend (peer-to-peer) =================

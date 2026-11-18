@@ -1327,8 +1327,8 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
               <button role="radio" data-team="2v2" aria-checked="false">2v2</button>
               <button role="radio" data-team="ffa" aria-checked="false">Free for all</button>
             </div>
-            <div id="d-rulesrow" hidden><div class="msub">1v1 rules</div>
-            <div class="seg" role="radiogroup" aria-label="1v1 rules" id="d-rules">
+            <div id="d-rulesrow" hidden><div class="msub" id="d-rules-lbl">1v1 rules</div>
+            <div class="seg" role="radiogroup" aria-label="Rules" id="d-rules">
               <button role="radio" data-rules="normal" aria-checked="true">Normal</button>
               <button role="radio" data-rules="simple" aria-checked="false">Simple</button>
             </div></div>
@@ -1381,7 +1381,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
             <div class="d-guns cons" id="d-consl"></div>
             <div class="wdet" id="d-cdet"></div>
           </div>
-          <div class="rumble-info" id="d-sinfo" hidden><b>M4, Sword &amp; Grenade</b><span>Simple 1v1: everyone gets the same loadout and there are no abilities. Just you against one bot.</span></div>
+          <div class="rumble-info" id="d-sinfo" hidden><b>M4, Sword &amp; Grenade</b><span id="d-sinfo-t">Simple 1v1: everyone gets the same loadout and there are no abilities. Just you against one bot.</span></div>
           <div class="rumble-info" id="d-rinfo" hidden><b>Fists only</b><span>Just your fists in Rumble: no guns, lethals, abilities, walls or shop. 15 damage a punch. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
@@ -9241,7 +9241,7 @@ function startMatch(){if(S.one)S.players='1v1';if(S.randMap)rollMap();if(S.randC
     if(S.mode==='rumble')b.primary=b.secondary='fists';if(S.simple)Object.assign(b,SIMPLE_KIT);tagFor(b);}
   const P=S.players;if(P!=='1v1')txt('d-botname',P==='2v2'?'Enemy team':'Bots');document.querySelector('.d-side.you .eyebrow').textContent=P==='2v2'?'Your team':'You';
   $('d-feed').innerHTML='';if(M.id!==S.map||M.ru!==(S.mode==='rumble'))buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
-  const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1 · Normal'):'Duels'} · ${S.one?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':'')+' · '}${MAPS[S.map].name}`;
+  const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1 · Normal'):'Duels'} · ${S.one?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':P==='2v2'&&!ru?(S.simple?' · Simple':' · Normal'):'')+' · '}${MAPS[S.map].name}`;
   $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · first to 10 kills wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · fists only':S.simple?' · M4, sword & grenade · no abilities':'');
   h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}
 // spawns: 1v1 two far-apart points out of each other's sight; 2v2 two far-apart points with each teammate beside their partner; FFA four points spread as far apart as possible
@@ -9289,7 +9289,7 @@ function showIntro(){setTimeout(warmShaders,60);const el=$('d-intro'),pic=thumbs
   el.classList.remove('out');el.hidden=false;for(const n of el.querySelectorAll('*')){n.style.animation='none';void n.offsetWidth;n.style.animation='';}}
 function hideIntro(now){const el=$('d-intro');if(!el||el.hidden)return;if(now){el.hidden=true;return;}if(!el.classList.contains('out')){el.classList.add('out');setTimeout(()=>{if(el.classList.contains('out'))el.hidden=true;},420);}}
 /* the mode shown under the map's name on the title card: 1v1, 1v1 · Simple, 2v2, Free for all or Rumble */
-const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1'):(PLAYERS[S.players]||'Duels');
+const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1'):S.simple&&S.players==='2v2'?'2v2 · Simple':(PLAYERS[S.players]||'Duels');
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
   if(cr&&cr!==v&&isFoe(cr,v))cr.k=(cr.k||0)+1;v.d=(v.d||0)+1;const asd=new Set();if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==cr&&src!==v&&isFoe(src,v)&&S.t-t<15&&!asd.has(src)){asd.add(src);src.as=(src.as||0)+1;}if(by&&by!==cr&&by!==v&&isFoe(by,v)&&!asd.has(by))by.as=(by.as||0)+1;v.hitBy=null;lbDirty=1;
@@ -9690,8 +9690,10 @@ function enterMenu(){hideIntro(true);S.manDown=null;$('duel-hud').classList.remo
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;S.mstep='setup';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 /* 1v1 rules (Normal or Simple) apply to Duels with 1v1 picked under Players */
-function syncOne(){S.one=S.mode==='duel'&&S.players==='1v1';S.simple=S.one&&S.rules==='simple';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;}
-function setMode(m){if(m==='simple'||m==='one'){if(m==='simple'){S.rules='simple';store.set('duel:rules','simple');}m='duels';store.set('duel:players','1v1');}if(m!=='duels'&&m!=='rumble')m='duels';S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));S.one=m==='duels'&&S.players==='1v1';S.simple=S.one&&S.rules==='simple';document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
+/* Normal / Simple rules apply to 1v1 and 2v2 */
+const rulesOn=()=>S.mode==='duel'&&(S.players==='1v1'||S.players==='2v2');
+function syncOne(){S.one=S.mode==='duel'&&S.players==='1v1';S.simple=rulesOn()&&S.rules==='simple';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;}
+function setMode(m){if(m==='simple'||m==='one'){if(m==='simple'){S.rules='simple';store.set('duel:rules','simple');}m='duels';store.set('duel:players','1v1');}if(m!=='duels'&&m!=='rumble')m='duels';S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));S.one=m==='duels'&&S.players==='1v1';S.simple=m==='duels'&&(S.players==='1v1'||S.players==='2v2')&&S.rules==='simple';document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===m)));
   const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',m);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
   if(du)setDuelMode(m==='rumble'?'rumble':'duel');
@@ -11266,7 +11268,7 @@ function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelect
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
   STG.tag.textContent='Ready for battle';STG.name.textContent=c.name;
-  STG.abil.innerHTML=`${S.simple?'No abilities in Simple 1v1':`<kbd>${S.touch?'E':(window.KN?window.KN('abil'):'G')}</kbd>${c.abil}`}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span></div>`;
+  STG.abil.innerHTML=`${S.simple?(S.players==='2v2'?'No abilities in Simple 2v2':'No abilities in Simple 1v1'):`<kbd>${S.touch?'E':(window.KN?window.KN('abil'):'G')}</kbd>${c.abil}`}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span></div>`;
   void el.offsetWidth;el.classList.add('go');STG.burst=1;}
 function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');let last=0;
   const tick=t=>{if(STG!==G)return;requestAnimationFrame(tick);const cv=G.cv;
@@ -11289,13 +11291,13 @@ function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 /* map picker title: a one-liner per map under the big cinematic name */
 const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
   street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, fist to fist.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
-function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
+function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1')+(!ru&&S.simple?' · Simple':'');}
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble',sk=ru||!!S.simple;
   const c=S.char&&CHARS[S.char];
   stageShow(S.randChar?'__rand':c?S.char:null);
   setHTML('d-chars',`<button class="opt char-opt rand" data-char="random" aria-pressed="${!!S.randChar}" title="Random: a surprise fighter every match"><span class="rq" aria-hidden="true">?</span><span class="t">Random</span></button>`+CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${!S.randChar&&k===S.char}" title="${ch.name}: ${(CHAR_INFO[k]&&CHAR_INFO[k].what)||ch.desc||''}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join(''));
-  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-rulesrow').hidden=!S.one;document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
+  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-rulesrow').hidden=!rulesOn();$('d-rules-lbl').textContent=(S.players==='2v2'?'2v2':'1v1')+' rules';$('d-sinfo-t').textContent=S.players==='2v2'?'Simple 2v2: everyone, your teammate and both bots, gets the same loadout and there are no abilities.':'Simple 1v1: everyone gets the same loadout and there are no abilities. Just you against one bot.';document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
   const mlist=Object.entries(MAPS).filter(([k,m])=>mapOK(m));{/* maps: one big picture you flick through with the arrows (or a swipe), a strip of dots under it with a small ? for Random */
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
     setHTML('d-maps',`<div class="mcar${S.randMap?' rand':''}"><div class="mcar-stage">${cur?(thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:''):'<b class="mcar-q" aria-hidden="true">?</b>'}

@@ -6797,7 +6797,10 @@ function armElbows(ch,M,add){M.elbow??={L:splitLeg(M.parts.armL,.5,M.col),R:spli
   for(const [s,o] of [['L',ch.aL],['R',ch.aR]]){const k=E[s];add(k.thigh,o.p);const j=new THREE.Group();j.position.set(0,k.ky,0);o.p.add(j);
     const fa=add(k.shin,j);fa.position.y=-k.ky;const cp=add(k.cap,j);cp.position.set(k.cx,0,k.cz);if(M.capMat)cp.material=M.capMat;o.e=j;
     const g=M.parts['arm'+s],P=g.attributes.position;g.computeBoundingBox();const y0=g.boundingBox.min.y;let hx=0,hz=0,n=0;
-    for(let i=0;i<P.count;i++)if(P.getY(i)<y0+.12){hx+=P.getX(i);hz+=P.getZ(i);n++;}o.hand=[n?hx/n:0,y0+.12,n?hz/n:0];o.up=-k.ky;o.fore=-(y0+.12)+k.ky;}
+    for(let i=0;i<P.count;i++)if(P.getY(i)<y0+.12){hx+=P.getX(i);hz+=P.getZ(i);n++;}o.hand=[n?hx/n:0,y0+.12,n?hz/n:0];o.up=-k.ky;o.fore=-(y0+.12)+k.ky;
+    /* the whole hand's box (fingertips up to the wrist), in elbow-joint space: what a boxing glove has to swallow */
+    const lo=[9,9,9],hi=[-9,-9,-9];for(let i=0;i<P.count;i++){const y=P.getY(i);if(y>y0+.3)continue;const q=[P.getX(i),y,P.getZ(i)];for(let c=0;c<3;c++){if(q[c]<lo[c])lo[c]=q[c];if(q[c]>hi[c])hi[c]=q[c];}}
+    o.handBox={c:[(lo[0]+hi[0])/2,(lo[1]+hi[1])/2+k.ky*0-k.ky,(lo[2]+hi[2])/2],s:[hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]};o.handBox.c[1]=(lo[1]+hi[1])/2-k.ky;}
   ch.elbows=true;}
 const IKv={d:new THREE.Vector3(),n:new THREE.Vector3(),p:new THREE.Vector3(),e:new THREE.Vector3(),u:new THREE.Vector3(),v:new THREE.Vector3(),x:new THREE.Vector3(),y:new THREE.Vector3(),z:new THREE.Vector3(),m:new THREE.Matrix4()};
 function armIK(A,T,pole){const V=IKv,S=A.p.position,a=A.up,b=A.fore;
@@ -7991,6 +7994,13 @@ function drawMonitor(t,v,flat){const {cv,g,pts}=t.userData;pts.push(v);if(pts.le
 const easeIO=u=>{u=clamp(u,0,1);return u*u*(3-2*u);},easeIn=u=>{u=clamp(u,0,1);return u*u;},easeOut=u=>{u=clamp(u,0,1);return 1-(1-u)*(1-u);};
 const segT=(t,t0,t1)=>clamp((t-t0)/(t1-t0),0,1);
 function handW(f,left){f.ch.root.updateMatrixWorld(true);return (left?f.ch.aL:f.ch.aR).p.localToWorld(new V3(0,-1.0,0));}
+/* where a glove sits: on the real hand (the forearm follows the elbow on sculpted models), sized to swallow the whole hand */
+function gloveFit(f,left,g){const A=left?f.ch.aL:f.ch.aR,hb=A.e&&A.handBox,par=hb?A.e:A.p;f.ch.root.updateMatrixWorld(true);
+  const c=hb?hb.c:[0,(f.ch.handY||-.86),0],sz=hb?hb.s:[.5,.3,.5];
+  /* glove fist is .72 x .78 x .66 centred .12 below its origin; leave a margin round the hand */
+  const k=Math.max(.75,(sz[0]+.16)/.72,(sz[1]+.12)/.78,(sz[2]+.16)/.66);
+  g.position.copy(par.localToWorld(new V3(c[0],c[1]+.12*k,c[2])));par.getWorldQuaternion(g.quaternion);const ws=par.getWorldScale(new V3());g.scale.setScalar(k*ws.x);
+  g.children[1].position.x=(left?-1:1)*Math.abs(g.children[1].position.x);g.children[1].rotation.z=(left?1:-1)*Math.abs(g.children[1].rotation.z);return g.position;}
 // put the attacker `dist` metres short of the victim's spot, facing them; vel drives the walk cycle
 // how far the attacker can stand from the victim along the move's line before hitting something solid (so run-ups and wind-ups don't put them inside a wall)
 function freeLine(F,sgn){const k=sgn>0?'fb':'ff';if(F[k]!=null)return F[k];let m=12;for(const y of [.35,1.2,2.0]){const o=new V3(F.v0.x,F.v0.y+y,F.v0.z),d=new V3(-F.fwd.x*sgn,0,-F.fwd.z*sgn);const h=rayBoxes(o,d,12);if(h&&h.box.y1-F.v0.y>STEP)m=Math.min(m,h.t-R-.05);}return F[k]=Math.max(0,m);}
@@ -8151,10 +8161,10 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
     if(t<1.0){const dx=F.T.x-F.a0.x,dz=F.T.z-F.a0.z;a.yaw=Math.hypot(dx,dz)>.3?Math.atan2(dx,dz):F.fy;if(t>.75)a.yaw=F.fy;}else{a.yaw=F.fy;a.vel.set(0,0,0);}
     const look=t>1.0&&t<1.6;
     // the gloves drop out of the sky, spinning, into his hands
-    const hands=[handW(a,false),handW(a,true)],q=new THREE.Quaternion();
-    F.gl.forEach((g,i)=>{if(t<1.0)return;g.visible=true;
-      if(t<1.55){const k=easeIn(segT(t,1.0,1.55)),top=F.T.clone().add(new V3(i?-.5:.5,10,0));g.position.copy(top).lerp(hands[i],k);g.rotation.set(t*14+i,t*9,t*6);}
-      else{(i?a.ch.aL:a.ch.aR).p.getWorldQuaternion(q);g.quaternion.copy(q);g.position.copy(hands[i]);}
+    /* once caught they're worn: animFighter re-fits them onto the hands after this frame's pose is applied */
+    const hands=[];a.gloves=F.gl;
+    F.gl.forEach((g,i)=>{const h=hands[i]=gloveFit(a,!!i,g).clone();g.userData.worn=t>=1.55;if(t<1.0)return;g.visible=true;
+      if(t<1.55){const k=easeIn(segT(t,1.0,1.55)),top=F.T.clone().add(new V3(i?-.5:.5,10,0));g.position.copy(top).lerp(h,k);g.rotation.set(t*14+i,t*9,t*6);}
       if(Math.abs(t-1.55)<dt*.6&&!F['c'+i]){F['c'+i]=1;S.shake=Math.max(S.shake,.2);emit(hands[i].x,hands[i].y,hands[i].z,{n:8,speed:3,size:.12,life:.3,colors:['#ffffff','#ffd23f']});}});
     // pummel: alternate fists into the body on the floor, getting faster, then a double-fist smash
     let ar=[-.25,0,.1],al=[-.25,0,-.1],head;
@@ -9687,6 +9697,7 @@ function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
       ch.lL.p.rotation.x=mix(ch.lL.p.rotation.x,-.95*(.5+.5*a));ch.lR.p.rotation.x=mix(ch.lR.p.rotation.x,-.95*(.5-.5*a));ch.headG.rotation.x=mix(ch.headG.rotation.x,-.18);ch.body.position.y=-1.25;ch.body.rotation.x=0;ch.body.position.z=0;if(ch.knee){ch.lL.k.rotation.x=ch.lR.k.rotation.x=.25*a+.25;}}
     if(L){f.ladHid=1;for(const k in f.guns)f.guns[k].visible=false;}else if(f.ladHid){f.ladHid=0;const g=f.guns[gunOf(f)];if(g&&!f.finishing)g.visible=true;}}
   if(ch.anim)ch.anim(dt,S.t);
+  if(f.gloves){if(!f.gloves[0].parent)f.gloves=null;else f.gloves.forEach((g,i)=>{if(g.userData.worn)gloveFit(f,!!i,g);});}
 
 
   if(f.jolt){ch.root.rotation.z+=f.jolt*.6;f.jolt=Math.abs(f.jolt)<.02?0:f.jolt*Math.exp(-dt*12);}

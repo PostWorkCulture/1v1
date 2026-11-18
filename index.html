@@ -7304,8 +7304,9 @@ function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=
 /* difficulty: react = s before first shot, err = aim spread (deg), head = headshot chance, turn = aim speed,
    settle = how fast the first-sight error closes, sway = error that never settles (x err), flinch = deg of aim knocked off when hit,
    recoil = deg added after each shot, lead = how well it leads a moving target, tol = how far off-target it still pulls the trigger (rad),
-   miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight */
-const DIFF={easy:{name:'Easy',react:1.5,err:7,head:.01,turn:2.6,strafe:.25,build:.15,settle:.7,sway:1.1,flinch:8,recoil:2.8,lead:0,tol:.2,rof:1.6,burst:3,pause:[.9,1.6],hes:.4,miss:.6},
+   miss = chance a shot is pulled wide on purpose, rof = x time between shots, burst/pause = stops to re-aim after this many shots, hes = chance to freeze on first sight,
+   dmg = x damage an enemy bot does to you (Easy only) */
+const DIFF={easy:{name:'Easy',react:2.2,err:10,head:0,turn:2,strafe:.15,build:.05,settle:.5,sway:1.4,flinch:11,recoil:3.6,lead:0,tol:.28,rof:2.1,burst:2,pause:[1.3,2.2],hes:.55,miss:.72,dmg:.7},
   normal:{name:'Normal',react:.8,err:3.6,head:.08,turn:5.2,strafe:.5,build:.3,settle:1.2,sway:.65,flinch:4,recoil:1.4,lead:.35,tol:.12,rof:1.4,burst:5,pause:[.5,1],hes:.2,miss:.35},
   hard:{name:'Hard',react:.4,err:1.6,head:.26,turn:10,strafe:.9,build:.7,settle:1.9,sway:.33,flinch:2,recoil:.5,lead:.85,tol:.07,rof:1.15,burst:8,pause:[.2,.45],hes:.05,miss:.15}};
 /* your bot team-mates play at the same level as the enemies; when you're the last one left on your team against two or more, the enemies ease off a little */
@@ -7800,7 +7801,7 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
   f.bloom=Math.min(f.bloom+g.bloom,3);}
 function damage(f,dmg,src,head,gun){
   return damage0(f,dmg,src,head,gun);}
-function damage0(f,dmg,src,head,gun){if(NET.role==='client'&&!NET.replay)return false;if(f.edgeFall||!f.alive||S.state!=='fight'||f.finishing)return false;if(f.finishT>0&&FS.some(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===f))return false;/* whoever is doing a finishing move can't be hurt or stopped until it's done */if(f===ME&&src&&src!==ME&&src.pos&&dmg>0&&gun!=='turret')hitDir(src);dmg=Math.max(1,Math.round(dmg));if(src&&src!==f&&src.alive!==undefined&&isFoe(src,f))src.dmgM=(src.dmgM||0)+Math.min(dmg,Math.max(0,f.hp));f.lastHurt=S.t;hitMark(f,dmg,src,gun,head);if(f===ME&&(gun==='grenade'||gun==='rocket'))ME.blastT=1.1;if(src&&src!==f){f.lastBy=src;if(isFoe(src,f))(f.hitBy||(f.hitBy=new Map())).set(src,S.t);}
+function damage0(f,dmg,src,head,gun){if(NET.role==='client'&&!NET.replay)return false;if(f.edgeFall||!f.alive||S.state!=='fight'||f.finishing)return false;if(f===ME&&src&&src.bot&&isFoe(src,ME)){const k=botDif(src).dmg;if(k)dmg*=k;}/* Easy bots hit you softer */if(f.finishT>0&&FS.some(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===f))return false;/* whoever is doing a finishing move can't be hurt or stopped until it's done */if(f===ME&&src&&src!==ME&&src.pos&&dmg>0&&gun!=='turret')hitDir(src);dmg=Math.max(1,Math.round(dmg));if(src&&src!==f&&src.alive!==undefined&&isFoe(src,f))src.dmgM=(src.dmgM||0)+Math.min(dmg,Math.max(0,f.hp));f.lastHurt=S.t;hitMark(f,dmg,src,gun,head);if(f===ME&&(gun==='grenade'||gun==='rocket'))ME.blastT=1.1;if(src&&src!==f){f.lastBy=src;if(isFoe(src,f))(f.hitBy||(f.hitBy=new Map())).set(src,S.t);}
   if(f===ME){vig(.55);S.shake=Math.max(S.shake,.18);if(S.t-(S.hurtSnd||-9)>.09){S.hurtSnd=S.t;sfx('hurt',null,{vol:clamp(dmg/30,.45,1)});}}
   if(!f.downed&&f.armor>0){const ab=Math.min(f.armor,dmg);f.armor-=ab;dmg-=ab;f.stam=Math.max(0,(f.stam??STAM_MAX)-ab*.4);if(ab){const gd=f.cons==='gold';hitSpray(f.pos.x,f.pos.y+1.3,f.pos.z,null,{n:5,colors:gd?['#ffc61a','#fff1a8','#d99a00']:['#2f7fe0','#bfe3ff','#1b4fa0'],mist:gd?'#ffd447':'#4d9dff'});}if(dmg<=0)return false;}
   if(!f.downed&&dmg>0){f.stam=Math.max(0,(f.stam??STAM_MAX)-dmg*1.2);if(f.stam<=0){if(f===ME&&!f.stamLock&&S.t-(S.breathT||-9)>3){S.breathT=S.t;sfx('breath');}f.stamLock=true;}f.stamRest=0;}
@@ -8769,7 +8770,7 @@ function killNotes(v,cr){if(!cr||cr===v||!isFoe(cr,v))return;const K=S.kc&&S.kc.
   const vStreak=v.streak||0;v.streak=0;cr.streak=(cr.streak||0)+1;
   cr.multi=S.t-(cr.multiT||-99)<4?(cr.multi||1)+1:1;cr.multiT=S.t;
   if(cr.grudgeSeed===S.seed)cr.grudge=null;
-  if(v!==ME){v.grudge=cr;v.grudgeSeed=S.seed;}
+  if(v!==ME&&S.diff!=='easy'){v.grudge=cr;v.grudgeSeed=S.seed;}/* no revenge hunts on Easy */
   if(cr!==ME&&v!==ME)return;
   const MULTI=['','','DOUBLE KILL','TRIPLE KILL','QUAD KILL','MULTI KILL'],SPREE={3:'KILLING SPREE',5:'RAMPAGE',7:'UNSTOPPABLE',10:'GODLIKE'};
   const lines=[];
@@ -8784,7 +8785,7 @@ function killCall(lines){if(OPT.kc!=='1')return;let box=$('d-call');if(!box){box
     if(sub){const t=document.createElement('div');t.className='ks';t.textContent=sub;t.style.animationDelay=(i*.35)+'s';t.style.opacity=i?0:'';box.appendChild(t);}});
   clearTimeout(killCall.t);killCall.t=setTimeout(()=>{box.innerHTML='';},2600);}
 function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.find(o=>o.alive&&o.finishT>0&&isFoe(f,o)&&FS.some(v=>v.finishing&&v.finishing.by===o&&!isFoe(f,v)));if(saving&&a.tgt!==saving){a.tgt=saving;a.lastSeen=saving.pos.clone();a.seeT=0;a.path=null;a.goalT=0;a.tgtUntil=S.t+.6;return saving;}if(a.tgt&&a.tgt.alive&&isFoe(f,a.tgt)&&!a.tgt.finishing&&(S.t<(a.tgtUntil||0)||(ally&&a.lastSeen)))return a.tgt;
-  const e=eyeOf(f,new V3());const gr=f.grudge&&f.grudgeSeed===S.seed&&f.grudge.alive?f.grudge:null,shotBy=o=>!!(f.hitBy&&S.t-(f.hitBy.get(o)??-99)<3);
+  const e=eyeOf(f,new V3());const gr=S.diff!=='easy'&&f.grudge&&f.grudgeSeed===S.seed&&f.grudge.alive?f.grudge:null,shotBy=o=>!!(f.hitBy&&S.t-(f.hitBy.get(o)??-99)<3);
   /* a revenge hunt doesn't blind the bot: another foe shooting it, or in plain sight close by, gets dealt with on the way */let threat=false;if(gr)for(const o of foesOf(f)){if(o===gr||!o.alive||o.finishing)continue;if(shotBy(o)||(Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z)<20&&los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))){threat=true;break;}}
   let best=null,bs=1e9;for(const o of foesOf(f)){if(o.finishing)continue;let sc=Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z);
     if(los(e,new V3(o.pos.x,o.pos.y+1.25*SC,o.pos.z)))sc-=18;if(shotBy(o))sc-=20;if(o.downed)sc-=12;if(o===a.tgt)sc-=8;if(o===gr&&!threat)sc-=60;sc-=leadBias(f,o);if(sc<bs){bs=sc;best=o;}}

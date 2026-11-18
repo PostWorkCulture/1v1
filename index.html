@@ -1770,6 +1770,19 @@ const GFX=(()=>{
   return G2;})();
 window.GFX=GFX;
 const canvas=$('c');
+/* if the browser won't give the game 3D graphics (Chrome switches WebGL off for a site after the graphics card resets while it's open,
+   until Chrome is restarted), say so plainly instead of leaving a half-built menu */
+function glFail(why){if(document.getElementById('gl-fail'))return;const d=document.createElement('div');d.id='gl-fail';
+  d.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#060606;color:#f5f5f5;font:15px/1.5 Arial,Helvetica,sans-serif;padding:24px';
+  d.innerHTML='<div style="max-width:520px;background:#0a0a0a;border:1px solid #464646;border-radius:14px;padding:26px 28px"><div style="font-size:30px;margin-bottom:6px">imok <span style="color:#ff3b30">1v1</span></div>'
+   +'<div style="height:4px;width:200px;border-radius:2px;background:linear-gradient(90deg,#ff3b30,#d6221a);margin:0 0 16px"></div>'
+   +'<b style="font-size:18px">3D graphics are switched off for this page</b><p style="color:#b4b4b4">'+(why==='lost'?'The graphics card stopped responding while the game was running.':'Your browser won\'t start 3D graphics for the game right now. Chrome does this after the graphics card has reset while the game was open.')+'</p>'
+   +'<p style="color:#b4b4b4"><b style="color:#f5f5f5">To fix it:</b> close every Chrome window and open Chrome again, then come back. If it keeps happening, make sure <i>Settings › System › Use graphics acceleration</i> is on, and try a lower Graphics setting in the pause menu.</p>'
+   +'<button onclick="location.reload()" style="margin-top:6px;background:linear-gradient(90deg,#ff3b30,#d6221a);color:#fff;border:2px solid rgba(0,0,0,.35);border-radius:10px;font:700 17px Arial,sans-serif;padding:10px 22px;cursor:pointer">Try again</button></div>';
+  document.body.appendChild(d);}
+{let ok=false;try{const t=document.createElement('canvas');ok=!!(t.getContext('webgl2')||t.getContext('webgl'));}catch(e){}if(!ok){glFail('blocked');throw new Error('WebGL unavailable');}}
+canvas.addEventListener('webglcontextlost',()=>{clearTimeout(canvas._glT);canvas._glT=setTimeout(()=>glFail('lost'),6000);});
+canvas.addEventListener('webglcontextrestored',()=>{clearTimeout(canvas._glT);});
 const renderer=new THREE.WebGLRenderer({canvas,antialias:GFX.aa(),powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -9745,7 +9758,7 @@ const HERO_CAM={arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36
 function shootThumb(id,keep){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   const OW=1600,OH=900,SS=2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
   try{renderer.setPixelRatio(1);renderer.setSize(OW*SS,OH*SS,false);}catch(e){}
-  scene.traverse(o=>{if(o.isDirectionalLight&&o.castShadow){saveSh.push([o,o.shadow.mapSize.x]);o.shadow.mapSize.set(4096,4096);if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}});
+  scene.traverse(o=>{if(o.isDirectionalLight&&o.castShadow){saveSh.push([o,o.shadow.mapSize.x]);o.shadow.mapSize.set(2048,2048);/* 4096 was a big memory spike on every map picture */if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}});
   camera.aspect=OW/OH;camera.fov=hc[3];camera.position.set(c.x+r*hc[0],r*hc[1],c.z+r*hc[2]);camera.lookAt(c.x+r*.04,0,c.z-r*.06);camera.updateProjectionMatrix();sky.position.copy(camera.position);
   placeSun({x:c.x,y:0,z:c.z});ME.ch.root.visible=false;BOT.ch.root.visible=false;renderer.render(scene,camera);
   const cv=document.createElement('canvas');cv.width=OW;cv.height=OH;const g=cv.getContext('2d');g.imageSmoothingQuality='high';const W=renderer.domElement.width,H=renderer.domElement.height;

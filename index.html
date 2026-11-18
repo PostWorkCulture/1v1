@@ -1561,7 +1561,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 /* the character box: a column too, clickable (the old stage ignored the mouse), portraits shown whole */
 #menu #d-prof{display:flex;flex-direction:column;padding:16px 16px 0}
 #menu #d-prof>.crg{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;height:auto;flex:1 1 0;min-height:0;pointer-events:auto}
-#menu #d-prof .crg .mrg-t{background:#e9eaee}
+#menu #d-prof .crg .mrg-t{background:#000}
 #menu #d-prof .crg .mrg-t img{object-fit:contain;object-position:50% 50%;padding:4px 4px 22px}
 #menu #d-prof .crg .mrg-t.rnd{background:#141414}
 #menu #d-prof>.st-info,#menu #d-prof>.st-side{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;transform:none;max-width:none;width:auto}
@@ -10170,7 +10170,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='982fcbcb1f01';
+const MODEL_STAMP='c082c33b66e2';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */
@@ -11657,7 +11657,7 @@ function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.pa
   {const on=f.flashT>.02;for(const fl of ud.flash){fl.material.opacity=on?.55:0;fl.rotation.z=Math.random()*3;fl.scale.setScalar(.7+Math.random()*.5);}}}
 function renderVM(){if(!VM.cur||!VM.cur.visible||VM.raise<=0)return;VM.cam.aspect=innerWidth/innerHeight;VM.cam.updateProjectionMatrix();
   const ac=renderer.autoClear;renderer.autoClear=false;renderer.clearDepth();renderer.render(VM.scene,VM.cam);renderer.autoClear=ac;}
-const PREV={};const setCharPrev=()=>{PREV.g_sword='models/dragon_sword_card.webp';for(const id of CHAR_IDS){PREV['p_'+id]=`chars/${id}_p.webp`;PREV['c_'+id]=`chars/${id}_c.webp`;}};setCharPrev();let previewsMade=false;
+const PREV={};const setCharPrev=()=>{PREV.g_sword='models/dragon_sword_card.webp';for(const id of CHAR_IDS){PREV['p_'+id]=`chars/${id}_p.webp`;PREV['c_'+id]=`chars/${id}_c.webp`;PREV['k_'+id]=`chars/${id}_k.webp`;}};setCharPrev();let previewsMade=false;
 function previewTasks(){const T=[];
   const PS=new THREE.Scene();PS.background=new THREE.Color('#e9edf2');PS.add(new THREE.HemisphereLight('#ffffff','#b9c2cf',1.1));const dl=new THREE.DirectionalLight('#ffffff',1.6);dl.position.set(3,5,6);PS.add(dl);
   const PC=new THREE.PerspectiveCamera(28,1,.05,100);const W=renderer.domElement.width,H=renderer.domElement.height;PC.aspect=W/H;PC.updateProjectionMatrix();
@@ -11709,7 +11709,7 @@ function stageBuild(el){el.className='stage';
 /* the character picker: every fighter (plus Random) as a small portrait in the stage; the picked one has a red edge and a soft glow wanders between them */
 function crgBuild(el){const ids=CHAR_IDS.filter(c=>CHARS[c]),key=ids.join(',');let g=el.querySelector('.crg');if(g&&g._k===key)return g;
   if(!g){g=document.createElement('div');g.className='crg mpick';el.insertBefore(g,el.firstChild);const ft=document.createElement('div');ft.className='cfoot';const inf=el.querySelector('.st-info'),sd=el.querySelector('.st-side');if(inf)ft.appendChild(inf);if(sd)ft.appendChild(sd);el.appendChild(ft);}g._k=key;g.classList.remove('picking');g.style.setProperty('--cols',Math.ceil((ids.length+1)/2));
-  g.innerHTML=ids.map(c=>`<button class="mrg-t" data-rk="${c}" data-char="${c}" title="${CHARS[c].name}"><img src="${PREV['c_'+c]||`chars/${c}_p.webp`}" alt=""><span>${CHARS[c].name}</span></button>`).join('')+`<button class="mrg-t rnd" data-char="random" title="Random: let it pick a fighter for you"><b aria-hidden="true">?</b><span>Random</span></button>`;return g;}
+  g.innerHTML=ids.map(c=>`<button class="mrg-t" data-rk="${c}" data-char="${c}" title="${CHARS[c].name}"><img src="${PREV['k_'+c]||PREV['c_'+c]||`chars/${c}_p.webp`}" alt=""><span>${CHARS[c].name}</span></button>`).join('')+`<button class="mrg-t rnd" data-char="random" title="Random: let it pick a fighter for you"><b aria-hidden="true">?</b><span>Random</span></button>`;return g;}
 function crgMark(){const g=document.querySelector('#d-prof .crg');if(!g||g.classList.contains('picking'))return;for(const t of g.children){const on=t.dataset.char==='random'?!!S.randChar:!S.randChar&&t.dataset.char===S.char;t.classList.toggle('sel',on);t.setAttribute('aria-pressed',String(on));}}
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
   if(STG.id===k)return;STG.id=k;const c=k&&CHARS[k];

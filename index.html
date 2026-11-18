@@ -2976,6 +2976,13 @@ tex('stripe',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=
 tex('dots',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.0)';for(let i=0;i<4;i++)for(let j=0;j<4;j++){const x=i*32+(j%2)*16+8,y=j*32+8;g.fillStyle='rgba(255,236,170,.55)';g.beginPath();g.moveTo(x,y-6);g.lineTo(x+5,y);g.lineTo(x,y+6);g.lineTo(x-5,y);g.closePath();g.fill();}});
 tex('wtile',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=0;i<4;i++)for(let j=0;j<4;j++){g.fillStyle=`rgba(255,255,255,${.12+((i*3+j*5)%4)*.05})`;g.fillRect(i*32+2,j*32+2,28,12);g.fillStyle='rgba(30,40,50,.28)';g.fillRect(i*32,0,2,h);g.fillRect(0,j*32,w,2);}});
 tex('panel',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=0;i<8;i++){g.fillStyle='rgba(0,0,0,.18)';g.fillRect(i*16,0,2,h);g.fillStyle='rgba(255,255,255,.6)';g.fillRect(i*16+2,0,2,h);}});
+/* a proper full-colour brick (use with a white tint): 12 courses a metre of stretcher bond, each brick its own shade of red-brown with a speckled face, in pale recessed mortar */
+tex('redbrick',256,256,(g,w,h)=>{let a=4711;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};g.fillStyle='#cfc6b8';g.fillRect(0,0,w,h);const rh=h/12,bw=w/4,C=['#9c4a35','#a85339','#8f4330','#b0603f','#97503a','#a2472f','#86412f','#b5694a'];
+  for(let r=0;r<12;r++){const off=r%2?bw/2:0;for(let c=-1;c<5;c++){const x=c*bw+off+2,y=r*rh+2,bwi=bw-4,bh=rh-4;g.fillStyle=C[Math.floor(R()*C.length)];g.fillRect(x,y,bwi,bh);
+    for(let k=0;k<26;k++){g.fillStyle=R()<.5?'rgba(0,0,0,.14)':'rgba(255,220,190,.12)';g.fillRect(x+R()*bwi,y+R()*bh,1+R()*2,1+R()*2);}g.fillStyle='rgba(0,0,0,.18)';g.fillRect(x,y+bh-2,bwi,2);g.fillStyle='rgba(255,255,255,.08)';g.fillRect(x,y,bwi,1.5);}}});
+/* Backyard: pool tiles in a blue mosaic, and the pool water (light ripples, scrolled about) */
+tex('mosaic',128,128,(g,w,h)=>{let a=31;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};const C=['#2f9fd0','#3fb3df','#2a8fc4','#57c2e6','#1f86bb'];for(let i=0;i<8;i++)for(let j=0;j<8;j++){g.fillStyle=C[Math.floor(R()*C.length)];g.fillRect(i*16,j*16,16,16);}g.fillStyle='rgba(255,255,255,.55)';for(let i=0;i<=8;i++){g.fillRect(i*16-1,0,2,h);g.fillRect(0,i*16-1,w,2);}});
+tex('ripple',256,256,(g,w,h)=>{g.fillStyle='#7fd8f0';g.fillRect(0,0,w,h);let a=99;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};g.lineWidth=2.5;for(let i=0;i<70;i++){const x=R()*w,y=R()*h,r=8+R()*26;g.strokeStyle=`rgba(255,255,255,${.25+R()*.35})`;g.beginPath();for(let t=0;t<=1.01;t+=.1){const an=t*Math.PI*1.2+R()*.2;g.lineTo(x+Math.cos(an)*r,y+Math.sin(an)*r*.6);}g.stroke();}});
 /* the modern home's finishes (full colour, used with a white tint): chequered kitchen tiles, grey-washed oak boards, patterned encaustic terrace tiles, cedar cladding */
 tex('chequer',128,128,(g,w,h)=>{for(let i=0;i<4;i++)for(let j=0;j<4;j++){g.fillStyle=(i+j)%2?'#2e3238':'#f1ece2';g.fillRect(i*32,j*32,32,32);}g.fillStyle='rgba(120,120,120,.35)';for(let i=0;i<=4;i++){g.fillRect(i*32-1,0,1.5,h);g.fillRect(0,i*32-1,w,1.5);}});
 tex('greyoak',256,256,(g,w,h)=>{let a=4242;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};const T=['#cfc8bd','#c3bbaf','#d9d3c9','#bab1a4','#d3cbc0'];
@@ -3774,7 +3781,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.floorAt=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -5465,7 +5472,7 @@ const MAPS={
     master:[0,X,-Z,-12,'#e6a9bb','dots','#8c4a63','panel','#e8c7d8','carpet']};
   for(const k in ROOMS){const r=ROOMS[k];floor(r[0],r[1],r[2],r[3],r[8],r[9],.01,r[9]==='tile'?1.5:2);}
   /* outer walls: warm brick outside (the rooms paint their own side) */
-  const ext='#c98f74';W(-X,-Z,X,-Z,ext,'brick');W(-X,Z,X,Z,ext,'brick');W(-X,-Z,-X,Z,ext,'brick');W(X,-Z,X,Z,ext,'brick');
+  const ext='#ffffff';W(-X,-Z,X,-Z,ext,'redbrick');W(-X,Z,X,Z,ext,'redbrick');W(-X,-Z,-X,Z,ext,'redbrick');W(X,-Z,X,Z,ext,'redbrick');
   /* interior walls (plaster on top and in the door reveals) */
   const IN='#ece7de',PL='plaster';
   W(-X,10,X,10,IN,PL,[Dr(-7.5),Gl(-5.5,-1.5),Hp(1.4,4.2),Dr(7.5)]);
@@ -5524,28 +5531,78 @@ const MAPS={
   /* master bedroom: bed, wardrobe, and a blanket chest under the low wall to the dining room */
   box(7.5,0,-20.5,5,.8,5.5,'#2f7fe0');box(7.5,0,-23.4,5,1.6,.4,'#ffffff');box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34');box(3.1,0,-12.65,2.8,1.05,.8,'#8c4a63');
   M.shopAt=[{x:4.1,z:-1.7,q:3}];M.spawns=[[7.5,15],[-9,-17],[-10,5],[10,-2],[-3,-9],[9,-15],[-10,21],[3,19]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
- yard:{modes:['rumble'],name:'Backyard',desc:'Small fenced garden: shed, pool and a trampoline',sw:['#5fb24b','#b07a4a','#8ecae6'],build(){
-  const X=13,Z=17;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  floor(-70,70,-90,90,'#5fb24b','grass',-.02,1);floor(-X,X,-Z,Z,'#6cc152','grass',0,2);
-  floor(-3,3,-Z,-10,'#d5d6da','tile',.03,2);
-  fence(-X,-Z,X,-Z,2.4,'#b07a4a');fence(-X,Z,X,Z,2.4,'#b07a4a');fence(-X,-Z,-X,Z,2.4,'#b07a4a');fence(X,-Z,X,Z,2.4,'#b07a4a');
-  // garden shed (enterable through a wide door)
-  {const sx=-8,sz=9,w=6,dd=5,h=3.4,c='#8a5a34';box(sx,0,sz+dd/2,w,h,.3,c);box(sx-w/2,0,sz,.3,h,dd,c);box(sx+w/2,0,sz-1.3,.3,h,dd-2.6,c);box(sx+w/2,0,sz+2.1,.3,h,.8,c);
-   box(sx-1.6,0,sz-dd/2,2.8,h,.3,c);box(sx+2.4,0,sz-dd/2,1.2,h,.3,c);box(sx+.6,0,sz-dd/2,1.2,.9,.3,c);box(sx,h,sz,w+.6,.3,dd+.6,'#5b4a3a');box(sx-1.8,0,sz+1.6,1.6,1,1,'#3a3d45');
-   // a way up onto the shed roof round the back: water butt, then the log store, then the roof
-   box(-4.2,0,12.6,.9,.5,.9,'#2f63c8');wcStairs(-4.7,-1,11.65,13.55,0,3.7,8,.5,'#7a4c2a');wcBox(-11.3,-8.7,0,3.7,11.65,13.55,'#7a4c2a',{tx:'wood'});}
-  // paddling pool
-  {const px=7,pz=9;box(px,0,pz-2.2,5,.5,.4,'#2f7fe0');box(px,0,pz+2.2,5,.5,.4,'#2f7fe0');box(px-2.3,0,pz,.4,.5,4,'#2f7fe0');box(px+2.3,0,pz,.4,.5,4,'#2f7fe0');floor(px-2.1,px+2.1,pz-2,pz+2,'#8ecae6',null,.25,1);}
-  // trampoline platform
-  {const tx=7,tz=-7;box(tx,0,tz,4,1.1,4,'#16171c');box(tx,1.1,tz,3.6,.08,3.6,'#3bb54a');}
-  // patio, bbq, table and crates for cover
-  box(-7,0,-6,1.2,1.1,1,'#3a3d45');box(-7,1.1,-6,1.4,.3,1.1,'#16171c');
-  box(0,0,1,3,1,1.6,'#c99a5b');box(-1.4,0,2.6,.6,1.4,.6,'#7a4c2a');box(1.4,0,-.6,.6,1.4,.6,'#7a4c2a');
-  box(-9,0,-12,1.4,1.4,1.4,'#c99a5b',{prop:'crate'});box(-10.6,0,-12,1.4,1.4,1.4,'#c99a5b',{prop:'crate'});box(-9.8,1.4,-12,1.4,1.4,1.4,'#b9895a',{prop:'crate'});
-  box(10,0,-13.5,2.4,1.6,1.2,'#3f8f3a',{tx:'grass',prop:'bush'});box(0,0,12.5,5,1.6,1.2,'#3f8f3a',{tx:'grass'});
-  tree(-10.8,-3,.8);tree(10.8,2,.8);
-  M.shopAt=[{x:0,z:-7}];M.spawns=[[0,-14],[0,14.8],[-10,-8],[10,-1],[-4,6],[4,-3],[10.5,14],[-10.5,14.5]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}}
+ yard:{modes:['rumble'],name:'Backyard',desc:'A big back garden: a sunken pool to wade through, trampolines, a treehouse, swings and brick walls to fight round',sw:['#5fb24b','#2f9fd0','#a85339'],build(){backyard();}}
 };
+/* ---------- Backyard: a big fenced back garden. A sunken pool you wade through, two trampolines, a treehouse, swings, a brick garden wall
+   with a window, raised brick planters, hedges, a patio with a brick BBQ and a parasol table, and the shop against the back fence ---------- */
+function backyard(){const X=13,Z=17,G=-.8;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  const BR=mat('#ffffff','redbrick'),stone=mat('#d9d4c8','slab'),dark=mat('#2b2d33',null,{metalness:.4,roughness:.5}),white=mat('#f2f2ef');
+  const bk=(x,z,w,h,d,o)=>box(x,0,z,w,h,d,'#ffffff',Object.assign({tx:'redbrick'},o||{}));
+  /* ground: textured meadow outside, mowed lawn inside, a stone patio at the back, with a hole left for the pool */
+  const PX0=-3,PX1=4,PZ0=-2,PZ1=7;
+  for(const [a,b,c,d] of [[-70,70,-90,-Z],[-70,70,Z,90],[-70,-X,-Z,Z],[X,70,-Z,Z]])floor(a,b,c,d,'#86a85a','meadow',-.02,7);
+  const lawn=(a,b,c,d)=>floor(a,b,c,d,'#ffffff','lawn',0,8);lawn(-X,X,-9,PZ0);lawn(-X,X,PZ1,Z);lawn(-X,PX0,PZ0,PZ1);lawn(PX1,X,PZ0,PZ1);
+  floor(-X,X,-Z,-9,'#e6e0d4','slab',.01,3);
+  /* the fence: the Tripo tall wooden fence on invisible walls, with Tripo trees standing over it outside */
+  const segs=[[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]];for(const [x0,z0,x1,z1] of segs){const ax=z0===z1;box((x0+x1)/2,0,(z0+z1)/2,ax?2*X:.25,2.8,ax?.25:2*Z,'#b07a4a',{mat:INVIS,edges:false,shadow:false});}modelFence(segs,'fence_tall');
+  for(const [id,x,z,h] of [['oak',-17,-10,8],['pine',-17,4,9],['blossom',-16.5,15,6.5],['tall',17,-12,9],['oak',17,6,8],['purple',16.5,16,6],['bonsai',-6,21,6],['pine',8,21,9],['blossom',-9,-21,6],['oak',9,-21,8]])glbTree(id,x,z,h);
+  /* the sunken pool: stone coping round a tiled hole 0.8 m deep, a step down at each end, water about knee deep that you wade through and splash */
+  M.floorAt=(x,z)=>x>PX0&&x<PX1&&z>PZ0&&z<PZ1?G:0;
+  const C=.4,IX0=PX0+C,IX1=PX1-C,IZ0=PZ0+C,IZ1=PZ1-C,WY=-.3;
+  for(const [x0,x1,z0,z1] of [[PX0,PX1,PZ0,IZ0],[PX0,PX1,IZ1,PZ1],[PX0,IX0,IZ0,IZ1],[IX1,PX1,IZ0,IZ1]])box((x0+x1)/2,G,(z0+z1)/2,x1-x0,.85,z1-z0,'#e8e3d6',{tx:'slab',edges:false});
+  const tile=mat('#ffffff','mosaic');
+  for(const [x,z,w,d] of [[(IX0+IX1)/2,IZ0+.01,IX1-IX0,.02],[(IX0+IX1)/2,IZ1-.01,IX1-IX0,.02],[IX0+.01,(IZ0+IZ1)/2,.02,IZ1-IZ0],[IX1-.01,(IZ0+IZ1)/2,.02,IZ1-IZ0]])deco(B.boxGeo(w,.8,d),tile,x,G+.4,z).castShadow=false;
+  floor(IX0,IX1,IZ0,IZ1,'#ffffff','mosaic',G+.005,1);
+  for(const [z0,z1] of [[IZ0,IZ0+.8],[IZ1-.8,IZ1]])box((IX0+IX1)/2,G,(z0+z1)/2,IX1-IX0,.42,z1-z0,'#f4f4f0',{tx:'wtile',edges:false});
+  const wm=new THREE.MeshStandardMaterial({color:'#4fc3e6',map:TX.ripple,transparent:true,opacity:.62,roughness:.08,metalness:.1,emissive:'#1d7fa8',emissiveIntensity:.25,depthWrite:false});
+  const wg=new THREE.PlaneGeometry(IX1-IX0,IZ1-IZ0);wg.rotateX(-Math.PI/2);const uv=wg.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*(IX1-IX0)/3,uv.getY(i)*(IZ1-IZ0)/3);
+  const wa=new THREE.Mesh(wg,wm);wa.position.set((IX0+IX1)/2,WY,(IZ0+IZ1)/2);wa.renderOrder=3;wa.userData.dyn=1;M.group.add(wa);
+  const wt=wm.map.clone();wt.needsUpdate=true;wt.wrapS=wt.wrapT=THREE.RepeatWrapping;wm.map=wt;
+  M.life.push(t=>{wt.offset.set(Math.sin(t*.13)*.4,t*.05);wa.position.y=WY+Math.sin(t*1.3)*.012;});
+  M.wade=(x,z)=>x>IX0&&x<IX1&&z>IZ0&&z<IZ1;M.waterY=(x,z)=>M.wade(x,z)?WY:null;waterRings(()=>WY);
+  {const pl=new THREE.PointLight('#7fdcff',4,9,1.8);pl.position.set((IX0+IX1)/2,G+.3,(IZ0+IZ1)/2);window.GFX&&GFX.light(pl);M.group.add(pl);}
+  /* a float ring and a lilo bobbing on the water */
+  {const ring=new THREE.Mesh(new THREE.TorusGeometry(.42,.14,10,24),mat('#ff5a7a',null,{roughness:.4}));ring.rotation.x=Math.PI/2;ring.userData.dyn=1;M.group.add(ring);
+   const lilo=new THREE.Mesh(B.boxGeo(.8,.12,1.9),mat('#ffd23f',null,{roughness:.45}));lilo.userData.dyn=1;M.group.add(lilo);
+   M.life.push(t=>{ring.position.set(1.6+Math.sin(t*.21)*1.1,WY+.05+Math.sin(t*1.7)*.03,3.6+Math.cos(t*.17)*1.4);lilo.position.set(-1.2+Math.sin(t*.15+1)*.6,WY+.06+Math.sin(t*1.4+1)*.03,1+Math.cos(t*.12)*1.2);lilo.rotation.y=Math.sin(t*.1)*.6;});}
+  /* loungers along the west side of the pool */
+  for(const z of [.6,3.4])box(-5,0,z,.9,.45,2,'#ffffff',{edges:false});
+  /* two trampolines: land on one and it throws you back up a couple of metres, so you can keep shooting from the top of each bounce */
+  const tramps=[];for(const [x,z] of [[-9,-3.5],[9.2,2.5]]){const Ht=.75,Rr=1.6;box(x,0,z,2.9,Ht,2.9,'#16171c',{mat:INVIS,edges:false,shadow:false});
+    const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.1,.13,8,32),mat('#2f7fe0',null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.position.set(x,Ht,z);M.group.add(pad);
+    const matt=new THREE.Mesh(new THREE.CircleGeometry(Rr-.2,32),mat('#141518',null,{roughness:.9}));matt.rotation.x=-Math.PI/2;matt.position.set(x,Ht-.02,z);matt.userData.dyn=1;M.group.add(matt);
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;deco(gC(.05,.05,Ht,6),dark,x+Math.cos(a)*(Rr-.1),Ht/2,z+Math.sin(a)*(Rr-.1));}
+    const net=new THREE.Mesh(new THREE.CylinderGeometry(Rr-.05,Rr-.05,1.6,24,1,true),new THREE.MeshBasicMaterial({color:'#222',transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));net.position.set(x,Ht+.8,z);M.group.add(net);
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;deco(gC(.035,.035,1.7,6),mat('#2f7fe0'),x+Math.cos(a)*(Rr-.05),Ht+.85,z+Math.sin(a)*(Rr-.05));}
+    tramps.push({x,z,y:Ht,r:Rr-.25,m:matt,t:9});}
+  M.life.push((t,dt)=>{for(const T of tramps){T.t+=dt;T.m.position.y=T.y-.02-(T.t<.35?Math.sin(T.t/.35*Math.PI)*.22:0);}
+    for(const f of FS){if(!f.alive||f.downed||!f.grounded)continue;for(const T of tramps)if(Math.abs(f.pos.y-T.y)<.06&&Math.hypot(f.pos.x-T.x,f.pos.z-T.z)<T.r){f.vel.y=Math.max(f.vel.y,10.5);f.grounded=false;T.t=0;sfx('land',f,{rate:1.7,vol:.4,range:14});break;}}});
+  /* the treehouse in the north-west corner: a cedar deck 2.6 m up on posts with solid side panels to shoot over, a ladder up the front and a little roof */
+  {const x0=-11.8,x1=-7.4,z0=11.4,z1=15.8,y=2.6,cx=(x0+x1)/2,cz=(z0+z1)/2;box(cx,y-.25,cz,x1-x0,.25,z1-z0,'#b9784a',{tx:'cedar'});
+   for(const [px,pz] of [[x0+.2,z0+.2],[x1-.2,z0+.2],[x0+.2,z1-.2],[x1-.2,z1-.2]])box(px,0,pz,.3,y-.25,.3,'#6e4a2c',{tx:'wood'});
+   const pn=(x,z,w,d)=>box(x,y,z,w,1,d,'#e9e2d2',{tx:'siding'});pn(cx,z1-.06,x1-x0,.12);pn(x0+.06,cz,.12,z1-z0-.24);pn(x1-.06,cz,.12,z1-z0-.24);pn(x0+.8,z0+.06,1.4,.12);pn(x1-.8,z0+.06,1.4,.12);
+   for(const [px,pz] of [[x0+.08,z0+.08],[x1-.08,z0+.08],[x0+.08,z1-.08],[x1-.08,z1-.08]])deco(B.boxGeo(.14,2.1,.14),mat('#6e4a2c','wood'),px,y+1.05,pz);
+   const rf=mat('#3d6b5a',null,{roughness:.8});for(const s2 of [-1,1]){const r=deco(B.boxGeo(x1-x0+.6,.12,(z1-z0)/2+.5),rf,cx,y+2.45,cz+s2*(z1-z0)/4);r.rotation.x=s2*.42;}
+   wLadder(cx,z0-.45,0,y,0,1);}
+  /* the swings in the north-east, as on Street Life: shoot them enough and the frame crashes over */
+  playFrame('swings',6.5,13.6,Math.PI,[[1.25,1.41,2.5,2.5,4.8],[-2.95,1.4,.6,2.2,3.4]]);
+  /* a brick garden wall across the top lawn with a window to shoot through, and a compost bay */
+  {const wx=0,wz=10.6,L=5,Hh=2.3,wh=[.95,1.65],ww=1.2;bk(wx-(L+ww)/4,wz,(L-ww)/2,Hh,.35);bk(wx+(L+ww)/4,wz,(L-ww)/2,Hh,.35);bk(wx,wz,ww,wh[0],.35);box(wx,wh[1],wz,ww,Hh-wh[1],.35,'#ffffff',{tx:'redbrick'});
+   box(wx,Hh,wz,L+.2,.12,.5,'#d9d4c8',{tx:'slab',solid:false});}
+  box(-1.5,0,15.9,3.2,1.2,1.4,'#6e4a2c',{tx:'wood'});
+  /* hedges (bullets stop in them; enough fire knocks a hole) */
+  const hedge=(x,z,w,d)=>box(x,0,z,w,1.35,d,'#3f8f3a',{tx:'grass',prop:'bush',hp:260});hedge(10.8,7.6,3.6,.9);hedge(-10.6,-8.2,3.8,.9);hedge(-5.8,8.6,.9,3);hedge(7.4,-5.2,.9,3);
+  /* raised brick planters with flowers: waist-high cover round the patio */
+  const planter=(x,z,w,d)=>{bk(x,z,w,1,d);floor(x-w/2+.12,x+w/2-.12,z-d/2+.12,z+d/2-.12,'#5a3a22','grass',1.01,1);for(let i=0;i<Math.round(w*d*3);i++){const fx=x+(Math.random()-.5)*(w-.4),fz=z+(Math.random()-.5)*(d-.4);deco(new THREE.SphereGeometry(.13+Math.random()*.08,8,6),mat(['#ff6b9a','#ffd23f','#ffffff','#b48cff','#ff8a3d'][i%5]),fx,1.18,fz).castShadow=false;deco(B.boxGeo(.3,.2,.3),mat('#3f8f3a'),fx,1.06,fz).castShadow=false;}};
+  planter(-4.2,-9.6,3.4,1);planter(4.6,-9.6,3.4,1);planter(11.6,-12,1,3.2);planter(-11.6,-12,1,3.2);
+  /* the patio: a brick BBQ with a chimney, a table and chairs under a parasol, and the shop against the back fence */
+  {bk(-7.5,-15.6,2.6,1.1,1.1);box(-7.5,1.1,-15.6,1.6,.08,.8,'#2b2d33',{solid:false,extra:{metalness:.6,roughness:.4}});bk(-8.5,-16.05,.6,2.6,.4);
+   M.life.push(()=>{if(Math.random()<.08)emit(-8.5,2.75,-16.05,{n:1,speed:.3,up:1.2,size:.45,life:2.2,grav:-.8,colors:['#d8dbe2','#c9ced6']});});}
+  {const tx=6.5,tz=-13.5;box(tx,0,tz,2.4,.78,1.4,'#f2f2ef',{edges:false});for(const [cx2,cz2] of [[tx-1.6,tz],[tx+1.6,tz],[tx,tz-1.1],[tx,tz+1.1]])box(cx2,0,cz2,.55,.95,.55,'#3a3d45',{edges:false});
+   deco(gC(.04,.04,2.6,6),white,tx,1.3,tz);const um=new THREE.Mesh(new THREE.ConeGeometry(1.9,.55,8,1,true),mat('#e8463a',null,{side:THREE.DoubleSide}));um.position.set(tx,2.65,tz);um.castShadow=true;M.group.add(um);}
+  M.shopAt=[{x:0,z:-Z+.85,q:0}];
+  M.spawns=[[-10,-14.5],[10.5,-15.5],[-11.5,6],[11.5,11.5],[-4,14.5],[11.5,-6.5],[-11.5,0.5],[2.5,13.8]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+
 // red explosive drums on every duel map (current and future): small clusters on open ground tucked beside cover,
 // clear of spawns, shops, ladders, stairs, water and the train lines; same spots each time a map is built
 function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble'||md.drums===0)return false;const g=M.grid;if(!g)return false;
@@ -5701,7 +5758,7 @@ function buildGrid(rg){const b=M.bounds;let g=M.grid;
   const boxesAt=(i,j)=>{const k=i+j*nx,L=g.sb[k]||[];if(!dyn.length)return L;const cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS,out=L.slice();for(const o of dyn)if(cx>o.x0-CLR-CS&&cx<o.x1+CLR+CS&&cz>o.z0-CLR-CS&&cz<o.z1+CLR+CS)out.push(o);return out;};
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=i+j*nx,cx=b.x0+(i+.5)*CS,cz=b.z0+(j+.5)*CS,L=boxesAt(i,j);
     for(let l=0;l<NL;l++)g.h[k*NL+l]=NaN;
-    const cand=M.edgeDrop&&M.edgeDrop(cx,cz)?[]:[0];for(const bx of L)if(cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1)cand.push(bx.y1);cand.sort((p,q)=>p-q);let n=0,prev=-9;
+    const cand=M.edgeDrop&&M.edgeDrop(cx,cz)?[]:[M.floorAt?M.floorAt(cx,cz):0];for(const bx of L)if(cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1)cand.push(bx.y1);cand.sort((p,q)=>p-q);let n=0,prev=-9;
     for(const h of cand){if(h-prev<.03)continue;prev=h;let ok=true;
       for(const bx of L){const inC=cx>=bx.x0&&cx<=bx.x1&&cz>=bx.z0&&cz<=bx.z1;
         if(inC&&bx.y0<h+.02&&bx.y1>h+.05){ok=false;break;}
@@ -6987,7 +7044,7 @@ function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladD
   const vy0=f.vel.y;if(!f.grounded)f.vel.y-=GRAV*dt*(f.vel.y<0?1.2:1)*(f.moonT>0?.32:1);if(f.moonT>0){f.moonT-=dt;if(f.grounded&&f.vel.y<=0)f.moonT=0;}if(f.glideT>0){f.glideT-=dt;if(f.grounded&&f.vel.y<=0)f.glideT=0;else if(f.vel.y<-2.6)f.vel.y=-2.6;}
   if(!moveAxis(f,f.vel.x*dt,0))f.vel.x=0;if(!moveAxis(f,0,f.vel.z*dt))f.vel.z=0;
   // average of start and end velocity = exact for constant gravity, so jump height is the same at any frame rate
-  let ny=f.pos.y+(f.grounded?f.vel.y:(vy0+f.vel.y)/2)*dt,sup=M.edgeDrop&&M.edgeDrop(f.pos.x,f.pos.z)?-1e9:0;
+  let ny=f.pos.y+(f.grounded?f.vel.y:(vy0+f.vel.y)/2)*dt,sup=M.edgeDrop&&M.edgeDrop(f.pos.x,f.pos.z)?-1e9:M.floorAt?M.floorAt(f.pos.x,f.pos.z):0;
   for(const b of allBoxes()){if(b.x0<f.pos.x+R*.8&&b.x1>f.pos.x-R*.8&&b.z0<f.pos.z+R*.8&&b.z1>f.pos.z-R*.8&&b.y1<=f.pos.y+(f.grounded?STEP:.05)+.001&&b.y1>sup)sup=b.y1;}
   const H=hhOf(f);if(f.vel.y>0){for(const b of allBoxes()){if(b.x0<f.pos.x+R*.8&&b.x1>f.pos.x-R*.8&&b.z0<f.pos.z+R*.8&&b.z1>f.pos.z-R*.8&&b.y0>=f.pos.y+H-.05&&b.y0<ny+H){ny=b.y0-H;f.vel.y=0;}}}
   if(ny<=sup){if(!f.grounded&&f.vel.y<-7&&!f.downed&&!(M.wade&&M.wade(f.pos.x,f.pos.z)))sfx('land',f,{vol:clamp((-f.vel.y-7)/14+.35,.35,1),range:8});ny=sup;f.vel.y=0;f.grounded=true;}else if(f.grounded&&ny>sup&&f.pos.y-sup<.6&&f.vel.y<=0){ny=sup;f.vel.y=0;}else f.grounded=false;
@@ -9361,7 +9418,7 @@ function bodyFX(f,ch,dt,menu,sp){const m=moOf(f);if(ch.up){const A=f.an||(f.an=[
     const on=o>.02&&f.alive&&!f.downed;for(const l of ch.lids){l.visible=on;l.scale.y=Math.max(.001,o);}}
   if(CFX.blob){const b=f.blob||(f.blob=blobMesh());let x=f.pos.x,z=f.pos.z,y=f.pos.y,gy=f.grounded?(f.visY??f.pos.y):0;
     if(f.rd){const p=f.rd.p;x=(p[0].x+p[1].x+p[2].x+p[3].x)/4;z=(p[0].z+p[1].z+p[2].z+p[3].z)/4;y=Math.min(p[0].y,p[2].y);gy=-1;}
-    if(!f.grounded||f.rd){gy=0;for(const bx of allBoxes())if(bx.x0<x&&bx.x1>x&&bx.z0<z&&bx.z1>z&&bx.y1<=y+.35&&bx.y1>gy)gy=bx.y1;}
+    if(!f.grounded||f.rd){gy=M.floorAt?M.floorAt(x,z):0;for(const bx of allBoxes())if(bx.x0<x&&bx.x1>x&&bx.z0<z&&bx.z1>z&&bx.y1<=y+.35&&bx.y1>gy)gy=bx.y1;}
     const hgt=Math.max(0,y-gy),a=(f.ghostShown??1),wet=M.wade&&gy<.25&&M.wade(x,z),sc=(ch.root.scale.x||1)*(f.rd||f.downed?1.5:1);
     b.userData.n=CFX.n;b.userData.show=ch.root.visible&&!wet&&hgt<7&&a>.05;b.position.set(x,gy+.035,z);b.scale.setScalar(sc*(2.1+hgt*.35));b.material.opacity=.5*a*(1-clamp(hgt/7,0,1))**2;}}
 function rdEnd2(f){/* the collapse has caught up with the crawl pose: hand back to the animation */f.rd=null;f.ch.headG.rotation.set(0,0,0);}

@@ -3,7 +3,7 @@
 <script type="module">
 import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 const COL={torso:'#3b82f6',head:'#f59e0b',armL:'#ef4444',armR:'#22c55e',legL:'#a855f7',legR:'#14b8a6'};
-window.render=async({url,w,h,mode,view,bg})=>{
+window.render=async({url,w,h,mode,view,bg,far,ty})=>{
   const r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});r.setSize(w,h);r.setPixelRatio(1);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.shadowMap.enabled=true;
   document.body.innerHTML='';document.body.appendChild(r.domElement);
   const sc=new THREE.Scene();if(bg)sc.background=new THREE.Color(bg);
@@ -16,7 +16,7 @@ window.render=async({url,w,h,mode,view,bg})=>{
   const cam=new THREE.PerspectiveCamera(28,w/h,.01,100);
   const ang={front:0,side:Math.PI/2,back:Math.PI,three:-Math.PI/5,top:0}[view]??0;
   let tgt=c.clone(),dist;
-  if(view==='face'){tgt=new THREE.Vector3(c.x,box.max.y-size.y*.17,c.z);dist=size.y*.95;}else{dist=Math.max(size.y,(view==="front"?size.x:Math.hypot(size.x,size.z))*h/w)/(2*Math.tan(cam.fov*Math.PI/360))*1.12;}
+  if(view==='face'){tgt=new THREE.Vector3(c.x,box.max.y-size.y*(ty||.17),c.z);dist=size.y*.95*(far||1);}else{dist=Math.max(size.y,(view==="front"?size.x:Math.hypot(size.x,size.z))*h/w)/(2*Math.tan(cam.fov*Math.PI/360))*1.12;}
   cam.position.set(tgt.x+Math.sin(ang)*dist,tgt.y+(view==='top'?dist:size.y*.06),tgt.z+Math.cos(ang)*dist);cam.lookAt(tgt);
   r.render(sc,cam);return r.domElement.toDataURL('image/png');};
 window.ready=true;

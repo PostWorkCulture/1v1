@@ -5536,8 +5536,10 @@ const MAPS={
   box(2.8,0,9.3,2.6,1.05,.8,'#2f6f73');box(-13.35,0,-5.35,2.4,1.05,.8,'#2f6f73');
   /* hallway / study (the shop stands against the living-room side of this wall) */
   box(11,0,1.2,3,1.05,1.6,'#7a4c2a');box(13.9,0,-1,1,2.6,5,'#8a5a34');box(8,0,-3.6,1.6,1.2,1.6,'#16171c');
-  {const S=St(0,0,1);S.slab(5.25,14.8,-5.8,5.25,3.1,3.4,'#b9895a',null,'wood');S.stairs(13.6,-1,5.2,7.2,0,10,.34,.4,'#8a5a34');S.slab(8.0,9.6,5.2,7.2,3.1,3.4,'#b9895a',null,'wood');S.box(7.85,8.0,5.05,7.2,3.4,4.4,'#ffffff');S.box(8.0,9.6,7.05,7.2,3.4,4.4,'#ffffff');for(const [pu,pv] of [[8.1,7.1],[9.5,7.1]])S.box(pu-.08,pu+.08,pv-.08,pv+.08,0,3.1,'#8a5a34');
-   S.box(5.25,5.45,-5.8,5.25,3.4,4.4,'#ffffff');S.box(7.25,8.0,5.05,5.25,3.4,4.4,'#ffffff');}
+  /* the stairs: one straight, wide flight (3.6 m, room for two) up the east wall onto the mezzanine, with a clear run-up from the kid's-room door
+     at the bottom and open floor at the top; a white rail along the rest of the mezzanine edge */
+  {const S=St(0,0,1);S.slab(5.25,14.8,-5.8,2.0,3.1,3.4,'#b9895a',null,'wood');S.stairs(6.2,-1,11.2,14.8,0,10,.34,.42,'#8a5a34',true);
+   S.box(5.25,11.2,1.85,2.0,3.4,4.4,'#ffffff');S.box(5.25,5.45,-5.8,2.0,3.4,4.4,'#ffffff');}
   /* kitchen: the worktop runs up to the low wall, so you can hop from it into the living room */
   box(-14.2,0,-8.6,1.2,1.1,4.4,'#ffffff');box(-5.5,0,-9,4,1.1,1.6,'#e8463a');box(-11.35,0,-6.85,1.4,2.6,1.3,'#d6dbe2');box(-6.2,0,-11.2,1.2,1.1,1.2,'#3a3d45');
   /* dining: table and chairs, a tall cabinet, and a sideboard under the low wall to the bedroom */
@@ -5550,7 +5552,7 @@ const MAPS={
   box(7.5,0,-20.5,5,.8,5.5,'#2f7fe0');box(7.5,0,-23.4,5,1.6,.4,'#ffffff');box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34');box(3.1,0,-12.65,2.8,1.05,.8,'#8c4a63');
   M.shopAt=[{x:4.1,z:-1.7,q:3}];M.spawns=[[7.5,15],[-9,-17],[-10,5],[10,-2],[-3,-9],[9,-15],[-10,21],[3,19]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   layoutRemap(LS,x=>[x,1],z=>Math.abs(z)<=24?[z*20/24,20/24]:[z-4*Math.sign(z),1]);M.bounds={x0:-15,x1:15,z0:-20,z1:20};}},
- yard:{modes:['rumble'],name:'Backyard',desc:'A big back garden: a sunken pool to wade through, trampolines, a treehouse, swings and brick walls to fight round',sw:['#5fb24b','#2f9fd0','#a85339'],build(){backyard();}}
+ yard:{modes:['rumble'],name:'Backyard',desc:'A big back garden: a sunken pool to wade through, trampolines, a treehouse, a fire pit and brick walls to fight round',sw:['#5fb24b','#2f9fd0','#a85339'],build(){backyard();}}
 };
 /* ---------- Backyard: a big fenced back garden. A sunken pool you wade through, two trampolines, a treehouse, swings, a brick garden wall
    with a window, raised brick planters, hedges, a patio with a brick BBQ and a parasol table, and the shop against the back fence ---------- */
@@ -5603,8 +5605,14 @@ function backyard(){const X=13,Z=17,G=-.8;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const
    for(const [px,pz] of [[x0+.08,z0+.08],[x1-.08,z0+.08],[x0+.08,z1-.08],[x1-.08,z1-.08]])deco(B.boxGeo(.14,2.1,.14),mat('#6e4a2c','wood'),px,y+1.05,pz);
    const rf=mat('#3d6b5a',null,{roughness:.8});for(const s2 of [-1,1]){const r=deco(B.boxGeo(x1-x0+.6,.12,(z1-z0)/2+.5),rf,cx,y+2.45,cz+s2*(z1-z0)/4);r.rotation.x=s2*.42;}
    wLadder(cx,z0-.45,0,y,0,1);}
-  /* the swings in the north-east, as on Street Life: shoot them enough and the frame crashes over */
-  playFrame('swings',6.5,13.6,Math.PI,[[1.25,1.41,2.5,2.5,4.8],[-2.95,1.4,.6,2.2,3.4]]);
+  /* a sunken-in fire pit corner in the north-east: waist-high brick seat walls round three sides (cover from the south, east and west),
+     a tall brick outdoor fireplace at the back to hide right behind, and a fire bowl crackling in the middle */
+  {const cx=7,cz=13.4;bk(cx,cz+2,4.6,1,.55);bk(cx-2.3,cz-.1,.55,1,3.6);bk(cx+2.3,cz-.1,.55,1,3.6);
+   for(const [x,z,w,d] of [[cx,cz+2,4.6,.55],[cx-2.3,cz-.1,.55,3.6],[cx+2.3,cz-.1,.55,3.6]])box(x,1,z,w+.1,.08,d+.1,'#d9d4c8',{tx:'slab',solid:false});
+   bk(cx,cz+3.05,2,2.4,.7);box(cx,2.4,cz+3.05,2.2,.12,.85,'#d9d4c8',{tx:'slab',solid:false});
+   deco(gC(.75,.55,.4,14),dark,cx,.2,cz-.2);const fl=new THREE.Mesh(new THREE.ConeGeometry(.35,.7,7),new THREE.MeshBasicMaterial({color:'#ffa23c'}));fl.position.set(cx,.7,cz-.2);fl.userData.dyn=1;M.group.add(fl);
+   const fp=new THREE.PointLight('#ff9a3c',5,8,1.8);fp.position.set(cx,1.2,cz-.2);window.GFX&&GFX.light(fp);M.group.add(fp);glowSprite(cx,.8,cz-.2,2.2,'#ffb060',.7);
+   M.life.push(t=>{fl.scale.set(1+Math.sin(t*13)*.1,1+Math.sin(t*9.3)*.18,1+Math.cos(t*11)*.1);fp.intensity=4.5+Math.sin(t*17)*.8;if(Math.random()<.12)emit((cx+(Math.random()-.5)*.4)*KX,.9,(cz-.2)*KZ,{n:1,speed:.3,up:2,size:.12,life:.7,grav:-1,colors:['#ffd27a','#ff8a3d']});});}
   /* a brick garden wall across the top lawn with a window to shoot through, and a compost bay */
   {const wx=0,wz=10.6,L=5,Hh=2.3,wh=[.95,1.65],ww=1.2;bk(wx-(L+ww)/4,wz,(L-ww)/2,Hh,.35);bk(wx+(L+ww)/4,wz,(L-ww)/2,Hh,.35);bk(wx,wz,ww,wh[0],.35);box(wx,wh[1],wz,ww,Hh-wh[1],.35,'#ffffff',{tx:'redbrick'});
    box(wx,Hh,wz,L+.2,.12,.5,'#d9d4c8',{tx:'slab',solid:false});}
@@ -5623,7 +5631,7 @@ function backyard(){const X=13,Z=17,G=-.8;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const
   M.spawns=[[-10,-14.5],[10.5,-15.5],[-11.5,6],[11.5,11.5],[-4,14.5],[11.5,-6.5],[-11.5,0.5],[2.5,13.8]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   /* fit to 30 x 40 m: everything scaled out from the middle; the pool's water test, the trampolines' bounce spots and the floating toys follow */
   layoutRemap(LS,x=>Math.abs(x)<=X?[x*KX,KX]:[x+2*Math.sign(x),1],z=>Math.abs(z)<=Z?[z*KZ,KZ]:[z+3*Math.sign(z),1]);
-  for(const T of tramps){T.x*=KX;T.z*=KZ;}{const w0=M.wade;M.wade=(x,z)=>w0(x/KX,z/KZ);}
+  for(const T of tramps){T.x*=KX;T.z*=KZ;}{const w0=M.wade,f0=M.floorAt;M.wade=(x,z)=>w0(x/KX,z/KZ);M.floorAt=(x,z)=>f0(x/KX,z/KZ);}
   M.bounds={x0:-15,x1:15,z0:-20,z1:20};}
 
 // red explosive drums on every duel map (current and future): small clusters on open ground tucked beside cover,

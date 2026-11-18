@@ -5167,13 +5167,14 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
     {const PO=[{x:14.5,z:8-1.6,nz:-1,col:'#ff8a2a'},{x:-14.5,z:-8+1.6,nz:1,col:'#3aa8ff'}];
      for(const P of PO){const g=new THREE.Group();g.position.set(P.x,0,P.z+P.nz*.012);g.rotation.y=P.nz>0?0:Math.PI;M.group.add(g);
        const rec=new THREE.Mesh(new THREE.PlaneGeometry(1.9,2.9),new THREE.MeshBasicMaterial({color:'#05060a'}));rec.position.y=1.45;g.add(rec);
-       const el=new THREE.Group();el.position.set(0,1.45,.01);el.scale.set(.86,1.36,1);g.add(el);
-       const sw=new THREE.Mesh(new THREE.CircleGeometry(1,48),new THREE.MeshBasicMaterial({map:canvasTex(256,256,(c,w,h)=>{const gr=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w/2);gr.addColorStop(0,'#ffffff');gr.addColorStop(.25,P.col);gr.addColorStop(.85,'#10131c');gr.addColorStop(1,P.col);c.fillStyle=gr;c.fillRect(0,0,w,h);
-         c.translate(w/2,h/2);c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=5;for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.beginPath();for(let t=0;t<1;t+=.02){const r=t*w*.48,an=t*5;c.lineTo(Math.cos(an)*r,Math.sin(an)*r);}c.stroke();}}),transparent:true,opacity:.92,toneMapped:false,depthWrite:false}));
-       sw.userData.dyn=1;el.add(sw);P.sw=sw;
-       const ring=new THREE.Mesh(new THREE.TorusGeometry(1,.06,10,64),new THREE.MeshBasicMaterial({color:P.col,toneMapped:false}));ring.position.z=.02;el.add(ring);
-       glowSprite(P.x,1.45,P.z+P.nz*.3,3.4,P.col,.55);const L=new THREE.PointLight(P.col,6,9,1.8);L.position.set(P.x,1.6,P.z+P.nz*1);window.GFX&&GFX.light(L);M.group.add(L);}
-     M.life.push((t,dt)=>{for(const P of PO)P.sw.rotation.z-=dt*2.2*P.nz;
+       /* the swirl fills the whole square opening (straight edges all round, like the recess it sits in): the picture spins, not the panel */
+       const tx=canvasTex(256,256,(c,w,h)=>{c.fillStyle='#10131c';c.fillRect(0,0,w,h);const gr=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w*.62);gr.addColorStop(0,'#ffffff');gr.addColorStop(.22,P.col);gr.addColorStop(.75,'#10131c');gr.addColorStop(1,P.col);c.fillStyle=gr;c.fillRect(0,0,w,h);
+         c.translate(w/2,h/2);c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=5;for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.beginPath();for(let t=0;t<1;t+=.02){const r=t*w*.7,an=t*5;c.lineTo(Math.cos(an)*r,Math.sin(an)*r);}c.stroke();}});
+       tx.center.set(.5,.5);tx.wrapS=tx.wrapT=THREE.MirroredRepeatWrapping;tx.needsUpdate=true;
+       const sw=new THREE.Mesh(new THREE.PlaneGeometry(1.86,2.86),new THREE.MeshBasicMaterial({map:tx,transparent:true,opacity:.95,toneMapped:false,depthWrite:false}));sw.position.set(0,1.45,.012);sw.userData.dyn=1;g.add(sw);P.tx=tx;
+       const fm=new THREE.MeshBasicMaterial({color:P.col,toneMapped:false});for(const [w,h,x,y] of [[2.02,.09,0,2.94],[2.02,.09,0,-.04],[.09,3.02,-.97,1.45],[.09,3.02,.97,1.45]]){const bar=new THREE.Mesh(new THREE.BoxGeometry(w,h,.05),fm);bar.position.set(x,y+(y<0?.08:0),.03);g.add(bar);}
+       const L=new THREE.PointLight(P.col,6,9,1.8);L.position.set(P.x,1.6,P.z+P.nz*1);window.GFX&&GFX.light(L);M.group.add(L);}
+     M.life.push((t,dt)=>{for(const P of PO)P.tx.rotation-=dt*2.2*P.nz;
        for(const f of FS){if(!f.alive||f.downed||S.t-(f._ptT||-9)<1)continue;
          for(let i=0;i<2;i++){const A=PO[i],O=PO[1-i];if(f.pos.y>2.2||Math.abs(f.pos.x-A.x)>.85||(f.pos.z-A.z)*A.nz>.7||(f.pos.z-A.z)*A.nz<-.2)continue;
            const sp=Math.max(4,Math.hypot(f.vel.x,f.vel.z));emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:8,speed:2,up:.5,size:.18,life:.4,colors:[A.col,'#ffffff']});
@@ -5182,18 +5183,31 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
     /* raised walkways along both long sides: 5 m wide, 4.4 m up, with a wide ramp at each end (0.25 m collision steps like the cross ramps)
        and breakable glass all along the inner edge */
     const H=4.4,W=5,D0=-10,D1=10,RL=10,n=18,cols=['#d9dce1','#d9dce1'];/* walkways in the same grey as the floor */
+    /* textures for the walkways: board-formed concrete on the walls and under the ramps (2.5 m panels with seams, tie holes, mottling and a few
+       streaks), and ribbed anti-slip treads on everything you walk on */
+    const CT=canvasTex(512,512,(g,w,h)=>{let a=777;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};g.fillStyle='#e9eaec';g.fillRect(0,0,w,h);
+        for(let i=0;i<5200;i++){g.fillStyle=R()<.55?`rgba(0,0,0,${.03+R()*.06})`:`rgba(255,255,255,${.15+R()*.25})`;const r=.6+R()*2.2;g.fillRect(R()*w,R()*h,r,r);}
+        for(let i=0;i<10;i++){const x=R()*w,gr=g.createLinearGradient(x,0,x+14,0);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(.5,'rgba(60,60,70,.07)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(x,R()*h*.4,14,h*(.3+R()*.5));}
+        for(let i=0;i<5;i++){g.fillStyle='rgba(0,0,0,.05)';g.fillRect(0,i*h/5+R()*6,w,2);}
+        g.fillStyle='rgba(40,42,50,.55)';g.fillRect(0,0,w,4);g.fillRect(0,0,4,h);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(0,4,w,2);g.fillRect(4,0,2,h);
+        for(const [x,y] of [[.25,.25],[.75,.25],[.25,.75],[.75,.75]]){g.fillStyle='rgba(30,32,40,.6)';g.beginPath();g.arc(x*w,y*h,6,0,7);g.fill();g.fillStyle='rgba(255,255,255,.3)';g.beginPath();g.arc(x*w+1.5,y*h+1.5,6,0,Math.PI);g.fill();}});
+    CT.wrapS=CT.wrapT=THREE.RepeatWrapping;CT.repeat.set(.4,.4);
+    const GT=canvasTex(256,256,(g,w,h)=>{g.fillStyle='#f2f3f5';g.fillRect(0,0,w,h);let a=99;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};for(let i=0;i<2500;i++){g.fillStyle=`rgba(0,0,0,${.03+R()*.05})`;g.fillRect(R()*w,R()*h,1.5,1.5);}
+        for(let i=0;i<8;i++){const y=i*h/8;g.fillStyle='rgba(0,0,0,.22)';g.fillRect(0,y+10,w,6);g.fillStyle='rgba(255,255,255,.55)';g.fillRect(0,y+8,w,2);}});
+    GT.wrapS=GT.wrapT=THREE.RepeatWrapping;
+    const conc=c=>new THREE.MeshStandardMaterial({color:c,map:CT,roughness:.88}),grip=c=>new THREE.MeshStandardMaterial({color:c,map:GT,roughness:.55});const GT2=GT.clone();GT2.rotation=Math.PI/2;GT2.needsUpdate=true;const gripX=c=>new THREE.MeshStandardMaterial({color:c,map:GT2,roughness:.55});/* treads across the slope on the ramps */
     [-1,1].forEach((sx,k)=>{const x1=sx*X,x0=sx*(X-W),xa=Math.min(x0,x1),xb=Math.max(x0,x1),xm=(xa+xb)/2,col=cols[k];
       const dk=new THREE.Color(col).multiplyScalar(.82).getStyle();
-      collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#b7bac1',{solid:false});box(xm,H-.2,(D0+D1)/2,W,.2,D1-D0,col,{solid:false,extra:{roughness:.4}});
+      collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#b7bac1',{solid:false,mat:conc('#c2c5cc')});{const tg=B.boxGeo(D1-D0,.2,W),tm=new THREE.Mesh(tg,grip(col));tm.rotation.y=Math.PI/2;tm.position.set(xm,H-.1,(D0+D1)/2);tm.castShadow=tm.receiveShadow=true;M.group.add(tm);}
       {const gx=sx*(X-W+.12),np=8,pw=(D1-D0)/np,fm=mat('#b9c0c9',null,{metalness:.8,roughness:.3});
         for(let i=0;i<np;i++)box(gx,H,D0+(i+.5)*pw,.1,1.15,pw-.06,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false});
         for(let i=0;i<=np;i++)deco(B.boxGeo(.14,1.2,.14),fm,gx,H+.6,D0+i*pw);deco(B.boxGeo(.16,.08,D1-D0),fm,gx,H+1.2,0);}
       for(const dir of [-1,1]){const zTop=dir>0?D1:D0,zLow=zTop+dir*RL;
         for(let i=0;i<n;i++){const u0=zLow-dir*i*RL/n,u1=zLow-dir*(i+1)*RL/n,top=H*(i+1)/n;collider(xa,xb,0,top,Math.min(u0,u1),Math.max(u0,u1));}
         const ang=Math.atan2(H,RL),len=Math.hypot(H,RL),g=new THREE.Group();g.position.set(xm,0,zTop);g.rotation.y=dir>0?-Math.PI/2:Math.PI/2;M.group.add(g);
-        const top=new THREE.Mesh(new THREE.BoxGeometry(len,.2,W),new THREE.MeshStandardMaterial({color:col,roughness:.35}));top.position.set(RL/2,H/2-.1,0);top.rotation.z=-ang;top.castShadow=top.receiveShadow=true;g.add(top);
+        const top=new THREE.Mesh(B.boxGeo(len,.2,W),gripX(col));top.position.set(RL/2,H/2-.1,0);top.rotation.z=-ang;top.castShadow=top.receiveShadow=true;g.add(top);
         const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(RL,0);sh.lineTo(0,H-.2);sh.closePath();const eg=new THREE.ExtrudeGeometry(sh,{depth:W-.02,bevelEnabled:false});eg.translate(0,0,-W/2+.01);
-        const wd=new THREE.Mesh(eg,new THREE.MeshStandardMaterial({color:dk,roughness:.6}));wd.castShadow=wd.receiveShadow=true;g.add(wd);
+        const wd=new THREE.Mesh(eg,conc(dk));wd.castShadow=wd.receiveShadow=true;g.add(wd);
         for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});
   arenaStadium(X,Z);
   M.shopAt=[{x:0,z:0,y:4}];

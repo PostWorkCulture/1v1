@@ -5570,6 +5570,22 @@ const MAPS={
   /* furniture detail: extra pieces ride on each piece's own mesh (so they move, chip and fall with it) */
   const kidM=(b,geo,m,x,y,z,ry)=>{b.mesh.userData.dyn=1;/* kept out of the static batching, which would drop its detail pieces */const o=new THREE.Mesh(geo,m);o.position.set(x-(b.x0+b.x1)/2,y-(b.y0+b.y1)/2,z-(b.z0+b.z1)/2);if(ry)o.rotation.y=ry;o.castShadow=true;o.receiveShadow=true;b.mesh.add(o);return o;};
   const shade=(c,k)=>'#'+new THREE.Color(c).multiplyScalar(k).getHexString(),chrome=mat('#d7dbe0',null,{metalness:.85,roughness:.25}),plinthM=mat('#2b2c31');
+  /* breakable furniture (sofas, beds, tellies, tables, the bookcase): three hits or any blast nearby and it collapses where it stands into a few
+     heavy pieces that drop flat onto the floor, with a faint puff of dust (no confetti, no sparks); back at the next round */
+  const FBL=[];
+  const FB=(b,links)=>{const ci=(M.chips||[]).indexOf(b);if(ci>=0)M.chips.splice(ci,1);b.chip=false;b.prop='furn';b.alive=true;b.hp=b.hp0=999;b.shots=3;b.snd='crate';b.mesh.userData.dyn=1;
+    (M.props||(M.props=[])).push(b);b.links=links||[];b.onRestore=()=>{b.shots=3;};b.fell=at=>collapse(b,at);FBL.push(b);return b;};
+  const collapse=(b,at)=>{const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,w=b.x1-b.x0,h=b.y1-b.y0,d=b.z1-b.z0,fl=b.y0;
+    const mats=[b.mesh.material];for(const c of b.mesh.children)if(c.isMesh&&!mats.includes(c.material)&&mats.length<4&&c.material!==chrome)mats.push(c.material);
+    const away=new V3(cx-at.x,0,cz-at.z);if(away.lengthSq()<1e-4)away.set(Math.random()-.5,0,Math.random()-.5);away.normalize();
+    const n=Math.round(clamp(w*d*h*2.2,6,12));b.rubble=[];for(let i=0;i<n;i++){const pw=rnd(.3,.55)*Math.min(w,1.8),pd=rnd(.3,.55)*Math.min(d,1.8),ph=rnd(.08,Math.min(.24,h*.35));
+      const m=new THREE.Mesh(B.boxGeo(pw,ph,pd),mats[i%mats.length]);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;m.position.set(cx+rnd(-w,w)*.3,fl+rnd(.2,.95)*h,cz+rnd(-d,d)*.3);m.rotation.y=rnd(0,Math.PI);M.group.add(m);
+      b.rubble.push({m,v:away.clone().multiplyScalar(rnd(.2,1.1)).add(new V3(rnd(-.5,.5),rnd(0,1),rnd(-.5,.5))),w:new V3(rnd(-2.5,2.5),0,rnd(-2.5,2.5)),y0:fl+ph/2,rest:false});}
+    emit(cx,fl+.3,cz,{n:6,speed:1,up:.5,size:.55,life:1.1,grav:-.3,colors:['#cfc8bc','#b8b0a2']});
+    for(const o of M.props||[])if(o!==b&&o.alive&&(b.links.includes(o)||(Math.abs(o.y0-b.y1)<.05&&o.x0<b.x1&&o.x1>b.x0&&o.z0<b.z1&&o.z1>b.z0)))breakProp(o,at);};
+  M.life.push((t,dt)=>{for(const b of FBL){if(!b.rubble)continue;if(b.alive){for(const r of b.rubble){M.group.remove(r.m);r.m.geometry.dispose();}b.rubble=null;continue;}
+    for(const r of b.rubble){if(r.rest)continue;r.v.y-=20*dt;r.m.position.addScaledVector(r.v,dt);r.m.rotation.x+=r.w.x*dt;r.m.rotation.z+=r.w.z*dt;
+      if(r.m.position.y<=r.y0){r.m.position.y=r.y0;r.m.rotation.x=0;r.m.rotation.z=0;r.rest=true;}}}});
   /* a unit's front (face '+x','-x','+z','-z'): inset door panels, handles, a recessed plinth and a top in a contrasting finish */
   const unit=(b,face,o={})=>{const ax=face[1],sg=face[0]==='+'?1:-1,W=ax==='x'?b.z1-b.z0:b.x1-b.x0,D=ax==='x'?b.x1-b.x0:b.z1-b.z0,h=b.y1-b.y0,c0=ax==='x'?(b.z0+b.z1)/2:(b.x0+b.x1)/2,fr=ax==='x'?(sg>0?b.x1:b.x0):(sg>0?b.z1:b.z0);
     const at=(u,y,dd,gw,gh,gd,m)=>{const g=ax==='x'?new THREE.BoxGeometry(gd,gh,gw):new THREE.BoxGeometry(gw,gh,gd);return ax==='x'?kidM(b,g,m,fr+sg*dd,y,c0+u):kidM(b,g,m,c0+u,y,fr+sg*dd);};
@@ -5597,17 +5613,17 @@ const MAPS={
   /* garage */
   car(-7.5,17.5,false,'#2f7fe0');unit(box(-13.6,0,22,2,2.2,3.2,'#c8322a'),'+x',{drawers:5,col:'#c8322a'});box(-2,0,22.6,3.2,1,1.4,'#d0a060',{prop:'crate'});
   /* kid bedroom: bed, wardrobe in the corner, desk, and a toy chest against the low wall to hop into the living room */
-  bed(box(10,0,20.5,4,.7,6,'#f4f1ea',{tx:'panel'}),'+z','#ff8fab');box(10,0,23.4,4,1.5,.4,'#f7c6d4',{tx:'stud'});unit(box(14.2,0,21.5,1.2,2.6,3.6,'#8ecae6'),'-x',{tall:1,n:2,col:'#8ecae6'});unit(box(13,0,13.2,2.6,1.1,1.2,'#ffd166'),'-z',{drawers:3,n:1,col:'#ffd166',top:mat('#f4f1ea')});
+  {const hb=FB(box(10,0,23.4,4,1.5,.4,'#f7c6d4',{tx:'stud'}));bed(FB(box(10,0,20.5,4,.7,6,'#f4f1ea',{tx:'panel'}),[hb]),'+z','#ff8fab');}unit(box(14.2,0,21.5,1.2,2.6,3.6,'#8ecae6'),'-x',{tall:1,n:2,col:'#8ecae6'});unit(FB(box(13,0,13.2,2.6,1.1,1.2,'#ffd166')),'-z',{drawers:3,n:1,col:'#ffd166',top:mat('#f4f1ea')});
   unit(box(2.8,0,10.75,2.6,1.05,.7,'#4f7ad6'),'+z',{n:2,col:'#4f7ad6',top:mat('#ffd166')});
   /* living room: sofa, coffee table, telly, plant, and a sideboard by each low wall */
-  {const st=box(-9,0,1,7,.9,2.2,'#a05ad6',{tx:'carpet'}),bk=box(-9,.9,0,7,.8,.6,'#a05ad6',{tx:'carpet'});sofa(st,bk,'#a05ad6','#ffd166');
-   const ch=box(-12.8,0,4,2.2,.9,4.6,'#a05ad6',{tx:'carpet'});const fab=mat(shade('#a05ad6',1.08),'carpet');for(const zz of [3,5.1])kidM(ch,B.roundedBox(1.7,.18,2,.06),fab,-12.65,1.0,zz);kidM(ch,B.roundedBox(.34,.7,4.4,.1),mat(shade('#a05ad6',.92),'carpet'),-13.72,1.25,4);}
-  box(-6.5,0,4.3,3.2,.5,1.8,'#7a4c2a');unit(box(-12.3,0,8.9,4.6,1.1,1.1,'#3a3d45'),'-z',{n:4,col:'#3a3d45',top:mat('#b9895a','wood')});{const tv=box(-12.3,1.1,9.2,3.4,1.9,.2,'#16171c',{extra:{roughness:.2,metalness:.5}});
+  {const bk=FB(box(-9,.9,0,7,.8,.6,'#a05ad6',{tx:'carpet'})),st=FB(box(-9,0,1,7,.9,2.2,'#a05ad6',{tx:'carpet'}));sofa(st,bk,'#a05ad6','#ffd166');
+   const ch=FB(box(-12.8,0,4,2.2,.9,4.6,'#a05ad6',{tx:'carpet'}));const fab=mat(shade('#a05ad6',1.08),'carpet');for(const zz of [3,5.1])kidM(ch,B.roundedBox(1.7,.18,2,.06),fab,-12.65,1.0,zz);kidM(ch,B.roundedBox(.34,.7,4.4,.1),mat(shade('#a05ad6',.92),'carpet'),-13.72,1.25,4);}
+  FB(box(-6.5,0,4.3,3.2,.5,1.8,'#7a4c2a',{tx:'wood'}));unit(FB(box(-12.3,0,8.9,4.6,1.1,1.1,'#3a3d45')),'-z',{n:4,col:'#3a3d45',top:mat('#b9895a','wood')});{const tv=FB(box(-12.3,1.1,9.2,3.4,1.9,.2,'#16171c',{extra:{roughness:.2,metalness:.5}}));
    kidM(tv,new THREE.PlaneGeometry(3.2,1.72),new THREE.MeshBasicMaterial({map:canvasTex(256,140,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,h);gr.addColorStop(0,'#1e3c72');gr.addColorStop(.6,'#2a9fd6');gr.addColorStop(1,'#7fd8be');g.fillStyle=gr;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.arc(190,40,16,0,7);g.fill();g.fillStyle='#14324a';g.beginPath();g.moveTo(0,h);g.lineTo(70,70);g.lineTo(130,110);g.lineTo(200,60);g.lineTo(w,h);g.fill();}),toneMapped:false}),-12.3,2.05,9.08,Math.PI);}
   box(-1.5,0,7.5,1.4,1.3,1.4,'#3bb54a',{prop:'bush'});
   unit(box(2.8,0,9.3,2.6,1.05,.8,'#2f6f73'),'-z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});unit(box(-13.35,0,-5.35,2.4,1.05,.8,'#2f6f73'),'+z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});
   /* hallway / study (the shop stands against the living-room side of this wall) */
-  unit(box(10.5,0,-1.2,3,1.05,1.6,'#7a4c2a'),'-z',{drawers:3,n:2,col:'#7a4c2a',top:mat('#3a2414','wood')});unit(box(13.9,0,-1,1,2.6,5,'#8a5a34'),'-x',{books:1,col:'#8a5a34'});box(8,0,-3.6,1.6,1.2,1.6,'#16171c');
+  unit(FB(box(10.5,0,-1.2,3,1.05,1.6,'#7a4c2a')),'-z',{drawers:3,n:2,col:'#7a4c2a',top:mat('#3a2414','wood')});unit(FB(box(13.9,0,-1,1,2.6,5,'#8a5a34')),'-x',{books:1,col:'#8a5a34'});box(8,0,-3.6,1.6,1.2,1.6,'#16171c');
   /* the stairs: one straight, wide flight (3.6 m, room for two) up the east wall onto the mezzanine, with a clear run-up from the kid's-room door
      at the bottom and open floor at the top; a white rail along the rest of the mezzanine edge */
   {const S=St(0,0,1);S.slab(5.25,14.8,-5.8,2.0,3.1,3.4,'#f6e7a0',null,'wood');/* the upstairs floor in pastel yellow, with a little potted plant in the corner */
@@ -5619,7 +5635,7 @@ const MAPS={
    unit(box(-5.5,0,-9,4,1.1,1.6,'#e8463a'),'+z',{n:4,col:'#e8463a',top:mat('#f4f2ee','tile')});unit(box(-11.35,0,-6.85,1.4,2.6,1.3,'#d6dbe2'),'-z',{tall:1,n:2,col:'#d6dbe2'});
    const ck=box(-6.2,0,-11.2,1.2,1.1,1.2,'#3a3d45');unit(ck,'+z',{n:1,col:'#3a3d45',top:wt});for(const [dx,dz] of [[-.28,-.25],[.28,-.25],[-.28,.25],[.28,.25]])kidM(ck,new THREE.TorusGeometry(.13,.025,6,16),mat('#16171c'),-6.2+dx,1.17,-11.2+dz).rotation.x=Math.PI/2;}
   /* dining: table and chairs, a tall cabinet, and a sideboard under the low wall to the bedroom */
-  box(6.8,0,-9,4.2,1.05,1.4,'#7a4c2a');for(const sx of [-1.4,0,1.4])box(6.8+sx,0,-8,.8,1.6,.5,'#c99a5b');/* chairs on the north side only, so the way to the bedroom door stays clear */unit(box(13.8,0,-10.45,1.2,2.4,2.5,'#3a3d45'),'-x',{tall:1,n:2,col:'#3a3d45'});
+  FB(box(6.8,0,-9,4.2,1.05,1.4,'#7a4c2a',{tx:'wood'}));for(const sx of [-1.4,0,1.4])box(6.8+sx,0,-8,.8,1.6,.5,'#c99a5b');/* chairs on the north side only, so the way to the bedroom door stays clear */unit(box(13.8,0,-10.45,1.2,2.4,2.5,'#3a3d45'),'-x',{tall:1,n:2,col:'#3a3d45'});
   unit(box(3.1,0,-11.35,2.8,1.05,.8,'#6e3b2a',{tx:'panel'}),'+z',{n:3,col:'#6e3b2a',top:mat('#3a2414','wood')});
   /* bathroom + laundry: a vanity unit and a laundry cupboard either side of the low wall between them */
   {const bt=box(-12,0,-21.8,5,1,2.4,'#ffffff');kidM(bt,new THREE.BoxGeometry(4.5,.02,1.9),mat('#8fd9f0',null,{roughness:.1,metalness:.2,emissive:'#3aa6c8',emissiveIntensity:.2}),-12,1.0,-21.8);kidM(bt,gC(.04,.04,.35,8),chrome,-14.2,1.15,-21.8);
@@ -5627,7 +5643,7 @@ const MAPS={
    for(const x of [-3,-1.4]){const wm=box(x,0,-22.6,1.6,1.4,1.4,'#e9eaee');kidM(wm,new THREE.TorusGeometry(.42,.06,8,24),chrome,x,.68,-21.88);kidM(wm,new THREE.CircleGeometry(.4,24),mat('#2b3a4a',null,{roughness:.1,metalness:.4}),x,.68,-21.89);kidM(wm,new THREE.BoxGeometry(1.4,.18,.02),mat('#c9cdd2'),x,1.25,-21.89);}
    unit(box(-5.25,0,-14.1,.9,1.05,2.2,'#9b8ad0'),'+x',{n:2,col:'#9b8ad0',top:mat('#f4f1ea')});}
   /* master bedroom: bed, wardrobe, and a blanket chest under the low wall to the dining room */
-  bed(box(7.5,0,-20.5,5,.8,5.5,'#6b4a33',{tx:'panel'}),'-z','#2f7fe0');box(7.5,0,-23.4,5,1.6,.4,'#3d4f7a',{tx:'stud'});unit(box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34',{tx:'panel'}),'-x',{tall:1,n:3,col:'#8a5a34'});unit(box(3.1,0,-12.65,2.8,1.05,.8,'#8c4a63'),'-z',{n:2,col:'#8c4a63',top:mat('#f4f1ea')});
+  {const hb=FB(box(7.5,0,-23.4,5,1.6,.4,'#3d4f7a',{tx:'stud'}));bed(FB(box(7.5,0,-20.5,5,.8,5.5,'#6b4a33',{tx:'panel'}),[hb]),'-z','#2f7fe0');}unit(box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34',{tx:'panel'}),'-x',{tall:1,n:3,col:'#8a5a34'});unit(box(3.1,0,-12.65,2.8,1.05,.8,'#8c4a63'),'-z',{n:2,col:'#8c4a63',top:mat('#f4f1ea')});
   M.shopAt=[{x:4.1,z:-1.7,q:3}];M.spawns=[[7.5,15],[-9,-17],[-10,5],[8,5],[-3,-9],[9,-15],[-10,21],[3,19]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   layoutRemap(LS,x=>[x,1],z=>Math.abs(z)<=24?[z*20/24,20/24]:[z-4*Math.sign(z),1]);M.bounds={x0:-15,x1:15,z0:-20,z1:20};
   /* no explosive drums in or beside a doorway, at the foot or top of the stairs, or by the low hop walls */
@@ -5669,12 +5685,12 @@ function backyard(){const X=13,Z=17,G=-.8;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const
   /* loungers along the west side of the pool */
   for(const z of [.6,3.4])box(-5,0,z,.9,.45,2,'#ffffff',{edges:false});
   /* two trampolines: land on one and it throws you back up a couple of metres, so you can keep shooting from the top of each bounce */
-  const tramps=[];for(const [x,z] of [[-9,-3.5],[9.2,2.5]]){const Ht=.75,Rr=1.6;box(x,0,z,2.9,Ht,2.9,'#16171c',{mat:INVIS,edges:false,shadow:false});
-    const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.1,.13,8,32),mat('#2f7fe0',null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.position.set(x,Ht,z);M.group.add(pad);
+  const tramps=[];for(const [x,z,rim] of [[-9,-3.5,'#2f7fe0'],[9.2,2.5,'#f4c22b']]){const Ht=.75,Rr=1.6;box(x,0,z,2.9,Ht,2.9,'#16171c',{mat:INVIS,edges:false,shadow:false});
+    const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.1,.13,8,32),mat(rim,null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.position.set(x,Ht,z);M.group.add(pad);
     const matt=new THREE.Mesh(new THREE.CircleGeometry(Rr-.2,32),mat('#141518',null,{roughness:.9}));matt.rotation.x=-Math.PI/2;matt.position.set(x,Ht-.02,z);matt.userData.dyn=1;M.group.add(matt);
     for(let i=0;i<6;i++){const a=i/6*Math.PI*2;deco(gC(.05,.05,Ht,6),dark,x+Math.cos(a)*(Rr-.1),Ht/2,z+Math.sin(a)*(Rr-.1));}
     const net=new THREE.Mesh(new THREE.CylinderGeometry(Rr-.05,Rr-.05,1.6,24,1,true),new THREE.MeshBasicMaterial({color:'#222',transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));net.position.set(x,Ht+.8,z);M.group.add(net);
-    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;deco(gC(.035,.035,1.7,6),mat('#2f7fe0'),x+Math.cos(a)*(Rr-.05),Ht+.85,z+Math.sin(a)*(Rr-.05));}
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;deco(gC(.035,.035,1.7,6),mat(rim),x+Math.cos(a)*(Rr-.05),Ht+.85,z+Math.sin(a)*(Rr-.05));}
     tramps.push({x,z,y:Ht,r:Rr-.25,m:matt,t:9});}
   M.life.push((t,dt)=>{for(const T of tramps){T.t+=dt;T.m.position.y=T.y-.02-(T.t<.35?Math.sin(T.t/.35*Math.PI)*.22:0);}
     for(const f of FS){if(!f.alive||f.downed||!f.grounded)continue;for(const T of tramps)if(Math.abs(f.pos.y-T.y)<.06&&Math.hypot(f.pos.x-T.x,f.pos.z-T.z)<T.r){f.vel.y=Math.max(f.vel.y,10.5);f.grounded=false;T.t=0;sfx('land',f,{rate:1.7,vol:.4,range:14});break;}}});
@@ -7169,7 +7185,7 @@ function glassShatter(b,cx,cy,cz,w,h,d,away){if(!GLS.geo){const sh=new THREE.Sha
       else if(s.v.x||s.v.z){s.p.x+=s.v.x*dt;s.p.z+=s.v.z*dt;const f=Math.max(0,1-dt*7);s.v.x*=f;s.v.z*=f;if(Math.abs(s.v.x)+Math.abs(s.v.z)<.05)s.v.x=s.v.z=0;}
       s.k=D.t>s.die?Math.max(.001,1-(D.t-s.die)/.6):1;}set();}});
   emit(cx,cy,cz,{n:46,speed:5.5,up:2.5,size:.06,life:.75,grav:10,colors:['#ffffff','#e8f8ff','#bfe6ff','#9fd3f0']});}
-function breakProp(b,at){if(!b.alive)return;knockOn(b,b.y1);sfx(b.snd||(b.prop==='bush'?'bush':b.prop==='bin'?'bin':'crate'),{x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,z:(b.z0+b.z1)/2},{range:b.prop==='glass'?22:18,vol:b.prop==='glass'?1.35:1});b.alive=false;b.backT=PROP_BACK;const ix=M.boxes.indexOf(b);if(ix>=0)M.boxes.splice(ix,1);if(b.mesh)b.mesh.visible=false;propPatch(b,false);
+function breakProp(b,at){if(!b.alive)return;if(b.mesh&&!b.sc0)b.sc0=b.mesh.scale.clone();/* remapped maps scale meshes unevenly: keep it for the regrow */knockOn(b,b.y1);sfx(b.snd||(b.prop==='bush'?'bush':b.prop==='bin'?'bin':'crate'),{x:(b.x0+b.x1)/2,y:(b.y0+b.y1)/2,z:(b.z0+b.z1)/2},{range:b.prop==='glass'?22:18,vol:b.prop==='glass'?1.35:1});b.alive=false;b.backT=PROP_BACK;const ix=M.boxes.indexOf(b);if(ix>=0)M.boxes.splice(ix,1);if(b.mesh)b.mesh.visible=false;propPatch(b,false);
   if(b.fell){b.fell(at);return;}
   const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,cz=(b.z0+b.z1)/2,w=b.x1-b.x0,h=b.y1-b.y0,d=b.z1-b.z0,bush=b.prop==='bush';
   const away=new V3(cx-at.x,0,cz-at.z);if(away.lengthSq()<1e-4)away.set(Math.random()-.5,0,Math.random()-.5);away.normalize();
@@ -7231,12 +7247,12 @@ function shoveProp(b,dir,dist){if(!b.alive||dist<.01)return;const l=Math.hypot(d
 function unshove(b){const h=b.home;if(!h)return;const on=M.boxes.includes(b),mx=h[0]-b.x0,mz=h[2]-b.z0;if(on)propPatch(b,false);b.x0=h[0];b.x1=h[1];b.z0=h[2];b.z1=h[3];
   if(b.mesh){b.mesh.position.x+=mx;b.mesh.position.z+=mz;}if(on)propPatch(b,true);b.home=null;}
 function restoreProp(b){if(b.alive)return;b.alive=true;b.backT=0;M.boxes.push(b);if(b.mesh){b.mesh.visible=true;b.mesh.scale.setScalar(.01);b.grow=0;}if(b.onRestore)b.onRestore();propPatch(b,true);}
-function updProps(dt){updKnocks(dt);updRuins(dt);updFires(dt);for(const b of M.props||[]){if(b.alive&&b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);b.mesh.scale.setScalar(easeOut(b.grow));}}}
+function updProps(dt){updKnocks(dt);updRuins(dt);updFires(dt);for(const b of M.props||[]){if(b.alive&&b.grow!=null&&b.grow<1){b.grow=Math.min(1,b.grow+dt*3);if(b.sc0)b.mesh.scale.copy(b.sc0).multiplyScalar(easeOut(b.grow));else b.mesh.scale.setScalar(easeOut(b.grow));}}}
 // bullets and blasts through wood: crates and fences break apart; short furniture loses chunks (down to 60% of its height) but stays as cover
 function woodChips(at,col,n){emit(at.x,at.y,at.z,{n:n||4,speed:3,up:1.5,size:.1,life:.45,colors:[col||'#c99a5b','#e9d3a8','#8a5a34']});}
 function itemChips(b,at){if(b.wood||b.prop==='tree')woodChips(at,b.color,3);else emit(at.x,at.y,at.z,{n:3,speed:3,up:1.5,size:.08,life:.4,colors:[b.color||'#9aa0a8','#d8dbe2','#55585f']});}
 function damageWood(b,dmg,at,dir){if(!b||!(b.prop||b.chip))return;
-  if(b.prop){if(!b.alive||b.hp==null)return;if(b.shove&&dir)shoveProp(b,dir,Math.min(.4,dmg*.015/Math.max(1,(b.x1-b.x0)*(b.z1-b.z0))));b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else itemChips(b,at);return;}
+  if(b.prop){if(!b.alive||b.hp==null)return;if(b.shots!=null){if(b.shotT===S.t)return;b.shotT=S.t;if(--b.shots<=0)breakProp(b,at);return;}/* counted in hits (one per trigger pull, so a shotgun's pellets count once); no chips fly off */if(b.shove&&dir)shoveProp(b,dir,Math.min(.4,dmg*.015/Math.max(1,(b.x1-b.x0)*(b.z1-b.z0))));b.hp-=dmg;if(b.hp<=0)breakProp(b,at);else itemChips(b,at);return;}
   b.chipHP=Math.max(0,b.chipHP-dmg);const step=Math.ceil((1-b.chipHP/b.hp0)*4)/4,nh=b.h0*(1-.4*step);
   if(nh<b.y1-b.y0-.01){const top=b.y1;b.y1=b.y0+nh;if(b.mesh){b.mesh.scale.y=nh/b.h0;b.mesh.position.y=b.y0+nh/2;}dirtyGrid(b,.05);MM.layer=null;knockOn(b,top);
     const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2;emit(cx,b.y1,cz,{n:12,speed:3.5,up:3,size:.14,life:.7,grav:12,colors:b.wood?[b.color||'#c99a5b','#e9d3a8','#8a5a34']:[b.color||'#9aa0a8','#d8dbe2','#55585f']});sfx(b.wood?'wood':'bin',{x:cx,y:b.y1,z:cz},{range:10});}
@@ -7345,7 +7361,7 @@ function resetRuins(){for(const B of M.blds||[]){if(B.stage===0)continue;B.stage
   for(const b of B.props)if(!M.props.includes(b))M.props.push(b);for(const b of B.chips)if(!M.chips.includes(b))M.chips.push(b);
   for(const m of B.cracks)m.visible=false;for(const m of B.hide1)m.visible=true;B.grp.visible=true;B.grp.matrix.identity();B.grp.matrixWorldNeedsUpdate=true;
   for(const P of M.plates||[])if(P.back>1e8){P.back=0;P.grp.visible=true;}}MM.layer=null;}
-function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const b of M.props||[])if(b.home)unshove(b);for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh)b.mesh.scale.setScalar(1);b.grow=null;}}
+function resetProps(){M.fires=[];resetRuins();resetChips();resetKnocks();for(const b of M.props||[])if(b.home)unshove(b);for(const c of M.cars||[])if(!c.alive&&c.restore)c.restore();for(const b of (M.props||[]).slice().sort((p,q)=>p.y0-q.y0))if(!b.alive){restoreProp(b);if(b.mesh){if(b.sc0)b.mesh.scale.copy(b.sc0);else b.mesh.scale.setScalar(1);}b.grow=null;}}
 /* loose items (cans, bottles, cones, tools, drips, chairs...): not solid, so they never block anyone; bullets, blasts and people
    walking into them knock them over. They tumble, land on whatever is under them, and stay down until the next round */
 function knock(x,y,z,w,h,d,color,o={}){const g=o.geo||(o.cyl?new THREE.CylinderGeometry(w/2*(o.top??1),w/2,h,o.seg||10):B.boxGeo(w,h,d));

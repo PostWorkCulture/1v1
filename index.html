@@ -3186,7 +3186,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   // mix level per sound, so nothing pokes out
   const MIX={heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,swordswing:.45,swordhit:.6,starthrow:.4,starhit:.5,starthunk:.45,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
-    horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55};
+    horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,bing:.25}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1,wvol=1;
   try{const v=JSON.parse(localStorage.getItem('blockrush:vol')||'null');if(typeof v==='number')vol=Math.max(0,Math.min(1,v));}catch(e){}
@@ -8468,7 +8468,7 @@ function renderShop(force){const L=shopList(),sig=L.map(it=>it.can(ME)?1:0).join
   $('sh-items').innerHTML=L.map((it,i)=>`<button class="sh-it${it.can(ME)?'':' cant'}" data-buy="${i}"><kbd>${i+1}</kbd><i class="ch" style="background:${it.col}">${it.ic}</i><span class="nm">${it.name}</span><span class="ds">${it.desc}</span></button>`).join('');}
 function shopPress(f,it){const sh=(M.shops||[]).reduce((a,b)=>!a||Math.hypot(f.pos.x-b.x,f.pos.z-b.z)<Math.hypot(f.pos.x-a.x,f.pos.z-a.z)?b:a,null);f.pressT=.55;if(sh&&sh.press)sh.press(it);}
 function buyShop(i){if(NET.role==='client'&&S.shopOpen&&ME.shopCD<=0){queueAct('buy:'+i);}const it=shopList()[i];if(!it||!S.shopOpen||!canShopNow()||ME.shopCD>0||!it.can(ME))return;
-  it.buy(ME);shopPress(ME,it);sfx('cash');ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;closeShop();S.shopMsg=`Got ${it.name}! Shop restocks in ${SHOP_CD}s`;S.shopMsgT=2.2;
+  it.buy(ME);shopPress(ME,it);sfx('cash',null,{vol:.5});ME.shopCD=SHOP_CD;S.stats.bought=(S.stats.bought||0)+1;closeShop();S.shopMsg=`Got ${it.name}! Shop restocks in ${SHOP_CD}s`;S.shopMsgT=2.2;
   emit(ME.pos.x,ME.pos.y+1.4,ME.pos.z,{n:26,speed:4,size:.2,life:.55,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});}
 /* round card pips (5 = first to 5) */
 const pp5=(n,o)=>Array.from({length:5},(_,i)=>`<i${i<n?' class="on"':''}></i>`).join('');
@@ -8988,7 +8988,7 @@ const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueS
 function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
   yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!mouseR,run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
 function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'||a==='Digit3'){equip(ME,+a.slice(5)-1);NET.swapAt=performance.now();}else if(a==='KeyR')startReload(ME);else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up')ME.aimThrow=false;else if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up')ME.aimNade=false;continue;}
-  if(typeof a==='string'&&a.startsWith('buy:')){const it=shopList()[+a.slice(4)];if(it&&ME.shopCD<=0&&it.can(ME)){it.buy(ME);ME.shopCD=SHOP_CD;sfx('cash',ME);}continue;}
+  if(typeof a==='string'&&a.startsWith('buy:')){const it=shopList()[+a.slice(4)];if(it&&ME.shopCD<=0&&it.can(ME)){it.buy(ME);ME.shopCD=SHOP_CD;sfx('cash',ME,{vol:.5});}continue;}
   if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up'){if(ME.aimNade){ME.aimNade=false;throwNade(ME);}}else if(a==='KeyV')deployTurret(ME);else if(a==='Digit1')equip(ME,0);else if(a==='Digit2')equip(ME,1);else if(a==='Digit3')equip(ME,2);else if(a==='KeyR')startReload(ME);else if(a==='KeyQ')buildWall(ME);
   else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
   else if(a==='KeyF'){const v=finishable(ME);if(v)finish(ME,v);}else if(a==='KeyC'){if(!ME.downed)ME.crouchOn=!ME.crouchOn;}}}

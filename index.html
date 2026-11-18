@@ -41,7 +41,7 @@
 #menu .mrg-t span{position:absolute;left:8px;bottom:6px;font:700 11px/1 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#f5f5f5;text-shadow:0 1px 4px rgba(0,0,0,.9)}
 #menu .mrg-t.on{box-shadow:0 0 0 2px #fff,0 0 24px 5px rgba(255,255,255,.5);filter:none;transform:scale(1.035)}
 #menu .mrg.picking .mrg-t{transition:box-shadow .08s,filter .08s,transform .08s}
-#menu .mrg-t.pick{box-shadow:0 0 0 3px #ff3b30,0 0 30px 8px rgba(255,59,48,.6);filter:none;transform:scale(1.07);z-index:2;transition:box-shadow .25s,transform .25s}
+#menu .mrg-t.pick{box-shadow:0 0 0 3px #fff,0 0 30px 8px rgba(255,255,255,.55);filter:none;transform:scale(1.07);z-index:2;transition:box-shadow .25s,transform .25s}
 #menu .mcar.rand .mcar-nav{z-index:3}
 #menu .mpick .mrg{left:18px;right:18px}
 #menu .mpick .mrg-t{border:0;padding:0;margin:0;cursor:pointer;color:inherit;font:inherit;text-align:left;appearance:none}
@@ -51,7 +51,7 @@
 #menu .mpick .mrg-t.rnd{background:#141414;display:grid;place-items:center}
 #menu .mpick .mrg-t.rnd b{font:700 46px/1 Arial,sans-serif;color:#f5f5f5;margin-bottom:10px}
 #menu .mpick .mrg.picking{pointer-events:none}
-#menu .mpick .mrg.picking .mrg-t.sel{box-shadow:0 0 0 1px #464646;filter:brightness(.62) saturate(.85)}
+#menu .mpick .mrg.picking .mrg-t.sel,#menu .crg.picking .mrg-t.sel{box-shadow:0 0 0 1px #464646;filter:brightness(.62) saturate(.85)}
 #menu .d-lob{grid-template-columns:1fr!important}#menu #d-chars{display:none!important}
 #menu #d-prof .st-fig,#menu #d-prof .st-q{display:none!important}
 #menu #d-prof .st-side{top:20px;transform:none;width:min(46%,420px)}
@@ -7003,7 +7003,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   return base;}
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
 const MAP_SIZE={wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[1,'40 × 30 m'],house:[1,'40 × 30 m'],club:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture) */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:null,gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,stam:Math.round(f.stam??0),alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,walls:f.walls,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -11542,13 +11542,9 @@ let mapLaterT=0;const mapLater=()=>{clearTimeout(mapLaterT);mapLaterT=setTimeout
 const mapNav=d=>{const L=mapList().map(k=>[k,MAPS[k]]).sort(mapRank).map(x=>x[0]);if(!L.length)return;let i=S.randMap?(d>0?-1:0):L.indexOf(S.map);i=(i+d+L.length)%L.length;S.randMap=false;S.map=L[i];renderDuelMenu();mapLater();};
 {let sx=null;$('d-maps').addEventListener('pointerdown',e=>{if(e.target.closest('.mcar-stage')&&!e.target.closest('button'))sx=e.clientX;});addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>40)mapNav(dx<0?1:-1);});}
 $('d-maps').addEventListener('click',e=>{if(S.picking)return;const b=e.target.closest('[data-map]');if(!b)return;
-  if(b.dataset.map==='random'){const g=document.querySelector('#d-maps .mrg');if(!g)return;rollMap();const pick=S.map;S.picking=true;
-    pickSpin(g,pick,()=>{S.picking=false;S.randMap=false;S.map=pick;renderDuelMenu();mapLater();},()=>mapCap(pick),{hops:10,d0:45,grow:1.2,hold:650});return;}
+  if(b.dataset.map==='random'){S.randMap=true;renderDuelMenu();return;}
   S.randMap=false;S.map=b.dataset.map;renderDuelMenu();mapLater();});
-/* hovering a map stops the wandering glow and lights only that map; moving off a map lets it wander again */
-for(const box of ['d-maps','d-prof']){$(box).addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest('.mrg-t'),g=e.target.closest('.mrg,.crg');if(!g||g.classList.contains('picking'))return;
-  if(t){g.classList.add('hov');g.querySelectorAll('.mrg-t.on').forEach(x=>x.classList.remove('on'));}else g.classList.remove('hov');});
-$(box).addEventListener('pointerout',e=>{const g=e.target.closest('.mrg,.crg');if(!g)return;const to=e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('.mrg-t');if(!to||!g.contains(to))g.classList.remove('hov');});}
+
 function mapCap(k){const cap=document.querySelector('#d-maps .mcar-cap');if(cap&&MAPS[k]){const tt=cap.querySelector('.t'),bb=cap.querySelector('.b');if(tt)tt.textContent=MAPS[k].name;if(bb)bb.textContent=MAP_TAG[k]||MAPS[k].desc||'';}}
 // random map: rolled fresh at the start of every match (rematches too), never the same one twice in a row when there's a choice
 /* Random loadout picks (the default): a fresh primary, secondary and lethal every match, never the same one twice in a row */
@@ -11567,8 +11563,7 @@ setDuelMode(S.mode);
   pops.forEach(([b,p])=>$(b).addEventListener('click',e=>{e.stopPropagation();const open=$(p).hidden;close();$(p).hidden=!open;$(b).setAttribute('aria-expanded',String(open));if(open){const f=$(p).querySelector('input,button');f&&f.focus();}}));
   document.addEventListener('click',e=>{if(!e.target.closest('.mpop'))close();});document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});}
 $('d-prof').addEventListener('click',e=>{if(S.picking)return;const b=e.target.closest('[data-char]');if(!b)return;
-  if(b.dataset.char==='random'){const g=document.querySelector('#d-prof .crg');if(!g)return;rollChar();const pick=S.char;S.picking=true;
-    pickSpin(g,pick,()=>{S.picking=false;S.randChar=false;S.char=pick;renderDuelMenu();setLook(ME,S.char);},()=>{if(STG&&CHARS[pick])STG.name.textContent=CHARS[pick].name;},{hops:10,d0:45,grow:1.2,hold:650});return;}
+  if(b.dataset.char==='random'){S.randChar=true;renderDuelMenu();return;}
   S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;if(b.dataset.char==='random'){S.randChar=true;renderDuelMenu();return;}S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 
@@ -11594,9 +11589,7 @@ $('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a m
   const g=S.randMap&&document.querySelector('#d-maps .mrg');if(g&&!S.picking){rollMap();const pick=S.map;S.randPre=pick;S.picking=true;
     pickSpin(g,pick,()=>{S.picking=false;menuStep('char');},()=>mapCap(pick));return;}
   if(S.picking)return;menuStep('char');});
-/* while Random is showing, a soft glow wanders slowly from picture to picture, as if it's still choosing */
-setInterval(()=>{if(document.hidden)return;for(const g of document.querySelectorAll('#d-maps .mrg:not(.picking):not(.hov),#d-prof .crg:not(.picking):not(.hov)')){if(!g.offsetParent)continue;const t=[...g.children].filter(x=>x.dataset.rk);if(!t.length)continue;const cur=t.findIndex(x=>x.classList.contains('on'));
-  let r;do r=(Math.random()*t.length)|0;while(t.length>1&&r===cur);t.forEach(x=>x.classList.remove('on'));t[r].classList.add('on');}},1300);
+
 $('m-quick').addEventListener('click',()=>{S.randMap=S.randChar=S.randGun=S.randSec=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();})/* Quick start: random everything, keeps the chosen mode, players and bots */;
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});

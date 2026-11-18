@@ -8985,7 +8985,7 @@ const keys={};let mouseL=false,mouseR=false;
 /* input -> one command per game tick. Everything the player does reaches the game as {fi,si,yaw,pitch,jump,jumpPress,fire,aim,acts}:
    held state is sampled each tick, and one-off actions (reload, wall, lethal, swap...) are queued and applied at the start of the next tick.
    This is the shape a multiplayer client will send to the server. */
-const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueSwap=(d=1)=>{const n=S.mode==='rumble'?2:3,s=Math.max(0,ME.slot);queueAct('Digit'+((s+(d<0?n-1:1))%n+1));}; /* primary → secondary → fists → primary (wheel up goes back) */
+const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueSwap=(d=1)=>{const n=S.mode==='rumble'?2:3,s=Math.max(0,ME.slot);queueAct('Digit'+((s+(d<0?n-1:1))%n+1));}; /* primary → secondary → fists → primary; wheel up goes forward (primary to secondary), wheel down goes back (primary to fists) */
 function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
   yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!mouseR,run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
 function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'||a==='Digit3'){equip(ME,+a.slice(5)-1);NET.swapAt=performance.now();}else if(a==='KeyR')startReload(ME);else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up')ME.aimThrow=false;else if(a==='KeyT')ME.aimNade=true;else if(a==='KeyT:up')ME.aimNade=false;continue;}
@@ -9069,7 +9069,7 @@ canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused
 window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
   const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(['sniper','scout'].includes(gunOf(ME))?(SN.snipe??SN.ads)*(gunOf(ME)==='sniper'?.3:.65):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
-window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)queueSwap(e.deltaY<0?-1:1);},{passive:true});
+window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)queueSwap(e.deltaY<0?1:-1);},{passive:true});
 function lock(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{S.lockOK=false;});}catch(err){S.lockOK=false;}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&D.active&&!S.paused&&S.state!=='menu'&&S.state!=='done')pause();simAcc=0;});
 document.addEventListener('pointerlockchange',()=>{S.locked=document.pointerLockElement===canvas;if(S.locked)S.lockAt=performance.now();if(!S.locked&&D.active&&S.state!=='menu'&&S.state!=='done'&&!S.paused&&S.state!=='roundEnd'&&!S.replayOpen&&S.lockOK)pause();});

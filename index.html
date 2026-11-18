@@ -1275,6 +1275,25 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 #d-intro .t{font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;background:none;-webkit-text-fill-color:#f5f5f5;color:#f5f5f5;letter-spacing:0;animation:mcarUp .5s both}
 #d-intro .rule{background:linear-gradient(90deg,#ff3b30,#d6221a)}
 #d-intro::before,#d-intro::after{display:none}
+
+/* ---- character box, made to match the map box: plain dark panel with a white edge, the portraits along the top,
+   the picked fighter's name (with the red underline) bottom-left and their ability bottom-right ---- */
+#menu #d-prof{background:#141414!important;border-radius:16px;box-shadow:0 0 0 2px #fff!important}
+#menu #d-prof :is(.st-bg,.st-grid,.st-beam,.st-floor,.st-wave,.st-fx,.st-vig,.st-flash,.st-fig,.st-q){display:none!important}
+#menu #d-prof .crg{left:18px;right:18px;top:18px;bottom:auto;height:calc(63% - 18px);gap:10px}
+#menu #d-prof .crg .mrg-t{background:#202020;filter:none;box-shadow:0 0 0 1px #464646}
+#menu #d-prof .crg .mrg-t img{object-position:50% 12%}
+#menu #d-prof .crg .mrg-t:hover{box-shadow:0 0 0 2px #fff}
+#menu #d-prof .crg .mrg-t.sel{box-shadow:0 0 0 3px #ff3b30,0 0 22px 4px rgba(255,59,48,.45)}
+#menu #d-prof .crg .mrg-t.on{box-shadow:0 0 0 2px #fff,0 0 24px 5px rgba(255,255,255,.5)}
+#menu #d-prof .crg .mrg-t.pick{box-shadow:0 0 0 3px #fff,0 0 30px 8px rgba(255,255,255,.55);transform:scale(1.07)}
+#menu #d-prof .st-info{left:30px;right:auto;top:auto;bottom:26px;max-width:48%;transform:none}
+#menu #d-prof .st-tag{display:inline-block;background:#fff;color:#000;border-radius:5px;padding:4px 8px;font:700 12px/1 Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+#menu #d-prof .st-name{font:400 clamp(40px,4.6vw,64px)/1.05 Arial,'Helvetica Neue',Helvetica,sans-serif;text-shadow:none}
+#menu #d-prof .st-name::after{content:'';display:block;width:min(300px,100%);height:4px;border-radius:2px;margin-top:8px;background:linear-gradient(90deg,#ff3b30,#d6221a)}
+#menu #d-prof .st-side{left:auto;right:30px;top:auto;bottom:26px;transform:none;width:min(44%,440px)}
+#menu #d-prof .st-desc{color:#d2d2d2}
+@media (max-width:720px){#menu #d-prof .crg{height:calc(60% - 18px)}#menu #d-prof .st-info{left:16px;bottom:14px;max-width:46%}#menu #d-prof .st-side{right:12px;bottom:14px;width:50%}#menu #d-prof .st-name{font-size:30px}}
 </style>
 
 </head>
@@ -11482,11 +11501,11 @@ function crgMark(){const g=document.querySelector('#d-prof .crg');if(!g||g.class
 function stageShow(k){const el=$('d-prof');if(!STG||STG.el!==el||!el.querySelector('.st-fig'))stageBuild(el);
   if(STG.id===k)return;STG.id=k;const c=k&&CHARS[k];
   el.classList.remove('boxed','go','rand');
-  crgBuild(el);if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
+  crgBuild(el);if(k==='__rand'){el.classList.remove('empty');el.classList.add('rand');STG.cc='#c08cff';el.style.setProperty('--cc',STG.cc);STG.img.removeAttribute('src');STG.tag.textContent='Character';STG.name.textContent='Random';STG.abil.innerHTML='';STG.desc.innerHTML='';void el.offsetWidth;el.classList.add('go');STG.burst=1;return;}
   el.classList.toggle('empty',!c);
   if(!c){STG.img.removeAttribute('src');STG.tag.textContent='Character select';STG.name.textContent='Pick a fighter';STG.abil.innerHTML='';STG.desc.textContent='Choose a character from the list.';return;}
   const src=`chars/${k}_x.webp`;STG.cc=stageCC(k);el.style.setProperty('--cc',STG.cc);STG.br.style.setProperty('--m',`url("${src}")`);STG.img.src=src;STG.img.alt=c.name;
-  STG.tag.textContent='Ready for battle';STG.name.textContent=c.name;
+  STG.tag.textContent='Character';STG.name.textContent=c.name;
   STG.abil.innerHTML=`${S.simple?(S.players==='2v2'?'No abilities in Simple 2v2':'No abilities in Simple 1v1'):`<kbd>${S.touch?'E':(window.KN?window.KN('abil'):'G')}</kbd>${c.abil}`}`;const I=CHAR_INFO[k]||{what:c.desc||'',dmg:/\d+ ?dmg/i.test(c.desc||'')?(c.desc.match(/(\d+) ?dmg/i)[1]):null};STG.desc.innerHTML=`<p>${I.what}</p><div class="st-stats"><span class="${I.dmg?'st-dmg':'st-nodmg'}"><em>Damage</em>${I.dmg||'None'}</span><span><em>Cooldown</em>${c.cd} s</span></div>`;
   void el.offsetWidth;el.classList.add('go');STG.burst=1;}
 function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');let last=0;

@@ -37,7 +37,7 @@ The site is published by the **Check and publish** GitHub Action (`.github/workf
 
 All styles push when you're low, play safer when hurt, and chase the clock late in a round when behind on health. Sniper, Turtle, Kiter and Camper aren't used in Rumble. A bot you kill comes back hunting you until it next gets a kill, but the hunt doesn't blind it: if another player shoots it, or is in plain sight within about 20 m, it deals with them first and then carries on after you (and any bot turns on whoever has hit it in the last few seconds).
 
-**Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (18 per punch) plus one **bat** pickup, on any map (every map is available in every mode); Rumble games get no shop, armour plates or barrels. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Walls, pick-ups, slams and finishing moves all still work.
+**Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (22 per punch, 5 to down someone) plus one **bat** pickup, on any map (every map is available in every mode); Rumble games get no shop, armour plates or barrels. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Walls, pick-ups, slams and finishing moves all still work.
 
 **Snipers only: the four new snipers** – the Snipers only mode offers six snipers: the HDR and Kar98 plus four made for it that appear nowhere else, all modelled in the same detailed style:
 - **Reaper** (.338 magnum bolt-action, forest-green thumbhole stock with bronze trim): 100 a hit, one body shot downs, but the slowest bolt (1.6 s) and slow aiming; 4 rounds.

@@ -1912,6 +1912,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <p data-tab="gfx" class="gfx-note" hidden></p>
           <label data-tab="gfx" class="sens" for="opt-fov"><span>Field of view</span><input type="range" id="opt-fov" data-optr="fov" min="60" max="100" step="5"><b data-optv="fov">70°</b></label>
           <label data-tab="gfx" class="sens" for="opt-bright"><span>Brightness</span><input type="range" id="opt-bright" data-optr="bright" min="0.5" max="1.5" step="0.05"><b data-optv="bright">100%</b></label>
+          <div data-tab="gfx" class="pm-row"><span>Camera <small>first person switches back to third for finishers, going down, ladders and falls</small></span><div class="seg" role="radiogroup" aria-label="Camera view" data-opt="cam"><button role="radio" data-v="3" aria-checked="false">Third person</button><button role="radio" data-v="1" aria-checked="false">First person</button></div></div>
           <div data-tab="gfx" class="pm-row"><span>Name tags <small>the names over other players' heads</small></span><div class="seg" role="radiogroup" aria-label="Name tags" data-opt="nt"><button role="radio" data-v="1" aria-checked="false">On</button><button role="radio" data-v="0" aria-checked="false">Off</button></div></div>
           <div data-tab="gfx" class="pm-row hud-row"><span>HUD layout <small>move, resize or hide the on-screen panels</small></span><button class="btn sm" data-go="hud">Edit <span class="chev">›</span></button></div>
           <label data-tab="sound" class="sens" for="vol-d"><span>Sound volume</span><input type="range" id="vol-d" data-vol min="0" max="1" step="0.1"><b data-vol-val>100%</b></label>
@@ -4491,7 +4492,7 @@ function wreckCove(){const G=WC.G,X=45,Z=60;/* 90 x 120 m (Biggest size) */M.bou
   // beach cabana: open on all sides, a shady roof you can climb onto from the bench
   const cabana=(x,z,c)=>{const r=ruinBegin(),strip=[];for(const [a,b] of [[-1.8,-1.8],[1.8,-1.8],[-1.8,1.8],[1.8,1.8]])wcBox(x+a-.12,x+a+.12,G,G+2.7,z+b-.12,z+b+.12,'#c99a5b',{tx:'wood'});
     wcBox(x-2.2,x+2.2,G+2.7,G+2.95,z-2.2,z+2.2,c);for(let i=0;i<5;i++)strip.push(box(x-2.2+i*1.1+.55,G+2.95,z,1.1,.08,4.4,i%2?'#ffffff':c,{solid:false,edges:false}));
-    wcBox(x-1.6,x+1.6,G,G+.5,z+1.1,z+1.6,'#8a5a34',{tx:'wood'});wcBox(x-.9,x+.9,G+.5,G+1.6,z+1.2,z+1.6,'#8a5a34',{tx:'wood',chip:false});ruinEnd(r,x,z,1,1,'#c99a5b',c,G+2.7,{noCracks:1,hide1:strip});};
+    wcBox(x-1.6,x+1.6,G,G+.5,z+1.1,z+1.6,'#8a5a34',{tx:'wood'});wcBox(x-.9,x+.9,G+.5,G+1.6,z+1.2,z+1.6,'#8a5a34',{tx:'wood',chip:false});ruinEnd(r,x,z,1,1,'#c99a5b',c,G+2.7,{hide1:strip});};
   /* a small open beach hut at each end: walk straight in through the wide front, waist-high walls for partial cover (crouch behind, shoot over), nothing inside to snag on */
   const hut=(hx,hz,c)=>{const r=ruinBegin(),sd=Math.sign(hz),bz=hz+sd*2.4,fz=hz-sd*2.4,RF=G+3.1,W='#d8b98a',strip=[],lw=G+1.1;
     for(const [a,z] of [[-3.4,bz],[3.4,bz],[-3.4,fz],[3.4,fz]])wcBox(hx+a-.14,hx+a+.14,G,RF,z-.14,z+.14,W,{tx:'wood'});
@@ -4499,7 +4500,7 @@ function wreckCove(){const G=WC.G,X=45,Z=60;/* 90 x 120 m (Biggest size) */M.bou
     for(const a of [-3.4,3.4])wcBox(hx+a-.11,hx+a+.11,G,lw,Math.min(hz,bz),Math.max(hz,bz),W,{tx:'wood'})/* sides: back half only, front half open */;
     for(const a of [-1,1])wcBox(hx+a*3.3-(a>0?1.1:0),hx+a*3.3+(a<0?1.1:0),G,lw,fz-.11,fz+.11,W,{tx:'wood'})/* front: short stubs at the corners, 4.4 m opening */;
     wcBox(hx-3.9,hx+3.9,RF,RF+.22,hz-2.9,hz+2.9,'#8a6a3c',{tx:'wood'});for(let i=0;i<6;i++)strip.push(box(hx-3.9+i*1.3+.65,RF+.22,hz,1.3,.07,5.8,i%2?'#ffffff':c,{solid:false,edges:false}));
-    ruinEnd(r,hx,hz,1,1,W,c,RF,{noCracks:1,hide1:strip});};
+    ruinEnd(r,hx,hz,1,1,W,c,RF,{hide1:strip});};
   hut(-15,48,'#2a9d8f');hut(-15,-46,'#1d3557');
   // big beach balls: push them about, kick them, shoot them
   for(const [x,z,c1,c2] of [[-12,-26,'#e8463a','#2f7fe0'],[-22,17,'#f4c22b','#3bb54a'],[4,17,'#a05ad6','#3bb54a']]){const r=.8;
@@ -4547,7 +4548,7 @@ function wreckCove(){const G=WC.G,X=45,Z=60;/* 90 x 120 m (Biggest size) */M.bou
       for(const [x,z] of [[cx-7,cz-2],[cx+7,cz-2],[cx-7,cz+4],[cx+7,cz+4]]){box(x,RB-1.6,z,.02,1.6,.02,'#3a3d45',{solid:false,edges:false});
         const ln=new THREE.Mesh(new THREE.CylinderGeometry(.26,.34,.6,10),new THREE.MeshStandardMaterial({color:'#ffcf7a',emissive:'#ffb347',emissiveIntensity:2}));ln.position.set(x,RB-1.9,z);M.group.add(ln);
         const pl=new THREE.PointLight('#ffb35a',4,13,2);window.GFX&&GFX.light(pl);pl.position.set(x,RB-2.2,z);M.group.add(pl);}}
-    ruinEnd(tr,cx,cz,1,1,'#b88a5a','#6b4a2c',RB,{noCracks:1,hide1:thatch,sturdy:1})/* the bar is too big to fold up from a couple of grenades: it stays standing (its bottles, glass and props still break) */;
+    ruinEnd(tr,cx,cz,1,1,'#b88a5a','#6b4a2c',RB,{hide1:thatch,sturdy:1})/* the bar is too big to fold up from a couple of grenades: it stays standing (its bottles, glass and props still break) */;
     // neon: TIKI BAR over the front, OPEN under the eave, COCKTAILS on the back wall
     neon('TIKI BAR',cx,RB+1.6,z1+1,9,2.2,0,'#fff3c4','#ffb020');neon('OPEN',cx+8.5,RB-1.2,z1+.25,2.6,1,0,'#ffe6f2','#ff3d8b',.7);neon('COCKTAILS',cx,y+3.9,z0+.62,6,1.2,0,'#e6fbff','#2ee6d6')/* raised clear of the top shelf */;
     /* white ladder up the back (south) eave onto the roof. It stands just outside the thatch, where the roof is lowest, and tops out
@@ -7548,7 +7549,7 @@ let gSeed=1;const GR=()=>{gSeed=(gSeed+0x6D2B79F5)|0;let t=Math.imul(gSeed^(gSee
 function spreadDir(d,deg){if(deg<=0)return d.clone();const a=deg*Math.PI/180*Math.sqrt(GR()),t=GR()*TAU;
   const up=Math.abs(d.y)>.95?new V3(1,0,0):new V3(0,1,0);const u=new V3().crossVectors(d,up).normalize(),v=new V3().crossVectors(d,u);
   return d.clone().multiplyScalar(Math.cos(a)).addScaledVector(u,Math.sin(a)*Math.cos(t)).addScaledVector(v,Math.sin(a)*Math.sin(t)).normalize();}
-function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;if(f===ME&&f.ads&&VM_GUNS.includes(gunOf(f)))s=lerp(g.spread,g.adsSpread,VM.raise);if(f.ads&&f.scopeKit&&OPTIC_GUNS.includes(gunOf(f)))s*=.6;const sp=Math.hypot(f.vel.x,f.vel.z),sgn=g.pellets>1;if(sp>2)s*=sgn?1.15:1.45;if(!f.grounded)s*=sgn?1.35:2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;if(f.crouching)s*=.65;const aimed=f.ads&&(f!==ME||!VM_GUNS.includes(gunOf(f))||VM.raise>.9);return s+f.bloom*(aimed?.3:1);}
+function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;if(f===ME&&f.ads&&VM_GUNS.includes(gunOf(f)))s=lerp(g.spread,g.adsSpread,VM.aim??VM.raise);if(f.ads&&f.scopeKit&&OPTIC_GUNS.includes(gunOf(f)))s*=.6;const sp=Math.hypot(f.vel.x,f.vel.z),sgn=g.pellets>1;if(sp>2)s*=sgn?1.15:1.45;if(!f.grounded)s*=sgn?1.35:2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;if(f.crouching)s*=.65;const aimed=f.ads&&(f!==ME||!VM_GUNS.includes(gunOf(f))||VM.raise>.9);return s+f.bloom*(aimed?.3:1);}
 function canFire(f){return !f.onLadder&&!f.edgeFall&&f.alive&&f.fireT<=0&&f.reloadT<=0&&f.switchT<=0&&f.ammo[gunOf(f)]>0&&S.state==='fight';}
 function startReload(f){const id=gunOf(f);if(f.reloadT>0||f.ammo[id]>=GUNS[id].mag||!isFinite(GUNS[id].mag)||GUNS[id].noReload)return;f.reloadT=GUNS[id].reload>0?GUNS[id].reload:1;f.reloadMax=f.reloadT;{const L=3.4,r=clamp(L/f.reloadT,.95,1.2);f.relSnd=sfx('reload',f,{rate:r,jitter:0,offset:Math.max(0,L-f.reloadT*r),vol:f===ME?1:.8,range:8});}}
 const projs=[];
@@ -7867,9 +7868,9 @@ function wreckCar(c,at){if(!c.alive)return;c.alive=false;c.state='dead';c.v=0;if
     const v=new V3(rnd(-5,5),rnd(6,13),rnd(-5,5)),fy=sz*.25;
     debris.push({o:m,v,w:new V3(rnd(-9,9),rnd(-9,9),rnd(-9,9)),t:0,ttl:4,fx:(q,dt)=>{q.v.y-=26*dt;q.o.position.addScaledVector(q.v,dt);q.o.rotation.x+=q.w.x*dt;q.o.rotation.z+=q.w.z*dt;
       if(q.o.position.y<fy&&q.v.y<0){q.o.position.y=fy;q.v.y*=-.25;q.v.x*=.5;q.v.z*=.5;q.w.multiplyScalar(.4);}if(q.t>q.ttl-.6)q.o.scale.setScalar(Math.max(.01,(q.ttl-q.t)/.6));}});}
-  for(let i=0;i<5;i++)emit(cx+rnd(-1,1),1+i*.4,cz+rnd(-1.5,1.5),{n:8,speed:1.2,up:3+i,size:.45,life:1.6,grav:-1.5,colors:['#3a3d45','#55585f','#ff7a1f','#ffb000']});}
+  for(let i=0;i<5;i++)emit(cx+rnd(-1,1),1+i*.4,cz+rnd(-1.5,1.5),{n:8,speed:1.2,up:3+i,size:.45,life:1.6,grav:-1.5,colors:['#ff7a1f','#ffb000']});}
 /* destructible flat-roofed houses: the first blast leaves one badly damaged (the roof wall and its crates blown off, the whole
-   house lurches, cracks open, smoke pours out); a second blast brings it down: it slowly sinks and folds into a pile of big
+   house lurches); a second blast brings it down: it slowly sinks and folds into a pile of big
    blocks you can climb over. Everything is rebuilt at the start of the next round. */
 function ruinBegin(){return{c0:M.group.children.length,b0:M.boxes.length};}
 function ruinEnd(r,cx,cz,flip,k,wall,trim,F,o={}){const kids=M.group.children.slice(r.c0),boxes=M.boxes.slice(r.b0),grp=new THREE.Group();grp.userData.dyn=1;grp.matrixAutoUpdate=false;
@@ -7877,13 +7878,8 @@ function ruinEnd(r,cx,cz,flip,k,wall,trim,F,o={}){const kids=M.group.children.sl
   let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,top=0;for(const b of boxes){x0=Math.min(x0,b.x0);x1=Math.max(x1,b.x1);z0=Math.min(z0,b.z0);z1=Math.max(z1,b.z1);top=Math.max(top,b.y1);b.ruin=1;}
   // the roof wall and everything up there stays separate so the first blast can knock it off
   const roofBits=boxes.filter(b=>b.y0>=F-.01&&!b.prop);for(const b of roofBits)if(b.mesh)b.mesh.userData.dyn=1;
-  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip),hide1:o.hide1||[],splash:o.splash,sturdy:!!o.sturdy};for(const m of B.hide1)m.userData.dyn=1;if(o.noCracks){(M.blds||(M.blds=[])).push(B);return B;}
-  // cracks on every outside wall, hidden until the house is hit
-  const ct=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='rgba(28,29,34,.9)';g.lineCap='round';
-    for(let n=0;n<5;n++){let x=40+Math.random()*176,y=10+Math.random()*60;g.lineWidth=5;g.beginPath();g.moveTo(x,y);for(let s=0;s<9;s++){x+=(Math.random()-.5)*50;y+=14+Math.random()*16;g.lineTo(x,y);g.lineWidth=Math.max(1.5,5-s*.4);}g.stroke();}});
-  const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
-  for(const [px,pz,ry,w] of [[x0-.02,(z0+z1)/2,-Math.PI/2,z1-z0],[x1+.02,(z0+z1)/2,Math.PI/2,z1-z0],[(x0+x1)/2,z0-.02,Math.PI,x1-x0],[(x0+x1)/2,z1+.02,0,x1-x0]])
-    for(const s of [-.25,.25]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w*.42,F*.9),cm);const a=ry;m.position.set(px+Math.sin(a)*0+(Math.abs(Math.sin(a))<.5?s*w:0),F*.5,pz+(Math.abs(Math.sin(a))>.5?s*w:0));m.rotation.y=ry;m.visible=false;m.userData.dyn=1;grp.add(m);B.cracks.push(m);}
+  const B={grp,boxes,roofBits,x0,x1,z0,z1,top,cx,cz,F,stage:0,t:0,cols:[wall,trim,'#9aa0a8','#c9ced6'],gone:[],rubble:[],cracks:[],props:boxes.filter(b=>b.prop),chips:boxes.filter(b=>b.chip),hide1:o.hide1||[],splash:o.splash,sturdy:!!o.sturdy};for(const m of B.hide1)m.userData.dyn=1;
+  /* no crack decals on damaged buildings (the black zig-zag lines were removed at the user's request: don't add them back) */
   (M.blds||(M.blds=[])).push(B);return B;}
 function ruinBatch(){for(const B of M.blds||[])batchStatic(B.grp);}
 function ruinMat(B,ang,ax,az,sink){const p=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),q=new THREE.Quaternion().setFromAxisAngle(new V3(ax,0,az).normalize(),ang);
@@ -7898,7 +7894,6 @@ function ruinHit(B,at){B.stage=1;const c=new V3((B.x0+B.x1)/2,0,(B.z0+B.z1)/2),d
   for(const b of B.props)if(b.alive&&b.y0>=B.F-.05)breakProp(b,at);
   for(const m of B.cracks)m.visible=true;for(const m of B.hide1)m.visible=false;if(B.splash){const t=new V3(c.x,B.F+2,c.z);for(let i=0;i<6;i++)emit(t.x,t.y+i*.4,t.z,{n:14,speed:6,up:4,size:.3,life:1.2,grav:12,colors:['#bfe6ff','#ffffff','#8fd6e4']});for(let i=0;i<10;i++)ruinChunk(B,t.x+rnd(-1.5,1.5),t.y,t.z+rnd(-1.5,1.5),rnd(.4,.9),'#7a4c2a',new V3(rnd(-6,6),rnd(4,9),rnd(-6,6)));}ruinMat(B,B.splash?.02:.035,dir.z,-dir.x,B.splash?.05:.18);
   sfx('wall',c,{range:40});sfx('brick',c,{range:40});if(ME.alive&&Math.hypot(ME.pos.x-c.x,ME.pos.z-c.z)<22)S.shake=Math.max(S.shake,.7);
-  for(let i=0;i<10;i++){const a=i/10*TAU;emit(c.x+Math.cos(a)*(B.x1-B.x0)*.55,.4,c.z+Math.sin(a)*(B.z1-B.z0)*.55,{n:6,speed:3,up:1.5,size:.8,life:1.6,grav:-.3,colors:['#d8d4cc','#bfb8aa','#e9e4d8']});}
   for(let i=0;i<8;i++)ruinChunk(B,rnd(B.x0,B.x1),rnd(1,B.F),i%2?B.x0:B.z0,rnd(.3,.6),B.cols[0],new V3(rnd(-3,3),rnd(2,5),rnd(-3,3)),1);
   MM.layer=null;}
 // a lump of wall flying off
@@ -7934,14 +7929,13 @@ function ruinFall(B,at,src){B.stage=2;B.fallT=0;const c=new V3((B.x0+B.x1)/2,0,(
   for(const f of FS){if(!f.alive)continue;for(const r of B.rubble){const b=r.b;if(!b)continue;if(f.pos.x>b.x0-R&&f.pos.x<b.x1+R&&f.pos.z>b.z0-R&&f.pos.z<b.z1+R&&f.pos.y<b.y1&&f.pos.y+HH>b.y0){f.pos.y=b.y1+.02;f.vel.y=Math.max(f.vel.y,2);}}}
   sfx('wall',c,{range:50,rate:.8});sfx('explode',c,{range:40,rate:.6});if(ME.alive&&Math.hypot(ME.pos.x-c.x,ME.pos.z-c.z)<30)S.shake=Math.max(S.shake,1);MM.layer=null;}
 function updRuins(dt){for(const B of M.blds||[]){
-  if(B.stage===1){if(Math.random()<dt*4)emit(rnd(B.x0+1,B.x1-1),B.F+.6,rnd(B.z0+1,B.z1-1),{n:1,speed:.4,up:2,size:1,life:2.6,grav:-1,colors:['#55585f','#6e665c','#8a8f99']});
+  if(B.stage===1){/* no smoke from damaged buildings (removed at the user's request: don't add it back) */
     if(Math.random()<dt*1.5)emit(rnd(B.x0,B.x1),B.F,rnd(B.z0,B.z1),{n:2,speed:.3,up:0,size:.12,life:1,grav:14,colors:['#d8d4cc',B.cols[0]]});continue;}
   if(B.stage!==2||B.fallT==null)continue;B.fallT+=dt;const t=B.fallT,d=B.dir||new V3(1,0,0);
   if(B.grp.visible){const e=Math.min(1,t/2.8),sk=e*e*(B.F+1.6);ruinMat(B,.035+e*.16,d.z,-d.x,.18+sk);
-    if(Math.random()<dt*14){const a=Math.random()*TAU;emit((B.x0+B.x1)/2+Math.cos(a)*(B.x1-B.x0)*.6,.3,(B.z0+B.z1)/2+Math.sin(a)*(B.z1-B.z0)*.6,{n:3,speed:2.5,up:1.2,size:1.1,life:1.8,grav:-.2,colors:['#d8d4cc','#bfb8aa','#e9e4d8']});}
     if(e>=1)B.grp.visible=false;}
   for(const r of B.rubble){if(r.land||t<r.delay)continue;r.m.visible=true;r.v-=22*dt;r.m.position.y+=r.v*dt;
-    if(r.m.position.y<=r.ty){r.m.position.y=r.ty;r.land=true;const p=r.m.position;emit(p.x,r.b?r.b.y1:.3,p.z,{n:10,speed:3,up:1.5,size:.7,life:1.2,grav:-.2,colors:['#d8d4cc','#bfb8aa']});if(Math.random()<.5)sfx('brick',p,{range:30,rate:rnd(.7,.9)});}}
+    if(r.m.position.y<=r.ty){r.m.position.y=r.ty;r.land=true;const p=r.m.position;if(Math.random()<.5)sfx('brick',p,{range:30,rate:rnd(.7,.9)});}}
   if(t>6)B.fallT=null;}}
 function resetRuins(){for(const B of M.blds||[]){if(B.stage===0)continue;B.stage=0;B.fallT=null;B.t=-9;
   for(const r of B.rubble){if(r.b){const i=M.boxes.indexOf(r.b);if(i>=0)M.boxes.splice(i,1);dirtyGrid(r.b,.05);}M.group.remove(r.m);r.m.geometry.dispose();}B.rubble=[];
@@ -9241,7 +9235,7 @@ function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts)
   else if(a==='KeyG'){if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;else useCons(ME);}else if(a==='KeyG:up'){if(ME.aimThrow){ME.aimThrow=false;useCons(ME);}}
   else if(a==='KeyF'){const v=finishable(ME);if(v)finish(ME,v);}else if(a==='KeyC'){if(!ME.downed)ME.crouchOn=!ME.crouchOn;}}}
 /* ---------- player options: key bindings, field of view, crosshair, hit feedback, brightness, kill commentary (pause menu) ---------- */
-const OPT_DEF={fov:70,bright:1,xs:'crossdot',xc:'#ffffff',xz:'m',xo:'1',hs:'1',hm:'1',kc:'1',nt:'1'};
+const OPT_DEF={cam:'3',fov:70,bright:1,xs:'crossdot',xc:'#ffffff',xz:'m',xo:'1',hs:'1',hm:'1',kc:'1',nt:'1'};
 const OPT=Object.assign({},OPT_DEF,store.get('duel:opts',{}));
 /* bindable actions: [id, name, the game's own key for it (what the rest of the code listens for), default key]. The lethal is
    named KeyG inside the game but sits on E by default */
@@ -9573,7 +9567,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
   $('d-slot1').classList.toggle('on',V.slot===0);$('d-slot2').classList.toggle('on',V.slot===1);{const h=!!S.snipers;if($('d-slot2').hidden!==h)$('d-slot2').hidden=h;}$('d-slot3').classList.toggle('on',V.slot===2);txt('d-slot3n',V.bat?'Bat':'Fists');txt('d-slot1n',GUNS[V.primary==='fists'&&V.bat?'bat':V.primary].name);txt('d-slot2n',GUNS[(V.secondary||'smg')==='fists'&&V.bat?'bat':V.secondary||'smg'].name);}
   const holo=holoOn(ME);{const ho=$('d-holo');if(ho.hidden===holo)ho.hidden=!holo;if(holo&&ho.dataset.g!==id){ho.dataset.g=id;ho.style.setProperty('--sc',XHAIR[id]);}}
   const scoped=ME.ads&&isSn(id)&&ME.alive;{const sc=$('d-scope');if(sc.hidden===scoped)sc.hidden=!scoped;if(scoped){const c=GUNS[id].zoom<=24?'hdr':'kar';if(sc.className!==c){sc.className=c;sc.style.setProperty('--sc',XHAIR[id]);}}}
-  const ovR=ME.ads&&ME.alive&&!ME.downed&&VM.raise>.85&&S.state!=='menu';{const rp=$('d-rpg'),lk=$('d-lock'),onR=ovR&&id==='rocket',onS=ovR&&id==='swarm';if(rp.hidden===onR)rp.hidden=!onR;if(lk.hidden===onS)lk.hidden=!onS;
+  const ovR=ME.ads&&ME.alive&&!ME.downed&&(VM.aim??VM.raise)>.85&&S.state!=='menu';{const rp=$('d-rpg'),lk=$('d-lock'),onR=ovR&&id==='rocket',onS=ovR&&id==='swarm';if(rp.hidden===onR)rp.hidden=!onR;if(lk.hidden===onS)lk.hidden=!onS;
     if(onR){/* rocket scope turns red with a ring and range when an enemy is under the crosshair (within 80 m and in sight) */
       const cp=camera.position.clone(),cd=new V3();camera.getWorldDirection(cd);const hf=rayFoes(cp,cd,ME),hb=rayBoxes(cp,cd,90),on=!!(hf&&hf.t<80&&(!hb||hf.t<hb.t));
       rp.classList.toggle('on',on);const tg=rp.querySelector('.tag'),tx=on?'TARGET '+Math.round(hf.t)+' m':'';if(tg.textContent!==tx)tg.textContent=tx;}
@@ -9585,7 +9579,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
       const tg=lk.querySelector('.tag'),tx=lockT?'LOCK':'SEARCH';if(tg.textContent!==tx)tg.textContent=tx;const rg=lk.querySelector('.rng'),rt=lockT?Math.round(hf.t)+' m':'';if(rg.textContent!==rt)rg.textContent=rt;
       const am=ME.ammo.swarm||0,left=am>4?am-4:am;lk.querySelectorAll('.pips b').forEach((b,i)=>b.classList.toggle('l',i<left));}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(isSn(id)?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':xhClass())+(id==='sting'&&ME.ads&&VM.raise>.3?' chev':'');cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'||(id==='sting'&&ME.ads)?1:clamp(1-VM.raise*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
+  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(isSn(id)?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':xhClass())+(id==='sting'&&ME.ads&&VM.raise>.3?' chev':'');cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'||(id==='sting'&&ME.ads)?1:clamp(1-(VM.fp>0?VM.aim:VM.raise)*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*1.65);$('d-flash').style.opacity=flashA.toFixed(3);{const ao=(Math.min(1,flashA*1.5)*.55).toFixed(3);const ae=$('d-after');if(ae.style.opacity!==ao)ae.style.opacity=ao;}{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.hidden=true;numPool.push(n.el);nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -9963,7 +9957,7 @@ function updCamera(dt){S.camFollow=0;
     use=Math.max(.35,use);S.camUse=!isFinite(S.camUse)||use<S.camUse?use:damp(S.camUse,use,7,dt);use=S.camUse;camera.position.copy(pivot).addScaledVector(d,use);if(camera.position.y<.3)camera.position.y=.3;f.ch.root.visible=use>1.0;
     if(!f.ads){camera.fov=damp(camera.fov,OPT.fov+8*ind+(f.sprinting?6:0),10,dt);camera.updateProjectionMatrix();}
     let lk=head.clone().addScaledVector(right,sh).addScaledVector(dir,60);
-    if(VM.raise>0){const e=VM.raise*VM.raise*(3-2*VM.raise);const fp=head.clone().add(new V3(0,.12,0)).addScaledVector(dir,.3);camera.position.lerp(fp,e);lk.lerp(head.clone().addScaledVector(dir,60),e);if(e>.12)f.ch.root.visible=false;}
+    {const r=Math.max(VM.raise*(VM.fp>0?0:1),VM.aim||0,VM.fp||0);if(r>0){const e=r*r*(3-2*r);const fp=head.clone().add(new V3(0,.12,0)).addScaledVector(dir,.3);camera.position.lerp(fp,e);lk.lerp(head.clone().addScaledVector(dir,60),e);if(e>.12)f.ch.root.visible=false;}}
     if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}camera.lookAt(lk);return;}
   if(S.shake>0){const s=S.shake*.25;camera.position.x+=rnd(-s,s);camera.position.y+=rnd(-s,s);camera.position.z+=rnd(-s,s);}
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
@@ -11992,20 +11986,26 @@ function vmFistPose(m,f,dt){const e0=punchE(f),r=f.punchL?0:e0,l=f.punchL?e0:0,s
     g.position.set(sx*lerp(.19,.05,hit),lerp(-.2,-.085,hit)+by-drop,lerp(-.52,-.7,hit));
     g.rotation.set(lerp(.32,.24,hit),sx*lerp(-.32,.2,hit),sx*lerp(-.2,-.45,hit));g.scale.setScalar(lerp(1,1.1,hit));}  // guard: angled in and up; punch: straight out, turning over
   m.visible=true;}
+/* First person camera option: the view sits in your head with the gun (or fists) drawn in front of you, lowered at the hip and raised to the sights on aim.
+   It drops back to third person for finishers (either side), going down, Man Down falls, ladders, and while a sword or bat is out (their swings read from behind). */
+const FP_GUNS=[...VM_GUNS,'sniper','scout','reaper','titan','vanguard','phantom','flamer'];
+const fpWant=f=>OPT.cam==='1'&&f===ME&&f.alive&&!f.downed&&!f.finishing&&!(f.finishT>0)&&!f.edgeFall&&!f.onLadder&&(FP_GUNS.includes(gunOf(f))||gunOf(f)==='fists');
 const vmWant=f=>f===ME&&f.alive&&!f.downed&&!f.finishing&&(f.ads&&VM_GUNS.includes(gunOf(f))||gunOf(f)==='fists'&&!(f.edgeFall));
-function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.paused&&vmWant(f);
-  const at=(GUNS[id]&&GUNS[id].ads)||.2;VM.raise=clamp(VM.raise+(want?dt/at:-dt/Math.min(.15,at*.6)),0,1);if(VM.raise<=0){if(VM.cur)VM.cur.visible=false;return;}
+function updVM(dt){const f=ME,id=gunOf(f),live=D.active&&S.state!=='menu'&&!S.paused,fp=live&&fpWant(f),want=live&&(vmWant(f)||fp);
+  const at=(GUNS[id]&&GUNS[id].ads)||.2;VM.raise=clamp(VM.raise+(want?dt/at:-dt/Math.min(.15,at*.6)),0,1);
+  VM.fp=clamp((VM.fp||0)+(fp?dt/.18:-dt/.15),0,1);VM.aim=VM.fp>0?clamp((VM.aim||0)+(f.ads&&f.alive?dt/at:-dt/Math.min(.15,at*.6)),0,1):VM.raise;  /* how far the gun is up at the sights (in first person it is drawn at the hip until you aim) */
+  if(VM.raise<=0){if(VM.cur)VM.cur.visible=false;return;}
   vmInit();if(id==='fists'||(!VM_GUNS.includes(id)&&VM.curId==='fists')){const m=vmFists(f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}VM.curId='fists';VM.t+=dt;vmFistPose(m,f,dt);return;}
-  if(VM_GUNS.includes(id))VM.curId=id;const m=vmModel(VM.curId||'ar',f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}m.visible=true;gunFx(m,f,VM.curId||'ar',dt);
-  VM.t+=dt;VM.kick=Math.max(f.kick||0,VM.kick-dt*7);const e=VM.raise*VM.raise*(3-2*VM.raise);const ud=m.userData,sc=.36;
+  if(FP_GUNS.includes(id))VM.curId=id;const m=vmModel(VM.curId||'ar',f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}m.visible=true;gunFx(m,f,VM.curId||'ar',dt);
+  VM.t+=dt;VM.kick=Math.max(f.kick||0,VM.kick-dt*7);const e=VM.aim*VM.aim*(3-2*VM.aim),drop=VM.fp>0?(1-VM.raise)*.35:0;const ud=m.userData,sc=.36*(VM.fp>0&&isSn(VM.curId)?1-.25*(1-e):1);  /* first person: the big sniper scopes are drawn smaller at the hip so they don't fill the screen */
   const sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8);const swx=Math.sin(VM.t*1.3)*.004+Math.sin(VM.t*9)*.006*bob,swy=Math.sin(VM.t*1.9)*.003+Math.abs(Math.cos(VM.t*9))*.006*bob;
   const relo=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI):0;
   // aimed: sight line on the screen centre; lowered: down and to the right
-  const ax=(ud.dx||0)*sc,ay=-ud.sightY*sc,az=-.3+ud.rearZ*sc,lx=.2,ly=-.42,lz=-.38;
-  m.position.set(lerp(lx,ax,e)+swx,lerp(ly,ay,e)+swy-relo*.12,lerp(lz,az,e)+VM.kick*.035);
-  m.rotation.set(lerp(-.25,0,e)+VM.kick*.05+relo*.5,lerp(.18,0,e),lerp(.25,0,e)-relo*.3);m.scale.setScalar(sc);
+  const ax=(ud.dx||0)*sc,ay=-ud.sightY*sc,az=-.3+ud.rearZ*sc,q=VM.fp*VM.fp*(3-2*VM.fp),lx=lerp(.2,.12,q),ly=lerp(-.42,-.17,q),lz=lerp(-.38,-.36,q);  /* first person: held at the hip, in view */
+  m.position.set(lerp(lx,ax,e)+swx,lerp(ly,ay,e)+swy-relo*.12-drop,lerp(lz,az,e)+VM.kick*.035);
+  m.rotation.set(lerp(lerp(-.25,-.03,q),0,e)+VM.kick*.05+relo*.5,lerp(lerp(.18,.05,q),0,e),lerp(lerp(.25,.04,q),0,e)-relo*.3);m.scale.setScalar(sc);
   if(VM.curId==='sting'){m.position.x+=.085*e;m.position.y-=.06*e;m.rotation.z-=.42*e;m.rotation.y+=.07*e;} /* point-shooting: canted low and right, chevron reticle on the HUD */
-  if((VM.curId==='rocket'||VM.curId==='swarm')&&VM.raise>.85&&f.ads)m.visible=false; /* the RPG optic and the Swarm display take over the screen */
+  if((VM.curId==='rocket'||VM.curId==='swarm')&&VM.aim>.85&&f.ads)m.visible=false;if(isSn(VM.curId)&&f.ads&&VM.aim>.5)m.visible=false; /* the scope overlay takes over */ /* the RPG optic and the Swarm display take over the screen */
   {const on=f.flashT>.02;for(const fl of ud.flash){fl.material.opacity=on?.55:0;fl.rotation.z=Math.random()*3;fl.scale.setScalar(.7+Math.random()*.5);}}}
 function renderVM(){if(!VM.cur||!VM.cur.visible||VM.raise<=0)return;VM.cam.aspect=innerWidth/innerHeight;VM.cam.updateProjectionMatrix();
   const ac=renderer.autoClear;renderer.autoClear=false;renderer.clearDepth();renderer.render(VM.scene,VM.cam);renderer.autoClear=ac;}

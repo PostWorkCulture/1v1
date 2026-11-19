@@ -8206,13 +8206,44 @@ function cracks(x,y,z){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new T
   m.rotation.x=-Math.PI/2;m.rotation.z=rnd(0,TAU);m.position.set(x,y+.035,z);m.scale.setScalar(.01);scene.add(m);debris.push({o:m,t:0,ttl:8,fx:d=>{m.material.opacity=Math.min(1,(d.ttl-d.t)/1.5);if(d.t>=7.99){m.geometry.dispose();m.material.dispose();}}});return m;}
 function flashBall(p,col,r){const m=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:1,toneMapped:false,depthWrite:false}));m.position.copy(p);scene.add(m);
   debris.push({o:m,t:0,ttl:.4,fx:d=>{const k=d.t/.4;m.scale.setScalar(.4+k*(r||3));m.material.opacity=Math.max(0,1-k);}});}
-function dogMesh(col){const g=new THREE.Group(),m=mat(col,null,{roughness:.85}),dk=mat('#1b1d23',null,{roughness:.5}),ear=mat(new THREE.Color(col).multiplyScalar(.7).getStyle(),null,{roughness:.85});
-  const body=new THREE.Group();g.add(body);piece(body,RBX(.5,.42,1.0,.1),m,0,.62,0);
-  const head=new THREE.Group();head.position.set(0,.86,.52);body.add(head);piece(head,RBX(.42,.38,.42,.08),m,0,.06,.06);piece(head,RBX(.24,.17,.28,.05),m,0,.0,.34);
-  piece(head,new THREE.BoxGeometry(.1,.07,.04),dk,0,.05,.49,{outline:false});for(const sx of [-1,1]){piece(head,new THREE.BoxGeometry(.06,.06,.02),dk,sx*.11,.14,.28,{outline:false});piece(head,new THREE.BoxGeometry(.1,.17,.06),ear,sx*.16,.3,-.02,{rot:[0,0,sx*.35]});}
-  const jaw=new THREE.Group();jaw.position.set(0,-.08,.22);head.add(jaw);piece(jaw,RBX(.2,.06,.26,.02),m,0,-.03,.12);
-  const tail=new THREE.Group();tail.position.set(0,.78,-.48);body.add(tail);piece(tail,new THREE.BoxGeometry(.08,.08,.36),m,0,0,-.16);
-  const legs=[];for(const [x,z] of [[-.17,.35],[.17,.35],[-.17,-.35],[.17,-.35]]){const l=new THREE.Group();l.position.set(x,.46,z);body.add(l);piece(l,new THREE.BoxGeometry(.13,.46,.13),m,0,-.22,0);legs.push(l);}
+/* four dog breeds for Dog pile: a brown boxer, a black lab, a golden retriever and a grey-and-white husky.
+   Rounded bodies with a deep chest, a neck, a proper snout and nose, eyes with a highlight, breed ears and tails, jointed legs with paws, and a collar with a gold tag */
+const DOG_BREEDS=[{c:'#8a5a34',b:'#f2ece4',mz:'#2b1d14',ear:'fold',tail:'stub',col:'#c8202a',eye:'#3a2414'},
+  {c:'#2b2d33',b:'#3d4049',mz:'#25272d',ear:'flop',tail:'long',col:'#ff7a1f',eye:'#6a4520'},
+  {c:'#d9a441',b:'#f3d796',mz:'#cf9b3a',ear:'flop',tail:'plume',col:'#2b6fd8',eye:'#4a2c12'},
+  {c:'#8f969f',b:'#eef0f3',mz:'#eef0f3',ear:'up',tail:'curl',col:'#c8202a',eye:'#4fb4ff'}];
+function dogMesh(i){const B=DOG_BREEDS[(i|0)%4],R=o=>Object.assign({roughness:.85},o);
+  const m=mat(B.c,null,R()),lt=mat(B.b,null,R()),mz=mat(B.mz,null,R()),dk=mat('#121317',null,{roughness:.3}),wh=mat('#ffffff',null,{roughness:.25}),pink=mat('#e8687a',null,{roughness:.45}),
+    cl=mat(B.col,null,{roughness:.45}),gold=mat('#f2c230',null,{metalness:.7,roughness:.3}),ey=mat(B.eye,null,{roughness:.15}),brow=mat(new THREE.Color(B.c).multiplyScalar(.55).getStyle(),null,R()),earM=mat(B.ear==='up'?B.c:new THREE.Color(B.c).multiplyScalar(.75).getStyle(),null,R());
+  const g=new THREE.Group(),body=new THREE.Group();g.add(body);
+  // body: deep chest at the front, slimmer hips behind, a lighter chest and belly
+  piece(body,RBX(.5,.48,.56,.17),m,0,.66,.18);piece(body,RBX(.44,.42,.56,.16),m,0,.67,-.25);
+  piece(body,RBX(.34,.18,.62,.08),lt,0,.5,0,{outline:false});piece(body,RBX(.3,.3,.1,.07),lt,0,.62,.45,{outline:false});
+  piece(body,RBX(.3,.34,.3,.11),m,0,.88,.38,{rot:[-.55,0,0]});
+  // collar with a gold tag
+  piece(body,new THREE.TorusGeometry(.165,.035,8,20),cl,0,.9,.4,{rot:[Math.PI/2-.55,0,0],outline:false});piece(body,new THREE.CylinderGeometry(.045,.045,.015,12),gold,0,.75,.52,{rot:[Math.PI/2-.3,0,0],outline:false});
+  // head
+  const head=new THREE.Group();head.position.set(0,1.02,.52);body.add(head);
+  piece(head,RBX(.4,.36,.4,.15),m,0,.05,0);piece(head,RBX(.25,.19,.3,.08),mz,0,-.04,.26);
+  if(B.ear==='up')piece(head,RBX(.3,.16,.1,.06),lt,0,0,.17,{outline:false});
+  piece(head,RBX(.12,.085,.08,.035),dk,0,.035,.41,{outline:false});
+  for(const sx of [-1,1]){piece(head,new THREE.SphereGeometry(.052,12,10),wh,sx*.1,.1,.18,{outline:false});piece(head,new THREE.SphereGeometry(.036,10,8),ey,sx*.1,.1,.212,{outline:false});
+    piece(head,new THREE.SphereGeometry(.017,8,6),dk,sx*.1,.1,.236,{outline:false});piece(head,new THREE.SphereGeometry(.009,6,5),wh,sx*.1+.012,.113,.247,{outline:false});
+    piece(head,RBX(.09,.026,.04,.012),brow,sx*.1,.165,.19,{rot:[0,0,sx*.22],outline:false});
+    if(B.ear==='flop'){const e=new THREE.Group();e.position.set(sx*.18,.17,-.03);head.add(e);piece(e,RBX(.07,.27,.16,.035),earM,sx*.03,-.11,0,{rot:[0,0,sx*.22]});}
+    else if(B.ear==='fold')piece(head,RBX(.13,.12,.045,.02),earM,sx*.16,.2,-.02,{rot:[.55,0,sx*.65]});
+    else{piece(head,new THREE.ConeGeometry(.085,.21,4),earM,sx*.13,.28,-.04,{rot:[0,Math.PI/4,-sx*.2]});piece(head,new THREE.ConeGeometry(.05,.14,4),pink,sx*.13,.27,-.005,{rot:[0,Math.PI/4,-sx*.2],outline:false});}}
+  // lower jaw with tongue and teeth (it opens when they bark and bite)
+  const jaw=new THREE.Group();jaw.position.set(0,-.11,.17);head.add(jaw);piece(jaw,RBX(.21,.065,.26,.025),mz,0,-.02,.1);
+  piece(jaw,RBX(.1,.026,.17,.012),pink,0,.018,.1,{outline:false});for(const sx of [-1,1])piece(jaw,new THREE.ConeGeometry(.016,.045,4),wh,sx*.065,.035,.2,{outline:false});
+  // tail
+  const tail=new THREE.Group();tail.position.set(0,.82,-.52);body.add(tail);
+  if(B.tail==='stub')piece(tail,RBX(.08,.08,.14,.035),m,0,0,-.06);
+  else if(B.tail==='curl'){piece(tail,new THREE.TorusGeometry(.12,.055,8,16,Math.PI*1.4),m,0,.12,-.06,{rot:[0,Math.PI/2,Math.PI*.3]});piece(tail,new THREE.SphereGeometry(.065,10,8),lt,0,.25,-.02,{outline:false});}
+  else{piece(tail,new THREE.CylinderGeometry(.03,.055,.46,8).rotateX(Math.PI/2),m,0,0,-.22);if(B.tail==='plume')piece(tail,RBX(.06,.13,.38,.05),lt,0,-.06,-.24);}
+  // legs: upper, lower and a paw
+  const legs=[];for(const [x,z] of [[-.15,.36],[.15,.36],[-.15,-.38],[.15,-.38]]){const l=new THREE.Group();l.position.set(x,.5,z);body.add(l);
+    piece(l,RBX(.15,.28,.17,.06),m,0,-.1,0);piece(l,RBX(.11,.22,.12,.045),B.ear==='up'?lt:m,0,-.32,z<0?-.02:0);piece(l,RBX(.15,.07,.19,.03),lt,0,-.455,.03);legs.push(l);}
   g.scale.setScalar(SC*1.1);return {g,body,head,jaw,tail,legs};}
 function heartMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:'#c8102e',roughness:.45,emissive:'#5a0010',emissiveIntensity:.35}),dk=new THREE.MeshStandardMaterial({color:'#7d0d17',roughness:.6});
   piece(g,RBX(.15,.15,.13,.05),m,-.065,.05,0);piece(g,RBX(.15,.15,.13,.05),m,.065,.05,0);piece(g,RBX(.15,.15,.13,.03),m,0,-.04,0,{rot:[0,0,Math.PI/4]});
@@ -8328,7 +8359,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
   if(fx==='Dog pile'){
     const C=F.v0.clone().addScaledVector(fw,1.3*SC);
     if(!F.dogs){F.dogs=[];const cols=['#8a5a34','#2b2d33','#d9a441','#d8dbe2'],spots=[[-1,.55],[1,.55],[-1,-.55],[1,-.55]];
-      spots.forEach(([s,f],i)=>{const d=dogMesh(cols[i]);const T=C.clone().addScaledVector(side,s*1.05*SC).addScaledVector(fw,f*1.0*SC);
+      spots.forEach(([s,f],i)=>{const d=dogMesh(i);const T=C.clone().addScaledVector(side,s*1.05*SC).addScaledVector(fw,f*1.0*SC);
         const out=side.clone().multiplyScalar(s*.75).addScaledVector(fw,f*.65).normalize();const st=T.clone().addScaledVector(out,13);
         d.T=T;d.st=st;d.out=out;d.face=Math.atan2(-out.x,-out.z);d.i=i;d.g.position.copy(st);d.g.visible=false;scene.add(d.g);F.obj.push(d.g);F.dogs.push(d);});}
     // attacker walks up, shoves, backs off and whistles

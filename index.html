@@ -5166,13 +5166,14 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
        on the far side of the arena, facing out of it with your speed carried through. Orange one end, blue the other; a short cooldown stops you bouncing straight back */
     {const PO=[{x:14.5,z:8-1.6,nz:-1,col:'#ff8a2a'},{x:-14.5,z:-8+1.6,nz:1,col:'#3aa8ff'}];
      for(const P of PO){const g=new THREE.Group();g.position.set(P.x,0,P.z+P.nz*.012);g.rotation.y=P.nz>0?0:Math.PI;M.group.add(g);
-       const rec=new THREE.Mesh(new THREE.PlaneGeometry(1.9,2.9),new THREE.MeshBasicMaterial({color:'#05060a'}));rec.position.y=1.45;g.add(rec);
+       /* the portal is a slim dark block standing out from the pillar as far as its base (so neither the base nor the white band cuts into it); the swirl fills its face exactly and the frame hugs its edges */
+       const PW=1.9,PH=2.9,PD=.28,FT=.08;const rec=new THREE.Mesh(new THREE.BoxGeometry(PW,PH,PD),new THREE.MeshBasicMaterial({color:'#05060a'}));rec.position.set(0,FT+PH/2,PD/2);g.add(rec);
        /* the swirl fills the whole square opening (straight edges all round, like the recess it sits in): the picture spins, not the panel */
        const tx=canvasTex(256,256,(c,w,h)=>{c.fillStyle='#10131c';c.fillRect(0,0,w,h);const gr=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w*.62);gr.addColorStop(0,'#ffffff');gr.addColorStop(.22,P.col);gr.addColorStop(.75,'#10131c');gr.addColorStop(1,P.col);c.fillStyle=gr;c.fillRect(0,0,w,h);
          c.translate(w/2,h/2);c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=5;for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.beginPath();for(let t=0;t<1;t+=.02){const r=t*w*.7,an=t*5;c.lineTo(Math.cos(an)*r,Math.sin(an)*r);}c.stroke();}});
        tx.center.set(.5,.5);tx.wrapS=tx.wrapT=THREE.MirroredRepeatWrapping;tx.needsUpdate=true;
-       const sw=new THREE.Mesh(new THREE.PlaneGeometry(1.86,2.86),new THREE.MeshBasicMaterial({map:tx,transparent:true,opacity:.95,toneMapped:false,depthWrite:false}));sw.position.set(0,1.45,.012);sw.userData.dyn=1;g.add(sw);P.tx=tx;
-       const fm=new THREE.MeshBasicMaterial({color:P.col,toneMapped:false});for(const [w,h,x,y] of [[2.02,.09,0,2.94],[2.02,.09,0,-.04],[.09,3.02,-.97,1.45],[.09,3.02,.97,1.45]]){const bar=new THREE.Mesh(new THREE.BoxGeometry(w,h,.05),fm);bar.position.set(x,y+(y<0?.08:0),.03);g.add(bar);}
+       const sw=new THREE.Mesh(new THREE.PlaneGeometry(PW,PH),new THREE.MeshBasicMaterial({map:tx,transparent:true,opacity:.95,toneMapped:false,depthWrite:false}));sw.position.set(0,FT+PH/2,PD+.004);sw.userData.dyn=1;g.add(sw);P.tx=tx;
+       const fm=new THREE.MeshBasicMaterial({color:P.col,toneMapped:false});for(const [w,h,x,y] of [[PW+2*FT,FT,0,FT+PH+FT/2],[PW+2*FT,FT,0,FT/2],[FT,PH+2*FT,-(PW+FT)/2,(PH+2*FT)/2],[FT,PH+2*FT,(PW+FT)/2,(PH+2*FT)/2]]){const bar=new THREE.Mesh(new THREE.BoxGeometry(w,h,PD+.03),fm);bar.position.set(x,y,(PD+.03)/2);g.add(bar);}
        const L=new THREE.PointLight(P.col,6,9,1.8);L.position.set(P.x,1.6,P.z+P.nz*1);window.GFX&&GFX.light(L);M.group.add(L);}
      M.life.push((t,dt)=>{for(const P of PO)P.tx.rotation-=dt*2.2*P.nz;
        for(const f of FS){if(!f.alive||f.downed||S.t-(f._ptT||-9)<1)continue;

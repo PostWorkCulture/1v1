@@ -51,6 +51,8 @@ All styles push when you're low, play safer when hurt, and chase the clock late 
 
 **Sniper glass and triggers** – every sniper scope has a coated, mirror-like front lens (sky reflection and highlight streaks, tinted to match the gun) and a see-through eyepiece you can look into, with the reticle inside; every sniper has a big polished trigger (chrome, bronze or gold).
 
+**First-person look** – the guns and fists in first person no longer have the thick black cartoon outline. Hands are rebuilt: dark woven tactical gloves with separate fingers wrapped round the grip, rubber knuckle pads, a ribbed cuff and a woven sleeve in your character's shirt colour; bare fists have taped knuckles and curled fingers. The first-person lighting is less flat (lower fill, stronger key) so the metal reads from the reflections.
+
 **First person** – with the first-person camera on, every weapon you can hold is drawn in your hands: all six snipers (switching back from fists now brings the sniper up instead of leaving the fists on screen), and the sword and bat are held upright at the bottom right and slash across on each swing.
 
 **Melee damage** – fists 34 a punch (3 to down, 0.36 s between punches), the bat and sword 50 a hit (2 to down). With fists, the bat or the sword out you run 20% faster (outside Rumble, where everyone is on melee). Rumble's air strike (a punch or swing that lands while you're falling onto someone) does the weapon's normal damage plus a big knock-back and a 1 s stun.

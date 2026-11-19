@@ -12937,23 +12937,39 @@ function ws3Frame(now){const cv=WS3.cv;if(!cv||!cv.isConnected||!WS3.piv){WS3.ra
 const VM_GUNS=['ar','gar','burst','shotgun','autoshot','mg','m60','smg','hornet','vector','p90','ump','sting','duals','crossbow','rocket','swarm'];
 const VM={scene:null,cam:null,models:{},cur:null,curId:null,raise:0,kick:0,t:0};
 function vmInit(){if(VM.scene)return;const S2=new THREE.Scene();VM.scene=S2;VM.cam=new THREE.PerspectiveCamera(52,1,.01,20);
-  S2.add(new THREE.HemisphereLight('#ffffff','#556',1.1));const k=new THREE.DirectionalLight('#ffffff',2.2);k.position.set(1.5,3,2);S2.add(k);const r=new THREE.DirectionalLight('#cfe6ff',1.2);r.position.set(-2,1,-1);S2.add(r);
+  S2.add(new THREE.HemisphereLight('#ffffff','#3a3d44',.55));const k=new THREE.DirectionalLight('#fff6ea',2.6);k.position.set(1.5,3,2);S2.add(k);const r=new THREE.DirectionalLight('#cfe6ff',1.4);r.position.set(-2,1,-1);S2.add(r);const lo=new THREE.DirectionalLight('#ffffff',.35);lo.position.set(0,-2,1);S2.add(lo); /* less flat fill: the env map gives the metal its shine */
   try{const ES=new THREE.Scene();ES.background=new THREE.Color('#5d6676');const pn=(c,i,w,h,x,y,z)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);ES.add(m);};
     pn('#ffffff',7,8,2.5,0,6,3);pn('#ffffff',4,3,7,7,1,4);pn('#bfe0ff',3.5,3,7,-7,1,-1);pn('#ffe2c0',3,9,1.5,0,-5,5);const pm=new THREE.PMREMGenerator(renderer);S2.environment=pm.fromScene(ES,.02).texture;pm.dispose();}catch(e){}}
 function gunFx(m,f,id,dt){const U=m.userData;if(!U.heat&&!U.ctr)return;const a=f.ammo[id];if(VM.fxId!==id){VM.fxId=id;VM.fxAmmo=a;VM.heatV=0;}
   if(a<VM.fxAmmo)VM.heatV=Math.min(1,VM.heatV+(VM.fxAmmo-a)*.07);VM.fxAmmo=a;VM.heatV=Math.max(0,VM.heatV-dt*.22);
   if(U.heat)for(const h of U.heat)h[0].opacity=h[1]*VM.heatV;if(U.ctr)U.ctr(a);}
+/* first-person glove + sleeve materials: dark synthetic glove with a fine weave, rubber knuckle pads, ribbed cuff, sleeve in the character's shirt colour with a fabric weave */
+const VMGM={};function vmGloveMats(shirt){if(VMGM[shirt])return VMGM[shirt];const tx=(f,rep)=>{const c=document.createElement('canvas');c.width=c.height=128;f(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);if(THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;return t;};
+  const weave=(base,a)=>tx(x=>{x.fillStyle=base;x.fillRect(0,0,128,128);for(let y=0;y<128;y+=4)for(let i=0;i<128;i+=4){x.fillStyle=((i+y)/4)%2?`rgba(255,255,255,${a})`:`rgba(0,0,0,${a*1.4})`;x.fillRect(i,y,4,2);x.fillRect(i+((y/4)%2?2:0),y+2,2,2);}},3);
+  const rib=tx(x=>{x.fillStyle='#1b1c1f';x.fillRect(0,0,128,128);for(let i=0;i<128;i+=6){x.fillStyle='rgba(255,255,255,.08)';x.fillRect(i,0,3,128);}},2);
+  const sh=new THREE.Color(shirt);sh.multiplyScalar(.85);
+  return VMGM[shirt]={glove:new THREE.MeshStandardMaterial({color:'#3a3d42',map:weave('#3a3d42',.06),roughness:.78,metalness:.05}),pad:new THREE.MeshStandardMaterial({color:'#1a1b1e',roughness:.45,metalness:.1}),
+    cuff:new THREE.MeshStandardMaterial({map:rib,roughness:.85,side:THREE.DoubleSide}),sleeve:new THREE.MeshStandardMaterial({color:sh,map:weave('#ffffff',.07),roughness:.92,side:THREE.DoubleSide})};}
 function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.models[key];
   const RBx=B.roundedBox;const g=heroModel(id,RBx,true);g.traverse(o=>{if(o.userData.fpOnly)o.visible=true;});const sightY=g.userData.sightY||.25,rearZ=g.userData.rearZ||-.1;
   const look=(CHARS[charId]&&CHARS[charId].look)||{};const sleeve=new THREE.MeshStandardMaterial({color:look.shirt||'#2b2d33',roughness:.8}),hand=new THREE.MeshStandardMaterial({color:'#efe7d6',roughness:.7});
   const blk=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.03,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;};
-  // right hand on the pistol grip, left hand under the handguard, sleeves running back out of view
-  const H=g.userData.hands||{r:[0,-.2,-.13],l:[.1,-.02,.6]};const [rx,ry,rz]=H.r,[lx,ly,lz]=H.l;
-  blk(.17,.2,.17,hand,rx,ry,rz,.25);blk(.2,.2,.62,sleeve,rx+.04,ry-.22,rz-.3,.75); // right hand on the grip
-  if(H.twin){blk(.17,.2,.17,hand,lx,ly+.1,lz,.25);blk(.2,.2,.62,sleeve,lx+.02,ly-.03,lz-.37,.35);}
-  else{blk(.08,.17,.22,hand,lx,ly,lz);blk(.17,.1,.22,hand,lx-.08,ly-.08,lz);blk(.2,.2,.7,sleeve,lx+.06,ly-.36,lz-.22,.85);} // left hand wraps the handguard
-  blk(.05,.06,.14,hand,rx-.085,ry+.26,rz+.03); // right thumb
-  heroOutline(g,.0025);
+  // gloved hands: right hand wrapped round the pistol grip, left hand cupping the handguard, woven sleeves running back out of view
+  const H=g.userData.hands||{r:[0,-.2,-.13],l:[.1,-.02,.6]};const [rx,ry,rz]=H.r,[lx,ly,lz]=H.l,GM=vmGloveMats(look.shirt||'#2b2d33');
+  const cap=(r,len,m,x,y,z,ax,rr=0)=>{const me=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,4,10),m);me.position.set(x,y,z);if(ax==='x')me.rotation.z=Math.PI/2;else if(ax==='z')me.rotation.x=Math.PI/2;if(rr)me.rotation[ax==='x'?'x':'z']+=rr;g.add(me);return me;};
+  const tube=(r0,r1,len,m,x,y,z,rx2)=>{const me=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,len,18,1,true),m);me.position.set(x,y,z);me.rotation.x=rx2;g.add(me);return me;};
+  const gripHand=(x,y,z)=>{ // palm on the back strap, four fingers round the front, thumb over the top, knuckle guard, cuff and sleeve
+    blk(.13,.17,.11,GM.glove,x+.005,y,z-.045,.25);blk(.03,.12,.12,GM.pad,x+.07,y+.01,z-.02,.25);
+    for(let i=0;i<4;i++){const fy=y+.065-i*.045,fz=z+.07+i*.006;cap(.024,.09,GM.glove,x-.01,fy,fz,'x');blk(.034,.03,.03,GM.pad,x+.05,fy+.004,fz-.004);}
+    cap(.024,.08,GM.glove,x-.075,y+.13,z+.0,'z',.25);blk(.05,.06,.07,GM.glove,x-.065,y+.07,z-.04,.3);
+    tube(.075,.07,.1,GM.cuff,x+.02,y-.16,z-.14,.75);tube(.1,.088,.7,GM.sleeve,x+.04,y-.38,z-.4,.75);};
+  gripHand(rx,ry,rz);
+  if(H.twin)gripHand(lx,ly+.1,lz);
+  else{ // left hand: palm under the handguard, fingers curling up the far side, thumb along the near side
+    blk(.15,.05,.2,GM.glove,lx-.075,ly-.085,lz,0);for(let i=0;i<4;i++){const fz=lz+.075-i*.05;cap(.023,.09,GM.glove,lx,ly-.01,fz,'y');blk(.026,.03,.034,GM.pad,lx+.022,ly+.035,fz);}
+    cap(.024,.11,GM.glove,lx-.165,ly-.02,lz+.03,'z');blk(.03,.06,.13,GM.pad,lx-.075,ly-.12,lz,0);
+    tube(.075,.07,.1,GM.cuff,lx+.03,ly-.17,lz-.13,.85);tube(.1,.088,.75,GM.sleeve,lx+.06,ly-.38,lz-.3,.85);}
+  /* no cartoon outline in first person: it read as toon-shaded at this size */
   const wrap=new THREE.Group();g.rotation.y=Math.PI;wrap.add(g);wrap.userData={sightY,rearZ,dx:g.userData.dx||0};
   const fm=()=>new THREE.Mesh(new THREE.PlaneGeometry(.22,.22),flashMat());
   const fl=fm(),fl2=fm();fl2.visible=false;const fg=new THREE.Group();fg.add(fl,fl2);fg.position.set(0,g.userData.muzY??.05,g.userData.muzZ||1.48);fg.visible=id!=='rocket'&&id!=='crossbow'&&id!=='swarm';g.add(fg);wrap.userData.flash=[fl,fl2];
@@ -12962,15 +12978,17 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
 function vmFists(charId){const key='fists|'+charId;if(VM.models[key])return VM.models[key];const look=(CHARS[charId]&&CHARS[charId].look)||{};const RBx=B.roundedBox;
   const hand=new THREE.MeshStandardMaterial({color:'#e2b48c',roughness:.6}),wrapM=new THREE.MeshStandardMaterial({color:'#f2efe8',roughness:.8}),sleeve=new THREE.MeshStandardMaterial({color:look.shirt||'#2b2d33',roughness:.8}),cuff=new THREE.MeshStandardMaterial({color:look.shirtSolid||'#1b1d23',roughness:.8});
   const wrap=new THREE.Group();
-  const mk=sx=>{const g=new THREE.Group(),b=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.022,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;};
-    b(.1,.09,.11,hand,0,0,0);                                            // fist
-    for(let k=0;k<4;k++)b(.022,.028,.028,hand,-.037+k*.025,.012,-.06);   // knuckles, facing forward
-    b(.104,.05,.06,wrapM,0,-.02,.03);                                    // hand wrap round the palm
-    b(.03,.034,.065,hand,-sx*.055,-.018,-.02);                           // thumb, on the inside
-    b(.085,.08,.06,cuff,0,-.004,.09);                                    // cuff
-    b(.092,.088,.42,sleeve,0,-.006,.32);                                 // forearm, running back out of view
+  const GM=vmGloveMats(look.shirt||'#2b2d33'),skin=new THREE.MeshStandardMaterial({color:'#d8a37c',roughness:.55,metalness:0}),tape=GM.tape||(GM.tape=new THREE.MeshStandardMaterial({color:'#efeae0',map:GM.cuff.map&&(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='#efeae0';x.fillRect(0,0,64,64);for(let i=0;i<64;i+=8){x.fillStyle='rgba(0,0,0,.06)';x.fillRect(0,i,64,2);}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);return t;})(),roughness:.85}));
+  const mk=sx=>{const g=new THREE.Group(),b=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.012,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;},
+      cap=(r,len,m,x,y,z,rz=0,rx=0)=>{const me=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,4,10),m);me.position.set(x,y,z);me.rotation.set(rx,0,rz);g.add(me);return me;};
+    b(.096,.085,.1,skin,0,0,.005);                                                        // back of the hand / palm
+    for(let k=0;k<4;k++){const x=-.036+k*.024,lift=k===0||k===3?-.004:0;cap(.0125,.006,tape,x,.014+lift,-.052,0,Math.PI/2);cap(.0118,.004,skin,x,-.012+lift,-.055,0,0);} // taped knuckles + curled fingers
+    cap(.012,.04,skin,-sx*.012,-.034,-.044,Math.PI/2);                                    // thumb folded across the front
+    b(.1,.05,.07,tape,0,-.012,.03);                                                       // tape round the palm
+    const cf=new THREE.Mesh(new THREE.CylinderGeometry(.052,.05,.06,18),GM.cuff);cf.rotation.x=Math.PI/2;cf.position.set(0,-.004,.09);g.add(cf); // ribbed cuff
+    const sl=new THREE.Mesh(new THREE.CylinderGeometry(.056,.05,.42,18),GM.sleeve);sl.rotation.x=Math.PI/2;sl.position.set(0,-.006,.33);g.add(sl);   // sleeve running back out of view
     return g;};
-  const R=mk(1),L=mk(-1);wrap.add(R,L);heroOutline(wrap,.0025);wrap.userData={fists:true,R,L};VM.models[key]=wrap;return wrap;}
+  const R=mk(1),L=mk(-1);wrap.add(R,L); /* no cartoon outline */wrap.userData={fists:true,R,L};VM.models[key]=wrap;return wrap;}
 function vmFistPose(m,f,dt){const e0=punchE(f),r=f.punchL?0:e0,l=f.punchL?e0:0,sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8),t=VM.t;
   const k=VM.raise*VM.raise*(3-2*VM.raise),drop=(1-k)*.35;
   for(const [g,sx,hit,ph] of [[m.userData.R,1,r,0],[m.userData.L,-1,l,1.7]]){

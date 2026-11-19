@@ -7258,7 +7258,7 @@ function moveAxis(f,dx,dz){const nx=f.pos.x+dx,nz=f.pos.z+dz;let lift=0;if(M.dee
 const TGQ=[];function touchGlass(b,f){if(!TGQ.some(q=>q.b===b))TGQ.push({b,at:new V3(f.pos.x,f.pos.y+1.1,f.pos.z)});}
 function flushGlass(){while(TGQ.length){const q=TGQ.shift();if(q.b.alive)breakProp(q.b,q.at);}}
 /* on a map with an open edge (Sky High) you aren't held inside the map's bounds: the glass is the wall. Bots stay held unless they're knocked or in the air */
-const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||!!(f.ai&&f.ai.reck)||f.thrownT>0||!f.grounded||!!(f.finishing&&f.finishing.fall));
+const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||!!(f.ai&&f.ai.reck)||f.thrownT>0||(!f.grounded&&(S.players!=='ffa'||!f.ai||f.ai.airLoose))/* free for all: a bot mid-jump is only sometimes let over the edge */||!!(f.finishing&&f.finishing.fall));
 /* ---------- Man Down: you went through the glass and off the edge. Slow motion, a camera out over the drop, and you lose the round ---------- */
 function startEdgeFall(f){const ax=Math.abs(f.pos.x)/18.5>Math.abs(f.pos.z)/22.5,n=M.edgeN?M.edgeN(f.pos.x,f.pos.z):ax?new V3(Math.sign(f.pos.x),0,0):new V3(0,0,Math.sign(f.pos.z));
   const out=f.vel.x*n.x+f.vel.z*n.z;if(out<3.2){f.vel.x+=n.x*(3.2-out);f.vel.z+=n.z*(3.2-out);}
@@ -8950,7 +8950,7 @@ function botTarget(f){const a=f.ai,ally=f!==ME&&!isFoe(f,ME);const saving=FS.fin
    or when its target is nearly dead). A reckless bot isn't held back from open edges (Sky High's glass, Lagoon's boards), so like a player it can
    crash through and fall off */
 function botReckless(f){const a=f.ai;if(!a)return false;if(S.t>(a.rkT||-1)){a.rkT=S.t+rnd(2.5,4.5);let p={easy:.3,normal:.14,hard:.06}[S.diff]??.14;
-    if(f.hp<35)p+=.15;const T=a.tgt;if(T&&T.alive&&(T.downed||T.hp<35))p+=.12;a.reck=Math.random()<p;}return!!a.reck;}
+    if(f.hp<35)p+=.15;const T=a.tgt;if(T&&T.alive&&(T.downed||T.hp<35))p+=.12;if(S.players==='ffa')p*=.4;/* a crowded free for all already gives plenty of chances to fall: bots take that risk less often */a.reck=Math.random()<p;a.airLoose=Math.random()<.35;}return!!a.reck;}
 /* something to blow up near the target: an explosive drum within its blast of them, or (for rockets and grenade launchers) the destructible
    building they were last seen in. Needs a clear shot from the bot's eye; the bot keeps its distance so it doesn't catch the blast itself */
 const BLAST_IDS=new Set(['rocket','swarm']);

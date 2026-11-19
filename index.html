@@ -4966,12 +4966,49 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
     /* taller steel panels along the rail for a bit more cover */
     for(const [a,b,c,d] of [[x0-.3,x0,-4,0],[x0-.3,x0,6,10],[27,31,z0-.3,z0],[22,26,z1,z1+.3]])wcBox(a,b,H+1.25,H+1.8,c,d,'#7d838c',{tx:'ribs'});
     floor(x0,x1,z0,z1,'#7d776c','asphalt',.02,2);
-    // spur track through the shed (empty: the green locomotive is gone, so the floor is open)
-    for(const s of [-.75,.75])box(27+s,0,3,.12,.16,30,'#b8bec6',{solid:false,edges:false});
-    // workbenches and stores along the walls, drums, tools
-    box(x1-.8,0,-4,1.1,.95,5,'#5b6070',{chip:true,hp:160});
-    rlDrum(x1-.7,0,10.5);
-    knock(x1-.8,.95,-5.6,.5,.28,.24,'#e8463a');knock(x1-.8,.95,-3,.3,.24,.2,'#9aa0a8');knock(x1-.7,.95,-2.2,.1,.22,.1,'#3bb54a',{cyl:1});
+    /* a station waiting room: tiled floor, everything pushed against the walls so the middle stays open to fight in. Benches along the back and both
+       end walls, a departures screen and a clock on the back wall, a small table with a newspaper and a coffee, a bin and potted plants in the corners */
+    floor(x0+.2,x1-.2,z0+.2,z1-.2,'#d9d4ca','tile',.03,1.2);
+    {const steel=mat('#2b2e35',null,{metalness:.6,roughness:.35}),slat=mat('#b5793f','wood'),IW=x1-.18,SZ0=z0+.18,SZ1=z1-.18;
+      // a station bench: steel legs and armrests, a slatted wooden seat and back; axis 'z' sits against the back wall (facing -x), 'x' against an end wall
+      const bench=(axis,c,a0,a1,inw)=>{const L=a1-a0,D=.62;const at=(u,v)=>axis==='z'?[c+inw*v,u]:[u,c+inw*v];
+        const bx=(u0,u1,v0,v1,y0,y1,m,solid)=>{const [xa,za]=at(u0,v0),[xb,zb]=at(u1,v1),X0=Math.min(xa,xb),X1=Math.max(xa,xb),Z0=Math.min(za,zb),Z1=Math.max(za,zb);
+          deco(B.boxGeo(X1-X0,y1-y0,Z1-Z0),m,(X0+X1)/2,(y0+y1)/2,(Z0+Z1)/2);if(solid)collider(X0,X1,y0,y1,Z0,Z1);};
+        for(let k=0;k<4;k++)bx(a0+.04,a1-.04,.12+k*.12,.21+k*.12,.43,.47,slat);bx(a0,a1,.08,.6,0,.43,INVIS,true);
+        for(let k=0;k<3;k++)bx(a0+.04,a1-.04,.03,.07,.6+k*.13,.7+k*.13,slat);bx(a0,a1,.02,.1,0,1,INVIS,true);
+        const legs=Math.max(2,Math.round(L/1.5)+1);for(let k=0;k<legs;k++){const u=a0+.06+k*(L-.12)/(legs-1);bx(u-.03,u+.03,.08,.58,0,.42,steel);bx(u-.03,u+.03,.03,.08,.4,1,steel);}
+        for(const u of [a0,a1-.05])bx(u,u+.05,.15,.55,.62,.66,steel);};
+      bench('z',IW,-7.1,-3.9,-1);bench('z',IW,-3.1,.1,-1);bench('z',IW,9.6,12.8,-1);
+      bench('x',SZ0,30.4,32.95,1);bench('x',SZ1,21.2,24.1,-1);bench('x',SZ1,30.4,32.95,-1);/* clear of the corner plants and the doorways */
+      // departures screen on the back wall, above the benches: one shot smashes it and it goes dark
+      {const tex=canvasTex(512,288,(g,w,h)=>{g.fillStyle='#05070a';g.fillRect(0,0,w,h);g.fillStyle='#ffb000';g.font='bold 30px Arial';g.fillText('DEPARTURES',18,40);
+          g.fillStyle='#e8eef5';g.font='bold 22px Arial';g.fillText('09:41',w-90,40);g.fillStyle='#ffb000';g.fillRect(18,54,w-36,2);
+          const rows=[['09:45','Maple Street','1','On time'],['09:52','Wreck Cove','2','On time'],['10:04','Sky High Central','1','Delayed 5'],['10:15','Lagoon Pier','3','On time'],['10:27','Club Night','2','Cancelled'],['10:40','Backyard Halt','1','On time']];
+          g.font='20px Arial';rows.forEach((r,k)=>{const y=86+k*33;g.fillStyle='#ffb000';g.fillText(r[0],18,y);g.fillText(r[1],100,y);g.fillText('Plat '+r[2],330,y);
+            g.fillStyle=r[3]==='On time'?'#7dff8a':r[3]==='Cancelled'?'#ff5a4a':'#ffe14a';g.fillText(r[3],420,y);});});
+        const cx=IW-.05,cz=-1.5,cy=2.35,off=mat('#0b0c10',null,{roughness:.2,metalness:.4});
+        deco(B.boxGeo(.08,1.02,1.72),steel,cx,cy,cz);const scr=deco(new THREE.PlaneGeometry(1.6,.9),new THREE.MeshBasicMaterial({map:tex,toneMapped:false}),cx-.045,cy,cz);scr.rotation.y=-Math.PI/2;
+        deco(B.boxGeo(.1,.06,.3),steel,cx+.04,cy+.55,cz);
+        const b=box(cx-.1,cy-.5,cz,.25,1,1.7,'#0b0c10',{mat:INVIS,edges:false,shadow:false,prop:'lamp',hp:1,snd:'frost',wood:false});
+        b.fell=()=>{scr.material=off;emit(cx-.2,cy,cz,{n:26,speed:5,up:1.5,size:.09,life:.9,grav:16,colors:['#ffffff','#cfe2ff','#9aa0a8']});sfx('smash',{x:cx,y:cy,z:cz},{range:40,vol:.6});};
+        const onM=scr.material;b.onRestore=()=>{scr.material=onM;};}
+      // station clock on the back wall
+      {const cx=IW-.04,cz=10.2,cy=2.6;const face=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#ffffff';g.beginPath();g.arc(64,64,62,0,7);g.fill();g.strokeStyle='#1c1d22';g.lineWidth=6;g.stroke();
+          g.fillStyle='#1c1d22';for(let k=0;k<12;k++){const a=k/12*Math.PI*2;g.fillRect(64+Math.sin(a)*50-2,64-Math.cos(a)*50-5,4,10);}
+          g.lineWidth=5;g.beginPath();g.moveTo(64,64);g.lineTo(64+Math.sin(5.45)*30,64-Math.cos(5.45)*30);g.stroke();g.lineWidth=3;g.beginPath();g.moveTo(64,64);g.lineTo(64+Math.sin(4.3)*44,64-Math.cos(4.3)*44);g.stroke();});
+        const c=deco(new THREE.CylinderGeometry(.34,.34,.06,32),steel,cx,cy,cz);c.rotation.z=Math.PI/2;const f=deco(new THREE.CircleGeometry(.31,32),new THREE.MeshBasicMaterial({map:face,toneMapped:false}),cx-.035,cy,cz);f.rotation.y=-Math.PI/2;}
+      // small table with a newspaper and a coffee, between the back benches and the door
+      {const tx=IW-.38,tz=2.4,top=mat('#f2f1ec',null,{roughness:.4});deco(new THREE.CylinderGeometry(.34,.34,.04,24),top,tx,.72,tz);deco(new THREE.CylinderGeometry(.04,.05,.7,10),steel,tx,.36,tz);deco(new THREE.CylinderGeometry(.22,.24,.03,16),steel,tx,.015,tz);
+        collider(tx-.34,tx+.34,0,.74,tz-.34,tz+.34);
+        const paper=canvasTex(256,180,(g,w,h)=>{g.fillStyle='#f4f1e8';g.fillRect(0,0,w,h);g.fillStyle='#1c1d22';g.font='bold 26px Georgia';g.fillText('IMOK DAILY',40,30);g.fillRect(10,38,w-20,2);
+          g.font='bold 15px Arial';g.fillText('TRAINS BACK ON TIME',14,60);for(let k=0;k<9;k++){g.fillStyle='#8a8a8a';g.fillRect(14,72+k*11,110,4);g.fillRect(134,72+k*11,108,4);}g.fillStyle='#9aa0a8';g.fillRect(134,62,108,40);});
+        const np=deco(B.boxGeo(.36,.012,.26),new THREE.MeshStandardMaterial({map:paper,roughness:.9}),tx-.04,.746,tz+.04);np.rotation.y=.35;
+        deco(new THREE.CylinderGeometry(.045,.038,.1,14),mat('#ffffff'),tx+.14,.79,tz-.12);deco(new THREE.CylinderGeometry(.047,.047,.015,14),mat('#2b2e35'),tx+.14,.845,tz-.12);}
+      // bin and potted plants in the corners
+      {const bx=IW-.3,bz=4.5;deco(new THREE.CylinderGeometry(.26,.24,.85,16),steel,bx,.425,bz);deco(new THREE.CylinderGeometry(.27,.27,.06,16),mat('#c8322b'),bx,.86,bz);collider(bx-.26,bx+.26,0,.88,bz-.26,bz+.26);}
+      for(const [px,pz] of [[x1-.55,z0+.55],[x1-.55,z1-.55],[x0+.7,z1-.55],[x0+.7,z0+.55]]){deco(new THREE.CylinderGeometry(.28,.22,.55,16),mat('#f2f1ec',null,{roughness:.5}),px,.275,pz);
+        for(let k=0;k<7;k++){const a=k/7*Math.PI*2,l=deco(new THREE.ConeGeometry(.12,.8,6),mat('#2e7d3a',null,{roughness:.7}),px+Math.cos(a)*.12,.85,pz+Math.sin(a)*.12);l.rotation.z=Math.cos(a)*.35;l.rotation.x=-Math.sin(a)*.35;}
+        collider(px-.28,px+.28,0,.6,pz-.28,pz+.28);}}
     // white ladder up the east wall to the roof, through the gap in the rail; fuel drums up top
     wLadder(x1+.45,2.45,0,H+.35,-1,0);rlDrum(x0+1.3,H+.35,-6.6);rlDrum(x0+2.1,H+.35,-6.9);rlDrum(x1-1.4,H+.35,-6.4);
     rlSign('ENGINE SHED','#1c1d22','#ffd23f',{stripe:'#f4c22b'},9,.9,x0-.2,6.1,3,-Math.PI/2,'#ffd27a');}

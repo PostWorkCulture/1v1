@@ -1650,6 +1650,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
   #menu #d-wshow .ws-st i{height:7px}#menu #d-wshow .ws-st em{font-size:12px}
   #menu #d-wshow .ws-ov-n{font-size:clamp(20px,5vh,34px)!important}}
 @media (max-height:440px){#menu .mfull.duels[data-step="loadout"] #col3.wsc #d-wshow .ws-img{height:clamp(60px,calc(100vh - 330px),160px)!important}#menu #d-wshow .ws-st div.mg{display:none}}
+#menu .qr-seg{display:flex;width:min(380px,100%);margin:0 auto 10px}#menu .qr-seg[hidden]{display:none}#menu .qr-seg button{flex:1;font-size:13px;padding:8px 10px;white-space:nowrap}
 </style>
 
 </head>
@@ -1765,6 +1766,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <div class="d-lob"><div class="d-chars" id="d-chars"></div><div class="stage" id="d-prof"></div></div>
           <div class="mfoot lobfoot">
             <div class="mneed" id="d-need1"></div>
+            <div class="seg qr-seg" role="radiogroup" aria-label="Map for the next match" hidden><button type="button" role="radio" data-qr="same" aria-checked="true">Play same map</button><button type="button" role="radio" data-qr="rand" aria-checked="false">Play random map</button></div>
             <div class="navrow"><button class="btn mnavback" id="d-fback1" type="button">&#8249; Back</button><button class="btn primary mstart" id="d-next">Loadout</button></div>
           </div>
         </section>
@@ -1791,6 +1793,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <div class="rumble-info" id="d-rinfo" hidden><b>Fists &amp; a bat</b><span>Just your fists in Rumble: no guns, lethals, walls or shop. 34 damage a punch (3 to down). Grab the barbed-wire bat in the middle for 50-damage swings (2 to down) (drop it if you go down). Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
+            <div class="seg qr-seg" role="radiogroup" aria-label="Map for the next match" hidden><button type="button" role="radio" data-qr="same" aria-checked="true">Play same map</button><button type="button" role="radio" data-qr="rand" aria-checked="false">Play random map</button></div>
             <div class="navrow"><button class="btn mnavback" id="d-fback2" type="button">&#8249; Back</button><button class="btn primary mstart" id="d-start">Start</button></div>
             <div class="keys" id="d-keys"><span>Controls are on the pause menu (<kbd>P</kbd>)</span></div>
           </div>
@@ -2060,6 +2063,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
         <div class="dzb-low"><div class="dz-rlog" id="dd-rlog"></div><div class="dd-side"><div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div><div class="newbest" id="dd-unlock"></div></div></div>
         <div class="btns dz-btns">
         <button class="btn primary" id="dd-again">Rematch</button>
+        <button class="btn" id="dd-map">Change map</button>
         <button class="btn" id="dd-load">Change loadout</button>
         <button class="btn" id="dd-home">Home</button>
         <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
@@ -10937,7 +10941,7 @@ function updCamera(dt){S.camFollow=0;
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];if(!priOK(S.gun)||!SECONDARIES.includes(S.sec)||!secOK(S.sec))rollLoad();D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){S.qr=null;if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];if(!priOK(S.gun)||!SECONDARIES.includes(S.sec)||!secOK(S.sec))rollLoad();D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.rlog=[];S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;f.sh=0;f.hi=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;snipeKit(ME);ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='fists';if(S.simple)Object.assign(ME,SIMPLE_KIT);
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -11410,7 +11414,7 @@ function enterMenu(){hideIntro(true);S.manDown=null;$('duel-hud').classList.remo
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
   setLook(ME,CHARS[S.char]?S.char:'wednesday');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'fists':S.simple?SIMPLE_KIT.primary:S.snipers&&!SNIPERS.includes(S.gun)?SNIPERS[0]:(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
-function leave(){$('d-homebtn').hidden=true;S.mstep='setup';clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
+function leave(){$('d-homebtn').hidden=true;S.mstep='setup';S.qr=null;clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
 /* 1v1 rules (Normal or Simple) apply to Duels with 1v1 picked under Players */
 /* Normal / Simple rules apply to 1v1 and 2v2 */
 const rulesOn=()=>S.mode==='duel'&&!S.snipers&&(S.players==='1v1'||S.players==='2v2');
@@ -13172,7 +13176,7 @@ function renderDuelMenu(){
    const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));document.querySelectorAll('#d-dmlen button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.len===dmLen())));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',sk||(!!S.gun&&!!S.sec&&!!S.cons));menuStep();
-  const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';
+  const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';$('d-next0').textContent=S.qr==='map'?'Play':'Character';document.querySelectorAll('.qr-seg').forEach(g=>{g.hidden=S.qr!=='load';g.querySelectorAll('[data-qr]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.qr==='rand')===!!S.qrRand)));});
   $('d-need').textContent=need.length?'Choose '+need.join(', '):'';$('d-need').classList.toggle('ok',!need.length);
   {const ln=lobbyNeeds(),nx=$('d-next');nx.textContent=sk?'Start':'Loadout';nx.classList.toggle('ready',!(sk?need:ln).length);
    $('d-need1').textContent=ln.length?'Choose '+ln.join(', '):'';$('d-need1').classList.toggle('ok',!ln.length);$('d-next0').classList.toggle('ready',!!S.map);$('d-need0').textContent=S.map?'':'Choose a map';}}
@@ -13221,7 +13225,7 @@ $('d-next').addEventListener('click',()=>{if(S.picking)return;
   const cg=S.randChar&&!S.cpDone&&document.querySelector('#d-prof .crg');if(cg&&cg.children.length&&(S.mode==='rumble'||S.simple||!lobbyNeeds().length)){rollChar();S.randCharPre=S.char;S.picking=true;
     pickSpin(cg,S.char,()=>{S.picking=false;S.cpDone=true;$('d-next').click();S.cpDone=false;setTimeout(()=>{if(STG&&STG.id==='__rand')STG.name.textContent='Random';},700);},()=>{if(STG&&CHARS[S.char])STG.name.textContent=CHARS[S.char].name;});return;}
   if(S.mode==='rumble'||S.simple){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);if(!S.map)menuStep('setup');return;}menuStep('loadout');});
-$('d-back').addEventListener('click',()=>menuStep('char'));$('d-back1').addEventListener('click',()=>menuStep('setup'));
+$('d-back').addEventListener('click',()=>{S.qr=null;menuStep('char');renderDuelMenu();});$('d-back1').addEventListener('click',()=>{S.qr=null;menuStep('setup');renderDuelMenu();});
 /* the Random picker: the glow speeds up, hops round the pictures, slows and stops (in red) on the pick, then calls done */
 function pickSpin(g,pick,done,onLand,o){o=o||{};const tiles=[...g.children].filter(t=>t.dataset.rk);const ti=Math.max(0,tiles.findIndex(t=>t.dataset.rk===pick));g.classList.add('picking');
   const H=o.hops||13,seq=[];let last=-1;for(let n=0;n<H;n++){let r;do r=(Math.random()*tiles.length)|0;while(tiles.length>1&&(r===last||(n===H-1&&r===ti)));seq.push(r);last=r;}seq.push(ti);
@@ -13231,11 +13235,11 @@ function pickSpin(g,pick,done,onLand,o){o=o||{};const tiles=[...g.children].filt
 $('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a map']);return;}
   /* Random map still set: the glow hops round the pictures and stops on the map it picked, then on to Character */
   const g=S.randMap&&document.querySelector('#d-maps .mrg');if(g&&!S.picking){rollMap();const pick=S.map;S.randPre=pick;S.picking=true;
-    pickSpin(g,pick,()=>{S.picking=false;menuStep('char');},()=>mapCap(pick));return;}
-  if(S.picking)return;menuStep('char');});
+    pickSpin(g,pick,()=>{S.picking=false;if(S.qr==='map')$('d-start').click();else menuStep('char');},()=>mapCap(pick));return;}
+  if(S.picking)return;if(S.qr==='map'){$('d-start').click();return;}menuStep('char');});
 
 $('m-quick').addEventListener('click',()=>{S.randMap=S.randChar=S.randGun=S.randSec=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();})/* Quick start: random everything, keeps the chosen mode, players and bots */;
-$('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}startMatch();});
+$('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}if(S.qr==='load'){if(S.qrRand){rollMap();S.randPre=S.map;}else if(S.randMap&&S.map)S.randPre=S.map;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}
 $('duel-pause').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)showPV(g.dataset.go);});
@@ -13260,7 +13264,11 @@ $('m-opt-btn').addEventListener('click',e=>{e.stopPropagation();menuOpts();});
 $('duel-pause').addEventListener('click',e=>{if(!menuOptsOn())return;if(e.target===e.currentTarget){menuOptsClose();return;}if(e.target.closest('[data-go="main"]')){e.stopPropagation();menuOptsBack();}},true);
 document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!menuOptsOn()||(typeof KB!=='undefined'&&KB.cap))return;menuOptsBack();});
 $('dp-leave').addEventListener('click',leave);
-$('dd-again').addEventListener('click',startMatch);$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});$('dd-load').addEventListener('click',()=>{leave();menuStep('loadout');if(typeof renderDuelMenu==='function')renderDuelMenu();});$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
+$('dd-again').addEventListener('click',startMatch);$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});/* Change map / Change loadout: back to just that menu screen with everything else kept, then straight into the next match.
+   Change map: the map screen's button reads Play. Change loadout: Start, with a small Play same map / Play random map choice */
+$('dd-load').addEventListener('click',()=>{leave();S.qr='load';S.qrRand=false;menuStep('loadout');renderDuelMenu();});
+$('dd-map').addEventListener('click',()=>{leave();S.qr='map';menuStep('setup');renderDuelMenu();});
+document.querySelectorAll('.qr-seg').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('[data-qr]');if(!b)return;S.qrRand=b.dataset.qr==='rand';renderDuelMenu();}));$('d-homebtn').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});
 
 /* ================= online: play a friend (peer-to-peer) =================
    The host's game runs the match exactly as it does against bots; the friend takes the place of the first enemy bot.

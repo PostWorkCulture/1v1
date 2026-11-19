@@ -11112,7 +11112,7 @@ function dmRespawn(f){setTimeout(()=>sfx('respawn',f,{range:20}),0);f.respawnT=0
 function dmTick(dt){if(!isDM()||S.state!=='fight')return;for(const f of FS)if(!f.alive&&f.respawnT>0&&(!f.finishing||f.finishing.t>3)){f.respawnT-=dt;if(f.respawnT<=0)dmRespawn(f);}}
 function dmWin(w){if(NET.role==='client'&&!NET.replay)return;if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;if(won)markWinningClip(true);S.lastWin=w?w.team:-1;for(const x of FS)if(x!==w)x.stamBoost=false;if(!won)setTimeout(()=>sfx('lose'),450);
   if(won){S.stats.kills++;addXP(20);}else addXP(5);center(won?'Victory':`${nm(w)} wins`,`${w?w.k:0} kills`,won?'win top':'lose top');showRoundEndBar();
-  if(w){startCrown([w]);if(CR.run)S.t0=Math.max(S.t0,crownDur(1));}}
+  /* no crown scene: a short beat on the Victory banner, then straight to the results */S.t0=1.5;}
 /* victory celebrations: everyone stays on the ground doing silly dances (no jumping or floating), each in a different light show,
    picked at random and never the same twice running:
    rave      - neon beams sweeping round the winners and rainbow rings pulsing at their feet
@@ -11329,7 +11329,7 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
   if(pre)center('Eliminated',(won?'Round won · ':S.players==='ffa'&&winner>=0?teamName(winner)+' takes the round · ':'Round lost · ')+sc,(won?'win':'lose')+' top');
   else if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(.8,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){/* no crown animation at the end of a match */}else if(!byFin)celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
+  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(.8,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){/* no crown scene: a short beat on the Victory banner, then straight to the results */S.t0=1.5;}else if(!byFin)celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(b.d||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?(f.hp+(f.armor||0))/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}

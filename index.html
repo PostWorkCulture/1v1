@@ -11163,7 +11163,7 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
   if(pre)center('Eliminated',(won?'Round won · ':S.players==='ffa'&&winner>=0?teamName(winner)+' takes the round · ':'Round lost · ')+sc,(won?'win':'lose')+' top');
   else if(won)center(done?'Victory':'Round won',head?'Headshot · '+sc:sc,'win top');
   else if(winner>=0)center(S.players==='ffa'?teamName(winner)+(done?' wins':' takes the round'):done?'Defeat':'Round lost',sc,'lose top');else center('Draw','Time up','top');
-  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(.8,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){startCrown(FS.filter(f=>f.team===winner));if(CR.run)S.t0=Math.max(S.t0,crownDur(CR.run.n));}else if(!byFin)celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
+  S.matchOver=done;if(won)markWinningClip(done);if(elT>0&&!done)S.t0=Math.max(.8,S.t0-elT);if(pre){clearTimeout(eliminated.ct);eliminated.ct=setTimeout(()=>{if($('d-big').textContent==='Eliminated')center('','');},S.t0*500);}showRoundEndBar();if(winner>=0){if(done){/* no crown animation at the end of a match */}else if(!byFin)celebrate(FS.filter(f=>f.team===winner&&f.alive),false);}}
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(b.d||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?(f.hp+(f.armor||0))/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
@@ -11177,11 +11177,11 @@ function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$(
   const st=S.stats,acc=st.shots?Math.round(st.hits/st.shots*100):0;
   $('dd-res').innerHTML=[['Kills',st.elims],['Damage',Math.round(st.dmg).toLocaleString('en-GB')],['Accuracy',acc+'%'],['Headshots',st.heads],['Deaths',ME.d||0],['K/D',((st.elims||0)/Math.max(1,ME.d||0)).toFixed(1)]].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join('');
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
-  $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();startAutoHome();}
-// no choice on the end-of-match bar within 10 s: back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
+  $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();startAutoHome(won);}
+// no choice on the end-of-match bar within 10 s (20 s after a win): back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
 const AUTO_HOME=10;let autoHomeT=null;
 function stopAutoHome(){if(autoHomeT){clearInterval(autoHomeT);autoHomeT=null;}const e=$('dd-auto');if(e)e.textContent='';}
-function startAutoHome(){stopAutoHome();const end=performance.now()+AUTO_HOME*1000;const tick=()=>{const left=Math.ceil((end-performance.now())/1000);if($('duel-done').hidden||S.state!=='done'||S.replayOpen){stopAutoHome();return;}if(left<=0){stopAutoHome();leave();return;}$('dd-auto').textContent=`Home in ${left}s`;};tick();autoHomeT=setInterval(tick,250);}
+function startAutoHome(won){stopAutoHome();const end=performance.now()+AUTO_HOME*(won?2:1)*1000;const tick=()=>{const left=Math.ceil((end-performance.now())/1000);if($('duel-done').hidden||S.state!=='done'||S.replayOpen){stopAutoHome();return;}if(left<=0){stopAutoHome();leave();return;}$('dd-auto').textContent=`Home in ${left}s`;};tick();autoHomeT=setInterval(tick,250);}
 $('duel-done').addEventListener('pointerdown',stopAutoHome);$('duel-done').addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'||e.code==='Tab')stopAutoHome();});
 const nextUnlock=()=>FX_XP.find(x=>x>(S.xp||0));
 const lvlOf=x=>Math.floor(x/100)+1;

@@ -1507,6 +1507,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
   .pz-set:not([hidden]){height:calc(100vh - 32px);height:calc(100dvh - 32px)}
 }
 /* ===== match results (scorecard): your card on the left (character, Victory/Defeat, place, six numbers; gold edge on a win), the scoreboard on the right (winner's row trimmed in gold), award cards, rounds + XP, buttons ===== */
+#duel-done:has(.dzb){overflow:hidden!important}
 #duel-done{background:rgba(0,0,0,.6)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);align-items:center!important;justify-content:center!important;pointer-events:auto!important;padding:max(20px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))!important;overflow:auto}
 #duel-done .card.ddh.dz.dzb{height:min(720px,calc(100vh - 40px));height:min(720px,calc(100dvh - 40px));text-align:left;width:min(1200px,100%);max-width:none;display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:0 36px;align-items:stretch;background:none!important;border:0!important;box-shadow:none!important;padding:0;color:#fff}
 .dz .lbl{font:600 10px/1 var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:#8a8a8a}
@@ -1514,7 +1515,8 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 .dzb-card{position:relative;display:flex;flex-direction:column;border-radius:14px;background:linear-gradient(#18181a,#0c0c0e);border:1px solid #2a2a2e;overflow:hidden;min-height:0}
 .dzb:not(.lost) .dzb-card{border:1.5px solid #d8b25a;box-shadow:0 0 34px rgba(216,178,90,.18)}
 .dzb-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:20px 22px 0}
-.dzb-hd .pz-tag{display:block;margin-bottom:8px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dzb-hd>div{min-width:0}.dzb-rank{flex:none}
+.dzb-hd .pz-tag{display:block;margin-bottom:8px;max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #duel-done .dzb #dd-title{display:block;font:800 clamp(34px,3.6vw,46px)/1 var(--f-body);letter-spacing:-.01em;text-transform:none;color:#fff;margin:0}
 #duel-done .dzb.lost #dd-title{color:#ff3b30}
 .dzb-rank{font:900 clamp(40px,4.4vw,58px)/1 Arial,sans-serif;color:#d8b25a;letter-spacing:-.02em}
@@ -1529,7 +1531,9 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 #duel-done .dzb .res.dzb-mini span{display:block;font:700 10px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:#8a8a8a}
 #duel-done .dzb .res.dzb-mini b{display:block;font:700 21px/1 var(--f-body);margin-top:6px;text-align:center;color:#fff;font-variant-numeric:tabular-nums}
 /* right: scoreboard, award cards, rounds + XP, buttons */
-.dzb-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.dzb-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-right:4px;scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}
+/* only the right side scrolls when it doesn't fit: your card on the left stays put */
+.dzb-card{max-height:100%}
 .dzb-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:14px}
 .dzb-h{font:700 26px/1 var(--f-body);margin:0 0 6px;color:#fff}
 #duel-done .dzb .dd-wl{font:500 12px/1.2 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#bdbdbd;margin:0}
@@ -1592,7 +1596,8 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
   #duel-done .dzb .btns{margin-top:8px;gap:6px}#duel-done .dz .btns .btn{height:38px;padding:0 14px;font-size:14px}#duel-done .dz .btns .btn.primary{min-width:140px;font-size:15px}#duel-done .dz .btns .btn.dd-vid{width:46px;height:38px}
 }
 @media (max-height:620px){.dzb-low .dz-rlog .lbl{display:none}}
-@media (max-height:440px){.dzb-low{display:none}.dzb-tbl>.r>*{height:34px}}
+@media (max-height:520px){#duel-done .card.ddh.dz.dzb{height:calc(100vh - 20px);height:calc(100dvh - 20px)}}
+@media (max-height:440px){.dzb-tbl>.r>*{height:34px}}
 
 /* the corner Home button steps aside while the pause and results screens are up (both have their own Home / Leave) */
 body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])) #d-homebtn{display:none!important}
@@ -11353,7 +11358,7 @@ function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$(
    const aw=[['Most kills',best(f=>f.k||0),v=>v],['Most assists',best(f=>f.as||0),v=>v],['Best accuracy',best(accOf),v=>Math.round(v*100)+'%']];
    $('dd-awards').innerHTML=rows.length>1?aw.map(([l,r,fmtv])=>`<div>${r?av(r[0]):'<span class="dzb-av"></span>'}<span><span class="lbl">${l}</span><b>${r?esc(nm(r[0]))+' · '+fmtv(r[1]):'–'}</b></span></div>`).join(''):'';}
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
-  $('duel-hud').hidden=true;$('duel-done').hidden=false;$('dd-again').focus();renderRecord();renderDuelMenu();startAutoHome(won);}
+  $('duel-hud').hidden=true;$('duel-done').hidden=false;{const m=document.querySelector('#duel-done .dzb-main');if(m)m.scrollTop=0;}$('dd-again').focus({preventScroll:true});renderRecord();renderDuelMenu();startAutoHome(won);}
 // no choice on the end-of-match bar within 10 s (20 s after a win): back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
 const AUTO_HOME=10;let autoHomeT=null;
 function stopAutoHome(){if(autoHomeT){clearInterval(autoHomeT);autoHomeT=null;}const e=$('dd-auto');if(e)e.textContent='';}

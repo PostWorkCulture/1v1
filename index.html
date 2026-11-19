@@ -9168,8 +9168,9 @@ function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const
 function botSpot(kind,f,o){const TG=o.T||ME;const meEye=eyeOf(TG,new V3()),body=new V3(TG.pos.x,TG.pos.y+1.25*SC,TG.pos.z),cx=o.cx??f.pos.x,cz=o.cz??f.pos.z;let best=null,bs=1e9;
   for(let k=0;k<(o.n||40);k++){const p=sampleSpot(cx,cz,o.r0,o.r1);if(!p)continue;const travel=Math.hypot(p.x-f.pos.x,p.z-f.pos.z),dd=Math.hypot(TG.pos.x-p.x,TG.pos.z-p.z);let sc;
     if(kind==='view'||kind==='vantage'){if(!los(p.eye,body)&&!los(p.eye,meEye))continue;
-      sc=kind==='view'?Math.abs(dd-o.range)+travel*.35-(p.h>1?3:0):Math.abs(dd-o.range)*.5+travel*.25-Math.min(p.h,9)*1.6+(dd<16?30:0)+(o.away&&Math.hypot(p.x-o.away.x,p.z-o.away.z)<7?25:0);}
+      sc=kind==='view'?Math.abs(dd-o.range)+travel*.35-(p.h>1?3:0):Math.abs(dd-o.range)*.5+travel*.25-Math.min(p.h,9)*1.6-(o.roof&&p.h>=2.6?8:0)+(dd<16?30:0)+(o.away&&Math.hypot(p.x-o.away.x,p.z-o.away.z)<7?25:0);}
     else if(kind==='hide'){if(los(meEye,p.eye))continue;sc=travel*.6-Math.min(dd,o.far||30)*.5;}
+    else if(kind==='cover'){if(los(meEye,p.eye))continue;sc=travel+(dd<8?20:0);} /* hidden from the target and as close to the bot as possible: somewhere to duck back to between peeks */
     else if(kind==='ambush'){if(los(meEye,p.eye))continue;sc=travel*.35+Math.abs(dd-9)*.7;}
     else if(kind==='creep'){if(dd>o.maxD||los(meEye,p.eye))continue;sc=dd*.7+travel*.4;}
     else sc=Math.hypot(p.x-cx,p.z-cz)+travel*.15+(los(meEye,p.eye)?9:0);
@@ -9222,6 +9223,35 @@ function boomNear(f,T,eye,id,see){const a=f.ai;let best=null,bd=1e9;
   if(!see&&BLAST_IDS.has(id)&&a.lastSeen&&M.blds)for(const B of M.blds){if(B.sturdy||B.stage>=2)continue;const L0=a.lastSeen;if(L0.x<B.x0||L0.x>B.x1||L0.z<B.z0||L0.z>B.z1)continue;
     const c=new V3(L0.x,L0.y+1.2,L0.z),d=c.clone().sub(eye),L=d.length();if(L<7||L>45)continue;d.divideScalar(L);const h=rayBoxes(eye,d,L,true);if(h&&B.boxes.includes(h.box)&&h.t>6)return{p:eye.clone().addScaledVector(d,h.t),b:h.box,bld:1};}
   return null;}
+/* ---------- bot tactics: cover and peek, pre-firing corners, jump shots, smarter throwables, mines on chokepoints ----------
+   how often each is used, by difficulty (a chance per decision, not per second) */
+const TAC={easy:{cover:.12,prefire:.25,jumpShot:.12,mine:.35},normal:{cover:.3,prefire:.55,jumpShot:.25,mine:.7},hard:{cover:.45,prefire:.8,jumpShot:.4,mine:.9}};
+const tacOf=()=>TAC[S.diff]||TAC.normal;
+const lvlAt=(i,j,h,lo=-.45,hi=.45)=>{const g=M.grid;if(!g||i<1||j<1||i>=g.nx-1||j>=g.nz-1)return null;const k=i+j*g.nx;for(let l=0;l<g.n[k];l++){const y=g.h[k*NL+l],d=y-h;if(d>lo&&d<hi)return y;}return null;};
+/* chokepoints within r0..r1 of the bot: the ends of ladders, doorways and other gaps under about 2 m wide, and steps (stairs, kerbs up onto a platform).
+   Each comes with where to stand and which way to face so the mine lands in the gap, on the side nearest the enemy */
+function chokeSpots(f,T,r0,r1){const out=[];if(!M.grid)return out;
+  for(const L of M.ladders||[]){const lx=(L.x0+L.x1)/2,lz=(L.z0+L.z1)/2,d=Math.hypot(lx-f.pos.x,lz-f.pos.z);if(d<r0||d>r1)continue;
+    for(const h of [L.y0||0,L.y1])for(const [ax,az] of [[1,0],[-1,0],[0,1],[0,-1]]){const x=lx+ax*1.3,z=lz+az*1.3,[i,j]=cellOf(x,z),y=lvlAt(i,j,h);if(y!=null)out.push({x,z,h:y,yaw:Math.atan2(lx-x,lz-z),kind:'ladder'});}}
+  for(let t=0;t<90;t++){const p=sampleSpot(f.pos.x,f.pos.z,r0,r1);if(!p)continue;const [i,j]=cellOf(p.x,p.z),h=p.h;
+    const run=(di,dj)=>{let n=0;for(let k=1;k<=4;k++){if(lvlAt(i+di*k,j+dj*k,h)==null)break;n++;}return n;};
+    const xl=run(-1,0),xr=run(1,0),zl=run(0,-1),zr=run(0,1);let ax=null;
+    if(xl+xr<=3&&zl>=3&&zr>=3)ax=[0,1];else if(zl+zr<=3&&xl>=3&&xr>=3)ax=[1,0];
+    if(ax){const sg=Math.sign((T.pos.x-p.x)*ax[0]+(T.pos.z-p.z)*ax[1])||1;out.push({x:p.x,z:p.z,h,yaw:Math.atan2(ax[0]*sg,ax[1]*sg),kind:'door'});continue;}
+    for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]])if(lvlAt(i+di,j+dj,h,.22,.75)!=null&&lvlAt(i-di,j-dj,h)!=null){out.push({x:p.x-di*CS,z:p.z-dj*CS,h,yaw:Math.atan2(di,dj),kind:'step'});break;}}
+  return out;}
+function pickChoke(f,T){let best=null,bs=1e9;for(const c of chokeSpots(f,T,2,20)){if(mines.some(m=>m.alive!==false&&Math.hypot((m.x??m.pos?.x)-c.x,(m.z??m.pos?.z)-c.z)<3.5))continue;
+    if(FS.some(o=>o!==f&&o.alive&&Math.hypot(o.pos.x-c.x,o.pos.z-c.z)<4))continue;const travel=Math.hypot(c.x-f.pos.x,c.z-f.pos.z),dT=Math.hypot(c.x-T.pos.x,c.z-T.pos.z);
+    const sc=travel+Math.abs(dT-11)*.35+(c.kind==='step'?3:0);if(sc<bs){bs=sc;best=c;}}return best;}
+/* where to lob a grenade: a bunch of enemies standing together, then a target that has just ducked out of sight, then one in plain view */
+function nadeAim(f,a,T,see,dist){const fo=foesOf(f).filter(o=>!o.downed&&!o.finishing);let best=null;
+  for(const o of fo){const d=Math.hypot(o.pos.x-f.pos.x,o.pos.z-f.pos.z);if(d<8||d>24)continue;let n=0,cx=0,cy=0,cz=0;for(const q of fo)if(Math.hypot(q.pos.x-o.pos.x,q.pos.z-o.pos.z)<4.5){n++;cx+=q.pos.x;cy+=q.pos.y;cz+=q.pos.z;}
+    if(n>=2&&(!best||n>best.n))best={n,p:new V3(cx/n,cy/n,cz/n),rate:1.2};}
+  if(best)return best;
+  if(!see&&a.lastSeen&&a.lostT>.5&&a.lostT<5&&dist>7&&dist<22)return{p:a.lastSeen,rate:.8};
+  if(see&&dist>7&&dist<22)return{p:T.pos,rate:a.mode==='rush'?.6:.2};return null;}
+const lob=(f,tgt)=>{const e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.max(.1,Math.hypot(dx,dz)),sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
+  return{e,dx,dz,hd,ang:.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05};};
 function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
   if(f.downed){updCrouch(f,true,dt);const dd=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z);const seen=T.alive&&los(eyeOf(T,new V3()),new V3(f.pos.x,f.pos.y+.5,f.pos.z));
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
@@ -9252,15 +9282,14 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
   if(f.secondary==='sword'){if(f.slot===0&&see&&dist<3.2)equip(f,1);else if(f.slot===1&&(!see||dist>5))equip(f,0);}
   botGunPick(f,a,dist,see);
   if(f.cons&&consReady(f)){const cid=f.cons;
-    if(cid==='mine'&&(!see&&a.lostT>1.5||see&&dist<9)&&Math.random()<dt*.35)useCons(f);
-    else if(AIMED.has(cid)&&a.lastSeen&&dist>6&&dist<22&&Math.random()<dt*(see?.45:.6)){const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.max(.1,Math.hypot(dx,dz));const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
-      const ang=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;f.yaw=Math.atan2(dx,dz);useCons(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}
+    if(cid==='mine'&&!a.mineAt&&(!see&&a.lostT>6||see&&dist<9)&&Math.random()<dt*.35)useCons(f);
+    else if(AIMED.has(cid)){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate*(cid==='flash'||cid==='stun'?(a.mode==='rush'?1.5:.6):1)){const {dx,dz,hd,ang}=lob(f,na.p);f.yaw=Math.atan2(dx,dz);useCons(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}}
     else if(cid==='sense'&&a.lostT>3&&Math.random()<dt*.4)useCons(f);}
   if(f.secondary==='grenade'&&f.slot===0&&f.ammo.grenade>0&&a.lastSeen&&dist>7&&dist<24&&f.fireT<=0&&Math.random()<dt*(see?.25:.6)){
     const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.hypot(dx,dz);const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
     const ang=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;const dir=new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang));f.slot=1;f.switchT=0;f.yaw=Math.atan2(dx,dz);fire(f,e,dir);f.slot=0;for(const k in f.guns)f.guns[k].visible=k===f.primary;}
-  if((f.nades>0||f.goldNade>0)&&f.nadeT<=0&&a.lastSeen&&dist>7&&dist<22&&Math.random()<dt*(see?.3:.5)){const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.max(.1,Math.hypot(dx,dz));const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
-    const y0=f.yaw,p0=f.pitch;f.yaw=Math.atan2(dx,dz);f.pitch=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;throwNade(f);f.pitch=p0;}
+  if((f.nades>0||f.goldNade>0)&&f.nadeT<=0){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate){const {dx,dz,ang}=lob(f,na.p);
+    const p0=f.pitch;f.yaw=Math.atan2(dx,dz);f.pitch=ang;throwNade(f);f.pitch=p0;}}
   if(f.turretKit>0&&a.lastSeen&&dist<25&&Math.random()<dt*(see?.8:.3)){const y0=f.yaw;if(a.lastSeen){f.yaw=Math.atan2(a.lastSeen.x-f.pos.x,a.lastSeen.z-f.pos.z);}if(!deployTurret(f))f.yaw=y0;}
   if(!see&&f.reloadT<=0&&f.ammo[gunOf(f)]<GUNS[gunOf(f)].mag*.5)startReload(f);
   a.crT=(a.crT||0)-dt;if(a.crT<=0){a.crT=rnd(.8,1.8);a.crouch=see&&!CLOSE(id)&&Math.random()<.12*dif.strafe;}
@@ -9290,15 +9319,24 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
     else if(st==='breacher')mode=see&&(dist<10||facing<.3||a.seeT>1.5)||dist<8?'rush':'creep';
     else if(st==='kiter')mode=see?'kite':'fight';
     else if(st==='camper')mode='camp';
-    else mode='fight';}
+    else mode='fight';
+    /* cover and peek: at range, duck behind something close by, step out to fire a few shots, duck back */
+    if((mode==='fight'||mode==='kite'||mode==='camp'||mode==='hunt')&&see&&dist>12&&!CLOSE(id)&&!T.downed&&S.t>(a.covCD||0)){a.covCD=S.t+rnd(6,12);
+      if(Math.random()<tacOf().cover){const c=botSpot('cover',f,{T,r0:1.2,r1:6,n:30});if(c&&Math.hypot(c.x-f.pos.x,c.z-f.pos.z)<6.5){a.cov=c;a.peekAt={x:f.pos.x,h:f.pos.y,z:f.pos.z};a.cvPh='in';a.cvT=rnd(.5,1);a.cvGo=S.t+4;a.cvMiss=0;mode='cover';a.covUntil=S.t+rnd(7,12);a.modeLock=a.covUntil-S.t;}}}}
   {const shops=M.shops||[];
     if(a.mode==='shop'){if(!a.shopAt||f.shopCD>0||S.t>(a.shopUntil||0)||botShopWant(f)<0||(see&&dist<10&&!T.downed))mode=mode==='shop'?'fight':mode;else mode='shop';}
     if(mode!=='shop'&&mode!=='retreat'&&shops.length&&f.shopCD<=0&&S.state==='fight'&&S.t>(a.shopNext??(a.shopNext=S.t+rnd(40,70)))&&!(see&&dist<16)&&botShopWant(f)>=0){
       a.shopNext=S.t+rnd(60,100);let best=null,bd=1e9;for(const sh of shops){const d=Math.hypot(sh.x-f.pos.x,sh.z-f.pos.z);if(d<bd){bd=d;best=sh;}}
       if(best&&bd<45&&Math.random()<.5){mode='shop';a.shopAt=best;a.shopUntil=S.t+14;}}}
+  /* carrying a mine and nobody close: go and lay it on a chokepoint (ladder end, doorway, steps) instead of dropping it at its feet */
+  if(f.cons==='mine'&&consReady(f)&&S.state==='fight'&&mode!=='retreat'&&mode!=='shop'&&!(see&&dist<16)){
+    if(!a.mineAt&&S.t>(a.mineCD||0)){a.mineCD=S.t+rnd(4,7);if(Math.random()<tacOf().mine){a.mineAt=pickChoke(f,T);a.mineUntil=S.t+10;}}
+    if(a.mineAt&&S.t<a.mineUntil)mode='mine';else a.mineAt=null;}else if(a.mineAt&&(see&&dist<16||!consReady(f)))a.mineAt=null;
+  if(mode==='mine'&&!a.mineAt){mode='fight';a.modeLock=0;}
+  if(mode==='cover'&&!a.cov){mode='fight';a.modeLock=0;}
   if(SHOE.vis&&!(f.shoeT>0)&&S.state==='fight'&&mode!=='retreat'&&mode!=='bat'){const sd=Math.hypot(SHOE.x-f.pos.x,SHOE.z-f.pos.z);if(sd<16&&(!see||dist>22||sd<5))mode='shoes';} /* Neon Runners nearby and not mid-fight: grab them */
   if(BAT.vis&&!f.bat&&S.state==='fight'&&mode!=='retreat'){const bd=Math.hypot(BAT.x-f.pos.x,BAT.z-f.pos.z);if(bd<(S.mode==='rumble'?70:20)&&(bd<dist+2||!see||bd<8))mode='bat';} /* a bat on the floor: go and grab it if it's nearer than the fight */
-  if(mode!==a.mode){a.mode=mode;a.modeLock=.5;a.path=null;a.goalT=0;a.spot=null;a.waitT=0;}
+  if(mode!==a.mode){a.mode=mode;a.modeLock=.5;a.path=null;a.goalT=0;a.spot=null;a.waitT=0;if(mode==='cover')a.modeLock=Math.max(.5,(a.covUntil||0)-S.t);}
   a.goalT-=dt;let wx=0,wz=0,jump=false,usePath=false;a.hunker=false;a.fireOK=true;
   const toX=T.pos.x-f.pos.x,toZ=T.pos.z-f.pos.z,tl=Math.hypot(toX,toZ)||1,level=Math.abs(T.pos.y-f.pos.y)<1.4;
   const juke=k=>{a.strafeT-=dt;if(a.strafeT<=0){a.strafeT=rnd(.35,1.1)/(dif.strafe*P.strafe);a.strafe=Math.random()<.5?-1:1;if(Math.random()<P.jump*dif.strafe)jump=true;}wx=-toZ/tl*a.strafe*k;wz=toX/tl*a.strafe*k;};
@@ -9309,6 +9347,13 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
   const held=a.holdT>0;
   if(held){a.holdT-=dt;a.peek-=dt;if(a.peek<=0){a.peek=rnd(.5,1.1);a.strafe=-a.strafe;a.peekUp=!a.peekUp;}const px=Math.cos(f.yaw),pz=-Math.sin(f.yaw);wx=px*a.strafe*.6;wz=pz*a.strafe*.6;}
   else if(mode==='shoes'){a.fireOK=true;goTo(SHOE.x,SHOE.y,SHOE.z,.5);}
+  else if(mode==='mine'){const c=a.mineAt;a.fireOK=true;if(!c){a.modeLock=0;}else if(Math.hypot(c.x-f.pos.x,c.z-f.pos.z)<.8&&Math.abs(c.h-f.pos.y)<1){f.yaw=c.yaw;useCons(f);a.mineAt=null;a.modeLock=0;}else goTo(c.x,c.h,c.z,1);}
+  else if(mode==='cover'){// in: crouched behind cover, reloading; out: step back to where it could see the target, fire a few shots, then duck back in
+    const c=a.cov,pk=a.peekAt;
+    if(!c||!pk||(see&&dist<7)||T.downed||a.cvMiss>=2||(a.cvPh==='in'&&!at(c)&&S.t>a.cvGo)){a.cov=null;a.modeLock=0;a.fireOK=true;if(see){juke(dif.strafe*P.strafe);}}
+    else if(a.cvPh==='in'){a.fireOK=false;if(at(c)){a.hunker=true;a.cvT-=dt;const g=gunOf(f);if(f.reloadT<=0&&f.ammo[g]<GUNS[g].mag*.7)startReload(f);if(a.cvT<=0&&f.reloadT<=0){a.cvPh='out';a.cvT=rnd(.7,1.3);a.cvShots=a.shots||0;a.cvSaw=false;}}else goTo(c.x,c.h,c.z,.8);}
+    else{a.fireOK=true;if(see){a.cvSaw=true;a.peekAt={x:f.pos.x,h:f.pos.y,z:f.pos.z};a.cvT-=dt;}else if(at(pk))a.cvT-=dt;else goTo(pk.x,pk.h,pk.z,.6);
+      if(a.cvT<=0||(a.shots||0)-a.cvShots>=4||(S.t-f.lastHurt<.2&&a.cvT<.6)){if(!a.cvSaw)a.cvMiss++;else a.cvMiss=0;a.cvPh='in';a.cvT=rnd(.8,1.6);a.cvGo=S.t+3;}}}
   else if(mode==='bat'){a.fireOK=true;if(see&&dist<2.6){wx=toX/tl;wz=toZ/tl;}else goTo(BAT.x,BAT.y,BAT.z,.5);}
   else if(mode==='shop'){// pop over to the kiosk, grab something, get back to it
     const sh=a.shopAt;a.fireOK=true;if(nearShop(f)){botBuy(f);a.shopUntil=0;a.modeLock=0;}else goTo(sh.x,sh.y,sh.z,.6);}
@@ -9317,8 +9362,8 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
     else goTo(T.pos.x,T.pos.y,T.pos.z,.6);}
   else if(mode==='snipe'){// perch somewhere high with a view, hold still, shoot, move on
     if(see&&(at(a.spot)||!a.spot&&S.t>(a.moveOnT||0))){if(!a.spot)a.spot={x:f.pos.x,h:f.pos.y,z:f.pos.z};a.waitT+=dt;a.hunker=true;
-      if(a.shots>=(P.shots||2)||(S.t-f.lastHurt<.25&&a.waitT>.6)||a.waitT>10){a.away={x:f.pos.x,z:f.pos.z};a.spot=spotFor('vantage',{r0:5,r1:30,range:pr,away:a.away});a.moveOnT=S.t+2.5;a.shots=0;a.waitT=0;a.path=null;a.goalT=0;}}
-    else{a.fireOK=dist<24;if(!a.spot||(at(a.spot)&&!see&&a.lostT>2.5)){const sp=spotFor('vantage',{r0:3,r1:32,range:pr,away:a.away});if(sp||!a.spot){a.spot=sp;a.waitT=0;a.path=null;a.goalT=0;}}
+      if(a.shots>=(P.shots||2)||(S.t-f.lastHurt<.25&&a.waitT>.6)||a.waitT>10){a.away={x:f.pos.x,z:f.pos.z};a.spot=spotFor('vantage',{r0:5,r1:30,range:pr,away:a.away,roof:true});a.moveOnT=S.t+2.5;a.shots=0;a.waitT=0;a.path=null;a.goalT=0;}}
+    else{a.fireOK=dist<24;if(!a.spot||(at(a.spot)&&!see&&a.lostT>2.5)){const sp=spotFor('vantage',{r0:3,r1:32,range:pr,away:a.away,roof:true});if(sp||!a.spot){a.spot=sp;a.waitT=0;a.path=null;a.goalT=0;}}
       if(a.spot)goTo(a.spot.x,a.spot.h,a.spot.z,1.5);else{const t=a.lastSeen&&a.lostT<6?a.lastSeen:T.pos;goTo(t.x,t.y,t.z,1);}}}
   else if(mode==='hide'||mode==='retreat'){// break line of sight, reload, wait
     a.fireOK=dist<12||!a.spot;if(!a.spot||(a.goalT<=0&&seenAt(a.spot))){a.spot=spotFor('hide',{r0:3,r1:mode==='retreat'?24:16,far:mode==='retreat'?40:25});a.path=null;a.goalT=0;}
@@ -9362,6 +9407,8 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
     // blocked by something that isn't on the map grid (a car pulling in, another fighter, a fresh wall): hop, recompute and sidestep round it
     if(a.sideT>0&&(wx||wz)){a.sideT-=dt;const c=Math.cos(1.25*a.sideD),sn=Math.sin(1.25*a.sideD),x=wx*c-wz*sn,z=wx*sn+wz*c;wx=x;wz=z;}
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;a.sideT=.5;a.sideD=(a.sideD||1)*-1;}}
+  /* jump shots: in a mid-range gunfight, hop while firing now and then to throw off the other player's aim */
+  if(see&&a.fireOK&&!CLOSE(id)&&id!=='sniper'&&f.grounded&&dist>4&&dist<20&&(mode==='fight'||mode==='kite'||mode==='rush'||(mode==='cover'&&a.cvPh==='out'))&&f.fireT<=.05&&Math.random()<dt*tacOf().jumpShot)jump=true;
   // dodging after being hit: hard side-to-side juking with hops
   if(a.dodgeT>0){a.dodgeT-=dt;wx=(-toZ*a.dodgeDir-toX*.25)/tl;wz=(toX*a.dodgeDir-toZ*.25)/tl;if(f.grounded&&Math.random()<dt*2.2)jump=true;if(Math.random()<dt*1.6)a.dodgeDir*=-1;}
   // Railyard: bots jump over hot rails most of the time (or hop clear after a shock), so they only rarely get zapped or clipped by a train
@@ -9375,6 +9422,7 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
       if(Math.abs(dyaw)<dif.tol+.05&&canFire(f)){fire(f,eye,new V3(dx,dy,dz).normalize());f.fireT=Math.max(f.fireT,(GUNS[id].rate||.1)*dif.rof);}}
     else a.boom=null;}
   // aim
+  if(see)a.pfRolled=false;
   if(see&&!bmDone){let tgt=(seeH||(a.headPick??(a.headPick=Math.random()<dif.head)))?tgtHead:tgtBody;if(id==='rocket'&&T.grounded&&seeB)tgt=new V3(T.pos.x,T.pos.y+1.0*SC,T.pos.z);
     const spr=deg=>dist*Math.tan(Math.min(deg,30)*Math.PI/180),E=dif.err*P.err;
     if(a.seeT<dt*1.5){a.err.set(rnd(-1,1),rnd(-.6,.6),rnd(-1,1)).multiplyScalar(spr(E*3));a.headPick=Math.random()<dif.head;a.hesT=Math.random()<dif.hes?rnd(.4,1.1):0;}
@@ -9394,7 +9442,16 @@ function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f
       const d=new V3(aim.x-eye.x,aim.y-eye.y,aim.z-eye.z).normalize();fire(f,eye,d);a.shots=(a.shots||0)+1;a.fired=(a.fired||0)+1;
       if(!CLOSE(id)){f.fireT=Math.max(f.fireT,(GUNS[id].rate||.1)*dif.rof);a.err.add(new V3(rnd(-1,1),rnd(-.2,1),rnd(-1,1)).multiplyScalar(spr(dif.recoil)));
         a.burstN=(a.burstN||0)+1;if(dif.burst&&a.burstN>=dif.burst){a.burstN=0;f.fireT+=rnd(dif.pause[0],dif.pause[1]);}}}}
-  else{f.ads=false;const sp=Math.hypot(wx,wz);if(sp>.1){const wy=Math.atan2(wx,wz);let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-6*dt,6*dt);}f.pitch=damp(f.pitch,0,4,dt);}
+  else{let pf=false;
+    if(!bmDone&&T.alive&&!T.downed&&a.lastSeen&&a.lostT>.2&&a.lostT<2.5&&!CLOSE(id)&&!['rocket','grenade','sniper','swarm','crossbow'].includes(id)&&mode!=='cover'&&mode!=='hide'&&mode!=='retreat'){
+      if(!a.pfRolled){a.pfRolled=true;a.pfOK=Math.random()<tacOf().prefire;a.pfN=0;}
+      const lp=a.lastSeen,ld=Math.hypot(lp.x-f.pos.x,lp.z-f.pos.z);
+      if(a.pfOK&&ld>3&&ld<22){pf=true;f.ads=ld>10;const aim=new V3(lp.x,(lp.y||0)+1.2*SC,lp.z),dx=aim.x-eye.x,dy=aim.y-eye.y,dz=aim.z-eye.z,wy=Math.atan2(dx,dz),wp=Math.atan2(dy,Math.hypot(dx,dz));
+        let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-dif.turn*dt,dif.turn*dt);f.pitch=damp(f.pitch,wp,dif.turn,dt);
+        if(a.pfN<4&&Math.abs(dyaw)<.12&&canFire(f)&&f.ammo[id]>GUNS[id].mag*.3&&Math.random()<dt*5){let tp=null;/* fire at the first part of where they were that's now in view: chest, head, then either side */
+          for(const [ox,oy,oz] of [[0,1.2,0],[0,1.9,0],[.6,1.2,0],[-.6,1.2,0],[0,1.2,.6],[0,1.2,-.6]]){const q=new V3(lp.x+ox,(lp.y||0)+oy*SC,lp.z+oz);if(los(eye,q)){tp=q;break;}}
+          if(tp){fire(f,eye,new V3(tp.x-eye.x+rnd(-.25,.25),tp.y-eye.y+rnd(-.15,.25),tp.z-eye.z+rnd(-.25,.25)).normalize());a.pfN++;f.fireT=Math.max(f.fireT,(GUNS[id].rate||.1)*dif.rof*1.4);}}}}
+    if(!pf){f.ads=false;const sp=Math.hypot(wx,wz);if(sp>.1){const wy=Math.atan2(wx,wz);let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-6*dt,6*dt);}f.pitch=damp(f.pitch,0,4,dt);}}
   if(S.mode==='rumble'&&f.grounded&&see&&dist>2.2&&dist<4.6&&Math.abs(T.pos.y-f.pos.y)<1&&Math.random()<dt*1.5)jump=true;
   if(S.mode==='rumble'&&!f.grounded&&f.vel.y<-1&&see&&dist<3.1&&f.fireT<=0){f.yaw=Math.atan2(T.pos.x-f.pos.x,T.pos.z-f.pos.z);f.fireT=GUNS.fists.rate;f.kick=1;melee(f);}
   // bots double jump now and then near the top of a jump (to get unstuck, reach high ground or juke)

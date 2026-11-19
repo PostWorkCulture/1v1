@@ -3192,9 +3192,10 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','shotty','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
     'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fistwhoosh','fisthit','swordswing','swordhit','starthrow','starhit','starthunk','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli','bing'];
-  const LOOPS={waves:1,engine:1,boat:1,heli:1}; // seamless loops ship as .wav so they don't click at the seam
+  const LOOPS={waves:1,engine:1,boat:1,heli:1,clubmusic:1};
+  const LAZY={clubmusic:1},lazyReq={};/* big beds (Club Night's music) only download the first time they're needed */ // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
+  const MIX={clubmusic:.3,heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,swordswing:.45,swordhit:.6,starthrow:.4,starhit:.5,starthunk:.45,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,bing:.25,bell:.55,whistle:.4,beep:.3,flatline:.3,reel:.5,boing:.45}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
@@ -3245,7 +3246,7 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
     const g=ctx.createGain();g.gain.value=amt;src.connect(g);g.connect(verbN);}
   // looping bed whose level and pan the game sets every frame (cars, sea, boats)
   const loops={};
-  function bed(n,v,pan){if(!ctx||!buf[n])return;let L=loops[n];if(!L){if(v<=.002)return;const s=ctx.createBufferSource();s.buffer=buf[n];s.loop=true;const g=ctx.createGain();g.gain.value=0;
+  function bed(n,v,pan){if(!ctx)return;if(!buf[n]){if(LAZY[n]&&v>.002&&!lazyReq[n]){lazyReq[n]=1;fetch('sfx/'+n+'.wav').then(r=>r.arrayBuffer()).then(a=>ctx.decodeAudioData(a)).then(b=>{buf[n]=b;}).catch(()=>{lazyReq[n]=0;});}return;}let L=loops[n];if(!L){if(v<=.002)return;const s=ctx.createBufferSource();s.buffer=buf[n];s.loop=true;const g=ctx.createGain();g.gain.value=0;
       let out=g;s.connect(g);if(ctx.createStereoPanner){const p=ctx.createStereoPanner();g.connect(p);out=p;L={s,g,p};}else L={s,g};out.connect(master);s.start(0,Math.random()*buf[n].duration);loops[n]=L;}
     const t=ctx.currentTime;L.g.gain.setTargetAtTime(Math.max(0,v)*(MIX[n]||.5)*wv(n),t,.12);if(L.p)L.p.pan.setTargetAtTime(Math.max(-1,Math.min(1,pan||0)),t,.12);}
   function stop(v,fade){if(!v||!ctx)return;const t=ctx.currentTime;try{v.g.gain.setTargetAtTime(0,t,(fade||.05)/3);v.s.stop(t+(fade||.05));}catch(e){}}
@@ -4184,8 +4185,13 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
       else if(h<.4&&rayBoxes(new V3(x,h+1,z),new V3(0,1,0),4.5))ins.push({x,z,y:h});}}
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
+<<<<<<< Updated upstream
 function clearMap(){M.onReset=[];if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
   M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.floorAt=null;M.noDrums=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
+=======
+function clearMap(){if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.floorAt=null;M.noDrums=null;M.clubMusic=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
+>>>>>>> Stashed changes
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -5944,7 +5950,9 @@ function clubNight(){const X=24,Z=14,HX=14,H=12;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z}
   M.spawns=[[-21.5,-11.5],[-21.5,11.5],[-16.4,-12],[-16.4,11.8],[18,-12.5],[18.5,12.5],[23,-6.5],[18.5,6.8],[-11,-7.5],[11,-8.2],[-11,8],[11,8]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   /* fit to 40 x 30 m: lounge (x -24..-14) and alley (14..24) each 8 m wide, the hall (-14..14) 24 m wide, 1 m longer at both ends */
   layoutRemap(LS,x=>x<-24?[x+4,1]:x<-14?[-20+(x+24)*.8,.8]:x<=14?[x*12/14,12/14]:x<=24?[12+(x-14)*.8,.8]:[x-4,1],z=>Math.abs(z)<=14?[z*15/14,15/14]:[z+Math.sign(z),1]);
-  M.bounds={x0:-20,x1:20,z0:-15,z1:15};}
+  M.bounds={x0:-20,x1:20,z0:-15,z1:15};
+  /* the music (sfx/clubmusic.wav, original 122 bpm deep house): full in the hall and inside the lounge, half out in the alley and up on the lounge roof deck */
+  M.clubMusic=(x,y,z)=>(Math.abs(x)<=12&&y<12)||(x<-12&&y<4.6)?1:.5;}
 const MAPS={
  arena:{modes:['duel'],in1v1:true,name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
  skyhigh:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
@@ -9082,7 +9090,9 @@ function updAmb(dt){const X=window.SFX;if(!X||!X.bed)return;const on=D.active&&S
   /* Lagoon: water lapping round the stilts all the time, swelling as a rogue wave rolls in (it peaks just before the crash) */
   else if(on&&M.deepWater&&M.lgWave){const U=M.lgWave.value,sw=clamp(U.z/2.4,0,1);let pan=0;if(sw>0){const a=ambAt(0,0,U.x,30);pan=a.pan*sw;}X.bed('waves',.28+.55*sw,pan);}
   else X.bed('waves',0,0);
-  let bv=0,bp=0;for(const g of (on&&M.boats)||[]){const p=g.position,a=ambAt(p.x,p.y,p.z,14);if(a.v>bv){bv=a.v;bp=a.pan;}}X.bed('boat',bv,bp);}
+  let bv=0,bp=0;for(const g of (on&&M.boats)||[]){const p=g.position,a=ambAt(p.x,p.y,p.z,14);if(a.v>bv){bv=a.v;bp=a.pan;}}X.bed('boat',bv,bp);
+  /* Club Night: an original deep house loop on the sound system, at full (background) level anywhere inside the club, half outside */
+  {const c=camera.position;X.bed('clubmusic',on&&M.clubMusic?M.clubMusic(c.x,c.y,c.z):0,0);}}
 function updWalls(dt){for(const w of M.walls){if(!w.alive)continue;const age=S.t-(w.born??S.t);
   if(age>=WALL_LIFE){w.alive=false;for(const br of w.bricks)br.alive=false;M.group.remove(w.group);const b=w.bb;for(let i=0;i<6;i++)emit(lerp(b.x0,b.x1,Math.random()),w.y0+rnd(.2,2.6),lerp(b.z0,b.z1,Math.random()),{n:4,speed:2,up:1,size:.25,life:.6,grav:2,colors:[w.color,'#d8dbe2']});dirtyGrid(b,.05);continue;}
   if(age>WALL_LIFE-.45){if(!w.sinkSnd){w.sinkSnd=1;const b=w.bb;sfx('sink',{x:(b.x0+b.x1)/2,y:w.y0+1,z:(b.z0+b.z1)/2},{range:14});}w.group.scale.y=Math.max(.03,(WALL_LIFE-age)/.45);w.group.position.y=w.y0*(1-w.group.scale.y);continue;}if(w.group.scale.y<1){w.group.scale.y=Math.min(1,w.group.scale.y+dt*5);w.group.position.y=w.y0*(1-w.group.scale.y);}

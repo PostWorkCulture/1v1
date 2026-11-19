@@ -11889,10 +11889,31 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
   const fm=()=>new THREE.Mesh(new THREE.PlaneGeometry(.22,.22),flashMat());
   const fl=fm(),fl2=fm();fl2.visible=false;const fg=new THREE.Group();fg.add(fl,fl2);fg.position.set(0,g.userData.muzY??.05,g.userData.muzZ||1.48);fg.visible=id!=='rocket'&&id!=='crossbow'&&id!=='swarm';g.add(fg);wrap.userData.flash=[fl,fl2];
   VM.models[key]=wrap;return wrap;}
-const vmWant=f=>f===ME&&f.alive&&!f.downed&&f.ads&&VM_GUNS.includes(gunOf(f))&&!f.finishing;
+/* fists: first-person fists in front of the camera (the view goes first-person while fists are out, like aiming a gun), so you see every jab */
+function vmFists(charId){const key='fists|'+charId;if(VM.models[key])return VM.models[key];const look=(CHARS[charId]&&CHARS[charId].look)||{};const RBx=B.roundedBox;
+  const hand=new THREE.MeshStandardMaterial({color:'#e2b48c',roughness:.6}),wrapM=new THREE.MeshStandardMaterial({color:'#f2efe8',roughness:.8}),sleeve=new THREE.MeshStandardMaterial({color:look.shirt||'#2b2d33',roughness:.8}),cuff=new THREE.MeshStandardMaterial({color:look.shirtSolid||'#1b1d23',roughness:.8});
+  const wrap=new THREE.Group();
+  const mk=sx=>{const g=new THREE.Group(),b=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.022,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;};
+    b(.1,.09,.11,hand,0,0,0);                                            // fist
+    for(let k=0;k<4;k++)b(.022,.028,.028,hand,-.037+k*.025,.012,-.06);   // knuckles, facing forward
+    b(.104,.05,.06,wrapM,0,-.02,.03);                                    // hand wrap round the palm
+    b(.03,.034,.065,hand,-sx*.055,-.018,-.02);                           // thumb, on the inside
+    b(.085,.08,.06,cuff,0,-.004,.09);                                    // cuff
+    b(.092,.088,.42,sleeve,0,-.006,.32);                                 // forearm, running back out of view
+    return g;};
+  const R=mk(1),L=mk(-1);wrap.add(R,L);heroOutline(wrap,.0025);wrap.userData={fists:true,R,L};VM.models[key]=wrap;return wrap;}
+function vmFistPose(m,f,dt){const e0=punchE(f),r=f.punchL?0:e0,l=f.punchL?e0:0,sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8),t=VM.t;
+  const k=VM.raise*VM.raise*(3-2*VM.raise),drop=(1-k)*.35;
+  for(const [g,sx,hit,ph] of [[m.userData.R,1,r,0],[m.userData.L,-1,l,1.7]]){
+    const by=Math.sin(t*2.2+ph)*.008+Math.abs(Math.cos(t*9+ph))*.012*bob;          // breathing and footwork
+    g.position.set(sx*lerp(.19,.05,hit),lerp(-.2,-.085,hit)+by-drop,lerp(-.52,-.7,hit));
+    g.rotation.set(lerp(.32,.24,hit),sx*lerp(-.32,.2,hit),sx*lerp(-.2,-.45,hit));g.scale.setScalar(lerp(1,1.1,hit));}  // guard: angled in and up; punch: straight out, turning over
+  m.visible=true;}
+const vmWant=f=>f===ME&&f.alive&&!f.downed&&!f.finishing&&(f.ads&&VM_GUNS.includes(gunOf(f))||gunOf(f)==='fists'&&!(f.edgeFall));
 function updVM(dt){const f=ME,id=gunOf(f),want=D.active&&S.state!=='menu'&&!S.paused&&vmWant(f);
   const at=(GUNS[id]&&GUNS[id].ads)||.2;VM.raise=clamp(VM.raise+(want?dt/at:-dt/Math.min(.15,at*.6)),0,1);if(VM.raise<=0){if(VM.cur)VM.cur.visible=false;return;}
-  vmInit();if(VM_GUNS.includes(id))VM.curId=id;const m=vmModel(VM.curId||'ar',f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}m.visible=true;gunFx(m,f,VM.curId||'ar',dt);
+  vmInit();if(id==='fists'||(!VM_GUNS.includes(id)&&VM.curId==='fists')){const m=vmFists(f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}VM.curId='fists';VM.t+=dt;vmFistPose(m,f,dt);return;}
+  if(VM_GUNS.includes(id))VM.curId=id;const m=vmModel(VM.curId||'ar',f.char);if(VM.cur!==m){if(VM.cur)VM.scene.remove(VM.cur);VM.scene.add(m);VM.cur=m;}m.visible=true;gunFx(m,f,VM.curId||'ar',dt);
   VM.t+=dt;VM.kick=Math.max(f.kick||0,VM.kick-dt*7);const e=VM.raise*VM.raise*(3-2*VM.raise);const ud=m.userData,sc=.36;
   const sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8);const swx=Math.sin(VM.t*1.3)*.004+Math.sin(VM.t*9)*.006*bob,swy=Math.sin(VM.t*1.9)*.003+Math.abs(Math.cos(VM.t*9))*.006*bob;
   const relo=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI):0;

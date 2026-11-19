@@ -42,12 +42,16 @@ All styles push when you're low, play safer when hurt, and chase the clock late 
 **Snipers only: the four new snipers** – the Snipers only mode offers six snipers: the HDR and Kar98 plus four made for it that appear nowhere else, all modelled in the same detailed style:
 - **Reaper** (.338 magnum bolt-action, forest-green thumbhole stock with bronze trim): 100 a hit, one body shot downs, but the slowest bolt (1.6 s) and slow aiming; 4 rounds.
 - **Titan .50** (semi-auto .50 cal, gunmetal with red pinstripes, arrowhead brake): 70 a hit, two quick body shots (0.55 s apart), huge kick; 6 rounds.
-- **Vanguard** (7.62 marksman rifle, desert tan with brass): 45 a hit, ×2.3 headshot, fast follow-ups (0.28 s), light scope; 12 rounds.
+- **Vanguard** (7.62 marksman rifle, gold-anodised "Sovereign" finish with black accents, fluted stainless barrel, gold brake, open dust cover, forward assist, ambi charging handle, folded bipod): 45 a hit, ×2.3 headshot, fast follow-ups (0.28 s), light scope; 12 rounds.
 - **Phantom** (integrally suppressed bolt-action, matte black with violet rings): 58 a hit, ×2.2 headshot; quiet shot with no tracer or muzzle flash; 6 rounds.
 
 **Small maps** – on the Small maps (Sky High, Lagoon, The House, Club Night, Backyard) Normal games only allow close-range kit: Primary is the SPAS-12, Shotty Horror or Crossbow and Secondary is one of the SMGs, the Dual Pistols or the Sword; everything else is greyed out in the loadout, Random only rolls from what's allowed, and bots follow the same rule. The allowed guns are listed first with Random straight after them (it only rolls from these) and the greyed-out ones last. With Random map picked, everything stays open in the menu and your kit is swapped for an allowed one if the roll lands on a small map.
 
 **Melee smashes things** – fists, the bat and the sword break glass, props and other breakables at head, waist and ankle height, and a punch or swing that reaches a proximity mine sets it off (so mind the blast).
+
+**Sniper glass and triggers** – every sniper scope has a coated, mirror-like front lens (sky reflection and highlight streaks, tinted to match the gun) and a see-through eyepiece you can look into, with the reticle inside; every sniper has a big polished trigger (chrome, bronze or gold).
+
+**First person** – with the first-person camera on, every weapon you can hold is drawn in your hands: all six snipers (switching back from fists now brings the sniper up instead of leaving the fists on screen), and the sword and bat are held upright at the bottom right and slash across on each swing.
 
 **Melee damage** – fists 34 a punch (3 to down, 0.36 s between punches), the bat and sword 50 a hit (2 to down). With fists, the bat or the sword out you run 20% faster (outside Rumble, where everyone is on melee). Rumble's air strike (a punch or swing that lands while you're falling onto someone) does the weapon's normal damage plus a big knock-back and a 1 s stun.
 

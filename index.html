@@ -715,6 +715,19 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 #duel-hud.touch .d-mm{width:84px;height:84px;top:calc(env(safe-area-inset-top,0px) + 6px);right:max(10px,env(safe-area-inset-right,0px))}
 #duel-hud.touch .d-lb{left:auto;right:calc(max(10px,env(safe-area-inset-right,0px))/(var(--z-lb,1)*.7));top:calc((env(safe-area-inset-top,0px) + 98px)/(var(--z-lb,1)*.7))}
 #duel-hud.touch.solo .d-lb{display:none}
+/* phones: the Fire button carries the ammo count (eyes stay near the crosshair) and a ring that fills while reloading */
+.dt-fire .dt-ft{display:block;font-size:12px;opacity:.85;letter-spacing:.04em}.dt-fire .dt-am{display:block;font:700 19px/1.05 var(--f-body);font-variant-numeric:tabular-nums}.dt-fire .dt-am:empty{display:none}
+.dt-fire.low .dt-am{color:#16171c;background:#fff;border-radius:6px;padding:1px 5px;margin-top:1px}.dt-fire.empty .dt-ft{font-size:11px}
+.dt-fire::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(#fff calc(var(--rl,0)*1turn),rgba(255,255,255,.18) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));opacity:0;pointer-events:none;transition:opacity .12s}
+.dt-fire.rl::after{opacity:1}
+/* phones: tap a weapon slot to switch to it; the hit area reaches well past the small slot */
+#duel-hud.touch .d-slots span{pointer-events:auto;touch-action:none;position:relative;cursor:pointer}
+#duel-hud.touch .d-slots span::before{content:'';position:absolute;left:-3px;right:-3px;top:-34px;bottom:-30px}
+#duel-hud.touch .d-slots span.tap{background:#3a3a3a}
+#duel-hud.hud-edit .d-slots span{pointer-events:none}
+/* phones: armour shows only when you have some, stamina only while it isn't full; the health panel is a little narrower so it clears the weapon panel */
+#duel-hud.touch .vrow.gone{display:none}
+#duel-hud.touch .d-vit{width:184px}#duel-hud.touch .vrow{grid-template-columns:58px 1fr 32px;gap:8px;letter-spacing:.1em}
 #duel-hud.touch #d-botname{display:block;max-width:110px;white-space:normal;line-height:1.2;text-align:right}#duel-hud.touch .d-score{min-width:340px;gap:14px}
 .dt-pause{left:auto;right:calc(max(10px,env(safe-area-inset-right,0px)) + 100px);top:calc(env(safe-area-inset-top,0px) + 8px);transform:none;width:40px;height:34px}
 #duel-hud.touch #d-prompt{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 66px);max-width:46vw;white-space:normal;font-size:13px;padding:7px 12px}
@@ -1887,7 +1900,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
     <div id="dtouch" hidden>
       <div class="dt-stick" id="dt-stick"><i></i></div>
       <div class="dt-btns">
-        <button class="dt-b dt-fire" data-k="fire">Fire</button>
+        <button class="dt-b dt-fire" data-k="fire"><span class="dt-ft">Fire</span><b class="dt-am" id="dt-ammo"></b></button>
         <button class="dt-b" data-k="aim" id="dt-aim">Aim</button>
         <button class="dt-b dt-jump" data-k="Space" id="dt-j">Jump</button>
         <button class="dt-b" data-k="KeyC" id="dt-c">Crouch</button>
@@ -10421,6 +10434,8 @@ document.querySelectorAll('#dtouch .dt-b').forEach(b=>{const k=b.dataset.k;let f
     /* any other button: once the thumb slides past a few pixels it turns the view, so a swipe that starts on Jump or Reload still aims */
     const L=b._lk;if(!L||!playing())return;if(!L.on){if(Math.hypot(e.clientX-L.x,e.clientY-L.y)<8)return;L.on=true;L.x=e.clientX;L.y=e.clientY;return;}lookBy(e.clientX-L.x,e.clientY-L.y);L.x=e.clientX;L.y=e.clientY;});
   const up=e=>{b._lk=null;if(k==='fire'){if(SNQ.hold){snipeUp(true);return;}mouseL=false;if(AA.autoR){AA.autoR=false;mouseR=false;}}else if(k!=='aim'&&k!=='swap')key(k,false);};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
+[1,2,3].forEach(n=>{const sl=$('d-slot'+n);if(!sl)return;sl.addEventListener('pointerdown',e=>{if(!S.touch||S.hudEdit||!playing()||sl.hidden)return;e.preventDefault();e.stopPropagation();
+  queueAct('Digit'+n);sl.classList.add('tap');setTimeout(()=>sl.classList.remove('tap'),140);});});
 $('sh-items').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-buy]');if(b){e.preventDefault();e.stopPropagation();buyShop(+b.dataset.buy);}});
 $('dt-pause').addEventListener('pointerdown',e=>{e.preventDefault();if(D.active&&S.state!=='menu')S.paused?resume():pause();});
 
@@ -10519,7 +10534,12 @@ function keepIn(el,z,sb){const r=el.getBoundingClientRect();if(!r.width||!r.heig
   if(dx)st.left=(parseFloat(st.left)+dx/z)+'px';if(dy)st.top=(parseFloat(st.top)+dy/z)+'px';}
 function hudFrame(){const q=S.touch?safeBox(0):{l:0,r:innerWidth,t:0,b:innerHeight};HF.l=q.l;HF.t=q.t;HF.w=Math.max(1,q.r-q.l);HF.h=Math.max(1,q.b-q.t);HF.fit=S.touch?Math.min(1,HF.w/844):1;/* the default phone layout was set on an 844px-wide phone: narrower screens (or ones with a notch) shrink the panels to match */
   const h=$('duel-hud');for(const k of ['score','vitals','items','weapon','lb','mm','feed','hint']){if(HF.fit<1)h.style.setProperty('--tb-'+k,String((TB[k]||1)*HF.fit));else h.style.removeProperty('--tb-'+k);}}
-function applyHudPos(){hudFrame();const sb=S.touch?safeBox(6):null;for(const k in HUD_EL){const el=document.querySelector(HUD_EL[k]);if(!el)continue;el.dataset.hudk=k;const p=S.hudPos[k],st=el.style;
+function applyHudPos(){applyHudPos0();if(!S.touch||S.hudEdit)return;
+  const w=document.querySelector(HUD_EL.weapon),v=document.querySelector(HUD_EL.vitals);if(!w||!v||!S.hudPos.vitals)return;const a=w.getBoundingClientRect(),b=v.getBoundingClientRect();
+  if(a.width&&b.width&&a.bottom>b.top&&b.bottom>a.top&&a.left<b.left&&a.right+6>b.left){const sc=document.querySelector('#duel-hud .d-score'),c=sc&&sc.getBoundingClientRect();
+    /* slide right to clear the weapon panel, but never onto the score panel */
+    let dx=a.right+6-b.left;if(c&&c.width&&c.bottom>b.top&&c.left>b.left)dx=Math.min(dx,Math.max(0,c.left-6-b.right));if(dx>0){const z=parseFloat(getComputedStyle(v).zoom)||1;v.style.left=(parseFloat(v.style.left)+dx/z)+'px';}}}
+function applyHudPos0(){hudFrame();const sb=S.touch?safeBox(6):null;for(const k in HUD_EL){const el=document.querySelector(HUD_EL[k]);if(!el)continue;el.dataset.hudk=k;const p=S.hudPos[k],st=el.style;
     if(p){const z=(S.hudZ[k]||1)*(S.touch&&TB[k]||1)*HF.fit;st.position='fixed';st.left=(hfX(p.x)/z)+'px';st.top=(hfY(p.y)/z)+'px';st.right='auto';st.bottom='auto';st.transform='none';st.margin='0';if(k==='score'){st.width='max-content';st.alignItems='flex-start';}if(sb)keepIn(el,z,sb);}
     else for(const q of ['position','left','top','right','bottom','transform','margin','width','alignItems'])st[q]='';}
   for(const k in TOUCH_EL){const el=document.querySelector(TOUCH_EL[k]);if(!el)continue;el.dataset.hudk=k;const p=S.touch&&S.hudPos[k],st=el.style;
@@ -10542,7 +10562,7 @@ let hudSel=null;
 function hudSelect(k){hudSel=k;document.querySelectorAll('#duel-hud [data-hudk].sel').forEach(e=>e.classList.remove('sel'));
   const el=k&&document.querySelector(`#duel-hud [data-hudk="${k}"]`);if(el)el.classList.add('sel');$('hud-sz').hidden=!k;$('hud-sz-v').textContent=Math.round((S.hudZ[k]||1)*100)+'%';$('hud-op').hidden=!k;if(k)$('hud-op-v').textContent=Math.round(hudOp(k)*100)+'%';
   $('hud-all').hidden=!S.touch;$('hud-all-v').textContent=Math.round((S.hudZ['b-all']||1)*100)+'%';$('hud-edit-msg').textContent=k?'Size':'Drag anything to move it; tap it to change its size and opacity';}
-function hudEdit(on){$('hud-edit-bar').classList.remove('mini');$('hud-edit-min').textContent='▾ Hide';S.hudEdit=on;$('duel-hud').classList.toggle('hud-edit',on);$('hud-edit-bar').hidden=!on;$('duel-pause').hidden=on;applyTouch();if(on)document.querySelectorAll('#dtouch .dt-btns .dt-b').forEach(b=>{b.hidden=false;});else{try{updTouchLabels();}catch(_){}}hudSelect(null);applyHudPos();if(!on){saveHud();showPV('hud');}}
+function hudEdit(on){if(on)document.querySelectorAll('#d-vit .vrow.gone').forEach(r=>r.classList.remove('gone'));/* the editor shows the full health panel */$('hud-edit-bar').classList.remove('mini');$('hud-edit-min').textContent='▾ Hide';S.hudEdit=on;$('duel-hud').classList.toggle('hud-edit',on);$('hud-edit-bar').hidden=!on;$('duel-pause').hidden=on;applyTouch();if(on)document.querySelectorAll('#dtouch .dt-btns .dt-b').forEach(b=>{b.hidden=false;});else{try{updTouchLabels();}catch(_){}}hudSelect(null);applyHudPos();if(!on){saveHud();showPV('hud');}}
 for(const [id,d,all] of [['hud-sz-dn',-1],['hud-sz-up',1],['hud-all-dn',-1,1],['hud-all-up',1,1]])$(id).addEventListener('click',()=>{const k=all?'b-all':hudSel;if(!k)return;S.hudZ[k]=clamp(Math.round(((S.hudZ[k]||1)+d*.1)*10)/10,.6,1.6);saveHud();applyHud();hudSelect(hudSel);});
 for(const [id,d] of [['hud-op-dn',-1],['hud-op-up',1]])$(id).addEventListener('click',()=>{const k=hudSel;if(!k)return;S.hudO[k]=clamp(Math.round((hudOp(k)+d*.1)*10)/10,.1,1);saveHud();applyHudOp();hudSelect(hudSel);});
 document.addEventListener('pointerdown',e=>{if(!S.hudEdit)return;const el=e.target.closest('[data-hudk]');if(e.target.closest('#hud-edit-bar'))return;if(!el){hudSelect(null);return;}e.preventDefault();e.stopPropagation();
@@ -10587,7 +10607,9 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
   {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);{const lo=!V.downed&&pct<=.3,rw=hp.parentElement.parentElement;if(rw.classList.contains('low')!==lo)rw.classList.toggle('low',lo);}
     const ar=V.armor||0;{const rw=$('v-ar').parentElement.parentElement,gd=V.cons==='gold';if(rw.classList.contains('gold')!==gd)rw.classList.toggle('gold',gd);}$('v-ar').style.transform=`scaleX(${clamp(ar/100,0,1)})`;txt('v-ar-n',String(Math.ceil(ar)));
-    const st=V.stam??STAM_MAX;$('v-st').style.transform=`scaleX(${st/STAM_MAX})`;txt('v-st-n',String(Math.round(st)));$('v-st').parentElement.parentElement.classList.toggle('low',!!V.stamLock);}
+    if(S.touch){const ga=ar<=0&&!S.hudEdit,ra=$('v-ar').parentElement.parentElement;if(ra.classList.contains('gone')!==ga)ra.classList.toggle('gone',ga);}
+    const st=V.stam??STAM_MAX;$('v-st').style.transform=`scaleX(${st/STAM_MAX})`;txt('v-st-n',String(Math.round(st)));$('v-st').parentElement.parentElement.classList.toggle('low',!!V.stamLock);
+    if(S.touch){const gs=st>=STAM_MAX-.5&&!V.stamLock&&!S.hudEdit,rs=$('v-st').parentElement.parentElement;if(rs.classList.contains('gone')!==gs)rs.classList.toggle('gone',gs);}}
   renderItems();
   const C=CHARS[ME.char];
   {const tg=$('dt-g');if(tg){tg.hidden=!CONS[ME.cons];tg.classList.toggle('dim',!consReady(ME));tg.classList.toggle('glow',consReady(ME));}
@@ -10605,6 +10627,10 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
   txt('d-wname',V.reloadT>0?'Reloading':empty?(g.noReload?'Out of grenades':'Empty'):g.name);$('d-wname').classList.toggle('alert',V===ME&&empty&&(S.needR>0?Math.sin(S.t*20)>0:true));
   $('d-ammo').parentElement.classList.toggle('low',!inf&&V.ammo[vid]<=Math.ceil(g.mag*.25));
   $('d-rl').style.transform=`scaleX(${V.reloadT>0?1-V.reloadT/(V.reloadMax||1):0})`;
+  if(S.touch){const fb=document.querySelector('#dtouch .dt-fire'),am=$('dt-ammo');if(fb&&am){const rl=V.reloadT>0,lo=!inf&&!rl&&V.ammo[vid]>0&&V.ammo[vid]<=Math.ceil(g.mag*.25);
+      txt('dt-ammo',rl?'':inf?'':String(V.ammo[vid]??0));const ft=fb.firstChild,t=rl?'Reloading':empty&&!g.noReload?'Reload':'Fire';if(ft.textContent!==t)ft.textContent=t;
+      if(fb.classList.contains('rl')!==rl)fb.classList.toggle('rl',rl);if(rl)fb.style.setProperty('--rl',(1-V.reloadT/(V.reloadMax||1)).toFixed(3));
+      if(fb.classList.contains('low')!==lo)fb.classList.toggle('low',lo);if(fb.classList.contains('empty')!==empty)fb.classList.toggle('empty',empty);}}
   $('d-slot1').classList.toggle('on',V.slot===0);$('d-slot2').classList.toggle('on',V.slot===1);{const h=!!S.snipers;if($('d-slot2').hidden!==h)$('d-slot2').hidden=h;}$('d-slot3').classList.toggle('on',V.slot===2);txt('d-slot3n',V.bat?'Bat':'Fists');txt('d-slot1n',GUNS[V.primary==='fists'&&V.bat?'bat':V.primary].name);txt('d-slot2n',GUNS[(V.secondary||'smg')==='fists'&&V.bat?'bat':V.secondary||'smg'].name);}
   const holo=holoOn(ME);{const ho=$('d-holo');if(ho.hidden===holo)ho.hidden=!holo;if(holo&&ho.dataset.g!==id){ho.dataset.g=id;ho.style.setProperty('--sc',XHAIR[id]);}}
   const scoped=ME.ads&&isSn(id)&&ME.alive;{const sc=$('d-scope');if(sc.hidden===scoped)sc.hidden=!scoped;if(scoped){const c=GUNS[id].zoom<=24?'hdr':'kar';if(sc.className!==c){sc.className=c;sc.style.setProperty('--sc',XHAIR[id]);}}}

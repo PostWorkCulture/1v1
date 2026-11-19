@@ -39,7 +39,7 @@ All styles push when you're low, play safer when hurt, and chase the clock late 
 
 **Rumble** – Duels with no guns (also 1v1, 2v2 or free for all): fists only (18 per punch) plus one **bat** pickup, on any map (every map is available in every mode); Rumble games get no shop, armour plates or barrels. Punch someone while you're falling for 20 damage: you both get knocked back and they're stunned for a second. Walls, pick-ups, slams and finishing moves all still work.
 
-**Snipers only: the four new snipers** – the Snipers only mode now offers four snipers made for it, all modelled in the same detailed style (the HDR and Kar98 stay in normal games):
+**Snipers only: the four new snipers** – the Snipers only mode offers six snipers: the HDR and Kar98 plus four made for it that appear nowhere else, all modelled in the same detailed style:
 - **Reaper** (.338 magnum bolt-action, forest-green thumbhole stock with bronze trim): 100 a hit, one body shot downs, but the slowest bolt (1.6 s) and slow aiming; 4 rounds.
 - **Titan .50** (semi-auto .50 cal, gunmetal with red pinstripes, arrowhead brake): 70 a hit, two quick body shots (0.55 s apart), huge kick; 6 rounds.
 - **Vanguard** (7.62 marksman rifle, desert tan with brass): 45 a hit, ×2.3 headshot, fast follow-ups (0.28 s), light scope; 12 rounds.

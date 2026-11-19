@@ -6541,7 +6541,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* ---------- furnishing helpers ---------- */
   /* P: a breakable piece: an invisible collision box (centre x,z, base y, size w x h x d) carrying the visible parts [geo, material spec, dx, dy from base, dz, ry] */
   const P=(x,z,y,w,h,d,c,op,parts)=>{op=op||{};const cc=c.includes(':')?c.split(':')[1]:c;const b=box(x,y,z,w,h,d,cc,{mat:INVIS,edges:false,shadow:false,prop:op.prop||'crate',hp:op.hp||60,snd:op.snd||'crate',wood:op.wood!==false});b.mesh.scale.set(1,1,1);/* glass props get squashed thin by box(); the parts carry their own shapes */
-    for(const [g,pc,dx,dy,dz,ry] of parts||[[B.boxGeo(w,h,d),c,0,h/2,0]]){const m=new THREE.Mesh(g,typeof pc==='string'?pm(pc):pc);m.position.set(dx,dy-h/2,dz);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;b.mesh.add(m);}
+    for(const [g,pc,dx,dy,dz,ry] of parts||[[B.boxGeo(w,h,d),c,0,h/2,0]]){const m=new THREE.Mesh(g,typeof pc==='string'?pm(pc):pc);m.position.set(dx,dy-h/2,dz);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;m.userData.pp=1;b.mesh.add(m);}
     if(op.boom){b.boom=true;b.prop='fuel';b.hp=b.hp0=1;}return b;};
   const SS=St(0,0,1);
   const WARNM=new THREE.MeshBasicMaterial({map:WARN()});
@@ -6556,7 +6556,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const MIRM=new THREE.MeshPhongMaterial({map:MIRT,shininess:140,specular:'#ffffff'});
   /* real reflections: each mirrored room has a cube camera at head height; its picture is the mirrors' environment map. It is shot once when the map
      loads and then kept live (a few times a second) while you are in that room on High graphics, so you can see yourself and anyone else in the glass */
-  const ENVS=[];const envAt=(x0,x1,z0,z1,y)=>{const rt=new THREE.WebGLCubeRenderTarget(128,{generateMipmaps:false});const cam=new THREE.CubeCamera(.1,40,rt);cam.position.set((x0+x1)/2,y+1.7,(z0+z1)/2);
+  const ENVS=[];const envAt=(x0,x1,z0,z1,y)=>{const rt=new THREE.WebGLCubeRenderTarget(128,{generateMipmaps:false});const cam=new THREE.CubeCamera(.1,16,rt);cam.position.set((x0+x1)/2,y+1.7,(z0+z1)/2);
     const E={x0,x1,z0,z1,y,rt,cam,meshes:[],t:-9,done:0,mat:new THREE.MeshStandardMaterial({color:'#eef3f6',metalness:1,roughness:.03,envMap:rt.texture})};ENVS.push(E);return E;};
   const ENV={dressing:envAt(-24,-8,-27,-9,UF),mirrors:envAt(-8,8,9,27,UF),gym:envAt(24,40,-9,9,0),master:envAt(-40,-24,-27,-9,UF),bar:envAt(-40,-24,9,27,0)};
   /* a mirror panel standing on the floor or hung on a wall (axis 'x' runs along x); one bullet shatters it */
@@ -6754,11 +6754,11 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    const ball=new THREE.Mesh(new THREE.SphereGeometry(.8,24,16),new THREE.MeshPhongMaterial({map:bt,shininess:150,specular:'#ffffff'}));ball.position.set(-16,4.2,17);ball.userData.dyn=1;M.group.add(ball);deco(gC(.02,.02,.9,4),chrome,-16,5.05,17);
    const spots=[];for(let i=0;i<10;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOWT,color:COLS[i%COLS.length],transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));s.scale.set(2.2,2.2,1);s.userData.dyn=1;M.group.add(s);spots.push(s);}
    /* moving-head lights round the ceiling: beams of coloured light sweeping over the dance floor */
-   const beams=[];for(let i=0;i<8;i++){const a=i/8*TAU,x=-16+Math.cos(a)*5.5,z=17+Math.sin(a)*6;const g=new THREE.Group();g.position.set(x,H1-.35,z);g.userData.dyn=1;M.group.add(g);
+   const beams=[];for(let i=0;i<8;i++){const a=i/8*TAU,x=-16+Math.cos(a)*4,z=17+Math.sin(a)*4.5;const g=new THREE.Group();g.position.set(x,H1-.35,z);g.userData.dyn=1;M.group.add(g);
      const hd=new THREE.Mesh(B.boxGeo(.35,.3,.35),mat('#1c1d22'));g.add(hd);const cg=new THREE.ConeGeometry(1.1,5.6,18,1,true);cg.translate(0,-2.8,0);
      const bmM=new THREE.MeshBasicMaterial({color:COLS[i%COLS.length],transparent:true,opacity:.16,blending:THREE.AdditiveBlending,depthWrite:false,side:2,toneMapped:false});const bm=new THREE.Mesh(cg,bmM);g.add(bm);
      const lens=new THREE.Mesh(new THREE.CircleGeometry(.12,12),new THREE.MeshBasicMaterial({color:COLS[i%COLS.length],toneMapped:false}));lens.rotation.x=Math.PI/2;lens.position.y=-.16;g.add(lens);beams.push({g,m:bmM,lens,i});}
-   M.life.push(t=>{for(const B2 of beams){const ph=t*(.7+B2.i*.07)+B2.i;B2.g.rotation.set(Math.sin(ph)*.55,0,Math.cos(ph*1.3)*.55);const c=COLS[(B2.i+Math.floor(t*1.5))%COLS.length];B2.m.color.set(c);B2.lens.material.color.set(c);}});
+   M.life.push(t=>{for(const B2 of beams){const ph=t*(.7+B2.i*.07)+B2.i;B2.g.rotation.set(Math.sin(ph)*.42,0,Math.cos(ph*1.3)*.42);/* kept inside the ballroom's walls */const c=COLS[(B2.i+Math.floor(t*1.5))%COLS.length];B2.m.color.set(c);B2.lens.material.color.set(c);}});
    M.life.push(t=>{ball.rotation.y=t*.8;for(let i=0;i<spots.length;i++){const a=t*.6+i/spots.length*TAU;spots[i].position.set(-16+Math.cos(a)*(3+i%3),.25,17+Math.sin(a*1.3)*(3+i%2));}});
    {const D=mnDJParts(),dj=P(-16,25.8,0,4,1.3,1.4,'#1c1d22',{hp:90,wood:false,snd:'bin'},D.P);const recs=[];for(const x of [-1.2,1.2]){const r=new THREE.Mesh(new THREE.CircleGeometry(.33,32),new THREE.MeshLambertMaterial({map:D.rec}));r.rotation.x=-Math.PI/2;r.position.set(x,1.307-.65,0);dj.mesh.add(r);recs.push(r);}
      M.life.push((t,dt)=>{if(dj.alive)for(const r of recs)r.rotation.z-=dt*3.5;});}
@@ -6992,11 +6992,40 @@ M.life.push(()=>{if(Math.random()<.5)emit(x+rnd(-r,r)*.7,y+.62,z+rnd(-r,r)*.7,{n
    const disco=zone(-24,-8,9,27,0),cine=zone(-24,-8,-9,9,0),spa=zone(-24,-8,-9,9,UF);M.roomBeds=(x,y,z)=>({discomusic:disco(x,y,z),cinemasound:cine(x,y,z),spamusic:spa(x,y,z)});}
   /* keep the mirrors' reflections fresh: once at the start, then a few times a second while you're in that room (High graphics only) */
   M.life.push(t=>{const c=camera.position,hi=!window.GFX||!GFX.lv||GFX.lv()==='high';for(const E of ENVS){const inR=c.x>E.x0-2&&c.x<E.x1+2&&c.z>E.z0-2&&c.z<E.z1+2&&Math.abs(c.y-(E.y+1.6))<3;
-      if(E.done&&!(hi&&inR&&t-E.t>.2))continue;E.done=1;E.t=t;for(const F of ENVS)for(const m of F.meshes)m.visible=false;try{E.cam.update(renderer,scene);}catch(e){}for(const F of ENVS)for(const m of F.meshes)m.visible=true;break;}});
+      if(E.done&&!(hi&&inR&&t-E.t>.3))continue;E.done=1;E.t=t;for(const F of ENVS)for(const m of F.meshes)m.visible=false;try{E.cam.update(renderer,scene);}catch(e){}for(const F of ENVS)for(const m of F.meshes)m.visible=true;break;}});
   /* chandeliers drop when shot: a quick fall, a crash of crystal on the floor, anyone underneath gets hurt */
   M.life.push((t,dt)=>{for(const C of CHAND){if(C.t<0){C.chain.position.y=(C.y0+(C.top||H2))/2;C.chain.scale.y=Math.max(.1,(C.top||H2)-C.y0);continue;}if(!C.grp.visible)continue;C.chain.visible=false;C.t+=dt;const fy=C.y0-.5*24*C.t*C.t,floorY=C.y0>UF+1?UF:0;
       C.grp.position.y=Math.max(floorY+.3,fy);if(fy<=floorY+.3){C.grp.visible=false;const p=C.grp.position;emit(p.x,floorY+.4,p.z,{n:40,speed:7,up:4,size:.14,life:.9,grav:14,colors:['#e8f6ff','#ffffff','#d4a640','#bfe6ff']});sfx('frost',{x:p.x,y:floorY,z:p.z},{range:30,vol:1.5});
         for(const f of FS){if(!f.alive||Math.abs(f.pos.y-floorY)>1.5)continue;const d=Math.hypot(f.pos.x-p.x,f.pos.z-p.z);if(d<2)damage(f,40,null,false,'barrel');}}}});
+  /* ---------- keeping a full free for all smooth: the Mansion has thousands of small parts, so
+     (1) each breakable piece's parts are merged into one mesh per material,
+     (2) nothing inside under the roof casts a sun shadow (the roof already shades it all),
+     (3) room lights only shine in the room you're in (so the disco colours stay in the ballroom and don't bleed through walls and floors),
+     (4) small things far away, or on the other floor, aren't drawn ---------- */
+  M.group.updateMatrixWorld(true);
+  {const sig=g=>Object.keys(g.attributes).sort().join(',');
+   for(const b of M.props){const pm0=b.mesh;if(!pm0)continue;const by=new Map();
+     for(const c of pm0.children)if(c.isMesh&&c.userData.pp&&!c.children.length&&!Array.isArray(c.material)&&c.geometry.attributes.position){const k=c.material.uuid+'|'+sig(c.geometry);if(!by.has(k))by.set(k,[]);by.get(k).push(c);}
+     for(const L of by.values()){if(L.length<2)continue;const parts=[];let n=0;for(const c of L){c.updateMatrix();const g=c.geometry.index?c.geometry.toNonIndexed():c.geometry.clone();g.applyMatrix4(c.matrix);parts.push(g);n+=g.attributes.position.count;}
+       const out=new THREE.BufferGeometry();for(const nm of Object.keys(parts[0].attributes)){const sz=parts[0].attributes[nm].itemSize,arr=new Float32Array(n*sz);let off=0;for(const p of parts){const a=p.attributes[nm];arr.set(a.array.subarray(0,a.count*sz),off);off+=a.count*sz;}out.setAttribute(nm,new THREE.BufferAttribute(arr,sz));}
+       for(const p of parts)p.dispose();out.computeBoundingSphere();out.computeBoundingBox();const m=new THREE.Mesh(out,L[0].material);m.castShadow=m.receiveShadow=true;for(const c of L)pm0.remove(c);pm0.add(m);}}}
+  M.group.updateMatrixWorld(true);
+  const TR0=R.terrace,inFoot=(x0,x1,z0,z1)=>x0>-MX+.6&&x1<MX-.6&&z0>-MZ+.6&&z1<MZ-.6;
+  {const bb=new THREE.Box3();M.group.traverse(o=>{if(!o.isMesh||!o.castShadow||!o.geometry)return;bb.copy(o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox)).applyMatrix4(o.matrixWorld);
+     if(inFoot(bb.min.x,bb.max.x,bb.min.z,bb.max.z)&&bb.max.y<H2-.2&&!(bb.max.x>TR0.x0&&bb.min.x<TR0.x1&&bb.max.z>TR0.z0&&bb.min.z<TR0.z1&&bb.max.y>UF-.3))o.castShadow=false;});}
+  const roomOf=(x,y,z)=>{const fl=y>UF-.2?1:0;for(const r of RM){const Q=R[r[0]];if(Q.fl===fl&&x>=Q.x0&&x<=Q.x1&&z>=Q.z0&&z<=Q.z1)return Q.n;}return null;};
+  {const VL=[];M.group.traverse(o=>{if(o.isPointLight)VL.push(o);});for(const l of VL){l.parent.remove(l);l._rm=roomOf(l.position.x,l.position.y,l.position.z);}
+   const POOL=[0,1,2].map(()=>{const l=new THREE.PointLight('#ffffff',0,10,1.6);window.GFX&&GFX.light(l);M.group.add(l);return l;});const c0=new V3();
+   M.life.push(()=>{const c=camera.position,rm=roomOf(c.x,c.y,c.z);const L=rm?VL.filter(l=>l._rm===rm):[];if(L.length>1)L.sort((a,b)=>a.position.distanceToSquared(c)-b.position.distanceToSquared(c));
+     for(let i=0;i<POOL.length;i++){const p=POOL[i],v=L[i];if(v){p.position.copy(v.position);p.color.copy(v.color);p.intensity=v.intensity;p.distance=v.distance;p.decay=v.decay;}else p.intensity=0;}});}
+  {const U=[],bx=new THREE.Box3(),sp=new THREE.Sphere(),pset=new Set(M.props.map(b=>b.mesh));
+   const add=(o,lv)=>{if(!lv.length)return;bx.setFromObject(o);if(bx.isEmpty())return;bx.getBoundingSphere(sp);if(sp.radius>4)return;const c=sp.center;U.push({x:c.x,y:c.y,z:c.z,r:sp.radius,fl:c.y>UF-.2?1:0,inn:inFoot(c.x,c.x,c.z,c.z),L:lv,on:true});};
+   const leaves=o=>{const a=[];o.traverse(d=>{if(d.isMesh||d.isSprite||d.isLine||d.isPoints)a.push(d);});return a;};
+   for(const b of M.props)if(b.mesh&&b.mesh.parent===M.group)add(b.mesh,leaves(b.mesh).filter(d=>d!==b.mesh));
+   for(const o of M.group.children)if(!pset.has(o)&&!o.isLight&&(o.isSprite||o.isGroup||(o.isMesh&&o.userData.dyn)))add(o,leaves(o));
+   let ct=0;M.life.push((t,dt)=>{if((ct-=dt||.016)>0)return;ct=.15;const c=camera.position,away=Math.abs(c.x)>X+12||Math.abs(c.z)>Z+12||c.y>H2+3,inside=inFoot(c.x,c.x,c.z,c.z)&&c.y<H2,cf=c.y>UF-.2?1:0,D=inside?28:42;
+     for(const u of U){let on=true;if(!away){let d=Math.hypot(u.x-c.x,u.y-c.y,u.z-c.z)-u.r;if(inside&&u.inn&&u.fl!==cf)d*=1.7;on=d<D+u.r*5;}if(on!==u.on){u.on=on;for(const l of u.L)l.layers.mask=on?1:0;}}});
+   M.perf={units:U.length};}
   /* the roof, the upper ceilings and upstairs lights are hidden for the menu picture */
   M.thumb=on=>{for(const b of ROOF)if(b.mesh)b.mesh.visible=!on;};
   M.shopAt=[{x:-52,z:-2,q:1},{x:52,z:-2,q:3}];

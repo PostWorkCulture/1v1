@@ -3539,7 +3539,8 @@ function car(x,z,rot,color,kind){if(kind&&!rot)return carModel(x,z,kind,color);c
 function carModel(x,z,kind,tint){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.1,y0:.3,bh:.55,ch:.55,cl:2.2,cw:1.7,co:-.25,wb:1.45,r:.4},
     truck:{c:'#f4f5f7',L:6.4,W:2.2,y0:.45,bh:.75,ch:1.42,cl:4.3,cw:2.2,co:-1.0,wb:2.2,r:.5},
     lambo:{c:'#232428',L:4.6,W:2.15,y0:.25,bh:.45,ch:.35,cl:1.9,cw:1.6,co:0,wb:1.42,r:.39},
-    porsche:{c:'#2a5bd7',L:4.5,W:1.95,y0:.3,bh:.5,ch:.55,cl:2.0,cw:1.55,co:-.2,wb:1.35,r:.38}}[kind];
+    porsche:{c:'#2a5bd7',L:4.5,W:1.95,y0:.3,bh:.5,ch:.55,cl:2.0,cw:1.55,co:-.2,wb:1.35,r:.38},
+    blackyellow:{c:'#1d1e22',L:4.5,W:2.15,y0:.3,bh:.5,ch:.5,cl:2.0,cw:1.6,co:-.1,wb:1.4,r:.38}}[kind];
   const {L,W,y0,bh,ch,cl,cw,co,wb,r}=K,c=tint||K.c,top=y0+bh;
   const b1=box(x,y0,z,W,bh,L,c,{extra:{roughness:.3,metalness:.3}});const b2=box(x,top,z+co,cw,ch,cl,kind==='truck'?c:'#1d2430',{extra:kind==='truck'?{roughness:.3,metalness:.3}:{roughness:.12,metalness:.5}});
   const C={boxes:[b1,b2],parts:[b1.mesh,b2.mesh],wheels:[],x,z,color:c,kind,tint:tint||null};
@@ -3582,7 +3583,7 @@ function carModel(x,z,kind,tint){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.1,y0:.3,bh:
 /* Street Life's cars: the Tripo models from the project's images/Vehicles folder, baked offline into models/cars/<kind>.glb (15k-35k triangles, 256-512 px colour
    maps; the truck keeps its 27 parts). Normals are rebuilt on load, each model is turned nose to +z, sat on the ground and scaled to its length. The body and cabin
    boxes stay as the solid parts (cover, what bullets hit, what's left as the burnt shell); until a model has landed the car shows its built-in shape. */
-const VEH_CFG={train:{L:18,W:3.2,rot:(x,y,z)=>[z,y,-x]},gtr:{L:4.7},lambo:{L:4.6},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
+const VEH_CFG={train:{L:18,W:3.2,rot:(x,y,z)=>[z,y,-x]},gtr:{L:4.7},lambo:{L:4.6},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},blackyellow:{L:4.5},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
 function loadVehicle(kind){if(VEH_P[kind])return VEH_P[kind];return VEH_P[kind]=fetch('models/cars/'+kind+'.glb').then(r=>{if(!r.ok)throw new Error('car '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=VEH_CFG[kind],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -6256,7 +6257,7 @@ const MAPS={
  club:{modes:['duel'],name:'Club Night',desc:'A warehouse nightclub: a lit dance floor ringed by black glass, a glass bridge, a lounge with a roof deck and an alley out back. Lifts take you up',sw:['#ff2aa0','#16161c','#2affd0'],
   env:{top:'#05040e',mid:'#1a1030',bot:'#0a0812',ex:.5,fog:['#140a24',70,320],hemi:['#c0a6ea','#2e1c40',1.15],sun:['#aab4ff',.8],sunOff:[24,60,30],fill:.35,clouds:false},build(){clubNight();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture: glass partitions, colour-coded rooms and low walls to hop',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
-  const X=15,Z=24,H=5.8,T=.4,DH=3,GH=3,HOP=2.6;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const LS=layoutSnap();/* laid out at 30 x 48 m, fitted to 30 x 40 m (Small size) at the end */
+  const X=15,Z=24,H=5.8,T=.4,DH=3,GH=3,HOP=2.6;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const LS=layoutSnap();let TUB=null;/* laid out at 30 x 48 m, fitted to 30 x 40 m (Small size) at the end */
   floor(-70,70,-90,90,'#86a85a','meadow',-.02,7);
   /* walls: solid runs with openings. Every doorway is 3.2 m wide (two people side by side), glass runs are floor-to-3 m panes that a single
      bullet smashes, and hop runs are a low 2.6 m wall you can only clear by jumping off the furniture standing beside it.
@@ -6367,7 +6368,7 @@ const MAPS={
     for(const ex of [seat.x0+.18,seat.x1-.18])kidM(seat,B.roundedBox(.38,.55,seat.z1-back.z0,.12),arm,ex,top+.22,(back.z0+seat.z1)/2);
     for(const [ex,r] of [[seat.x0+.75,.5],[seat.x1-.75,-.4]]){const pl=kidM(seat,B.roundedBox(.5,.5,.16,.07),mat(acc,'stud'),ex,top+.42,back.z1+.32);pl.rotation.set(-.25,r,0);}};
   /* garage */
-  car(-7.5,17.5,false,'#2f7fe0');unit(box(-13.6,0,22,2,2.2,3.2,'#c8322a'),'+x',{drawers:5,col:'#c8322a'});box(-2,0,22.6,3.2,1,1.4,'#d0a060',{prop:'crate'});
+  /* (the car is added after the fit to size, below) */unit(box(-13.6,0,22,2,2.2,3.2,'#c8322a'),'+x',{drawers:5,col:'#c8322a'});box(-2,0,22.6,3.2,1,1.4,'#d0a060',{prop:'crate'});
   /* kid bedroom: bed, wardrobe in the corner, desk, and a toy chest against the low wall to hop into the living room */
   {const hb=FB(box(10,0,23.4,4,1.5,.4,'#f7c6d4',{tx:'stud'}));bed(FB(box(10,0,20.5,4,.7,6,'#f4f1ea',{tx:'panel'}),[hb]),'+z','#ff8fab');}unit(box(14.2,0,21.5,1.2,2.6,3.6,'#8ecae6'),'-x',{tall:1,n:2,col:'#8ecae6'});unit(FB(box(13,0,13.2,2.6,1.1,1.2,'#ffd166')),'-z',{drawers:3,n:1,col:'#ffd166',top:mat('#f4f1ea')});
   unit(box(2.8,0,10.75,2.6,1.05,.7,'#4f7ad6'),'+z',{n:2,col:'#4f7ad6',top:mat('#ffd166')});
@@ -6379,7 +6380,9 @@ const MAPS={
   box(-1.5,0,7.5,1.4,1.3,1.4,'#3bb54a',{prop:'bush'});
   unit(box(2.8,0,9.3,2.6,1.05,.8,'#2f6f73'),'-z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});unit(box(-13.35,0,-5.35,2.4,1.05,.8,'#2f6f73'),'+z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});
   /* hallway / study (the shop stands against the living-room side of this wall) */
-  /* (no desk in the study: it blocked the way between the dining-room and living-room doors) */unit(FB(box(13.9,0,-1,1,2.6,5,'#8a5a34')),'-x',{books:1,col:'#8a5a34'});box(8,0,-3.6,1.6,1.2,1.6,'#16171c');
+  /* (no desk in the study: it blocked the way between the dining-room and living-room doors) */unit(FB(box(13.9,0,-1,1,2.6,5,'#8a5a34')),'-x',{books:1,col:'#8a5a34'});/* a telly on a stand in the study's corner (by the living-room wall, under the landing), showing the imok1 channel; breakable like the others */
+   {unit(FB(box(6.5,0,-5.35,2.4,.7,.75,'#2b2c31')),'+z',{n:2,col:'#2b2c31',top:mat('#b9895a','wood')});const tv2=FB(box(6.5,.7,-5.5,2.1,1.25,.14,'#16171c',{extra:{roughness:.2,metalness:.5}}));
+    kidM(tv2,new THREE.PlaneGeometry(1.96,1.1),new THREE.MeshBasicMaterial({map:liveTV(256,144,'show',9),toneMapped:false}),6.5,1.325,-5.425);kidM(tv2,new THREE.BoxGeometry(.5,.05,.25),mat('#16171c'),6.5,.725,-5.5);}
   /* the stairs: one straight, wide flight (3.6 m, room for two) up the east wall onto the mezzanine, with a clear run-up from the kid's-room door
      at the bottom and open floor at the top; a white rail along the rest of the mezzanine edge */
   {const S=St(0,0,1);S.slab(5.25,14.8,-5.8,2.0,3.1,3.4,'#f6e7a0',null,'wood');/* the upstairs floor in pastel yellow, with a little potted plant in the corner */
@@ -6394,7 +6397,10 @@ const MAPS={
   FB(box(6.8,0,-9,4.2,1.05,1.4,'#7a4c2a',{tx:'wood'}));for(const sx of [-1.4,0,1.4])box(6.8+sx,0,-8,.8,1.6,.5,'#c99a5b');/* chairs on the north side only, so the way to the bedroom door stays clear */unit(box(13.8,0,-10.45,1.2,2.4,2.5,'#3a3d45'),'-x',{tall:1,n:2,col:'#3a3d45'});
   unit(box(3.1,0,-11.35,2.8,1.05,.8,'#6e3b2a',{tx:'panel'}),'+z',{n:3,col:'#6e3b2a',top:mat('#3a2414','wood')});
   /* bathroom + laundry: a vanity unit and a laundry cupboard either side of the low wall between them */
-  {const bt=box(-12,0,-21.8,5,1,2.4,'#ffffff');kidM(bt,new THREE.BoxGeometry(4.5,.02,1.9),mat('#8fd9f0',null,{roughness:.1,metalness:.2,emissive:'#3aa6c8',emissiveIntensity:.2}),-12,1.0,-21.8);kidM(bt,gC(.04,.04,.35,8),chrome,-14.2,1.15,-21.8);
+  {/* the bath is a real tub: a 1 m rim round a low floor, filled with water you can jump into and splash about in (jump to get out) */
+   const RT=.2,bx0=-14.5,bx1=-9.5,bz0=-23,bz1=-20.6,tw=mat('#fbfbfb',null,{roughness:.25});TUB=box((bx0+bx1)/2,0,(bz0+bz1)/2,bx1-bx0-2*RT,.2,bz1-bz0-2*RT,'#eef6f8',{tx:'wtile'});
+   for(const [x,z,w,d] of [[(bx0+bx1)/2,bz0+RT/2,bx1-bx0,RT],[(bx0+bx1)/2,bz1-RT/2,bx1-bx0,RT],[bx0+RT/2,(bz0+bz1)/2,RT,bz1-bz0-2*RT],[bx1-RT/2,(bz0+bz1)/2,RT,bz1-bz0-2*RT]])box(x,0,z,w,1,d,'#ffffff',{mat:tw});
+   deco(gC(.04,.04,.35,8),chrome,-14.4,1.17,-21.8);deco(new THREE.BoxGeometry(.3,.05,.06),chrome,-14.3,1.33,-21.8);
    const vn=box(-6.75,0,-14.1,.9,1.05,2.2,'#ffffff');unit(vn,'-x',{n:2,col:'#ffffff',top:mat('#d9d4c8','slab')});kidM(vn,gC(.3,.22,.12,16),mat('#fbfbfb'),-6.75,1.12,-14.1);
    for(const x of [-3,-1.4]){const wm=box(x,0,-22.6,1.6,1.4,1.4,'#e9eaee');kidM(wm,new THREE.TorusGeometry(.42,.06,8,24),chrome,x,.68,-21.88);kidM(wm,new THREE.CircleGeometry(.4,24),mat('#2b3a4a',null,{roughness:.1,metalness:.4}),x,.68,-21.89);kidM(wm,new THREE.BoxGeometry(1.4,.18,.02),mat('#c9cdd2'),x,1.25,-21.89);}
    unit(box(-5.25,0,-14.1,.9,1.05,2.2,'#9b8ad0'),'+x',{n:2,col:'#9b8ad0',top:mat('#f4f1ea')});}
@@ -6403,7 +6409,62 @@ const MAPS={
   M.shopAt=[{x:4.1,z:-1.7,q:3}];M.spawns=[[7.5,15],[-9,-17],[-10,5],[8,5],[-3,-9],[9,-15],[-10,21],[3,19]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   layoutRemap(LS,x=>[x,1],z=>Math.abs(z)<=24?[z*20/24,20/24]:[z-4*Math.sign(z),1]);M.bounds={x0:-15,x1:15,z0:-20,z1:20};
   /* no explosive drums in or beside a doorway, at the foot or top of the stairs, or by the low hop walls */
-  M.noDrums=[[-7.5,10],[7.5,10],[-9,-6],[2.5,-6],[10,-6],[-10.5,-12],[-3,-12],[7.5,-12],[0,17],[5,2],[0,-9],[-6,-18],[0,-18],[13,7.4],[13,1.2],[2.8,10],[-13.4,-6],[3.1,-12],[-6,-14.1]].map(([x,z])=>({x,z:z*20/24,r:3}));}},
+  M.noDrums=[[-7.5,10],[7.5,10],[-9,-6],[2.5,-6],[10,-6],[-10.5,-12],[-3,-12],[7.5,-12],[0,17],[5,2],[0,-9],[-6,-18],[0,-18],[13,7.4],[13,1.2],[2.8,10],[-13.4,-6],[3.1,-12],[-6,-14.1]].map(([x,z])=>({x,z:z*20/24,r:3}));
+  /* the bath water: wade and splash in the tub (its floor is low enough to count as standing in water) */
+  {const WY=.72,b=TUB,wm=new THREE.MeshStandardMaterial({color:'#7fd3ec',map:TX.ripple,transparent:true,opacity:.6,roughness:.06,metalness:.1,emissive:'#2b8fb5',emissiveIntensity:.18,depthWrite:false});
+   const wg=new THREE.PlaneGeometry(b.x1-b.x0,b.z1-b.z0);wg.rotateX(-Math.PI/2);const wa=new THREE.Mesh(wg,wm);wa.position.set((b.x0+b.x1)/2,WY,(b.z0+b.z1)/2);wa.renderOrder=3;wa.userData.dyn=1;M.group.add(wa);
+   M.life.push(t=>{wa.position.y=WY+Math.sin(t*1.6)*.01;});M.wade=(x,z)=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1;M.waterY=(x,z)=>M.wade(x,z)?WY:null;waterRings(()=>WY);}
+  /* the garage car: the black-and-yellow #69 race car (images/Vehicles/BlackYellow Car.glb, baked to models/cars/blackyellow.glb) with its own glass and lights
+     that break. The windscreen, the glass over the engine and both side windows each smash with one shot (shards fall, a jagged edge is left round a dark hole),
+     and the headlights and tail lights smash and go dark. Three shots to the body still blows the whole car; everything is back next round */
+  {const cx=-7.5,cz=17.5*20/24,GC=parkVehicle(car(cx,cz,false,null,'blackyellow')),b2=GC.boxes[1];
+   /* the cabin's solid box shrunk to the model's actual greenhouse, so the glass sits outside it and takes the shots aimed at it */
+   b2.x0=cx-.55;b2.x1=cx+.55;b2.y0=.8;b2.y1=1.2;b2.z0=cz-.55;b2.z1=cz+.15;b2.mesh.scale.set(1.1/1.6,.4/.5,.7/2);
+   {const b1=GC.boxes[0];b1.z1=cz+1.85;b1.mesh.scale.z=(b1.z1-b1.z0)/4.5;b1.mesh.position.z=(b1.z0+b1.z1)/2;}/* the body's box stops just short of the headlights, so they take the shots aimed at them */b2.mesh.position.set(cx,(b2.y0+b2.y1)/2,(b2.z0+b2.z1)/2);
+   const P=(x,y,z)=>new V3(cx+x,y,cz+z),parts=[];
+   const glassM=new THREE.MeshStandardMaterial({color:'#18222c',roughness:.04,metalness:.75,transparent:true,opacity:.78}),holeM=new THREE.MeshBasicMaterial({color:'#050608'}),shardM=new THREE.MeshStandardMaterial({color:'#bfe0ee',roughness:.05,metalness:.4,transparent:true,opacity:.55,side:THREE.DoubleSide});
+   const polyGeo=(pts,off)=>{const c=pts.reduce((a,p)=>a.add(p),new V3()).multiplyScalar(1/pts.length),n=new V3().subVectors(pts[1],pts[0]).cross(new V3().subVectors(pts[2],pts[0])).normalize();if(n.dot(new V3().subVectors(c,new V3(cx,.7,cz)))<0)n.negate();
+     const v=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];for(const q of [c,a,b])v.push(q.x+n.x*off,q.y+n.y*off,q.z+n.z*off);}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();return {g,c,n};};
+   const jagged=(pts,c,n,off)=>{const v=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],k=Math.max(3,Math.round(a.distanceTo(b)/.12));for(let j=0;j<k;j++){const p0=a.clone().lerp(b,j/k),p1=a.clone().lerp(b,(j+1)/k),m=p0.clone().lerp(p1,.5),dp=.04+Math.random()*.13,ti=m.clone().lerp(c,dp/Math.max(.2,m.distanceTo(c)));
+       for(const q of [p0,p1,ti])v.push(q.x+n.x*off,q.y+n.y*off,q.z+n.z*off);}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.computeVertexNormals();return g;};
+   /* a pane: its own glass over the model's, an invisible collider round it (one bullet breaks it), and the broken look (dark hole and jagged edge) shown once it's gone */
+   const pane=pts=>{const {g,c,n}=polyGeo(pts,.025);let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;for(const q of pts){x0=Math.min(x0,q.x);x1=Math.max(x1,q.x);y0=Math.min(y0,q.y);y1=Math.max(y1,q.y);z0=Math.min(z0,q.z);z1=Math.max(z1,q.z);}
+     const pd=.05;const b=box((x0+x1)/2,y0-pd,(z0+z1)/2,x1-x0+2*pd,y1-y0+2*pd,z1-z0+2*pd,'#000000',{mat:INVIS,edges:false,shadow:false,prop:'glass',hp:1,snd:'frost'});
+     const gm=new THREE.Mesh(g,glassM);gm.userData.dyn=1;M.group.add(gm);const hole=new THREE.Mesh(polyGeo(pts,.012).g,holeM),jag=new THREE.Mesh(jagged(pts,c,n,.026),shardM);for(const o of [hole,jag]){o.visible=false;o.userData.dyn=1;M.group.add(o);}
+     parts.push({b,on:[gm],off:[hole,jag]});};
+   for(const s2 of [-1,1]){const xs=y=>s2*(.69-.3*(y-.95));pane([[.5,.97],[.18,1.17],[-.35,1.17],[-.6,1.05],[-.62,.97]].map(([z,y])=>P(xs(y),y,z)));}
+   pane([P(-.62,.94,.74),P(.62,.94,.74),P(.52,1.2,.22),P(-.52,1.2,.22)]);
+   pane([P(-.42,1.2,-.66),P(.42,1.2,-.66),P(.46,1.07,-1.36),P(-.46,1.07,-1.36)]);
+   /* lights: two round headlights and the full-width tail-light bar (lit; shot, they smash and go dark) */
+   const lamp=(geo,col,x,y,z,rx,ry,hw,hh,hd)=>{const b=box(cx+x,y-hh,cz+z,2*hw,2*hh,2*hd,'#000000',{mat:INVIS,edges:false,shadow:false,prop:'glass',hp:1,snd:'frost'});
+     const on=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:2.2,toneMapped:false})),off=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:'#1b1d22',roughness:.6}));
+     for(const o of [on,off]){o.position.set(cx+x,y,cz+z);o.rotation.set(rx,ry,0);o.userData.dyn=1;M.group.add(o);}off.visible=false;parts.push({b,on:[on],off:[off]});};
+   for(const s2 of [-1,1]){lamp(new THREE.PlaneGeometry(.42,.07),'#eef6ff',s2*.72,.6,1.97,-.3,s2*.45,.24,.08,.16);lamp(new THREE.PlaneGeometry(.46,.06),'#ff2a2a',s2*.72,.76,-2.16,0,Math.PI-s2*.35,.26,.06,.12);}
+   /* broken bits show once a part is gone; the whole lot breaks if the car is blown up, and hides with the burnt-out shell */
+   M.life.push(()=>{const burnt=!GC.alive;for(const q of parts){if(burnt&&q.b.alive)breakProp(q.b,new V3(cx,1,cz));for(const o of q.on)o.visible=q.b.alive&&!GC.burnt;for(const o of q.off)o.visible=!q.b.alive&&!GC.burnt;}});}
+  /* garage shelving: two floor-standing steel racks against the back wall (clear of the window, the red drawers and the car), four wooden boards each,
+     loaded with toolboxes, drills, spanners, hammers, paint tins and a saw. Each board is breakable: shoot it (or blast it) and its tools tumble off; back next round */
+  {const steel=mat('#3a3d45',null,{metalness:.6,roughness:.4}),board=mat('#8a6a48','wood'),chrome=mat('#c9ced6',null,{metalness:.9,roughness:.2}),blk=mat('#1c1d22',null,{roughness:.5}),
+     rnd=(()=>{let sd=11;return ()=>(sd=(sd*16807)%2147483647)/2147483647;})(),R=(a,b)=>a+rnd()*(b-a),cols=['#f4c22b','#d8322b','#1f9a9a','#2f7fe0','#e8e4d8'],pick=a=>a[(rnd()*a.length)|0];
+   const zw=20-.2,D=.5,zf=zw-D,zc=zw-D/2,YS=[.12,.68,1.24,1.8];let G=null;
+   const add=(geo,m,x,y,z,ry=0)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.rotation.y=ry;o.castShadow=true;o.userData.dyn=1;G.add(o);return o;};
+   const toolbox=(x,y,z)=>{const c=mat(pick(['#d8322b','#2b2e35','#1f6fd0']),null,{metalness:.4,roughness:.35});add(B.boxGeo(.5,.24,.26),c,x,y+.12,z);add(B.boxGeo(.28,.03,.03),blk,x,y+.28,z);add(B.boxGeo(.5,.015,.27),chrome,x,y+.2,z);};
+   const tin=(x,y,z)=>{const c=mat(pick(cols),null,{metalness:.5,roughness:.4});add(new THREE.CylinderGeometry(.09,.09,.2,14),c,x,y+.1,z);add(new THREE.CylinderGeometry(.092,.092,.02,14),chrome,x,y+.2,z);};
+   const drill=(x,y,z,ry)=>{const c=mat(pick(['#f4c22b','#2f7fe0','#d8322b']),null,{roughness:.45});const g=new THREE.Group();g.position.set(x,y,z);g.rotation.y=ry;G.add(g);const pG=G;G=g;
+     add(B.boxGeo(.26,.09,.07),c,0,.27,0);add(B.boxGeo(.06,.16,.06),blk,.06,.15,0);add(B.boxGeo(.12,.07,.09),blk,.07,.035,0);add(new THREE.CylinderGeometry(.022,.026,.06,10).rotateZ(Math.PI/2),chrome,-.16,.27,0);add(new THREE.CylinderGeometry(.006,.006,.08,6).rotateZ(Math.PI/2),chrome,-.22,.27,0);G=pG;};
+   const spanners=(x,y,z)=>{for(let k=0;k<3;k++){const len=R(.18,.3);add(B.boxGeo(len,.012,.035),chrome,x+R(-.05,.05),y+.008+k*.013,z+R(-.08,.08),R(-.5,.5));}};
+   const hammer=(x,y,z,ry)=>{const g=new THREE.Group();g.position.set(x,y+.02,z);g.rotation.y=ry;G.add(g);const pG=G;G=g;add(B.boxGeo(.32,.025,.03),mat('#b5793f','wood'),0,0,0);add(B.boxGeo(.04,.04,.12),steel,.16,.0,0);G=pG;};
+   const saw=(x,y,z)=>{add(B.boxGeo(.5,.22,.008),chrome,x,y+.13,z-.12+.06);add(B.boxGeo(.14,.12,.03),mat('#d8322b'),x+.29,y+.1,z-.06);};
+   const boxes=(x,y,z)=>{add(B.boxGeo(.36,.26,.34),mat('#c9a06a'),x,y+.13,z);if(rnd()<.6)add(B.boxGeo(.3,.2,.28),mat('#b88d58'),x+R(-.03,.03),y+.36,z);};
+   const fill=(x,y,z,lvl)=>{const k=rnd(),ry=R(-.3,.3);if(lvl===0){k<.55?boxes(x,y,z):toolbox(x,y,z);return;}
+     if(k<.22)toolbox(x,y,z);else if(k<.42)drill(x,y,z,ry);else if(k<.58)spanners(x,y,z);else if(k<.7)hammer(x,y,z,ry+Math.PI/2*(rnd()<.5?0:1));else if(k<.88){tin(x-.06,y,z);if(rnd()<.6)tin(x+.14,y,z+.04);}else saw(x,y,z);};
+   for(const [a0,a1] of [[-12.3,-9.1],[-8.8,-5.6]]){const L=a1-a0;
+     /* the steel frame: corner posts and a back brace */
+     for(const xa of [a0+.03,a1-.03])for(const zz of [zf+.03,zw-.03])deco(B.boxGeo(.05,2.05,.05),steel,xa,1.025,zz);deco(B.boxGeo(L,.05,.02),steel,(a0+a1)/2,1.5,zw-.02);
+     YS.forEach((y,lvl)=>{G=new THREE.Group();M.group.add(G);const g=G;add(B.boxGeo(L-.02,.04,D-.02),board,(a0+a1)/2,y,zc);
+       for(let a=a0+.35;a<a1-.3;a+=R(.5,.75))fill(a,y+.02,zc+R(-.06,.06),lvl);
+       const top=lvl<3?YS[lvl+1]-.04:2.15,pb=box((a0+a1)/2,y-(lvl?0:.12),zc,L,top-y+(lvl?0:.12),D,'#8a6a48',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:40,snd:'crate',wood:true});
+       pb.fell=()=>{g.visible=false;emit((a0+a1)/2,y+.2,zc-.1,{n:10,speed:2.5,up:1.2,size:.1,life:1,grav:18,colors:['#8a6a48','#3a3d45','#c9ced6']});};pb.onRestore=()=>{g.visible=true;};});}}}},
  yard:{modes:['rumble'],name:'Backyard',desc:'A big back garden: a sunken pool to wade through, trampolines, a treehouse, a fire pit and brick walls to fight round',sw:['#5fb24b','#2f9fd0','#a85339'],build(){backyard();}},
  mansion:{modes:['duel'],name:'The Mansion',desc:'A two-floor mansion maze: thirty rooms, a grand staircase, lifts, a pole drop, a launch trampoline, portals and a pool',sw:['#efe6d6','#7a2a36','#d4a640'],build(){mansion();}},
 };

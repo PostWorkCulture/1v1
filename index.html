@@ -3193,13 +3193,13 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
   const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','shotty','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
-    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fistwhoosh','fisthit','swordswing','swordhit','starthrow','starhit','starthunk','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
+    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','fistwhoosh','fisthit','batswing','swordswing','swordhit','starthrow','starhit','starthunk','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli','bing'];
   const LOOPS={waves:1,engine:1,boat:1,heli:1,clubmusic:1};
   const LAZY={clubmusic:1},lazyReq={};/* big beds (Club Night's music) only download the first time they're needed */ // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={clubmusic:.3,heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
-    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,swordswing:.45,swordhit:.6,starthrow:.4,starhit:.5,starthunk:.45,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
+    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,batswing:.45,swordswing:.45,swordhit:.6,starthrow:.4,starhit:.5,starthunk:.45,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.55,bing:.25,bell:.55,whistle:.4,beep:.3,flatline:.3,reel:.5,boing:.45}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1,wvol=1;
@@ -8037,7 +8037,7 @@ function fireFlame(f,origin,dir){const id='flamer',g=GUNS[id];f.fireT=g.rate;f.a
 function flameOut(f){if(f.secondary!=='flamer'||f.ammo.flamer>0)return;f.secondary=f.flamerPrev||'smg';f.flamerPrev=null;f.flameT=0;equip(f,f.slot);}
 function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='crossbow'){f.shotT=S.t;S.lastShooter=f;f.shotP=f.pos.clone();}
 
-  if(g.type==='melee'){f.fireT=g.rate;f.kick=1;sfx(id==='fists'?'fistwhoosh':id==='sword'||id==='bat'?'swordswing':'swing',f,{jitter:.08});if(f===ME)S.stats.shots++;melee(f);return;}
+  if(g.type==='melee'){f.fireT=g.rate;f.kick=1;sfx(id==='fists'?'fistwhoosh':id==='bat'?'batswing':id==='sword'?'swordswing':'swing',f,{jitter:.08});if(f===ME)S.stats.shots++;melee(f);return;}
   if(g.type==='flame'){fireFlame(f,origin,dir);return;}
   if(g.type==='proj'){f.fireT=g.rate;if(!fromBurst&&g.burst){f.burstN=g.burst-1;f.burstT=g.burstGap;}f.ammo[id]--;f.kick=1;f.flashT=id==='rocket'?.08:0;let mz=f.guns[id].userData.muzzle.getWorldPosition(new V3());if(f===ME&&VM.raise>.5&&(id==='rocket'||id==='crossbow'||id==='swarm'))mz=origin.clone().addScaledVector(dir,1.05).add(new V3(0,-.05,0));
     const hb=rayBoxes(origin,dir,250),hf=rayFoes(origin,dir,f);let t=200;if(hb)t=Math.min(t,hb.t);if(hf)t=Math.min(t,hf.t);

@@ -5984,9 +5984,37 @@ function lagoonMap(){const X=15,Z=20,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     const bam2=mat('#c8a060',null,{flatShading:true});for(const px of [bx-3.1,bx+3.1])box(px,0,bz+sg(2.15),.28,3.3,.28,'#c8a060',{mat:bam2,wood:false,edges:false});
     const th=mat('#d4ad62','thatch',{flatShading:true,side:2});/* a flat thatched roof you can stand on, with a white ladder up the end */
     box(bx,3.3,bz+sg(1.2),7.4,.25,4.2,'#d4ad62',{mat:th,wood:true,chip:false,edges:false});deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.42,bz+sg(-.9)).castShadow=false;
-    wLadder(bx+s*4.15,bz+sg(1.2),0,3.55,-s,0);}
-  /* white ladders up onto the shop canopy, one from each pavilion's inner edge, east of the crossover */
-  for(const s of [1,-1])wLadder(11.5,s*(CR*Math.SQRT1_2+.45),0,CY+.3,0,-s);
+    /* hop-ups onto the roof, off the bar's end: a squat lava-stone drum, then two rum barrels stacked, then the roof */
+    {const hz=bz+sg(1.2),dx=bx+s*5.55,rx=bx+s*4.4,lava=mat('#3d3733','stone',{roughness:.95,flatShading:true}),oak=mat('#7a4a26','wood',{roughness:.7}),hoop=mat('#b08a3e',null,{metalness:.8,roughness:.35});
+      deco(new THREE.CylinderGeometry(.55,.62,.95,10),lava,dx,.475,hz);deco(new THREE.TorusGeometry(.56,.05,6,18),mat('#ff6a1a',null,{emissive:'#ff5a10',emissiveIntensity:1.6}),dx,.9,hz).rotation.x=Math.PI/2;collider(dx-.55,dx+.55,0,.95,hz-.55,hz+.55);
+      for(let k=0;k<2;k++){const y=k*1.05,g=new THREE.Group();g.position.set(rx,y,hz);g.rotation.y=k*.7+(s>0?0:1.3);M.group.add(g);
+        const bar=new THREE.Mesh(new THREE.CylinderGeometry(.46,.46,1.05,14),oak);bar.position.y=.525;bar.scale.set(1,1,1);g.add(bar);
+        const belly=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.5,14),oak);belly.position.y=.525;g.add(belly);
+        for(const hy of [.12,.4,.65,.93]){const h=new THREE.Mesh(new THREE.TorusGeometry(hy>.3&&hy<.7?.505:.47,.025,5,18),hoop);h.rotation.x=Math.PI/2;h.position.y=hy;g.add(h);}
+        g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});}
+      collider(rx-.5,rx+.5,0,2.1,hz-.5,hz+.5);}}
+  /* a stepped tiki totem on each pavilion's inner edge, its back to the shop canopy: hop up the lava plinth, its shoulders and its flat head,
+     then over its feather headdress onto the canopy. Glowing eyes; the carving faces the pavilion */
+  {const lava=mat('#3d3733','stone',{roughness:.95,flatShading:true}),wd=mat('#8a5530','wood',{roughness:.75,flatShading:true}),wd2=mat('#6a3e22','wood',{roughness:.8,flatShading:true}),
+      eye=mat('#ffb040',null,{emissive:'#ff8a20',emissiveIntensity:2.6}),tooth=mat('#efe4c8'),tx=11.5,z0=CR*Math.SQRT1_2+.47;
+    for(const s of [1,-1]){const Z=(a,b)=>s*(z0+(a+b)/2),D=(a,b)=>b-a,f=s*(z0+.02);
+      /* plinth 0-0.9 m, shoulders to 2.0 m, head to 3.2 m; each tier steps back toward the canopy */
+      box(tx,0,Z(0,2.3),1.9,.9,D(0,2.3),'#3d3733',{mat:lava,wood:false,chip:false,edges:false});
+      box(tx,.9,Z(0,1.3),1.4,1.1,D(0,1.3),'#8a5530',{mat:wd,wood:false,chip:false,edges:false});
+      box(tx,2,Z(0,.8),1.15,1.2,D(0,.8),'#8a5530',{mat:wd,wood:false,chip:false,edges:false});
+      const fz=s*(z0+.8+.04),fz2=s*(z0+1.3+.04);
+      /* the face, on the pavilion side of the head: heavy brow, glowing eyes, wide grinning mouth with teeth, flared ears */
+      deco(new THREE.BoxGeometry(1.2,.16,.12),wd2,tx,2.95,fz);for(const ex of [-.27,.27]){deco(new THREE.BoxGeometry(.26,.18,.06),eye,tx+ex,2.72,fz).castShadow=false;glowSprite(tx+ex,2.72,fz+s*.06,.5,'#ff9a30',.6);}
+      deco(new THREE.BoxGeometry(.22,.38,.14),wd2,tx,2.48,fz);deco(new THREE.BoxGeometry(.86,.3,.1),wd2,tx,2.18,fz);deco(new THREE.BoxGeometry(.7,.08,.04),tooth,tx,2.24,fz+s*.05);
+      for(const ex of [-1,1])deco(new THREE.BoxGeometry(.12,.55,.32),wd2,tx+ex*.62,2.55,s*(z0+.45));
+      /* the torso: folded arms and a carved belly band */
+      deco(new THREE.BoxGeometry(1.25,.16,.1),wd2,tx,1.6,fz2);deco(new THREE.BoxGeometry(.9,.12,.08),wd2,tx,1.25,fz2);
+      /* a carved feather headdress on the back of the head (stops you short of the canopy's edge, so the last hop onto the thatch is clean) */
+      box(tx,3.2,Z(0,.13),1.15,1.25,D(0,.13),'#6a3e22',{mat:wd2,wood:false,chip:false,edges:false});
+      [['#e0482e',-.44],['#f2a531',-.22],['#2fa39a',0],['#f2a531',.22],['#e0482e',.44]].forEach(([c,ox],i)=>{const fe=deco(new THREE.BoxGeometry(.2,.62,.07),mat(c,null,{flatShading:true}),tx+ox,4.4+(i===2?.1:i%2?.05:0),s*(z0+.07));fe.rotation.z=-ox*.55;fe.castShadow=false;});
+      /* lava plinth rim glows faintly */
+      {const gm=mat('#ff6a1a',null,{emissive:'#ff5a10',emissiveIntensity:1.4}),pz=Z(0,2.3),pd=D(0,2.3);
+        for(const e of [-1,1]){deco(new THREE.BoxGeometry(1.96,.04,.06),gm,tx,.9,pz+e*pd/2).castShadow=false;deco(new THREE.BoxGeometry(.06,.04,pd+.02),gm,tx+e*.98,.9,pz).castShadow=false;}}}}
   /* a moored speedboat bobbing on the swell, a lifebuoy on the rail */
   /* boats (Tripo models): a speedboat moored by the north pavilion, a cruiser and a sailboat passing round the lagoon, two jet skis tearing about,
      a superyacht at anchor, a rowing boat and a canoe pulled up on the islands, a lighthouse on the big island and a seaplane circling overhead;

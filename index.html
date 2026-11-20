@@ -3277,13 +3277,13 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 <script>
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
-  const NAMES=['akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','shotty','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
+  const NAMES=['uiselect','uifwd','uiback','uitick','uiland','uistart','akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','shotty','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
     'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','djump','fistwhoosh','fisthit','batswing','swordswing','swordhit','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli','bing'];
   const LOOPS={waves:1,engine:1,boat:1,heli:1,clubmusic:1,discomusic:1,cinemasound:1,spamusic:1};
   const LAZY={clubmusic:1,discomusic:1,cinemasound:1,spamusic:1},lazyReq={};/* big beds (Club Night's music) only download the first time they're needed */ // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={djump:.36,clubmusic:.3,discomusic:.55,cinemasound:.4,spamusic:.32,heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
+  const MIX={uiselect:.35,uifwd:.35,uiback:.35,uitick:.3,uiland:.4,uistart:.4,djump:.36,clubmusic:.3,discomusic:.55,cinemasound:.4,spamusic:.32,heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,batswing:.45,swordswing:.45,swordhit:.6,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.41,bing:.25,reel:.5,boing:.45}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
@@ -13418,14 +13418,23 @@ $('d-back').addEventListener('click',()=>{S.qr=null;menuStep('char');renderDuelM
 function pickSpin(g,pick,done,onLand,o){o=o||{};const tiles=[...g.children].filter(t=>t.dataset.rk);const ti=Math.max(0,tiles.findIndex(t=>t.dataset.rk===pick));g.classList.add('picking');
   const H=o.hops||13,seq=[];let last=-1;for(let n=0;n<H;n++){let r;do r=(Math.random()*tiles.length)|0;while(tiles.length>1&&(r===last||(n===H-1&&r===ti)));seq.push(r);last=r;}seq.push(ti);
   let n=0,d=o.d0||60;const hop=()=>{tiles.forEach(t=>t.classList.remove('on'));const t=tiles[seq[n]];
-    if(n===seq.length-1){t.classList.add('pick');onLand&&onLand();sfx('hit',null,{rate:.8,vol:.6});setTimeout(()=>{g.classList.remove('picking');t.classList.remove('pick');done();},o.hold||1100);return;}
-    t.classList.add('on');sfx('hit',null,{rate:1.5,vol:.25});n++;d*=o.grow||1.17;setTimeout(hop,d);};hop();}
+    if(n===seq.length-1){t.classList.add('pick');onLand&&onLand();sfx('uiland');setTimeout(()=>{g.classList.remove('picking');t.classList.remove('pick');done();},o.hold||1100);return;}
+    t.classList.add('on');sfx('uitick',null,{jitter:.04});n++;d*=o.grow||1.17;setTimeout(hop,d);};hop();}
 $('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a map']);return;}
   /* Random map still set: the glow hops round the pictures and stops on the map it picked, then on to Character */
   const g=S.randMap&&document.querySelector('#d-maps .mrg');if(g&&!S.picking){rollMap();const pick=S.map;S.randPre=pick;S.picking=true;
     pickSpin(g,pick,()=>{S.picking=false;if(S.qr==='map')$('d-start').click();else menuStep('char');},()=>mapCap(pick));return;}
   if(S.picking)return;if(S.qr==='map'){$('d-start').click();return;}menuStep('char');});
 
+/* menu sounds: select (tiles, cards, options, tabs, toggles), forward (Character / Loadout), back, start (Start, Quick start), and a tick per slider step.
+   Only real clicks in the menus and pause / results screens - never the in-game HUD - and only the user's own clicks (not ones the code fires itself). */
+(()=>{const UI='#menu,#pause,#duel-pause,#duel-done,#done',VOLS='[data-vol],[data-wvol],[data-svol],[data-mvol]';
+  const p=(n,o)=>{try{window.SFX&&window.SFX.play(n,o||{});}catch(e){}};
+  document.addEventListener('click',e=>{if(!e.isTrusted)return;const t=e.target.closest&&e.target.closest('button,.mrg-t,.opt,[role=button]');if(!t||!t.closest(UI)||t.disabled)return;
+    if(t.id==='d-start'||t.id==='m-quick')p('uistart');else if(t.classList.contains('mnavback')||t.classList.contains('mback')||/back/i.test(t.id||''))p('uiback');
+    else if(t.classList.contains('mstart'))p('uifwd');else p('uiselect');},true);
+  const last=new WeakMap();document.addEventListener('input',e=>{const t=e.target;if(!e.isTrusted||t.type!=='range'||!t.closest(UI)||t.matches(VOLS))return;
+    if(last.get(t)!==t.value){last.set(t,t.value);const k=(+t.value-(+t.min||0))/((+t.max||1)-(+t.min||0));p('uitick',{rate:.94+k*.12});}},true);})();
 $('m-quick').addEventListener('click',()=>{S.randMap=S.randChar=S.randGun=S.randSec=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();})/* Quick start: random everything, keeps the chosen mode, players and bots */;
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}if(S.qr==='load'){if(S.qrRand){rollMap();S.randPre=S.map;}else if(S.randMap&&S.map)S.randPre=S.map;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});

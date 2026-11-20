@@ -9999,12 +9999,12 @@ function updScorch(dt){for(let i=scorches.length-1;i>=0;i--){const d=scorches[i]
   if(d.br&&!d.br.alive){scene.remove(d.o);scorches.splice(i,1);continue;}if(d.t>40){const a=Math.max(0,1-(d.t-40)/5);d.o.material.opacity=a;if(a<=0){scene.remove(d.o);scorches.splice(i,1);}}}}
 
 /* ---------- walls: built from bricks that break off one at a time ---------- */
-const BRICK_HP=24,BCOLS=6,BROWS=5;const brickGeo=new THREE.BoxGeometry(1,1,1);const brickEdge=new THREE.EdgesGeometry(brickGeo);
+const BRICK_HP=24,BCOLS=6,BROWS=3;/* built walls are 3 bricks high (was 5); each brick keeps its size */const brickGeo=new THREE.BoxGeometry(1,1,1);const brickEdge=new THREE.EdgesGeometry(brickGeo);
 // patches of the nav grid waiting to be rebuilt (kept separate: one big box round walls at opposite ends of the map would mean rebuilding everything)
 let gridDirty=0,gridRg=[];const dirtyGrid=(o,t)=>{for(const r of gridRg)if(o.x0<r.x1+1&&o.x1>r.x0-1&&o.z0<r.z1+1&&o.z1>r.z0-1){r.x0=Math.min(r.x0,o.x0);r.x1=Math.max(r.x1,o.x1);r.z0=Math.min(r.z0,o.z0);r.z1=Math.max(r.z1,o.z1);gridDirty=gridDirty||t;return;}gridRg.push({x0:o.x0,x1:o.x1,z0:o.z0,z1:o.z1});gridDirty=gridDirty||t;};
 function buildWall(f){if(S.mode==='rumble'||f.walls<=0||f.buildT>0||!f.alive||f.downed||S.state!=='fight')return false;
   const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),alongZ=Math.abs(fx)>Math.abs(fz);const cx=f.pos.x+fx*2.3,cz=f.pos.z+fz*2.3;
-  const W=3.6,T=.5,Hh=3.1;const x0=cx-(alongZ?T:W)/2,x1=cx+(alongZ?T:W)/2,z0=cz-(alongZ?W:T)/2,z1=cz+(alongZ?W:T)/2;
+  const W=3.6,T=.5,Hh=.62*BROWS;const x0=cx-(alongZ?T:W)/2,x1=cx+(alongZ?T:W)/2,z0=cz-(alongZ?W:T)/2,z1=cz+(alongZ?W:T)/2;
   const bd=M.bounds;if(cx<bd.x0+1||cx>bd.x1-1||cz<bd.z0+1||cz>bd.z1-1)return false;
   for(const o of FS)if(o.alive&&o.pos.x+R>x0&&o.pos.x-R<x1&&o.pos.z+R>z0&&o.pos.z-R<z1)return false;
   const color=TEAMC[f.team]||'#e8463a',base=new THREE.Color(color);const w={bricks:[],alive:true,color,owner:f,grow:0,y0:f.pos.y,group:new THREE.Group(),bb:{x0,x1,z0,z1},born:S.t};M.group.add(w.group);

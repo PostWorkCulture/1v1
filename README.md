@@ -49,6 +49,8 @@ All styles push when you're low, play safer when hurt, and chase the clock late 
 
 **Small maps** – on the Small maps (Sky High, Lagoon, The House, Club Night, Backyard) Normal games only allow close-range kit: Primary is the SPAS-12, Shotty Horror or Crossbow and Secondary is one of the SMGs, the Dual Pistols or the Sword; everything else is greyed out in the loadout, Random only rolls from what's allowed, and bots follow the same rule. The allowed guns are listed first with Random straight after them (it only rolls from these) and the greyed-out ones last. With Random map picked, everything stays open in the menu and your kit is swapped for an allowed one if the roll lands on a small map.
 
+**Boxing gloves** – with fists out, every character punches in small padded boxing gloves in their own colours (in third person and in the first-person fists view); they only replace bare fists, so nobody wears them while holding a gun, bat or sword.
+
 **Melee smashes things** – fists, the bat and the sword break glass, props and other breakables at head, waist and ankle height, and a punch or swing that reaches a proximity mine sets it off (so mind the blast).
 
 **Sniper glass and triggers** – every sniper scope has a coated, mirror-like front lens (sky reflection and highlight streaks, tinted to match the gun) and a see-through eyepiece you can look into, with the reticle inside; every sniper has a big polished trigger (chrome, bronze or gold).

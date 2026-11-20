@@ -6601,7 +6601,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
     ['gym',0,4,1,'#e9eaee','stripe','#2b2d33','panel','#3a3d45','felt','#f4f4f6','#eaf4ff',0],
     ['bar',0,0,2,'#5a3420','panel','#2a170c','panel','#6b4428','wood','#2a1a10','#ffb35a',6],['ballroom',0,1,2,'#2a1b4a','dots','#120a26','panel','#1c1530','tile','#100a20','#d07bff',6],
     ['gallery',0,2,2,'#f7f5f0','plaster','#e6e1d6','panel','#d9d4c8','slab','#fbfaf6','#ffffff',0],['music',0,3,2,'#6b2f5a','stripe','#2a1226','panel','#8a5a34','wood','#f1e6ee','#ffb3e6',0],
-    ['garage',0,4,2,'#a7adb5','brick','#6b7079','brick','#9aa0a8','slab','#c9ced6','#f0f6ff',0],
+    ['garage',0,4,2,'#2a2b30','brick','#141518','slab','#9aa0a8','slab','#3a3d45','#cfe6ff',0],
     ['master',1,0,0,'#e6c9d4','plaster','#8c4a63','panel','#e8c7d8','plush','#fbf6f4','#ffd9c4',0],['dressing',1,1,0,'#f6e7ee','stripe','#c47a96','panel','#efe6e0','carpet','#fff9fb','#fff0f6',0],
     ['landing',1,2,0,'#e9efe6','plaster','#4a6a52','panel','#c99a5b','wood','#fbfaf6','#fff1d6',0],['study',1,3,0,'#3d4f6b','stripe','#1f2a3d','panel','#6b4a33','wood','#e9e4da','#ffd9a0',0],
     ['observ',1,4,0,'#141a33','dots','#0b0f22','panel','#1d2238','carpet','#070a18','#6a7cff',3],
@@ -6882,11 +6882,24 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    for(const x of [14.9,16.4])P(x,26,0,1.1,1.6,.8,'#1c1d22',{hp:60},[[B.boxGeo(1.1,1.6,.8),'gloss:#1c1d22',0,.8,0],[B.boxGeo(.95,1.2,.02),'weave:#202127',0,.75,-.41]]);
    for(const [x,z] of [[11,15],[12.5,21]])P(x,z,0,.5,1.3,.5,'#1c1d22',{hp:12,wood:false,snd:'bin'},[[gC(.02,.02,1.1,6),'brushed:#1c1d22',0,.55,0],[B.boxGeo(.5,.35,.03),'brushed:#1c1d22',0,1.2,0]]);
    rug(15,18.5,6,5,'#6b2f5a','#d4a640');}
-  /* ---------- garage: two dirt bikes (they blow up), fuel drums, a workbench, tyres, back stairs up to the roof terrace ---------- */
+  /* ---------- garage: black brick walls under flickering strip lights, two dirt bikes hung on wall racks (they blow up), fuel drums, a workbench, tyres, back stairs up to the roof terrace ---------- */
   {SS.stairs(9.6,1,36.6,39.8,0,17,UF/17,.42,'#9aa0a8',true);
-   mansionBike(29,20,0,null);mansionBike(31.8,19.4,Math.PI,null);/* two dirt bikes on their stands (the Tripo Dirt Bike 2) */drum(25.2,26.2);drum(26,26.2,0,'#f4c22b');drum(25.2,25.4,0,'#2f62c8');
+   /* two dirt bikes (the Tripo Dirt Bike 2) hung side-on on steel wall racks along the solid south wall, between its door and the stairs */
+   {const blk=pm('brushed:#1c1d22'),stl=pm('brushed:#9aa0a8'),RY=1.45,WZ=9.2;for(const [bx,ry] of [[31.6,Math.PI/2],[35,-Math.PI/2]]){mansionBike(bx,WZ+.42,ry,null,RY,0);
+     for(const ry2 of [RY+.75,RY-.05]){const o=deco(B.boxGeo(2.4,.16,.05),blk,bx,ry2,WZ+.03);o.castShadow=false;}/* wall rails */
+     for(const dx of [-.72,.72]){deco(B.boxGeo(.12,.07,.62),blk,bx+dx,RY-.04,WZ+.3);deco(B.boxGeo(.05,.22,.05),stl,bx+dx,RY+.06,WZ+.6);deco(B.boxGeo(.05,.22,.05),stl,bx+dx,RY+.06,WZ+.22);/* wheel cradles */
+       for(const dy of [-.05,.75])deco(new THREE.CylinderGeometry(.025,.025,.03,8).rotateX(Math.PI/2),stl,bx+dx*1.5,RY+dy,WZ+.07);}/* bolts */
+     deco(B.boxGeo(.08,.05,.5),blk,bx+(ry>0?.55:-.55),RY+1.05,WZ+.25);/* a strap arm to the handlebars */}}
+   /* flickering strip lights: humming tubes that stutter, one of them badly */
+   {const TB=[];for(const [lx,lz,bad] of [[28,13.5,0],[32.5,13.5,0],[28,22,1],[32.5,22,0],[36,22.5,0]]){deco(B.boxGeo(.34,.1,1.8),pm('brushed:#3a3d45'),lx,H1-.1,lz);
+       const tm=new THREE.MeshStandardMaterial({color:'#e8f4ff',emissive:'#dff0ff',emissiveIntensity:1.2,roughness:.3});const tu=new THREE.Mesh(B.boxGeo(.14,.07,1.66),tm);tu.position.set(lx,H1-.18,lz);tu.userData.dyn=1;M.group.add(tu);
+       const gs=glowSprite(lx,H1-.3,lz,2.4,'#cfe6ff',.45);TB.push({tm,gs,bad,on:1,t:Math.random()*4,op:.45});}
+     const L1=new THREE.PointLight('#dceeff',1.1,16,1.6);L1.position.set(30,H1-.6,18);M.group.add(L1);
+     M.life.push((t,dt)=>{let lit=0;for(const T of TB){T.t-=dt||.016;if(T.t<=0){if(T.bad){T.on=T.on?0:1;T.t=T.on?.04+Math.random()*(Math.random()<.2?1.8:.25):.03+Math.random()*.18;}
+         else{T.on=T.on?0:1;T.t=T.on?2+Math.random()*7:.04+Math.random()*.09;}}
+       T.tm.emissiveIntensity=T.on?1.2:.05;if(T.gs&&T.gs.material)T.gs.material.opacity=T.on?T.op:0;lit+=T.on;}L1.intensity=.25+lit/TB.length*.95;});}drum(25.2,26.2);drum(26,26.2,0,'#f4c22b');drum(25.2,25.4,0,'#2f62c8');
    P(31,26.2,0,4,1.1,1,'#8a5a34',{hp:90},[[B.boxGeo(4,.1,1),'grain:#8a5a34',0,1.05,0],[B.boxGeo(.1,1,.9),'brushed:#55585f',-1.9,.5,0],[B.boxGeo(.1,1,.9),'brushed:#55585f',1.9,.5,0],[B.boxGeo(.5,.28,.24),'gloss:#e8463a',-1,1.24,0],[B.boxGeo(.08,.3,.08),'brushed:#9aa0a8',.8,1.25,0]]);
-   for(const [x,z] of [[33,10.6],[34.2,10.6]])P(x,z,0,.9,1.05,.9,'#1c1d22',{hp:60,wood:false,snd:'bin'},[0,1,2,3].map(i=>[new THREE.TorusGeometry(.33,.12,8,18).rotateX(Math.PI/2),'#1c1d22',0,.13+i*.26,0]));
+   for(const [x,z] of [[38.2,26.1],[39.2,26.1]])P(x,z,0,.9,1.05,.9,'#1c1d22',{hp:60,wood:false,snd:'bin'},[0,1,2,3].map(i=>[new THREE.TorusGeometry(.33,.12,8,18).rotateX(Math.PI/2),'#1c1d22',0,.13+i*.26,0]));
    sign('GARAGE',32,4.4,26.75,Math.PI,3.6,.8,'#1c1d22','#f4c22b');}
   /* ---------- upstairs: master bedroom ---------- */
   const U=UF;
@@ -7229,10 +7242,10 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    The turret slowly swings round to keep its gun on the nearest player. It soaks up a lot of fire; once it's had enough it goes up like a fuel drum
    (a big fireball), and it's back next round */
 /* a dirt bike (images/Vehicles/Dirt Bike 2.glb, baked to models/cars/dirtbike.glb) leaning on its stand; an invisible solid round it, and a few shots blow it up */
-function mansionBike(x,z,ry,tint){const b=box(x,0,z,.7,1.15,2.05,'#ffffff',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:70,snd:'bin',wood:false});b.boom=true;b.prop='fuel';
-  const grp=M.group,root=b.mesh,go=()=>{const V=VEHM.dirtbike;if(!V||root.userData.bk||M.group!==grp)return;root.userData.bk=1;const hold=new THREE.Group();hold.position.y=-1.15/2;hold.rotation.set(0,ry,.1);root.add(hold);
+function mansionBike(x,z,ry,tint,y=0,lean=.1){const b=box(x,y,z,.7,1.15,2.05,'#ffffff',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:70,snd:'bin',wood:false});b.boom=true;b.prop='fuel';
+  const grp=M.group,root=b.mesh,go=()=>{const V=VEHM.dirtbike;if(!V||root.userData.bk||M.group!==grp)return;root.userData.bk=1;const hold=new THREE.Group();hold.position.y=-1.15/2;hold.rotation.set(0,ry,lean);root.add(hold);
     for(const pt of V.parts){const mt=tint?Object.assign(pt.mat.clone(),{color:new THREE.Color(tint)}):pt.mat;const m=new THREE.Mesh(pt.geo,mt);m.castShadow=true;m.receiveShadow=true;hold.add(m);}
-    const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4,6),mat('#2b2b2b'));st.position.set(-.16,.17,0);st.rotation.z=-.5;hold.add(st);};
+    if(lean){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4,6),mat('#2b2b2b'));st.position.set(-.16,.17,0);st.rotation.z=-.5;hold.add(st);}};
   if(VEHM.dirtbike)go();else{VEH_WAIT.push(go);loadVehicle('dirtbike').catch(()=>{});}
   return b;}
 /* ---- detail helpers for the Mansion's showpieces (each returns a parts list for P) ---- */

@@ -11605,7 +11605,7 @@ const thumbs={},thumbsPartial=new Set();
 const SETTLED=new WeakSet(),unsettled=p=>{if(!p.__seen){p.__seen=1;p.then(()=>SETTLED.add(p),()=>SETTLED.add(p));}return !SETTLED.has(p);};
 function mapPending(){return [...[...FURN_USED].filter(k=>!FURNM[k]&&FURN_P[k]).map(k=>FURN_P[k]),
   ...Object.keys(VEH_P).filter(k=>!VEHM[k]).map(k=>VEH_P[k]),...Object.keys(TREE_P).filter(k=>!TREEM[k]).map(k=>TREE_P[k])].filter(unsettled);}
-function makeThumb(id){if(thumbs[id]&&!thumbsPartial.has(id))return;const keep=M.id;buildMap(id);
+function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))return;const keep=M.id;buildMap(id);
   /* models land after the build: wait for them (up to 20 s) so the preview shows the real map; if some are still missing, the picture is used
      for now but marked partial, so it is never saved and gets shot again next time */
   const pend=mapPending();
@@ -13243,6 +13243,8 @@ function previewTasks(){const T=[];
    otherwise they're drawn a few at a time between frames and filled in as they're ready, then saved for next time. */
 const IMG_DB={db:null,open(){if(this.db)return this.db;return this.db=new Promise((res,rej)=>{try{const q=indexedDB.open('imok-menu-img',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}catch(e){rej(e);}});},
   async get(k){const db=await this.open();return new Promise(r=>{try{const t=db.transaction('k').objectStore('k').get(k);t.onsuccess=()=>r(t.result||null);t.onerror=()=>r(null);}catch(e){r(null);}});},
+  /* whatever set is saved (only one is ever kept), whichever version drew it */
+  async any(){const db=await this.open();return new Promise(r=>{try{const t=db.transaction('k').objectStore('k').openCursor();t.onsuccess=()=>r(t.result?t.result.value:null);t.onerror=()=>r(null);}catch(e){r(null);}});},
   async put(k,v){const db=await this.open();return new Promise(r=>{try{const tx=db.transaction('k','readwrite'),st=tx.objectStore('k');st.clear();st.put(v,k);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false);}catch(e){r(false);}});}};
 let imgVer=null,imgQ=null,imgLoad=null;
 function imgVersion(){if(imgVer)return imgVer;let h=2166136261;for(const sc of document.querySelectorAll('script:not([src])')){const t=sc.textContent;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}}return imgVer='v1_'+(h>>>0).toString(36);}
@@ -13252,13 +13254,24 @@ function menuImagesReady(){return previewsMade&&Object.keys(MAPS).every(k=>thumb
    models or textures with no code change still redraws the map pictures; offline it falls back to the code-only key */
 const imgVerP=fetch('sw.js',{cache:'no-store'}).then(r=>r.ok?r.text():'').catch(()=>'').then(t=>{const m=/CACHE='([^']+)'/.exec(t||''),b=imgVersion();return imgVer=b+(m?'_'+m[1]:'');});
 const imgCached=imgVerP.then(v=>IMG_DB.get(v)).catch(()=>null);
+/* a new version used to throw the saved pictures away and redraw every one straight away, building each map (the Mansion is huge) and
+   rendering it at 3200 x 1800 on the main thread: the menu stuttered for a minute or more after every publish. Now the last saved set shows
+   at once and is redrawn in the background, one picture at a time, only while you're not touching anything (2 s after the last input) */
+let imgLastIn=-1e9;for(const ev of ['pointerdown','pointermove','keydown','wheel','touchstart'])addEventListener(ev,()=>{imgLastIn=performance.now();},{passive:true,capture:true});
 function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
-  if(!imgLoad)imgLoad=Promise.race([imgCached,new Promise(r=>setTimeout(()=>r(null),15000))]).catch(()=>null).then(v=>{
-    if(v&&v.prev&&v.thumbs&&Object.keys(MAPS).every(k=>v.thumbs[k])){Object.assign(PREV,v.prev);setCharPrev();Object.assign(thumbs,v.thumbs);previewsMade=true;if(S.state==='menu')renderDuelMenu();}
+  if(!imgLoad)imgLoad=Promise.race([imgCached,new Promise(r=>setTimeout(()=>r(null),15000))]).catch(()=>null).then(async v=>{
+    const full=x=>x&&x.prev&&x.thumbs&&Object.keys(MAPS).every(k=>x.thumbs[k]),use=x=>{Object.assign(PREV,x.prev);setCharPrev();Object.assign(thumbs,x.thumbs);previewsMade=true;if(S.state==='menu')renderDuelMenu();};
+    if(full(v)){use(v);return;}
+    const old=await IMG_DB.any().catch(()=>null);
+    if(old&&old.prev&&old.thumbs){const have=Object.keys(MAPS).filter(k=>old.thumbs[k]);use(old);startImgQueue(true,have);}
     else startImgQueue();});
   else if(!menuImagesReady())imgLoad.then(()=>{if(!menuImagesReady())startImgQueue();});}
-function startImgQueue(){if(imgQ||menuImagesReady())return;imgQ=[...(previewsMade?[]:previewTasks()),...Object.keys(MAPS).filter(k=>!thumbs[k]).map(k=>()=>makeThumb(k))];setTimeout(runImgQ,60);}
+/* refresh: redraw everything (the shown set is from an older version); new maps the old set lacks go first */
+function startImgQueue(refresh,have){if(imgQ||(!refresh&&menuImagesReady()))return;
+  const maps=Object.keys(MAPS),miss=maps.filter(k=>!thumbs[k]),again=refresh?maps.filter(k=>thumbs[k]&&(!have||have.includes(k))):[];
+  imgQ=[...miss.map(k=>()=>makeThumb(k)),...(previewsMade&&!refresh?[]:previewTasks()),...again.map(k=>()=>makeThumb(k,true))];setTimeout(runImgQ,60);}
 function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
+  if(performance.now()-imgLastIn<2000){setTimeout(runImgQ,300);return;}// and never while you're using the menu
   const t=imgQ.shift();if(t){let r=null;try{r=t();}catch(e){console.warn('menu image',e);}const next=()=>{if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);};if(r&&r.then)r.then(next,next);else next();return;}
   imgQ=null;if(menuImagesReady()&&!thumbsPartial.size)imgVerP.then(v=>IMG_DB.put(v,{prev:Object.assign({},PREV),thumbs:Object.assign({},thumbs)})).catch(()=>{});}
 // which duels menu screen is showing: 'setup' (mode and map), 'char' (character) or 'loadout'; Rumble and Simple 1v1 start straight from the character screen

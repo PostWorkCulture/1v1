@@ -3420,17 +3420,12 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(700,32,16),new THREE.ShaderMat
   fragmentShader:'uniform vec3 top,mid,bot,sd,sc,dc;uniform float ex,sa,ds;varying vec3 vP;void main(){vec3 n=normalize(vP);float h=n.y+.04;vec3 c=h>0.?mix(mid,top,pow(clamp(h,0.,1.),ex)):mix(mid,bot,pow(clamp(-h*2.,0.,1.),.5));float s=max(dot(n,sd),0.);c+=sc*sa*(pow(s,5.)*(1.-clamp(h,0.,1.))+pow(s,60.)*.8);c=mix(c,dc,smoothstep(ds-.0006,ds+.0001,s));gl_FragColor=vec4(c,1.);\n#include <colorspace_fragment>\n}',
   side:THREE.BackSide,depthWrite:false,fog:false}));
 scene.add(sky);
-const CLOUDS={cm:null,cm2:null,g:[]};(function clouds(){const cm=CLOUDS.cm=new THREE.MeshBasicMaterial({color:'#ffffff',fog:false}),cm2=CLOUDS.cm2=new THREE.MeshBasicMaterial({color:'#dcebf5',fog:false}),bg=new THREE.BoxGeometry(1,1,1);
-  let a=7;const r=()=>{a=(a*16807)%2147483647;return a/2147483647;};
-  for(let i=0;i<22;i++){const g=new THREE.Group();const n=3+Math.floor(r()*4);
-    for(let k=0;k<n;k++){const b=new THREE.Mesh(bg,k===0?cm2:cm);b.scale.set(30+r()*50,5+r()*4,16+r()*18);b.position.set(r()*60-30,k===0?-3:r()*5,r()*20-10);g.add(b);}
-    const ang=r()*TAU,d=330+r()*230;g.position.set(Math.cos(ang)*d,70+r()*90,Math.sin(ang)*d);scene.add(g);CLOUDS.g.push(g);}})();
 /* per-map atmosphere: a map can set env {top,mid,bot,ex,fog:[colour,near,far],hemi:[sky,ground,strength],sun:[colour,strength],sunOff:[x,y,z],fill,glow:[colour,strength],disc:[colour,size],clouds:[colour,underside]|false}; anything left out uses the normal daytime look */
 const ENV0={top:'#2f8fd8',mid:'#86cbe8',bot:'#d6f1f4',ex:.6,fog:['#a9d8ea',90,320],hemi:['#ffffff','#9aa3ad',1.45],sun:['#fffaf0',2.3],sunOff:[30,60,22],fill:.35,glow:null,disc:null,clouds:['#ffffff','#dcebf5']};let ENV=ENV0;
 function applyEnv(e){ENV=Object.assign({},ENV0,e||{});const u=sky.material.uniforms;u.top.value.set(ENV.top);u.mid.value.set(ENV.mid);u.bot.value.set(ENV.bot);u.ex.value=ENV.ex;
   scene.fog.color.set(ENV.fog[0]);scene.fog.near=ENV.fog[1];scene.fog.far=ENV.fog[2];hemi.color.set(ENV.hemi[0]);hemi.groundColor.set(ENV.hemi[1]);hemi.intensity=ENV.hemi[2];sun.color.set(ENV.sun[0]);sun.intensity=ENV.sun[1];fillL.intensity=ENV.fill;
   u.sd.value.set(...ENV.sunOff).normalize();u.sc.value.set(ENV.glow?ENV.glow[0]:'#000000');u.sa.value=ENV.glow?ENV.glow[1]:0;u.dc.value.set(ENV.disc?ENV.disc[0]:'#000000');u.ds.value=ENV.disc?Math.cos(ENV.disc[1]):1.01;
-  const cl=ENV.clouds;for(const g of CLOUDS.g)g.visible=!!cl;if(cl){CLOUDS.cm.color.set(cl[0]);CLOUDS.cm2.color.set(cl[1]);if(typeof CLOUD_MATS!=='undefined')for(const mt of CLOUD_MATS)mt.color.set(cl[0]);}}
+}
 function placeSun(c){const o=ENV.sunOff;sun.position.set(c.x+o[0],(c.y||0)+o[1],c.z+o[2]);sun.target.position.set(c.x,0,c.z-4*Math.sign(o[2]||1));}
 
 /* ================= textures / materials ================= */
@@ -3703,17 +3698,6 @@ function playFrame(id,x,z,ry,cols){const piv=new THREE.Group();piv.position.set(
   for(const b of bs){b.fell=fell;b.snd='bin';b.onRestore=()=>{S.st=0;piv.quaternion.identity();piv.position.y=0;piv.visible=true;};}
   M.life.push((t,dt)=>{if(!S.st)return;S.t+=dt;const a=Math.min(.5,.9*S.t*S.t);piv.quaternion.setFromAxisAngle(S.ax,a);piv.position.y=-Math.max(0,S.t-.5)*1.6;if(S.t>3.2){piv.visible=false;S.st=0;}});
   furnInto(id,piv,x,0,z,ry);}
-/* Tripo clouds (a single puff and a bank of puffs): every cloud, the far ones round the sky and the ones drifting over the maps, swaps its blocks for one of
-   the two models (same width, a random turn) as soon as they've loaded; until then it shows its blocks */
-var CLOUD_MATS=[];
-function cloudModel(g,sky){const id=g.userData.cid||(g.userData.cid=Math.random()<.6?'cloud1':'cloud2');const go=()=>{const F=FURNM[id];if(!F||g.userData.swapped)return;
-    const bb=new THREE.Box3();for(const c of g.children){c.updateMatrix();const b=new THREE.Box3().setFromBufferAttribute(c.geometry.attributes.position).applyMatrix4(c.matrix);bb.union(b);}
-    const w=Math.max(bb.max.x-bb.min.x,bb.max.z-bb.min.z),cy=(bb.min.y+bb.max.y)/2,s=w/F.w*(sky?1:1.1);for(const c of g.children.slice())g.remove(c);
-    for(const p of F.parts){const m=new THREE.Mesh(p.geo,(p.cm||(p.cm={})).sky&&sky?p.cm.sky:!sky&&p.cm.map?p.cm.map:(()=>{const mt=new THREE.MeshLambertMaterial({map:p.mat.map,color:'#ffffff',emissive:'#c9d6e6',emissiveIntensity:sky?.55:.35,fog:!sky,transparent:!sky,opacity:sky?1:.95});
-      if(sky){p.cm.sky=mt;CLOUD_MATS.push(mt);}else p.cm.map=mt;return mt;})());m.scale.setScalar(s);m.position.y=cy-s*.5;g.add(m);}
-    g.rotation.y=Math.random()*Math.PI*2;g.userData.swapped=1;if(sky&&ENV.clouds)for(const mt of CLOUD_MATS)mt.color.set(ENV.clouds[0]);};
-  if(FURNM[id])go();else loadFurn(id).then(go).catch(()=>{});}
-setTimeout(()=>{for(const g of CLOUDS.g)cloudModel(g,true);},1200);
 /* a run of fence panels along straight lines, the panels stretched a little so each line takes a whole number of them; all panels are merged into one mesh
    per material, so a whole boundary costs a handful of draw calls */
 /* a white picket fence along straight runs [x0,z0,x1,z1]: white-washed vertical slats every 0.2 m (one instanced mesh) on two pale rails; looks only, the walls are separate */
@@ -3731,7 +3715,7 @@ function modelFence(segs,id){FURN_USED.add(id);const grp=M.group;const go=()=>{c
     per.forEach((o,k)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(o.P,3));if(o.U.length)g.setAttribute('uv',new THREE.Float32BufferAttribute(o.U,2));
       g.setIndex(o.I);g.computeVertexNormals();const m=new THREE.Mesh(g,F.parts[k].mat);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;M.group.add(m);});};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
-// ---- ambient town life: cars that pull out now and then, birds, clouds, butterflies, swaying trees ----
+// ---- ambient town life: cars that pull out now and then, birds, butterflies, swaying trees ----
 function updLife(dt){if(!M.life||!M.life.length)return;M.lifeT=(M.lifeT||0)+dt;for(const f of M.life)f(M.lifeT,dt);}
 function townLife(cars,o){const R=Math.random;
   // cars: park for a while, then drive at their own speed to a new spot along their lane, stop, repeat (either direction)
@@ -3752,11 +3736,6 @@ function townLife(cars,o){const R=Math.random;
     c.blocked=0;if(dz)move(c,dz);
     c.blur.opacity=Math.min(.32,c.v*.028);if(c.v>3&&Math.random()<c.v*dt*.5){const w=c.wheels[dir>0?0:2]||c.wheels[0];emit(w.position.x,.15,w.position.z-dir*.3,{n:1,speed:.6,size:.13,life:.5,grav:-.6,colors:['#c9c4b8','#b5b0a4'],vz:-dir*1.2});}
     if(left<.05||!dz&&c.v<.01){c.state='park';c.v=0;c.blur.opacity=0;c.wait=5+R()*18;}}});
-  // drifting blocky clouds
-  const cm=new THREE.MeshLambertMaterial({color:'#ffffff',transparent:true,opacity:.92}),clouds=[];
-  for(let i=0;i<9;i++){const g=new THREE.Group();const n=3+Math.floor(R()*3);for(let k=0;k<n;k++){const s=6+R()*8;const m=new THREE.Mesh(new THREE.BoxGeometry(s*1.6,s*.45,s),cm);m.position.set((k-n/2)*s*.8,R()*2,(R()-.5)*s*.6);g.add(m);}
-    g.position.set(-160+R()*320,70+R()*25,-160+R()*320);g.userData.v=1.2+R()*1.6;M.group.add(g);clouds.push(g);cloudModel(g);}
-  M.life.push((t,dt)=>{for(const g of clouds){g.position.x+=g.userData.v*dt;if(g.position.x>180)g.position.x=-180;}});
   // birds: every so often a small flock crosses the sky, flapping
   const bm=new THREE.MeshLambertMaterial({color:'#2b2d33'}),flocks=[];let next=4+R()*8;(M.flockLists=M.flockLists||[]).push(flocks);
   const bird=()=>{const g=new THREE.Group();const body=new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.6),bm);g.add(body);
@@ -4956,9 +4935,6 @@ function wreckCove(){const G=WC.G,X=45,Z=60;/* 90 x 120 m (Biggest size) */M.bou
 
   /* ---------- life: gulls, crabs, the lot ---------- */
   wcBirds('#f4f5f7',{wing:'#c9ced6',every:7,circle:[{x:-4,z:12,y:22,r:9,sp:.35},{x:-3,z:-14,y:19,r:12,sp:-.28},{x:30,z:44,y:14,r:7,sp:.4}]});
-  {const cl=new THREE.MeshLambertMaterial({color:'#ffffff',transparent:true,opacity:.92}),clouds=[];for(let i=0;i<8;i++){const g=new THREE.Group();const n=3+Math.floor(R()*3);
-      for(let k=0;k<n;k++){const s=6+R()*8;const m=new THREE.Mesh(new THREE.BoxGeometry(s*1.6,s*.45,s),cl);m.position.set((k-n/2)*s*.8,R()*2,(R()-.5)*s*.6);g.add(m);}g.position.set(-160+R()*320,72+R()*25,-160+R()*320);g.userData.v=1+R()*1.5;M.group.add(g);clouds.push(g);cloudModel(g);}
-    M.life.push((t,dt)=>{for(const g of clouds){g.position.z+=g.userData.v*dt;if(g.position.z>180)g.position.z=-180;}});}
   {const cm=mat('#e8563a'),crabs=[];for(let i=0;i<7;i++){const g=new THREE.Group();const b=new THREE.Mesh(B.boxGeo(.42,.16,.32),cm);b.position.y=.12;g.add(b);
       for(const s of [-1,1]){const cw=new THREE.Mesh(B.boxGeo(.14,.12,.14),cm);cw.position.set(s*.28,.16,.2);g.add(cw);for(let k=0;k<3;k++){const l=new THREE.Mesh(B.boxGeo(.18,.04,.04),cm);l.position.set(s*.26,.06,-.1+k*.1);g.add(l);}}
       for(const s of [-1,1]){const e=new THREE.Mesh(B.boxGeo(.05,.1,.05),mat('#16171c'));e.position.set(s*.07,.25,.14);g.add(e);}

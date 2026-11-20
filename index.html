@@ -3716,7 +3716,7 @@ function modelFence(segs,id){FURN_USED.add(id);const grp=M.group;const go=()=>{c
     per.forEach((o,k)=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(o.P,3));if(o.U.length)g.setAttribute('uv',new THREE.Float32BufferAttribute(o.U,2));
       g.setIndex(o.I);g.computeVertexNormals();const m=new THREE.Mesh(g,F.parts[k].mat);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;M.group.add(m);});};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
-// ---- ambient town life: cars that pull out now and then, birds, butterflies, swaying trees ----
+// ---- ambient town life: cars that pull out now and then, birds, swaying trees ----
 function updLife(dt){if(!M.life||!M.life.length)return;M.lifeT=(M.lifeT||0)+dt;for(const f of M.life)f(M.lifeT,dt);}
 function townLife(cars,o){const R=Math.random;
   // cars: park for a while, then drive at their own speed to a new spot along their lane, stop, repeat (either direction)
@@ -3748,13 +3748,7 @@ function townLife(cars,o){const R=Math.random;
     for(let i=flocks.length-1;i>=0;i--){const f=flocks[i];f.life-=dt;f.g.position.x+=f.dx*f.sp*dt;f.g.position.z+=f.dz*f.sp*dt;f.g.position.y+=Math.sin(t*.7+f.ph)*.4*dt;
       for(const b of f.g.children){const gl=Math.sin(t*1.1+b.userData.ph)>.55;const fl=gl?.15:Math.sin(t*13+b.userData.ph)*.7;b.userData.w[0].rotation.z=fl;b.userData.w[1].rotation.z=-fl;}
       if(f.life<=0){M.group.remove(f.g);flocks.splice(i,1);}}});
-  // butterflies flutter round the hedges and front gardens
-  const cols=['#ffd23f','#ffffff','#ff8fab','#8ecae6'],bfs=[];
-  for(let i=0;i<10;i++){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:cols[i%4],side:THREE.DoubleSide});
-    const w1=new THREE.Mesh(new THREE.PlaneGeometry(.22,.18),m),w2=w1.clone();w1.position.x=-.11;w2.position.x=.11;const p1=new THREE.Group(),p2=new THREE.Group();p1.add(w1);p2.add(w2);g.add(p1,p2);
-    const side=i%2?1:-1,hx=side*(10+R()*2.5),hz=(R()*2-1)*o.zLim;g.userData={hx,hz,ph:R()*9,p1,p2};M.group.add(g);bfs.push(g);}
-  M.life.push((t,dt)=>{for(const g of bfs){const u=g.userData,k=t*.6+u.ph;g.position.set(u.hx+Math.sin(k)*2.2+Math.sin(k*2.3)*.6,1+Math.abs(Math.sin(k*1.7))*1.1,u.hz+Math.cos(k*.8)*2.2);
-    g.rotation.y=k;const f=Math.sin(t*18+u.ph)*1.1;u.p1.rotation.y=f;u.p2.rotation.y=-f;}});}
+  /* no butterflies (the little yellow/pink/white/blue flapping squares were removed at the user's request: don't add them back) */}
 function roofGable(x,z,w,d,y,color,alongX,tx,endC,ov){const o0=ov?ov[0]:.4,o1=ov?ov[1]:.4;/* ov: how far the roof overhangs each end (low end, high end), 0.4 m by default */
   const h=2.6,slope=Math.atan2(h,(alongX?d:w)/2),len=Math.hypot(h,(alongX?d:w)/2)+.3;const m=mat(color,tx||'brick');
   for(const s of [-1,1]){const g=B.boxGeo(alongX?w+o0+o1:len,.35,alongX?len:d+o0+o1);const r=new THREE.Mesh(g,m);r.castShadow=true;r.receiveShadow=true;

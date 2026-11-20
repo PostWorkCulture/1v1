@@ -12355,7 +12355,39 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
     if(W.dots&&!vm){const tg=RAW('#7dffb0',{emissive:'#7dffb0',emissiveIntensity:2.6,roughness:.3});for(const [x,y,z] of W.dots)add(new THREE.SphereGeometry(.0055,10,8),tg,x,y,z);}
     if(W.muz){const segs=[],glows=[];for(const [z0,len,r,y,x=0] of W.muz){segs.push([r+.0006,len,z0+len/2,y,x,.6]);glows.push(['#ff7a2a',Math.max(.2,r*8),x,y,z0+len*.6,.55],['#ffb060',r*4,x,y,z0+len,.5]);}
       if(W.fade){const [z,len,r]=W.fade,y=W.muz[0][3];segs.push([r+.0006,len,z+len/2,y,0,.11],[r+.0006,len*.7,z-len*.35,y,0,.04]);}const heat=gunHeat(g,vm,segs,glows);if(vm)g.userData.heat=heat;}}}
+  if(id==='shotgun'||id==='autoshot'){const SP=id==='shotgun',V=SP?'B':'A',T=THREE; /* finishes: SPAS-12 "Neon Arcade", Shotty Horror "Dragon's Breath" */
+    const E=(c,i=2)=>RAW(c,{emissive:c,emissiveIntensity:i,roughness:.3}),hexOf=m=>m&&m.color?m.color.getHexString():'';
+    const recHex=SP?new T.Color('#a8603a').getHexString():new T.Color('#e6e9ee').getHexString();
+    const remap=(fn)=>g.traverse(o=>{if(o.isMesh&&o.material&&!o.material.transparent){const r=fn(o.material);if(r)o.material=r;}});
+    const isRec=m=>hexOf(m)===recHex,isFur=m=>['2a2b2f','1b1c1f'].includes(hexOf(m))&&!m.map,isWood=m=>!!m.map&&m.map.image&&m.color.getHexString()==='ffffff'&&m.metalness<.1;
+    const sides=(mat,w,h,xf,y,z)=>{for(const s of [-1,1])add(new T.PlaneGeometry(w,h),mat,s*(xf+.0016),y,z).rotation.y=s*Math.PI/2;};
+    const xf=SP?.045:.05,ry=SP?.01:.005,rz=SP?0:-.1,rw=SP?.56:.24,BYv=SP?.05:.035,mz=SP?1.12:.99;
+    if(V==='A'){ /* Dragon's Breath: black chrome, flame paint, gold scale heat shield, glowing embers, dragon muzzle */
+      const bc=RAW('#141518',{metalness:1,roughness:.16}),gold=RAW('#f0c75e',{metalness:1,roughness:.14}),ember=E('#ff6a1a',2.6);
+      remap(m=>isRec(m)?bc:isFur(m)?RAW('#3a0d0a',{roughness:.45,metalness:.3}):isWood(m)?RAW('#3a0d0a',{roughness:.4,metalness:.3}):null);
+      const t=gunFxTex('flame');sides(new T.MeshStandardMaterial({map:t,emissive:'#ff5a1a',emissiveMap:t,emissiveIntensity:.5,transparent:true,opacity:.95,metalness:.6,roughness:.3,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}),rw,.15,xf,ry,rz);
+      if(SP){extZ(arch(.046,.03,.112,.016),.33,.94,gold,.004);for(let i=0;i<9;i++)for(const a of [.2,Math.PI-.2,.95,Math.PI-.95])add(new T.SphereGeometry(.009,10,8),ember,Math.cos(a)*.046,BYv+Math.sin(a)*.046,.38+i*.064);}
+      else for(const s of [-1,1])for(let i=0;i<7;i++)box(.004,.012,.05,s*.0605,BYv,.12+i*.11,ember,.002);
+      for(const s of [-1,1]){const tooth=new T.ConeGeometry(.012,.05,6);tooth.rotateX(Math.PI/2);for(let i=0;i<3;i++)add(tooth,gold,s*.03,BYv+.035-i*.035,mz+.04);} cyl(.05,.07,0,BYv,mz,gold,.04,24);
+      const gl=new T.Sprite(new T.SpriteMaterial({map:gunFxTex('glow'),color:'#ff7a2a',transparent:true,opacity:.7,blending:T.AdditiveBlending,depthWrite:false}));gl.scale.setScalar(.25);gl.position.set(0,BYv,mz+.08);g.add(gl);
+      if(!SP)box(.014,.005,.9,0,BYv+.037,.5,gold,.002);
+    } else if(V==='B'){ /* Neon Arcade: gloss white body, black furniture, cyan and magenta light strips, LED shell counter */
+      const wh=RAW('#f3f5f8',{metalness:.25,roughness:.12}),cy=E('#22f3ff',3),mg=E('#ff2bd6',3);
+      remap(m=>isRec(m)?wh:isWood(m)?RAW('#16171b',{roughness:.3,metalness:.4}):null);
+      for(const s of [-1,1]){box(.004,.008,rw,s*(xf+.002),ry+.06,rz,cy,.002);box(.004,.008,rw,s*(xf+.002),ry-.07,rz,mg,.002);}
+      if(SP)box(.01,.006,.6,0,.108,.64,cy,.002);else box(.01,.006,.9,0,BYv+.038,.5,cy,.002);for(const s of [-1,1])box(.004,.04,SP?.36:.38,s*(SP?.058:.063),SP?-.02:.0,SP?.59:.24,mg,.002);
+      const c=document.createElement('canvas');c.width=128;c.height=48;const x=c.getContext('2d');x.fillStyle='#001014';x.fillRect(0,0,128,48);x.fillStyle='#22f3ff';x.font='700 34px monospace';x.textAlign='center';x.fillText(SP?'08':'02',64,37);
+      const tx=new T.CanvasTexture(c);box(.008,.04,.08,-xf-.004,ry,rz+.05,RAW('#111',{roughness:.5}),.003);add(new T.PlaneGeometry(.07,.03),new T.MeshBasicMaterial({map:tx,toneMapped:false}),-xf-.0085,ry,rz+.05).rotation.y=-Math.PI/2;
+      for(const s of [-1,1])for(let i=0;i<4;i++)add(new T.CircleGeometry(.008,16),i%2?mg:cy,s*(xf+.0018),ry-.02,rz-.1+i*.05).rotation.y=s*Math.PI/2;
+      cyl(.034,.05,0,BYv,mz+.02,E('#22f3ff',1.6),.03,24);
+    }}
   return {acc};}
+/* metallic gradient finish: colour blends from a to b along one model axis (lo..hi), shiny metal by default */
+function gradM(a,b,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:'#ffffff',metalness:o.metal??1,roughness:o.rough??.18});const ax=o.axis||'y',A=new THREE.Color(a),Bc=new THREE.Color(b);
+  m.onBeforeCompile=sh=>{sh.uniforms.gA={value:A};sh.uniforms.gB={value:Bc};sh.uniforms.gR={value:new THREE.Vector2(o.lo??-.3,o.hi??.1)};
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying float vG;').replace('#include <begin_vertex>','#include <begin_vertex>\nvG=position.'+ax+';');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 gA;uniform vec3 gB;uniform vec2 gR;varying float vG;').replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb*=mix(gA,gB,smoothstep(gR.x,gR.y,vG));');};
+  m.customProgramCacheKey=()=>'grad'+ax;return m;}
 let GUNTEX=null;
 function gunTex(){if(GUNTEX)return GUNTEX;const mk=(lo,hi,rep,n=128)=>{const c=document.createElement('canvas');c.width=c.height=n;const x=c.getContext('2d'),d=x.createImageData(n,n);
     for(let i=0;i<n*n;i++){const v=lo+Math.random()*(hi-lo);d.data[i*4]=d.data[i*4+1]=d.data[i*4+2]=v;d.data[i*4+3]=255;}x.putImageData(d,0,0);
@@ -12478,8 +12510,8 @@ function heroModelV2(id,RB,vm){
     sling(-.07,.0,-.32,steel);sling(-.07,.07,.95,steel);
     if(vm){g.userData.muzZ=1.23;g.userData.muzY=.07;g.userData.hands={r:[0,-.2,-.28],l:[.03,-.02,.5]};}
   }
-  else if(id==='p90'){ /* P90: sculpted charcoal bullpup with neon green trim, two cut-outs (trigger and thumbhole), smoked see-through top mag with the rounds lying crossways, ring sight, short barrel and flash hider */
-    const body=M('#202125',{keep:1,roughness:.6,metalness:.12,roughnessMap:NT.rough,bumpMap:NT.bump,bumpScale:.3}),poly=M('#101114',{keep:1,roughness:.8}),accent=ACC('#16171a'),glw=M('#9aa0a8',{keep:1,metalness:1,roughness:.25}),dk=M('#121416',{roughness:.5,metalness:.3}),
+  else if(id==='p90'){ /* P90: sculpted polished-silver bullpup (bright top fading to gunmetal underneath) with an ice-blue to violet chrome sweep, two cut-outs (trigger and thumbhole), smoked see-through top mag with the rounds lying crossways, ring sight, short barrel and flash hider */
+    const body=gradM('#ffffff','#7a828e',{axis:'y',lo:-.29,hi:.08,metal:.72,rough:.2}),poly=gradM('#8fd6ff','#b98cff',{axis:'z',lo:-.47,hi:.44,metal:.95,rough:.14}),accent=ACC('#16171a'),glw=M('#9aa0a8',{keep:1,metalness:1,roughness:.25}),dk=M('#121416',{roughness:.5,metalness:.3}),
       glass=M('#9fe8c4',{transparent:true,opacity:.32,roughness:.05,metalness:.3,depthWrite:false});
     const path=(P,c)=>{for(const k of c){if(k[0]==='M')P.moveTo(k[1],k[2]);else if(k[0]==='L')P.lineTo(k[1],k[2]);else P.quadraticCurveTo(k[1],k[2],k[3],k[4]);}return P;};
     const extC=(cmds,holes,w,m,b=.008)=>{const sh=path(new THREE.Shape(),cmds);for(const h of holes)sh.holes.push(path(new THREE.Path(),h));
@@ -12496,7 +12528,12 @@ function heroModelV2(id,RB,vm){
     box(.1,.012,.16,0,-.075,.37,dk,.004);for(let i=0;i<4;i++)box(.104,.004,.012,0,-.068,.31+i*.035,steel,.001); /* under-nose plate */
     for(const sx of [-1,1])for(const [y,z] of [[-.11,-.42],[-.11,-.24],[.0,.28],[-.05,.42]])add(new THREE.CircleGeometry(.009,12),steel,sx*.066,y,z).rotation.y=sx*Math.PI/2; /* moulded screw heads */
     extC([['M',-.09,-.105],['L',.01,-.105],['Q',.015,-.11,.012,-.115],['L',-.09,-.115]],[],.128,M('#0c0d10'),.002); /* thumbhole lip */
-    box(.012,.05,.012,0,-.15,.13,chrome,.003); /* trigger */
+    {const CH=RAW('#f3f6fa',{metalness:1,roughness:.05}); /* mirror-chrome linings round the trigger hole and thumbhole, chrome hook trim and trigger */
+      const liner=(c)=>{const pts=c.flatMap(k=>k[0]==='Q'?[[k[1],k[2]],[k[3],k[4]]]:[[k[1],k[2]]]),xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),cx=(Math.min(...xs)+Math.max(...xs))/2,cy=(Math.min(...ys)+Math.max(...ys))/2,
+        f=1+.018/Math.min(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys)),sc=c.map(k=>k[0]==='Q'?['Q',cx+(k[1]-cx)*f,cy+(k[2]-cy)*f,cx+(k[3]-cx)*f,cy+(k[4]-cy)*f]:[k[0],cx+(k[1]-cx)*f,cy+(k[2]-cy)*f]);
+        extC(sc,[c],.132,CH,.003);};liner(trig);liner(thumb);
+      g.traverse(o=>{if(o.material===poly&&o.geometry&&o.geometry.type==='ExtrudeGeometry'){if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();if(o.geometry.boundingBox.min.y<-.25)o.material=CH;}});
+      ext([[.142,-.12],[.122,-.12],[.112,-.15],[.12,-.185],[.136,-.19],[.128,-.15]],.016,CH,0,.003);} /* trigger */
     for(let i=0;i<4;i++)box(.13,.006,.03,0,-.13-i*.03,.05-i*.004,M('#0c0d10'),.002); /* grip texture */
     cylY(.032,.016,0,-.292,.12,steel,20);box(.008,.006,.03,0,-.3,.135,poly,.002); /* selector disc + mark */
     box(.05,.012,.09,0,-.284,-.05,M('#050607'),.003); /* ejection chute */

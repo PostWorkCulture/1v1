@@ -8044,7 +8044,7 @@ const MODELS={},MODEL_LOAD={},MODEL_IDS=['brute','ghost','jet','patch','crusty',
 /* Height levelling: every model was baked to the same overall height including hats, horns and hair, so characters with tall headgear
    (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero, Murda Medic) tall. MODEL_EYE is each model's measured eye level;
    on load the model is scaled about the feet so every character's eyes sit at the same height (looks only: hitboxes don't change). */
-const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,astronaut:2.53,lilpink:2.48,roboid:2.82},EYE_TARGET=2.4;
+const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,astronaut:2.53,lilpink:2.48,roboid:2.48},EYE_TARGET=2.4;
 function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
   for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
   for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
@@ -10864,6 +10864,8 @@ function legIK(L,T,pole,soft){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
   V.y.copy(V.u).negate();V.z.copy(V.p).addScaledVector(V.u,-V.u.dot(V.p));if(V.z.lengthSq()<1e-6)V.z.set(0,0,1);V.z.normalize();V.x.crossVectors(V.y,V.z);
   V.m.makeBasis(V.x,V.y,V.z);L.p.quaternion.setFromRotationMatrix(V.m);L.k.rotation.set(Math.acos(clamp(V.u.dot(V.v),-1,1)),0,0);}
 /* legs and pelvis. Returns how far the body leans forward (the arms, head and gun lean back by the same amount to stay on aim). */
+/* stride length per character (1 = the cast's chunky cartoon gait). Shadow has realistic long legs, so he takes fewer, longer steps instead of a frantic shuffle. */
+const STRIDE={roboid:1.35};
 function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded||menu),sc=ch.root.scale.x||1,L=ch.lL,R=ch.lR;m.t+=dt;
   const special=!CFX.legs||f.downed||!f.alive||f.finishing||f.pose||f.onLadder||f.ladK>.01||f.dangle||f.tumble||f.carriedBy||f.skySlam||CR.run;
   if(special){m.w=0;m.air=0;m.sq=0;m.sqv=0;m.wasG=g;m.ax=m.az=0;m.mv=false;if(m.ft){m.ft[0].cx=m.ft[1].cx=undefined;}const lean=KN.lean*cv;
@@ -10886,7 +10888,7 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
   // lean into the run and into changes of speed
   const idt=1/Math.max(dt,1e-3),ax=clamp((lx-m.pvx)*idt,-70,70),az=clamp((lz-m.pvz)*idt,-70,70);m.pvx=lx;m.pvz=lz;m.ax=damp(m.ax,ax,7,dt);m.az=damp(m.az,az,7,dt);
   const kk=k*m.w*st,gk=g?1:.35,leanX=(.12*kk*dz+clamp(m.az*.003,-.09,.11))*gk-m.sq*.3*st,leanZ=-(.08*kk*dx+clamp(m.ax*.0028,-.08,.08))*gk;
-  const mv=g&&sp>.7,Ls=(.7+.18*spA)/sc,len=L.up+L.lo,hh=KN.hip-(.03+.15*Math.min(k,1))*st,RL=Math.sqrt(Math.max(.16,len*len-hh*hh))*1.06,beta=Math.min(lerp(.6,.2,clamp(k,0,1)),RL/Ls),Sd=2*Ls*beta,H=(.1+.44*Math.min(k,1))*len/1.46;
+  const mv=g&&sp>.7,Ls=(.7+.18*spA)*(STRIDE[f.char]||1)/sc,len=L.up+L.lo,hh=KN.hip-(.03+.15*Math.min(k,1))*st,RL=Math.sqrt(Math.max(.16,len*len-hh*hh))*1.06,beta=Math.min(lerp(.6,.2,clamp(k,0,1)),RL/Ls),Sd=2*Ls*beta,H=(.1+.44*Math.min(k,1))*len/1.46;
   if(mv&&!m.mv)f.phase=Math.PI*beta;/* setting off: the left foot is mid-stance, right where it stands */m.mv=mv;
   const ph=f.phase||0,c=((ph/(2*Math.PI))%1+1)%1;
   const bob=-(.012+.05*k)*m.w*st*Math.cos(4*Math.PI*(c-beta/2)),drop=(.03+.15*Math.min(k,1)*m.w)*st,idle=(1-m.w)*st*(g?1:0),lean=KN.lean*cv+leanX;
@@ -11069,7 +11071,7 @@ function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
   // stairs and kerbs move you up or down a step instantly; the body and camera glide over it instead of snapping
   {const v=f.visY??f.pos.y,d=f.pos.y-v;f.visY=f.grounded&&Math.abs(d)<.8&&!f.finishing&&!menu?v+d*(1-Math.exp(-20*dt)):f.pos.y;}
   ch.root.position.copy(f.pos);ch.root.position.y=f.visY+(f.celLift||0);if(!f.finishing||f.finishing.fx!=='Disco')ch.root.rotation.y=f.downed&&!f.finishing?downYaw(f):visYaw(f,dt,menu);if(!(f.finishing&&f.finishing.move&&f.finishing.done))ch.root.rotation.x=damp(ch.root.rotation.x,f.downed?1.3:f.corpse&&!f.alive||f.finishing&&f.finishing.fx==='Fall'?(CFX.rag&&ch.up&&!menu?ch.root.rotation.x:1.5):0,f.corpse?11:8,dt);if(f.downed||f.corpse&&(!f.alive||f.finishing&&f.finishing.fx==='Fall'))ch.root.position.y+=CFX.rag&&ch.up&&!menu?.32*clamp(ch.root.rotation.x/1.3,0,1):.32;const sp=Math.hypot(f.vel.x,f.vel.z);
-  if(f.grounded){f.phase+=sp*dt*(ch.up&&CFX.legs?Math.PI/(.7+.18*sp):1.15);if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;sfx('step'+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
+  if(f.grounded){f.phase+=sp*dt*(ch.up&&CFX.legs?Math.PI/((.7+.18*sp)*(STRIDE[f.char]||1)):1.15);if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;sfx('step'+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
   const KN=ch.knee,cv=KN&&ch.up&&CFX.legs&&f.downed?0:(f.cv||0);let lean=KN?KN.lean*cv:0,lean2=lean;
   if(KN&&ch.up){lean=legsMo(f,ch,dt,sp,s,cv,menu);lean2=lean+spineMo(f,ch,dt,menu);}
   else if(KN){/* crouch = a ready kneel: front foot planted with the shin upright, back knee on the ground, chest leaning a little into the gun.

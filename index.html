@@ -7898,7 +7898,8 @@ const CHARS={
   antihero:{skin:'anti_hero',fx:['Tornado','Firework'],name:'Anti Hero',hp:100,look:{shirt:'#2f7a3a',shirtSolid:'#8a1a12',hair:'#b59a4a'},color:'#2f9a46'},
   dracula:{skin:'dracula_vamp',fx:['Black hole','Spirit'],name:'Dracz',hp:100,look:{shirt:'#3a2350',shirtSolid:'#2a1838',hair:'#1a1420'},color:'#c4122e'},
   astronaut:{skin:'space_suit',fx:['Rainbow beam','Firework'],name:'Spacebot',hp:100,look:{shirt:'#eceff3',shirtSolid:'#d3d8de',hair:'#2d6fd8'},color:'#ff7a1f'},
-  lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'}};
+  lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'},
+  roboid:{skin:'black_roboid',fx:['Lightning','Black hole'],name:'Shadow',hp:100,look:{shirt:'#16161a',shirtSolid:'#0c0c0e',hair:'#0c0c0e'},color:'#e0202a'}};
 const ABIL_KILL={crush:'crushed by the chopper',fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain',turret:'Sentry'};
 const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula','jet','astronaut'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))]; // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
 function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
@@ -8033,11 +8034,11 @@ function glbTree(id,x,z,h,ry=0,tw=.7){const th=Math.min(3,h*.35),b=box(x,0,z,tw,
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
    their next setLook. */
-const MODELS={},MODEL_LOAD={},MODEL_IDS=['brute','ghost','jet','patch','crusty','wednesday','antihero','dracula','astronaut','lilpink'];
+const MODELS={},MODEL_LOAD={},MODEL_IDS=['brute','ghost','jet','patch','crusty','wednesday','antihero','dracula','astronaut','lilpink','roboid'];
 /* Height levelling: every model was baked to the same overall height including hats, horns and hair, so characters with tall headgear
    (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero, Murda Medic) tall. MODEL_EYE is each model's measured eye level;
    on load the model is scaled about the feet so every character's eyes sit at the same height (looks only: hitboxes don't change). */
-const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,astronaut:2.53,lilpink:2.48},EYE_TARGET=2.4;
+const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,astronaut:2.53,lilpink:2.48,roboid:2.82},EYE_TARGET=2.4;
 function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
   for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
   for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
@@ -8167,6 +8168,7 @@ const CHAR_GLOW={
   ghost:[...CGLOW_SYM({p:'head',t:'halo',at:[.1,.34,.32],s:.2,c:'#ff2030'}),...CGLOW_SYM({p:'head',t:'flame',at:[.6,.98,0],s:[.24,.56],rot:-.2,c:'#3fe8ff'})],
   crusty:[{p:'head',t:'halo',at:[.02,.16,.54],s:.36,c:'#ff2018'}],
   lilpink:[{p:'torso',t:'halo',at:[0,1.72,.47],s:.42,c:'#ff5ab0'}],
+  roboid:[{p:'head',t:'halo',at:[0,.81,.26],s:.26,c:'#ff1a10'},{p:'head',t:'glint',at:[0,.81,.24],s:[.5,.07],c:'#ff4a30'}],
   patch:[{p:'head',t:'halo',at:[0,.83,.42],s:.3,c:'#5dff8a'},{p:'head',t:'glint',at:[0,.83,.44],s:[.7,.12],c:'#c8ffd8'}],
   astronaut:[{p:'head',t:'glint',at:[-.2,.47,.69],s:[.55,.1],rot:.6,c:'#ffffff'},{p:'torso',t:'blink',at:[-.22,1.66,.71],s:.16,c:'#3dff6a'},{p:'torso',t:'blink',at:[.2,1.66,.71],s:.16,c:'#ff3030',ph:1.4}]};
 const CGLOWTEX={};
@@ -8417,6 +8419,7 @@ Object.assign(SKINS,{
  dracula_vamp(ch){{const M=modelFor('dracula');if(M)return modelSkin(ch,M,'dracula');}const k=mat('#3a2350',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#1c1820'),shoes:mat('#111114'),hands:mat('#e6e6ea')});},
  space_suit(ch){{const M=modelFor('astronaut');if(M)return modelSkin(ch,M,'astronaut');}const w=mat('#eceff3',null,{roughness:.5});suit(ch,{torso:w,arms:w,legs:w,shoes:mat('#9aa1ab'),hands:w});},
  lil_pink(ch){{const M=modelFor('lilpink');if(M)return modelSkin(ch,M,'lilpink');}const k=mat('#16161a',null,{roughness:.6});suit(ch,{torso:k,arms:mat('#f4a6c8'),legs:k,shoes:mat('#f4a6c8'),hands:mat('#e9e6e2')});},
+ black_roboid(ch){{const M=modelFor('roboid');if(M)return modelSkin(ch,M,'roboid');}const k=mat('#16161a',null,{roughness:.45});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#0c0c0e',null,{roughness:.25}),hands:k});},
  wed_goth(ch){{const M=modelFor('wednesday');if(M)return modelSkin(ch,M,'wednesday');}const k=mat('#18181c',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#c0202a'),hands:mat('#e9e6e2')});},
  anti_hero(ch){{const M=modelFor('antihero');if(M)return modelSkin(ch,M,'antihero');}suit(ch,{torso:mat('#2f7a3a'),arms:mat('#e8c49a'),legs:mat('#2a5aa8'),shoes:mat('#24467e'),hands:mat('#2a5aa8')});},
 });
@@ -11653,7 +11656,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=S.snipers&&m!=='rumble'&&m!=='parkour'?'Snipers only: pick one of six snipers (HDR, Kar98, Reaper, Titan .50, Vanguard or Phantom). It is your only gun, plus fists (or a bat) and your lethal; the shop still works. '+who:m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='7090e1eb4b84';
+const MODEL_STAMP='133e89c300ca';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */
@@ -13343,7 +13346,7 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
 /* fists: first-person fists in front of the camera (the view goes first-person while fists are out, like aiming a gun), so you see every jab */
 /* each character's own hands and sleeves, matched to their model (hand = skin or glove, sleeve, wrist band) */
 const FIST_LOOK={wednesday:['#ece8e2','#1a1a1c','#c8283a'],crusty:['#f2efe9','#3fd15a','#ff3b2f'],antihero:['#2c4a85','#3b5c9a','#c9ccd2'],jet:['#2340b0','#2340c0','#f2f2f2'],
-  ghost:['#8ff3f6','#3a4b5c','#6fe7f0'],dracula:['#d9d9de','#4a2d55','#f2f2f2'],astronaut:['#eceeee','#e6e8ea','#f08a2a'],lilpink:['#efe9e4','#1c1a1c','#f7a9c4'],
+  ghost:['#8ff3f6','#3a4b5c','#6fe7f0'],dracula:['#d9d9de','#4a2d55','#f2f2f2'],astronaut:['#eceeee','#e6e8ea','#f08a2a'],lilpink:['#efe9e4','#1c1a1c','#f7a9c4'],roboid:['#1c1c20','#141416','#e0202a'],
   brute:['#5d5e5c','#6b6b66','#e07a24'],patch:['#3fd9cf','#eef0f0','#e0392e']};
 /* fists: first-person fists in front of the camera (the view goes first-person while fists are out, like aiming a gun), so you see every jab.
    Smooth, rounded hands in the character's own colours - no tape or wraps */
@@ -13450,7 +13453,7 @@ function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep
 const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');return n;};
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'&&!S.simple){if(!S.gun)n.push('a primary');if(!S.sec&&!S.snipers)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
 /* ===== lobby character stage: cut-out portrait under coloured stage lights, embers and a floor ring ===== */
-const STAGE_CC={antihero:'#ff3b3b',brute:'#ff5a2a',crusty:'#ffcc33',ghost:'#3fd4ff',jet:'#3d7dff',patch:'#2af0dc',wednesday:'#ff2a4a',dracula:'#ff1a3a',astronaut:'#ff8a2a',lilpink:'#ff6fae'};
+const STAGE_CC={antihero:'#ff3b3b',brute:'#ff5a2a',crusty:'#ffcc33',ghost:'#3fd4ff',jet:'#3d7dff',patch:'#2af0dc',wednesday:'#ff2a4a',dracula:'#ff1a3a',astronaut:'#ff8a2a',lilpink:'#ff6fae',roboid:'#ff2a1a'};
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';

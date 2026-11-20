@@ -11524,7 +11524,12 @@ function cullDetail(){const G=window.GFX;if(!G||!M.group)return;const lv=G.lv();
 function render(){cullDetail();if(!isFinite(camera.position.x+camera.position.y+camera.position.z)){camera.position.set(ME.pos.x||0,(ME.pos.y||0)+4,(ME.pos.z||0)-5);S.camUse=NaN;}updXray();previewThrow();const w=innerWidth,h=innerHeight;if(Math.abs(camera.aspect-w/h)>.001){camera.aspect=w/h;camera.updateProjectionMatrix();}if(CR.run){poseCrown();renderer.render(CR.scene,CR.cam);return;}if(S.camOv){camera.position.set(...S.camOv.p);camera.lookAt(...S.camOv.t);}renderer.render(scene,camera);if(!S.camOv)renderVM();fxGrab();}
 const SIM=1/60;let simAcc=0;
 /* a bug in one game step is logged once and skipped, so it can't freeze the whole game on the last picture */
-function frame(rdt){simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;try{step(SIM);}catch(err){const m=String(err&&err.message);if(!frame.seen)frame.seen=new Set();if(!frame.seen.has(m)){frame.seen.add(m);console.error('step failed:',err);}}n++;}
+/* paused (solo, pause screen showing): the world is frozen, so the scene is drawn a couple of times and then left as it is. Drawing the whole
+   map 20 times a second under the pause screen's full-screen blur made the settings feel sticky and freeze on big maps (The Mansion).
+   Any click, slider or key on the pause screen (or a resize) draws a few fresh frames so changes like FOV or graphics show straight away */
+let pzDirty=0;const pzStill=()=>S.paused&&!(typeof NET!=='undefined'&&NET.live)&&!$('duel-pause').hidden;
+for(const ev of ['click','input','change','keydown'])$('duel-pause').addEventListener(ev,()=>{pzDirty=4;},true);addEventListener('resize',()=>{pzDirty=4;});
+function frame(rdt){if(pzStill()){if(pzDirty<=0)return;pzDirty--;}else pzDirty=3;simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;try{step(SIM);}catch(err){const m=String(err&&err.message);if(!frame.seen)frame.seen=new Set();if(!frame.seen.has(m)){frame.seen.add(m);console.error('step failed:',err);}}n++;}
   if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;drawLerp(1);render();drawLerp(0);capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip

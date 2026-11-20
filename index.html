@@ -13179,26 +13179,31 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
   const fl=fm(),fl2=fm();fl2.visible=false;const fg=new THREE.Group();fg.add(fl,fl2);fg.position.set(0,g.userData.muzY??.05,g.userData.muzZ||1.48);fg.visible=id!=='rocket'&&id!=='crossbow'&&id!=='swarm';g.add(fg);wrap.userData.flash=[fl,fl2];
   VM.models[key]=wrap;return wrap;}
 /* fists: first-person fists in front of the camera (the view goes first-person while fists are out, like aiming a gun), so you see every jab */
+/* each character's own hands and sleeves, matched to their model (hand = skin or glove, sleeve, wrist band) */
+const FIST_LOOK={wednesday:['#ece8e2','#1a1a1c','#c8283a'],crusty:['#f2efe9','#3fd15a','#ff3b2f'],antihero:['#2c4a85','#3b5c9a','#c9ccd2'],jet:['#2340b0','#2340c0','#f2f2f2'],
+  ghost:['#8ff3f6','#3a4b5c','#6fe7f0'],dracula:['#d9d9de','#4a2d55','#f2f2f2'],astronaut:['#eceeee','#e6e8ea','#f08a2a'],lilpink:['#efe9e4','#1c1a1c','#f7a9c4'],
+  brute:['#5d5e5c','#6b6b66','#e07a24'],patch:['#3fd9cf','#eef0f0','#e0392e']};
+/* fists: first-person fists in front of the camera (the view goes first-person while fists are out, like aiming a gun), so you see every jab.
+   Smooth, rounded hands in the character's own colours - no tape or wraps */
 function vmFists(charId){const key='fists|'+charId;if(VM.models[key])return VM.models[key];const look=(CHARS[charId]&&CHARS[charId].look)||{};const RBx=B.roundedBox;
-  const hand=new THREE.MeshStandardMaterial({color:'#e2b48c',roughness:.6}),wrapM=new THREE.MeshStandardMaterial({color:'#f2efe8',roughness:.8}),sleeve=new THREE.MeshStandardMaterial({color:look.shirt||'#2b2d33',roughness:.8}),cuff=new THREE.MeshStandardMaterial({color:look.shirtSolid||'#1b1d23',roughness:.8});
+  const FL=FIST_LOOK[charId]||['#e2b48c',look.shirt||'#2b2d33',look.shirtSolid||'#1b1d23'];
+  const hand=new THREE.MeshStandardMaterial({color:FL[0],roughness:.55,metalness:0}),sleeve=new THREE.MeshStandardMaterial({color:FL[1],roughness:.78}),cuff=new THREE.MeshStandardMaterial({color:FL[2],roughness:.7});
   const wrap=new THREE.Group();
-  const GM=vmGloveMats(look.shirt||'#2b2d33'),skin=new THREE.MeshStandardMaterial({color:'#d8a37c',roughness:.55,metalness:0}),tape=GM.tape||(GM.tape=new THREE.MeshStandardMaterial({color:'#efeae0',map:GM.cuff.map&&(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.fillStyle='#efeae0';x.fillRect(0,0,64,64);for(let i=0;i<64;i+=8){x.fillStyle='rgba(0,0,0,.06)';x.fillRect(0,i,64,2);}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);return t;})(),roughness:.85}));
-  const mk=sx=>{const g=new THREE.Group(),b=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.012,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;},
-      cap=(r,len,m,x,y,z,rz=0,rx=0)=>{const me=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,4,10),m);me.position.set(x,y,z);me.rotation.set(rx,0,rz);g.add(me);return me;};
-    b(.096,.085,.1,skin,0,0,.005);                                                        // back of the hand / palm
-    for(let k=0;k<4;k++){const x=-.036+k*.024,lift=k===0||k===3?-.004:0;cap(.0125,.006,tape,x,.014+lift,-.052,0,Math.PI/2);cap(.0118,.004,skin,x,-.012+lift,-.055,0,0);} // taped knuckles + curled fingers
-    cap(.012,.04,skin,-sx*.012,-.034,-.044,Math.PI/2);                                    // thumb folded across the front
-    b(.1,.05,.07,tape,0,-.012,.03);                                                       // tape round the palm
-    const cf=new THREE.Mesh(new THREE.CylinderGeometry(.052,.05,.06,18),GM.cuff);cf.rotation.x=Math.PI/2;cf.position.set(0,-.004,.09);g.add(cf); // ribbed cuff
-    const sl=new THREE.Mesh(new THREE.CylinderGeometry(.056,.05,.42,18),GM.sleeve);sl.rotation.x=Math.PI/2;sl.position.set(0,-.006,.33);g.add(sl);   // sleeve running back out of view
+  const mk=sx=>{const g=new THREE.Group(),b=(w,h,d,m,x,y,z)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.03,w/2-.002,h/2-.002,d/2-.002),4),m);me.position.set(x,y,z);g.add(me);return me;},
+      cap=(r,len,m,x,y,z,rz=0,rx=0)=>{const me=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,6,14),m);me.position.set(x,y,z);me.rotation.set(rx,0,rz);g.add(me);return me;};
+    b(.1,.088,.104,hand,0,0,0);                                                           // the fist
+    cap(.022,.064,hand,0,.006,-.05,Math.PI/2);                                            // one smooth roll of knuckles across the front
+    cap(.013,.03,hand,-sx*.016,-.034,-.03,Math.PI/2);                                    // thumb tucked under
+    const cf=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.05,24),cuff);cf.rotation.x=Math.PI/2;cf.position.set(0,-.004,.075);g.add(cf);   // wrist band
+    const sl=new THREE.Mesh(new THREE.CylinderGeometry(.054,.05,.42,24),sleeve);sl.rotation.x=Math.PI/2;sl.position.set(0,-.006,.31);g.add(sl);   // sleeve running back out of view
     return g;};
-  const R=mk(1),L=mk(-1);wrap.add(R,L); /* no cartoon outline */wrap.userData={fists:true,R,L};VM.models[key]=wrap;return wrap;}
+  const R=mk(1),L=mk(-1);wrap.add(R,L);wrap.userData={fists:true,R,L};VM.models[key]=wrap;return wrap;}
 function vmFistPose(m,f,dt){const e0=punchE(f),r=f.punchL?0:e0,l=f.punchL?e0:0,sp=Math.hypot(f.vel.x,f.vel.z),bob=Math.min(1,sp/8),t=VM.t;
   const k=VM.raise*VM.raise*(3-2*VM.raise),drop=(1-k)*.35;
   for(const [g,sx,hit,ph] of [[m.userData.R,1,r,0],[m.userData.L,-1,l,1.7]]){
     const by=Math.sin(t*2.2+ph)*.008+Math.abs(Math.cos(t*9+ph))*.012*bob;          // breathing and footwork
-    g.position.set(sx*lerp(.19,.05,hit),lerp(-.2,-.085,hit)+by-drop,lerp(-.52,-.7,hit));
-    g.rotation.set(lerp(.32,.24,hit),sx*lerp(-.32,.2,hit),sx*lerp(-.2,-.45,hit));g.scale.setScalar(lerp(1,1.1,hit));}  // guard: angled in and up; punch: straight out, turning over
+    g.position.set(sx*lerp(.15,.05,hit),lerp(-.1,-.055,hit)+by-drop,lerp(-.48,-.7,hit));
+    g.rotation.set(lerp(.2,.24,hit),sx*lerp(.32,.2,hit),sx*lerp(-.12,-.45,hit));g.scale.setScalar(lerp(1,1.1,hit));}  // guard: angled in and up; punch: straight out, turning over
   m.visible=true;}
 /* First person camera option: the view sits in your head with the gun (or fists) drawn in front of you, lowered at the hip and raised to the sights on aim.
    It drops back to third person for finishers (either side), going down, Man Down falls, ladders, and while a sword or bat is out (their swings read from behind). */

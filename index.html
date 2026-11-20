@@ -9715,7 +9715,7 @@ let flashA=0;
 function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
 const GOLD_ARMOUR=30;
 function consReady(f){const c=CONS[f.cons];if(!c||c.passive)return false;return f.consT<=0&&(!c.uses||f.consN>0||(f.cons==='grenade'&&f.nades>0));}
-function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
+function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());if(!f.downed&&f.cv>0)e.y=f.pos.y+2.35*(f.scale||1);/* crouched: the arm comes up to standing height to throw, so a lob clears the cover you're crouched behind */return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
 /* Throws land where the crosshair points: find the spot under the crosshair (whatever it's on, else the ground), then solve the flattest arc that reaches it
    at the throwable's speed and gravity. Out of reach (or aiming at the sky) throws at 45°, the furthest it can go, and THROW_OUT dims the aim trail. */
 let THROW_OUT=false;
@@ -9849,7 +9849,7 @@ function botShopWant(f){const L=shopList();const want=id=>{const i=L.findIndex(i
 function botBuy(f){if(botShopWant(f)<0||f.shopCD>0)return false;const L=shopList().filter(it=>it.can(f)),it=L[Math.floor(Math.random()*L.length)];if(!it)return false;it.buy(f);shopPress(f,it);f.shopCD=SHOP_CD;sfx('bing',f,{range:14});
   emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:20,speed:4,size:.2,life:.5,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});return true;}
 function throwNade(f){if(!(f.nades>0||f.goldNade>0)||f.nadeT>0||!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight')return false;
-  const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());const from=e.addScaledVector(fw,.7).add(new V3(0,-.2,0));sfx('throw',f,{wpn:1});spawnProj(f,'grenade',from,throwDirFor(f));if(f.goldNade>0){f.goldNade--;const P=projs[projs.length-1];P.gold=true;P.mesh.traverse(o=>{if(o.isMesh){o.material=GOLD_NADE_M;}});}else f.nades--;f.nadeT=.9;f.swingT=.32;return true;}
+  const from=throwFrom(f);sfx('throw',f,{wpn:1});spawnProj(f,'grenade',from,throwDirFor(f));if(f.goldNade>0){f.goldNade--;const P=projs[projs.length-1];P.gold=true;P.mesh.traverse(o=>{if(o.isMesh){o.material=GOLD_NADE_M;}});}else f.nades--;f.nadeT=.9;f.swingT=.32;return true;}
 const GOLD_NADE_M=new THREE.MeshStandardMaterial({color:'#ffc61a',metalness:.9,roughness:.22,emissive:'#7a4a00',emissiveIntensity:.6});
 /* ===== Sentry turret (shop item): a tripod gun you put down with V (the Sentry button on phones). It turns to the nearest enemy it can see within 28 m,
    paints them with a red laser and fires weak bursts (4 damage a shot, a small fraction of a rifle), so it harasses rather than wins fights on its own.

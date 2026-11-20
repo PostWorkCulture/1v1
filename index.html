@@ -3414,6 +3414,8 @@ const hemi=new THREE.HemisphereLight('#ffffff','#9aa3ad',1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight('#fffaf0',2.3);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-42,right:42,top:42,bottom:-42,near:1,far:220});sun.shadow.bias=-.0005;sun.shadow.normalBias=.04;
 scene.add(sun);scene.add(sun.target);window.GFX&&GFX.addScene(scene,sun);
+/* Roast's firelight: always in the scene (off) so lighting it never stalls the game recompiling shaders */
+const FIRE_LIGHT=new THREE.PointLight('#ff7a1f',0,9,1.6);window.GFX&&GFX.light(FIRE_LIGHT);scene.add(FIRE_LIGHT);
 const fillL=new THREE.DirectionalLight('#ffffff',.35);scene.add(fillL);scene.add(fillL.target);
 scene.fog=new THREE.Fog('#a9d8ea',90,320);
 const sky=new THREE.Mesh(new THREE.SphereGeometry(700,32,16),new THREE.ShaderMaterial({uniforms:{top:{value:new THREE.Color('#2f8fd8')},mid:{value:new THREE.Color('#86cbe8')},bot:{value:new THREE.Color('#d6f1f4')},ex:{value:.6},sd:{value:new THREE.Vector3(0,1,0)},sc:{value:new THREE.Color(0)},sa:{value:0},dc:{value:new THREE.Color(0)},ds:{value:1}},
@@ -9383,6 +9385,24 @@ function impactFlash(p,size,col){const g=new THREE.Group(),mt=o=>new THREE.MeshB
   debris.push({o:g,t:0,ttl:.36,fx:d=>{const k=Math.min(1,d.t/.35);g.quaternion.copy(camera.quaternion);ring.scale.setScalar(size*(.3+2.4*easeOut(k)));ring.material.opacity=1-k;core.scale.setScalar(size*(1-k*.7));core.material.opacity=.95*(1-k)*(1-k);
     rays.forEach((r,j)=>{const a=j/8*TAU,dd=size*(.8+2*easeOut(k));r.position.set(-Math.sin(a)*dd,Math.cos(a)*dd,0);r.rotation.z=a;r.scale.set(size,size*(1.4-k),1);r.material.opacity=1-k;});
     if(d.t>=.355)g.traverse(o=>{if(o.geometry){o.geometry.dispose();o.material.dispose();}});}});}
+/* Roast's fire: dense billowing flame sprites that cling to the body (they follow running, rolling and kneeling), hot cores,
+   a column of black smoke and a flickering firelight on the floor and anyone nearby */
+const FIRE_COLS=['#fff1a8','#ffc21f','#ff7a10','#e83a0c','#8a1c08'];
+function fireSprite(p,vel,size,life,o){o=o||{};const m=new THREE.SpriteMaterial({map:glowTex('halo'),color:FIRE_COLS[0],transparent:true,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending,depthWrite:false,toneMapped:false});
+  const sp=new THREE.Sprite(m);sp.position.copy(p);sp.scale.setScalar(size*.4);scene.add(sp);const c0=new THREE.Color(),c1=new THREE.Color();
+  debris.push({o:sp,t:0,ttl:life,fx:(d,dt)=>{const k=Math.min(1,d.t/life);sp.position.addScaledVector(vel,dt);vel.x*=.97;vel.z*=.97;
+    const ci=Math.min(FIRE_COLS.length-1.001,k*(FIRE_COLS.length-1));c0.set(FIRE_COLS[ci|0]);c1.set(FIRE_COLS[(ci|0)+1]);m.color.copy(c0).lerp(c1,ci%1);
+    sp.scale.setScalar(size*(.4+1.1*Math.sin(Math.min(1,k*1.4)*Math.PI*.5)));m.opacity=(o.op||1)*(1-k*k);}});}
+function smokeSprite(p,vel,size,life){const m=new THREE.SpriteMaterial({map:glowTex('halo'),color:'#2a2b30',transparent:true,depthWrite:false,opacity:0});const sp=new THREE.Sprite(m);sp.position.copy(p);scene.add(sp);
+  debris.push({o:sp,t:0,ttl:life,fx:(d,dt)=>{const k=Math.min(1,d.t/life);sp.position.addScaledVector(vel,dt);sp.scale.setScalar(size*(.6+1.6*k));m.opacity=.55*Math.sin(k*Math.PI);m.rotation+=dt*.6;}});}
+/* spots on the body the flames cling to, in the body's own space: [x, y, z, size] */
+const FIRE_SPOTS=[[0,1.95,0,1.1],[-.22,1.45,.1,1],[.22,1.4,.1,1],[0,1.1,.14,1.2],[-.45,1.5,0,.8],[.45,1.5,0,.8],[-.15,.7,0,.9],[.15,.65,0,.9],[0,1.55,-.15,1],[-.3,1.0,-.1,.8],[.3,1.05,-.1,.8]];
+function bodyFire(v,t){const root=v.ch.root;root.updateMatrixWorld(true);const at=k=>{const q=FIRE_SPOTS[k];return root.localToWorld(new V3(q[0],q[1],q[2]));};
+  for(let i=0;i<12;i++){const k=(Math.random()*FIRE_SPOTS.length)|0,p=at(k).add(new V3(rnd(-.12,.12),rnd(-.1,.1),rnd(-.12,.12)));
+    fireSprite(p,new V3(rnd(-.3,.3),rnd(2.2,3.4),rnd(-.3,.3)),rnd(1.0,1.6)*SC*FIRE_SPOTS[k][3]*1.25,rnd(.4,.6));if(i<2)fireSprite(p.clone(),new V3(0,rnd(2,3),0),rnd(.6,.85)*SC,.28,{add:1,op:.9});}
+  if(Math.random()<.5)fireSprite(at(0).add(new V3(0,.2,0)),new V3(0,3,0),2.0*SC,.45,{op:.9});
+  if(Math.random()<.6)smokeSprite(at(0).add(new V3(rnd(-.2,.2),.5,rnd(-.2,.2))),new V3(rnd(-.2,.2),rnd(2.5,3.5),rnd(-.2,.2)),rnd(.9,1.3),rnd(1.4,2));
+  FIRE_LIGHT.position.copy(at(3)).add(new V3(0,.4,0));FIRE_LIGHT.intensity=(6+4*Math.sin(t*37)*Math.sin(t*23))*Math.min(1,(t-.6)*4);FIRE_LIGHT.userData.at=S.t;}
 function flashBall(p,col,r){const m=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:1,toneMapped:false,depthWrite:false}));m.position.copy(p);scene.add(m);
   debris.push({o:m,t:0,ttl:.4,fx:d=>{const k=d.t/.4;m.scale.setScalar(.4+k*(r||3));m.material.opacity=Math.max(0,1-k);}});}
 function heartMesh(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:'#c8102e',roughness:.45,emissive:'#5a0010',emissiveIntensity:.35}),dk=new THREE.MeshStandardMaterial({color:'#7d0d17',roughness:.6});
@@ -9504,8 +9524,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       /* where the body is now (standing, rolling on the floor, kneeling) so the flames sit on it */
       const lying=t>=1.6&&t<2.6,bh=lying?.5:1.75;
       if(t>=.6){charLook(v,t<2.75?.9*segT(t,.6,2.4):1);
-        if(t<2.75){for(let i=0;i<3;i++)emit(v.pos.x+rnd(-.35,.35),v.pos.y+rnd(.2,bh)*SC,v.pos.z+rnd(-.35,.35),{n:1,speed:.7,up:3.2,size:rnd(.22,.42),life:.42,grav:-3.5,colors:['#ff3b1f','#ff7a1f','#ffb347','#ffe08a']});
-          if(!lying)emit(v.pos.x+rnd(-.2,.2),v.pos.y+2.05*SC,v.pos.z+rnd(-.2,.2),{n:1,speed:.6,up:3.5,size:.38,life:.4,grav:-3,colors:['#ff7a1f','#ffb347','#ffe08a']});}
+        if(t<2.75)bodyFire(v,t);
         /* embers drifting up the whole time; the smoke thickens as it chars */
         if(Math.random()<.8)emit(v.pos.x+rnd(-.4,.4),v.pos.y+rnd(.3,bh)*SC,v.pos.z+rnd(-.4,.4),{n:1,speed:.8,up:3.2,size:.06,life:1.1,grav:-1.6,colors:['#ffb347','#ff7a1f','#ffe08a']});
         if(Math.random()<(t>2.75?.85:.3))emit(v.pos.x+rnd(-.3,.3),v.pos.y+(t>2.75?rnd(.6,1.6):bh+.3)*SC,v.pos.z+rnd(-.3,.3),{n:1,speed:.3,up:2,size:t>2.75?.4:.32,life:1.2,grav:-1.2,colors:['#3a3c42','#55585f','#6b6f78']});}
@@ -11507,7 +11526,7 @@ function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).cop
   updWalls(dt);updTurrets(dt);updProps(dt);updPlates(dt);updBat(dt);updShoes(dt);updSwarm(dt);updCelebrate(dt);updCrown(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);if(sh.tick)sh.tick(S.t);else sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){if(x.finishing&&x.finishing.fall||freeEdge(x))continue;/* a flung body may sail off the map */x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');bodyFXend();
-  updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);updScorch(dt);updParts(dt);updFlames(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
+  updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);if(FIRE_LIGHT.intensity>0&&S.t-(FIRE_LIGHT.userData.at||0)>.12)FIRE_LIGHT.intensity=0;updScorch(dt);updParts(dt);updFlames(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
   updCamera(rdt);if(S.state!=='menu')updHUD(rdt);
   sky.position.copy(camera.position);const c=S.state==='menu'?M.center:ME.pos;placeSun(c);
   fillL.position.copy(camera.position);fillL.target.position.copy(c);}

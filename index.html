@@ -3801,8 +3801,19 @@ function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
         bx(Math.min(a,b),Math.max(a,b),v0,v1,top-Math.min(rise*1.6,top-y0),top,{solid:false});
         // open stairs (Railed): each step is its own slab, so you can walk underneath where there's headroom; otherwise one solid wedge to the ground
         const e=OPEN_STAIRS?b:uS+dir*run*n,A0=Math.min(a,e),A1=Math.max(a,e);let p,q,r,s;if(alongV){p=X(v0);q=X(v1);r=Z(A0);s=Z(A1);}else{p=X(A0);q=X(A1);r=Z(v0);s=Z(v1);}
-        collider(Math.min(p,q),Math.max(p,q),OPEN_STAIRS?top-Math.min(rise*1.6,top-y0):y0,top,Math.min(r,s),Math.max(r,s));}},
+        collider(Math.min(p,q),Math.max(p,q),OPEN_STAIRS?top-Math.min(rise*1.6,top-y0):y0,top,Math.min(r,s),Math.max(r,s));}
+      stairRails(n,run,rise,uS,dir,v0,v1,y0,alongV,X,Z);},
     X,Z};return S;}
+/* small, low guardrails up both sides of every flight: a steel handrail about 55 cm above the treads, a mid rail and posts every few steps
+   (looks only: they don't block anything, so you can still hop off the side) */
+let RAILM=null;const RAIL_UP=new THREE.Vector3(0,1,0);
+function stairRails(n,run,rise,uS,dir,v0,v1,y0,alongV,X,Z){if(n<3)return;if(!RAILM)RAILM=new THREE.MeshStandardMaterial({color:'#c9ced6',roughness:.25,metalness:.85});
+  const W=(u,y,v)=>alongV?new THREE.Vector3(X(v),y,Z(u)):new THREE.Vector3(X(u),y,Z(v));
+  const rod=(a,b,r)=>{const d=b.clone().sub(a),L=d.length();if(L<.01)return;const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,8),RAILM);m.position.copy(a).add(b).multiplyScalar(.5);m.quaternion.setFromUnitVectors(RAIL_UP,d.normalize());m.castShadow=false;m.receiveShadow=false;M.group.add(m);};
+  const H=.55,ua=uS+dir*run*.5,ub=uS+dir*run*(n-.5),ya=y0+rise,yb=y0+rise*n,inset=Math.min(.08,Math.abs(v1-v0)/4);
+  for(const v of [v0+inset,v1-inset]){rod(W(ua,ya+H,v),W(ub,yb+H,v),.028);rod(W(ua,ya+H*.5,v),W(ub,yb+H*.5,v),.016);
+    const ks=[];for(let k=0;k<n;k+=3)ks.push(k);if(ks[ks.length-1]!==n-1)ks.push(n-1);
+    for(const k of ks){const u=uS+dir*run*(k+.5),t=y0+rise*(k+1);rod(W(u,t,v),W(u,t+H+.03,v),.022);}}}
 const WIN=(c,w=1.8,y0=1.1,y1=2.5)=>({c,w,y0,y1}),DOOR=(c,w=4.2)=>({c,w,y0:0,y1:3.2});
 // ---- house personalities on Maple Street: garage, hospital, family home, corner shop ----
 const INVIS=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});
@@ -6700,7 +6711,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
      for(let i=0;i<n;i++){const c=(ax?x0:z0)+(i+.5)*w;box(ax?c:x0,UF,ax?z0:c,ax?w-.04:.08,1.05,ax?.08:w-.04,'#bfe6ff',GO);}deco(B.boxGeo(ax?L+.1:.12,.08,ax?.12:L+.1),gold,(x0+x1)/2,UF+1.09,(z0+z1)/2).castShadow=false;}
    for(const s of [-1,1])deco(B.boxGeo(.1,.08,7.3),gold,s*2.25,UF/2+.6,2.45).rotation.x=-Math.atan2(UF,7.1);}
   /* ---------- kitchen ---------- */
-  {const Q=R.kitchen;SS.stairs(-9.6,-1,-39.8,-36.6,0,17,UF/17,.42,'#8a5a34',true);
+  {const Q=R.kitchen;SS.stairs(-11,-1,-39.8,-36.6,0,15,UF/15,.38,'#8a5a34',true);/* starts 1.8 m out from the wall, so there's room to step on at the bottom */
    const isl=P(-31,-18,0,5,1.1,2.2,'#2f6f73',{hp:140},[[B.boxGeo(5,1,2.2),'grain:#2f6f73',0,.5,0],[B.boxGeo(5.2,.1,2.4),'marble:#f4f1ea',0,1.05,0],[gC(.25,.2,.12,14),'brushed:#c9ced6',-1.4,1.16,0],[gC(.15,.15,.25,12),'gloss:#e8463a',1.2,1.22,.4],[gC(.15,.15,.18,12),'gloss:#f4c22b',1.6,1.19,-.3]]);
    P(-31,-26.4,0,10,1.1,1,'#2f6f73',{hp:140},[[B.boxGeo(10,.98,.96),'grain:#2f6f73',0,.53,-.02],[B.boxGeo(10.1,.06,1.05),'marble:#2b2d33',0,1.07,0],[B.boxGeo(10,.1,.9),'gloss:#111216',0,.05,-.05],
      ...Array.from({length:10},(_,k)=>k===3?null:[B.boxGeo(.9,.84,.03),'grain:#3a8a8f',-4.5+k+0,.55,.475]).filter(Boolean),...Array.from({length:10},(_,k)=>k===3?null:[B.boxGeo(.03,.22,.03),'brushed:#d7dbe0',-4.5+k+(k%2?-.36:.36),.78,.5]).filter(Boolean),
@@ -6883,7 +6894,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    for(const [x,z] of [[11,15],[12.5,21]])P(x,z,0,.5,1.3,.5,'#1c1d22',{hp:12,wood:false,snd:'bin'},[[gC(.02,.02,1.1,6),'brushed:#1c1d22',0,.55,0],[B.boxGeo(.5,.35,.03),'brushed:#1c1d22',0,1.2,0]]);
    rug(15,18.5,6,5,'#6b2f5a','#d4a640');}
   /* ---------- garage: black brick walls under flickering strip lights, two dirt bikes hung on wall racks (they blow up), fuel drums, a workbench, tyres, back stairs up to the roof terrace ---------- */
-  {SS.stairs(9.6,1,36.6,39.8,0,17,UF/17,.42,'#9aa0a8',true);
+  {SS.stairs(11,1,36.6,39.8,0,15,UF/15,.38,'#9aa0a8',true);/* starts 1.8 m out from the wall, so there's room to step on at the bottom */
    /* two dirt bikes (the Tripo Dirt Bike 2) hung side-on on steel wall racks along the solid south wall, between its door and the stairs */
    {const blk=pm('brushed:#1c1d22'),stl=pm('brushed:#9aa0a8'),RY=1.45,WZ=9.2;for(const [bx,ry] of [[31.6,Math.PI/2],[35,-Math.PI/2]]){mansionBike(bx,WZ+.42,ry,null,RY,0);
      for(const ry2 of [RY+.75,RY-.05]){const o=deco(B.boxGeo(2.4,.16,.05),blk,bx,ry2,WZ+.03);o.castShadow=false;}/* wall rails */

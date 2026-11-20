@@ -6493,8 +6493,8 @@ const MAPS={
    a launch trampoline (gym up into the trophy room), and two pairs of portals linking opposite corners on each floor. */
 function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   const SEG=[],WINS=[],DOORS=[],ROOF=[],LIGHTS=[];
-  const GO={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false},FRM=mat('#2c3036',null,{metalness:.5,roughness:.4}),chrome=mat('#d7dbe0',null,{metalness:.85,roughness:.22}),gold=mat('#d4a640',null,{metalness:.8,roughness:.3});
-  const Dr=(c,w=3.2)=>({a:c-w/2,b:c+w/2,k:'d'}),Gl=(a,b)=>({a,b,k:'g'}),Wn=(c,w=3)=>({a:c-(w+.6)/2,b:c+(w+.6)/2,k:'w'}),Op=(a,b)=>({a,b,k:'o'});
+  const GO={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false},GFX_={mat:HOUSE_GLASS,wood:false,shadow:false,edges:false},FRM=mat('#2c3036',null,{metalness:.5,roughness:.4}),chrome=mat('#d7dbe0',null,{metalness:.85,roughness:.22}),gold=mat('#d4a640',null,{metalness:.8,roughness:.3});
+  const Dr=(c,w=3.2)=>({a:c-w/2,b:c+w/2,k:'d'}),Gl=(a,b)=>({a,b,k:'g'}),Wn=(c,w=3)=>({a:c-(w+.6)/2,b:c+(w+.6)/2,k:'w'}),Wf=(c,w=3)=>({a:c-(w+.6)/2,b:c+(w+.6)/2,k:'w',fx:1}),Op=(a,b)=>({a,b,k:'o'});
   /* a wall run between heights y0 and y1 with doorways, glass panels, windows and open gaps; each solid piece is recorded so rooms can paint their own side */
   const W=(x0,z0,x1,z1,y0,y1,fs,col,tx)=>{const ax=Math.abs(x1-x0)>Math.abs(z1-z0),at=ax?z0:x0,a0=ax?Math.min(x0,x1):Math.min(z0,z1),a1=ax?Math.max(x0,x1):Math.max(z0,z1);
     const seg=(a,b,h0,h1)=>{if(b-a<.05||h1-h0<.05)return;const c=(a+b)/2,l=b-a;box(ax?c:at,h0,ax?at:c,ax?l:T,h1-h0,ax?T:l,col,{tx});SEG.push({ax,at,a,b,y0:h0,y1:h1});};
@@ -6503,7 +6503,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
       if(f.k==='d'){seg(f.a,f.b,y0+DH,y1);DOORS.push({x:ax?(f.a+f.b)/2:at,z:ax?at:(f.a+f.b)/2,y:y0,ax,w:f.b-f.a});}
       else if(f.k==='o'){}
       else if(f.k==='w'){/* big single-pane windows on a low sill: shoot the glass and jump straight through */const s0=y0+.8,s1=Math.min(y1-.5,y0+3.8);seg(f.a,f.b,y0,s0);const n=1,w=(f.b-f.a)/n;
-        let pane=null;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;pane=box(ax?c:at,s0,ax?at:c,ax?w-.03:.1,s1-s0,ax?.1:w-.03,'#bfe6ff',GO);}for(let i=0;i<=n;i++)bar(f.a+i*w,s0,s1);
+        let pane=null;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;pane=box(ax?c:at,s0,ax?at:c,ax?w-.03:.1,s1-s0,ax?.1:w-.03,'#bfe6ff',f.fx?GFX_:GO);}if(f.fx)pane=null;/* side windows are fixed glass: no way out to the sides */for(let i=0;i<=n;i++)bar(f.a+i*w,s0,s1);
         deco(new THREE.BoxGeometry(ax?f.b-f.a+.16:T+.14,.09,ax?T+.14:f.b-f.a+.16),mat('#e9e6df'),ax?(f.a+f.b)/2:at,s0,ax?at:(f.a+f.b)/2).castShadow=false;
         WINS.push({ax,at,c:(f.a+f.b)/2,y:(s0+s1)/2,w:f.b-f.a,a:f.a,b:f.b,s0,s1,pane});seg(f.a,f.b,s1,y1);}
       else{const n=Math.max(1,Math.round((f.b-f.a)/1.6)),w=(f.b-f.a)/n,gh=y0+3;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;box(ax?c:at,y0,ax?at:c,ax?w-.03:.1,3,ax?.1:w-.03,'#bfe6ff',GO);}
@@ -6514,6 +6514,11 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   for(const [a,b,c,d] of [[-150,11,-150,150],[21,150,-150,150],[11,21,-150,-5],[11,21,5,150]])floor(a,b,c,d,'#ffffff','lawn',-.02,10);/* (with a gap for the sunken indoor pool) */
   floor(-4,4,-X,-MZ,'#d9d2c4','slab',.01,2);floor(-14,14,-40,-31,'#d9d2c4','slab',.012,2);/* the front drive and turning circle */
   for(const [a,b,c,d] of [[-X,-MX,-3,3],[MX,X,-1,7],[MX,X,17,27],[-3,3,MZ,Z]])floor(a,b,c,d,'#d9d2c4','slab',.01,2);/* paths out of the side and back doors */
+  /* the side lawns are out of bounds (too much going on out there): tall hedges run from each corner of the house out to the boundary hedge,
+     so outside you can only fight on the front and back lawns */
+  {const hm=mat('#3e7a32','grass',{roughness:.95});for(const sx of [-1,1])for(const sz of [-1,1]){const x0=sx*(MX+.2),x1=sx*X,zc=sz*(MZ+.45);
+     box((x0+x1)/2,0,zc,Math.abs(x1-x0),3,.9,'#3e7a32',{mat:hm,tx:'grass',shadow:true});
+     for(let x=Math.min(x0,x1)+.6;x<Math.max(x0,x1);x+=1.2){const o=deco(new THREE.IcosahedronGeometry(.42,0),hm,x,3+Math.random()*.1,zc+(Math.random()-.5)*.3);o.castShadow=false;}}}
   /* the boundary: a tall clipped hedge on invisible walls */
   {const iv={mat:INVIS,shadow:false,edges:false},hm=mat('#3e7a32','grass',{roughness:.95});for(const [x0,z0,x1,z1] of [[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]]){const ax=z0===z1;
     box((x0+x1)/2,0,(z0+z1)/2,ax?2*X:.4,3,ax?.4:2*Z,'#3e7a32',iv);const o=deco(B.boxGeo(ax?2*X+1.6:1.6,2.6,ax?1.6:2*Z+1.6),hm,(x0+x1)/2+(ax?0:Math.sign(x0)*.6),1.3,(z0+z1)/2+(ax?Math.sign(z0)*.6:0));o.castShadow=true;}}
@@ -6552,16 +6557,16 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const ext='#ffffff',EX='redbrick';
   W(-MX,-MZ,MX,-MZ,0,H1,[Wn(-36),Wn(-30),Wn(-20),Wn(-12),Dr(0,5),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
   W(-MX,MZ,MX,MZ,0,H1,[Wn(-20),Wn(-12),Dr(0),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
-  W(-MX,-MZ,-MX,MZ,0,H1,[Dr(-22),Dr(-4),Wn(-.2),Wn(13),Wn(24)],ext,EX);/* (no window over the kitchen's back stairs) */
-  W(MX,-MZ,MX,MZ,0,H1,[Wn(-24),Wn(-12),Wn(-5),Dr(4),Dr(22,5)],ext,EX);/* (no window over the garage stairs) */
+  W(-MX,-MZ,-MX,MZ,0,H1,[Wf(-22),Wf(-4.4),Wf(-.2),Wf(13),Wf(24)],ext,EX);/* the sides are fenced off: no doors, fixed windows *//* (no window over the kitchen's back stairs) */
+  W(MX,-MZ,MX,MZ,0,H1,[Wf(-24),Wf(-12),Wf(-5.2),Wf(4),Wf(22.5)],ext,EX);/* (no window over the garage stairs) */
   for(const [x0,z0,x1,z1] of [[-MX,-MZ,MX,-MZ],[-MX,MZ,MX,MZ],[-MX,-MZ,-MX,MZ],[MX,-MZ,MX,MZ]]){const ax=z0===z1;box((x0+x1)/2,H1,(z0+z1)/2,ax?2*MX+T:T,UF-H1,ax?T:2*MZ+T,'#d9d4c8',{tx:'slab'});}
   W(-MX,-MZ,MX,-MZ,UF,H2,[Wn(-34),Wn(-28),Wn(-18),Wn(-12),Wn(-4,4),Wn(4,4),Wn(12),Wn(18),Wn(28),Wn(36)],ext,EX);
   W(-MX,MZ,24,MZ,UF,H2,[Wn(-20),Wn(-12),Wn(-4),Wn(4),Wn(12),Wn(20)],ext,EX);W(24,MZ,MX,MZ,UF,UF+1.2,[],ext,EX);
-  W(-MX,-MZ,-MX,MZ,UF,H2,[Wn(-24),Wn(-14),Wn(-4),Wn(4)],ext,EX);
-  W(MX,-MZ,MX,9,UF,H2,[Wn(-24),Wn(-12),Wn(-3),Wn(5)],ext,EX);W(MX,9,MX,MZ,UF,UF+1.2,[],ext,EX);
+  W(-MX,-MZ,-MX,MZ,UF,H2,[Wf(-24),Wf(-14),Wf(-4),Wf(4)],ext,EX);
+  W(MX,-MZ,MX,9,UF,H2,[Wf(-24),Wf(-12),Wf(-3),Wf(5)],ext,EX);W(MX,9,MX,MZ,UF,UF+1.2,[],ext,EX);
   for(const [x,z] of [[-MX,-MZ],[MX,-MZ],[-MX,MZ],[MX,MZ]])box(x,0,z,1,H2+.6,1,'#d9d4c8',{tx:'slab'});/* stone corner quoins */
   /* ladders up the outside walls onto the roof: front (two), back and the west side */
-  {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);wLadder(-ox,18,0,top,1,0);}
+  {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);}
   /* the front porch: four columns and a canopy over the door */
   for(const x of [-3.5,-1.2,1.2,3.5])box(x,0,-29.6,.6,4.6,.6,'#f4f1ea',{tx:'pillar'});deco(B.boxGeo(9,.35,3.4),mat('#f4f1ea','slab'),0,4.75,-28.8);
   /* inside walls, ground floor then upper floor (plaster) */
@@ -6636,7 +6641,17 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const SS=St(0,0,1);
   const WARNM=new THREE.MeshBasicMaterial({map:WARN()});
   const gas=(x,z,y=0,c='#e8662a')=>P(x,z,y,.42,1.05,.42,c,{boom:1,snd:'bin',wood:false},[[gC(.2,.2,.85,14),'paint:'+c,0,.43,0],[new THREE.SphereGeometry(.2,14,8,0,Math.PI*2,0,Math.PI/2),'paint:'+c,0,.85,0],[gC(.05,.06,.14,8),'brushed:#9aa0a8',0,1.0,0],[B.boxGeo(.36,.18,.01),WARNM,0,.55,.205]]);
-  const drum=(x,z,y=0,c='#c8322b')=>P(x,z,y,.7,1,.7,c,{boom:1,snd:'bin',wood:false},[[gC(.35,.35,1,14),'paint:'+c,0,.5,0],[gC(.355,.355,.05,14),'#1c1d22',0,.32,0],[gC(.355,.355,.05,14),'#1c1d22',0,.7,0],[B.boxGeo(.36,.36,.01),WARNM,0,.55,.356]]);
+  /* explosive drums: rolled steel with raised rolling hoops, a rimmed lid with two bung caps, a FLAMMABLE label front and back, a dark stencil band and drips */
+  const DRL=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#f4f1ea';g.fillRect(0,0,w,h);g.save();g.translate(w/2,h*.42);g.rotate(Math.PI/4);g.fillStyle='#e8463a';g.fillRect(-34,-34,68,68);g.strokeStyle='#1c1d22';g.lineWidth=3;g.strokeRect(-30,-30,60,60);g.restore();
+     g.fillStyle='#1c1d22';g.beginPath();g.moveTo(64,22);g.bezierCurveTo(84,44,80,62,64,70);g.bezierCurveTo(48,62,46,46,58,36);g.bezierCurveTo(58,48,64,50,66,46);g.bezierCurveTo(70,38,66,30,64,22);g.fill();
+     g.font='bold 18px Impact, sans-serif';g.textAlign='center';g.fillText('FLAMMABLE',64,104);g.font='bold 11px sans-serif';g.fillText('UN1203  •  3',64,120);});
+  const DRLM=new THREE.MeshLambertMaterial({map:DRL}),DRIP=new THREE.MeshLambertMaterial({color:'#2a2622',transparent:true,opacity:.55});
+  const drum=(x,z,y=0,c='#c8322b')=>{const hoop=k=>{const g=new THREE.TorusGeometry(.338,.02,6,22);g.rotateX(Math.PI/2);return [g,'paint:'+c,0,k,0];};
+    return P(x,z,y,.7,1,.7,c,{boom:1,snd:'bin',wood:false},[[gC(.33,.33,.94,20),'paint:'+c,0,.5,0],hoop(.34),hoop(.66),[gC(.345,.345,.035,20),'brushed:#55585f',0,.02,0],
+      (()=>{const g=new THREE.TorusGeometry(.33,.026,6,22);g.rotateX(Math.PI/2);return [g,'brushed:#9aa0a8',0,.97,0];})(),[gC(.31,.31,.02,20),'brushed:#8a8f97',0,.975,0],
+      [gC(.05,.05,.035,10),'brushed:#c9ced6',.16,.995,.06],[gC(.035,.035,.03,8),'brushed:#c9ced6',-.17,.995,-.08],[gC(.333,.333,.08,20),'#1c1d22',0,.84,0],
+      [new THREE.PlaneGeometry(.26,.28),DRLM,0,.52,.333],[new THREE.PlaneGeometry(.26,.28).rotateY(Math.PI),DRLM,0,.52,-.333],
+      [B.boxGeo(.03,.18,.01),DRIP,.1,.86,.333],[B.boxGeo(.025,.12,.01),DRIP,-.14,.89,.333]]);};
   const plant=(x,z,y=0,s=1,pot='#c4693d')=>P(x,z,y,.6*s,1.4*s,.6*s,'#3f8f3a',{prop:'bush',hp:25,wood:false,snd:'bush'},[[gC(.26*s,.2*s,.5*s,10),'clay:'+pot,0,.25*s,0],[new THREE.IcosahedronGeometry(.4*s,0),'leafy:#3f8f3a',0,.85*s,0],[new THREE.IcosahedronGeometry(.3*s,0),'leafy:#4fae45',.15*s,1.1*s,.06*s],[new THREE.IcosahedronGeometry(.26*s,0),'leafy:#2f7a33',-.12*s,1.15*s,-.1*s]]);
   const palm=(x,z,y=0,pot='#f4f5f7')=>P(x,z,y,.7,2.6,.7,'#3f8f3a',{prop:'bush',hp:30,wood:false,snd:'bush'},[[gC(.3,.24,.55,10),'clay:'+pot,0,.27,0],[gC(.05,.07,1.8,6),'grain:#7a4c2a',0,1.3,0],...[0,1,2,3,4,5].map(i=>{const g=B.boxGeo(1.3,.04,.3);g.translate(.6,0,0);g.rotateZ(-.45);return [g,'leafy:#3f8f3a',0,2.2,0,i*1.05];})]);
   const pic=(x,z,face,y,w,h,i)=>{const PIC=houseArt();const n=new V3(Math.sin(face),0,Math.cos(face));const fr=deco(new THREE.BoxGeometry(w+.16,h+.16,.06),pm('grain:#5b3a1e'),x+n.x*.03,y,z+n.z*.03,face);fr.castShadow=false;
@@ -7222,11 +7237,11 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* the roof, the upper ceilings and upstairs lights are hidden for the menu picture */
   M.dbg={R,DOORS,WINS};/* for the layout checks */
   M.thumb=on=>{for(const b of ROOF)if(b.mesh)b.mesh.visible=!on;};
-  M.shopAt=[{x:-52,z:-2,q:1},{x:52,z:-2,q:3}];
+  M.shopAt=[{x:-14,z:-43.6,q:0},{x:14,z:43.6,q:2}];/* one on the front lawn, one on the back */
   const sp=(x,z,y=0)=>({x,z,y,yaw:Math.atan2(-x,-z)});
   M.spawns=[sp(-32,-13),sp(-16,-12),sp(16,-23),sp(30,-14),sp(-36,-2),sp(-11,2),sp(4,3),sp(28,5),sp(-34,13),sp(-12,12),sp(4,20),sp(18,13),
     sp(-32,-15,UF),sp(-12,-24,UF),sp(18,-14,UF),sp(-30,-5,UF),sp(-14,-2,UF),sp(13,1,UF),sp(-20,14,UF),sp(17,23,UF),
-    sp(0,-40),sp(-30,-38),sp(30,-38),sp(-52,22),sp(52,22),sp(0,38)];
+    sp(0,-40),sp(-30,-38),sp(30,-38),sp(-34,40),sp(34,40),sp(0,38)];
   M.noDrums=DOORS.map(d=>({x:d.x,z:d.z,r:3.2})).concat([[0,2.5],[-38.2,-13],[38.2,13],[-22.5,25.5],[22.5,-7.5],[-32,0],[32,0],[16,0],[-39,18],[39,-18]].map(([x,z])=>({x,z,r:4})));}
 /* the Mansion's garage tank: a detailed tank built from parts (camouflaged hull with a sloped glacis, side skirts, road wheels and sprockets inside
    segmented tracks, a turret with a long barrel, muzzle brake, commander's hatch, machine gun, periscopes, smoke launchers, jerry cans and a star).

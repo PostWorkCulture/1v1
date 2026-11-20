@@ -5791,13 +5791,13 @@ const LG={X:14,PZ0:5.5,PZ1:19.5,W0:4.5,W1:9.5,NX0:9.5,NX1:12.5,NZ:1.75,WY:-2.4}/
 const lgH=(x,z,t)=>.16*Math.sin(x*.21+z*.13+t*.9)+.11*Math.sin(-x*.14+z*.27+t*1.15)+.05*Math.sin(x*.9+z*.7+t*2.3)+.03*Math.sin(x*1.7-z*1.3+t*3.1);
 /* the lagoon water: the Beach Please sea (swell, fine ripples, sun glitter, sparkling glints, caustics) in a lagoon setting:
    clear turquoise over a sandy bed near the decks, deep blue further out, foam lapping at the deck edges and the odd whitecap */
-function lgWater(){const WY=LG.WY,L=LG;
+function lgWater(){const WY=LG.WY,L=LG,F=v=>{const t=String(+(+v).toFixed(4));return /[.e]/.test(t)?t:t+'.';}/* a GLSL float: 5.5 stays 5.5, 6 becomes 6. (writing ${n}. broke the whole sea once the decks went to half metres) */;
   const GL=WC_GLSL+`
 float sdB(vec2 p,vec2 c,vec2 h){vec2 q=abs(p-c)-h;return length(max(q,0.))+min(max(q.x,q.y),0.);}
-float lgSd(vec2 p){float pz=(${L.PZ0}.+${L.PZ1}.)*.5,ph=(${L.PZ1}.-${L.PZ0}.)*.5;
-  return min(min(sdB(p,vec2(0.,pz),vec2(${L.X}.,ph)),sdB(p,vec2(0.,-pz),vec2(${L.X}.,ph))),min(min(sdB(p,vec2(${(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2)),sdB(p,vec2(${-(L.W0+L.W1)/2}.,0.),vec2(${(L.W1-L.W0)/2}.,${L.PZ0}.2))),sdB(p,vec2(${(L.NX0+L.NX1)/2},0.),vec2(${(L.NX1-L.NX0)/2},${L.NZ}))));}
+float lgSd(vec2 p){float pz=${F((L.PZ0+L.PZ1)/2)},ph=${F((L.PZ1-L.PZ0)/2)};
+  return min(min(sdB(p,vec2(0.,pz),vec2(${F(L.X)},ph)),sdB(p,vec2(0.,-pz),vec2(${F(L.X)},ph))),min(min(sdB(p,vec2(${F((L.W0+L.W1)/2)},0.),vec2(${F((L.W1-L.W0)/2)},${F(L.PZ0+.2)})),sdB(p,vec2(${F(-(L.W0+L.W1)/2)},0.),vec2(${F((L.W1-L.W0)/2)},${F(L.PZ0+.2)}))),sdB(p,vec2(${F((L.NX0+L.NX1)/2)},0.),vec2(${F((L.NX1-L.NX0)/2)},${F(L.NZ)}))));}
 uniform vec4 uWv;/* the rogue wave: x crest z, y +1 coming in from +z (-1 from -z), z height */
-float lgWv(vec2 p){if(uWv.z<.001)return 0.;float d=(p.y-uWv.x)*uWv.y,c=d<0.?exp(-d*d/2.2):exp(-d*d/34.);return uWv.z*c*smoothstep(32.,12.,abs(p.x))*smoothstep(${L.PZ1}.-.4,${L.PZ1}.+2.5,p.y*uWv.y);}
+float lgWv(vec2 p){if(uWv.z<.001)return 0.;float d=(p.y-uWv.x)*uWv.y,c=d<0.?exp(-d*d/2.2):exp(-d*d/34.);return uWv.z*c*smoothstep(32.,12.,abs(p.x))*smoothstep(${F(L.PZ1-.4)},${F(L.PZ1+2.5)},p.y*uWv.y);}
 float lgH(vec2 p,float t){return .16*sin(p.x*.21+p.y*.13+t*.9)+.11*sin(-p.x*.14+p.y*.27+t*1.15)+.05*sin(p.x*.9+p.y*.7+t*2.3)+.03*sin(p.x*1.7-p.y*1.3+t*3.1);}
 `;
   // the sandy lagoon bed: shallow and pale round the decks, sloping away into deep water
@@ -5943,8 +5943,13 @@ function lagoonMap(){const X=15,Z=20,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
   const CX=(L.W0+L.NX1)/2,CY=4.3,CR=7.4;
   {const bam=mat('#c8a060',null,{flatShading:true}),ring=mat('#8a6a3a');for(const [x,z] of [[L.W0-.55,-2.7],[L.W0-.55,2.7],[L.NX1+.55,-2.7],[L.NX1+.55,2.7]]){deco(gC(.16,.19,CY-WY,8),bam,x,(CY+WY)/2,z);for(let y=.4;y<CY-.3;y+=.75)deco(gC(.2,.2,.06,8),ring,x,y,z).castShadow=false;}
     const th=mat('#d4ad62','thatch',{flatShading:true,side:2});{const u=deco(new THREE.CircleGeometry(CR,4),mat('#6e5028',null,{side:2,emissive:'#4a3014',emissiveIntensity:.8}),CX,CY+.02,0);u.rotation.x=Math.PI/2;u.rotation.z=Math.PI/4;u.castShadow=false;}
-    const roof=deco(new THREE.CylinderGeometry(0,CR,2.8,4),th,CX,CY+1.4,0);roof.rotation.y=Math.PI/4;deco(new THREE.CylinderGeometry(CR,CR+.3,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),CX,CY+.05,0).rotation.y=Math.PI/4;
-    deco(new THREE.SphereGeometry(.35,8,6),mat('#b88c46'),CX,CY+2.85,0);
+    /* a low hipped thatch you can walk on: a solid eave all round, rising in shallow invisible steps to a flat top.
+       White ladders up from each pavilion (below) */
+    {const EB=CR*Math.SQRT1_2,ET=2.4,RH=1.1,E0=CY+.3,ns={wood:true,chip:false,edges:false,shadow:false};
+      box(CX,CY,0,EB*2,.3,EB*2,'#d4ad62',{...ns,mat:th});
+      const roof=deco(new THREE.CylinderGeometry(ET*Math.SQRT2,CR,RH,4),th,CX,E0+RH/2,0);roof.rotation.y=Math.PI/4;
+      for(let k=1;k<=8;k++){const hw=EB-(EB-ET)*(k-.5)/8;collider(CX-hw,CX+hw,E0,E0+RH*k/8,-hw,hw);}}
+    deco(new THREE.CylinderGeometry(CR,CR+.3,.5,4,1,true),mat('#b88c46',null,{side:2,flatShading:true}),CX,CY+.05,0).rotation.y=Math.PI/4;
     const l=new THREE.PointLight('#ffb070',14,14,1.6);window.GFX&&GFX.light(l);l.position.set(CX,CY-.6,0);M.group.add(l);}
   /* ---------- evening lights, all round the edges so the boards stay clear ----------
      tiki torches stand in the water beside the crossovers; string lights swag between bamboo posts along the outer rails and the inner side of
@@ -5976,7 +5981,11 @@ function lagoonMap(){const X=15,Z=20,WY=LG.WY,L=LG;M.bounds={x0:-X,x1:X,z0:-Z,z1
     box(bx,0,bz+sg(2.1),5.2,1.9,.5,'#6e5a46',{wood:false,extra:{roughness:.85}});deco(new THREE.BoxGeometry(5.3,.08,.6),mat('#9a948a'),bx,1.95,bz+sg(2.1)).castShadow=false;
     {const gl=['#3f8f4a','#7a3a1e','#d8c070','#2a5a8a'];for(let i=0;i<10;i++){const b=deco(gC(.06,.07,.32,8),mat(gl[i%4],null,{roughness:.2,metalness:.1}),bx-2.2+i*.49,2.15,bz+sg(2.1));b.castShadow=false;}}
     const bam2=mat('#c8a060',null,{flatShading:true});for(const px of [bx-3.1,bx+3.1])box(px,0,bz+sg(2.15),.28,3.3,.28,'#c8a060',{mat:bam2,wood:false,edges:false});
-    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});const r=deco(new THREE.BoxGeometry(7.4,.25,4.2),th,bx,3.45,bz+sg(1.2));r.rotation.x=sg(-.22);deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.9,bz+sg(-.9)).castShadow=false;}
+    const th=mat('#d4ad62','thatch',{flatShading:true,side:2});/* a flat thatched roof you can stand on, with a white ladder up the end */
+    box(bx,3.3,bz+sg(1.2),7.4,.25,4.2,'#d4ad62',{mat:th,wood:true,chip:false,edges:false});deco(new THREE.BoxGeometry(7.6,.14,.3),mat('#b88c46'),bx,3.42,bz+sg(-.9)).castShadow=false;
+    wLadder(bx+s*4.15,bz+sg(1.2),0,3.55,-s,0);}
+  /* white ladders up onto the shop canopy, one from each pavilion's inner edge, east of the crossover */
+  for(const s of [1,-1])wLadder(11.5,s*(CR*Math.SQRT1_2+.45),0,CY+.3,0,-s);
   /* a moored speedboat bobbing on the swell, a lifebuoy on the rail */
   /* boats (Tripo models): a speedboat moored by the north pavilion, a cruiser and a sailboat passing round the lagoon, two jet skis tearing about,
      a superyacht at anchor, a rowing boat and a canoe pulled up on the islands, a lighthouse on the big island and a seaplane circling overhead;

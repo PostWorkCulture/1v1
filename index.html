@@ -1374,6 +1374,7 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 /* damage numbers: clean white, headshots red */
 #duel-hud .dmg{font:800 14px/1 var(--f-body);text-shadow:1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000,0 0 6px rgba(0,0,0,.5)}
 #duel-hud .dmg.head{color:var(--mono-red);font-size:18px}
+#duel-hud .dmg.zero{color:#b4b9c2}
 /* touch: finish button goes white, pause button dark */
 #duel-hud .dt-btns [data-k=KeyF]{background:#ffffff;color:#0a0a0a;border-color:#ffffff}
 #duel-hud .dt-pause{color:#ffffff}
@@ -10574,7 +10575,10 @@ const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60
 const hc={};const txt=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}};
 let vigA=0;function vig(a){vigA=Math.max(vigA,a);}
 function hitMarker(head){if(OPT.hs==='1')sfx(head?'headshot':'hit',null,{rate:head?1:1.05});if(OPT.hm!=='1')return;const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');requestAnimationFrame(()=>h.classList.add('on'));} // restart next frame (forcing a layout here caused hitches)
-const nums=[],numPool=[];function dmgNumber(f,n,head){const el=numPool.pop()||$('d-nums').appendChild(document.createElement('div'));el.className='dmg'+(head?' head':'');el.textContent=n;el.style.opacity='';el.hidden=false;
+const nums=[],numPool=[];
+/* someone mid-finisher can't be hurt (see damage0), so hits on them show a grey 0 to make that clear */
+const finImmune=f=>!!f&&(!!f.finishing||(f.finishT>0&&FS.some(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===f)));
+function dmgNumber(f,n,head){if(finImmune(f)){n=0;head=false;}const el=numPool.pop()||$('d-nums').appendChild(document.createElement('div'));el.className='dmg'+(head?' head':'')+(n===0?' zero':'');el.textContent=n;el.style.opacity='';el.hidden=false;
   nums.push({el,p:new V3(f.pos.x+rnd(-.4,.4),f.pos.y+2.9*SC,f.pos.z+rnd(-.4,.4)),t:0});}
 function feedMsg(html,cls){const el=document.createElement('div');el.className='panel feed'+(cls?' '+cls:'');el.innerHTML=html;const box=$('d-feed');box.prepend(el);while(box.children.length>3)box.lastChild.remove();setTimeout(()=>el.remove(),5000);}
 function feed(you,gun,head){const el=document.createElement('div');el.className='panel feed';

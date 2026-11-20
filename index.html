@@ -3603,7 +3603,7 @@ function carModel(x,z,kind,tint){const K={gtr:{c:'#f4f5f7',L:4.7,W:2.1,y0:.3,bh:
 /* Street Life's cars: the Tripo models from the project's images/Vehicles folder, baked offline into models/cars/<kind>.glb (15k-35k triangles, 256-512 px colour
    maps; the truck keeps its 27 parts). Normals are rebuilt on load, each model is turned nose to +z, sat on the ground and scaled to its length. The body and cabin
    boxes stay as the solid parts (cover, what bullets hit, what's left as the burnt shell); until a model has landed the car shows its built-in shape. */
-const VEH_CFG={train:{L:18,W:3.2,rot:(x,y,z)=>[z,y,-x]},gtr:{L:4.7},lambo:{L:4.6},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},blackyellow:{L:4.5},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
+const VEH_CFG={dirtbike:{L:2.1,rot:(x,y,z)=>[-z,y,x]},train:{L:18,W:3.2,rot:(x,y,z)=>[z,y,-x]},gtr:{L:4.7},lambo:{L:4.6},porsche:{L:4.5,rot:(x,y,z)=>[z,y,-x]},blackyellow:{L:4.5},truck:{L:6.4,rot:(x,y,z)=>[z,-x,-y]}},VEHM={},VEH_P={},VEH_WAIT=[];
 function loadVehicle(kind){if(VEH_P[kind])return VEH_P[kind];return VEH_P[kind]=fetch('models/cars/'+kind+'.glb').then(r=>{if(!r.ok)throw new Error('car '+r.status);return r.arrayBuffer();}).then(buf=>{
   const cfg=VEH_CFG[kind],dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
   const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array},NC={SCALAR:1,VEC2:2,VEC3:3};
@@ -6876,9 +6876,9 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    for(const x of [14.9,16.4])P(x,26,0,1.1,1.6,.8,'#1c1d22',{hp:60},[[B.boxGeo(1.1,1.6,.8),'gloss:#1c1d22',0,.8,0],[B.boxGeo(.95,1.2,.02),'weave:#202127',0,.75,-.41]]);
    for(const [x,z] of [[11,15],[12.5,21]])P(x,z,0,.5,1.3,.5,'#1c1d22',{hp:12,wood:false,snd:'bin'},[[gC(.02,.02,1.1,6),'brushed:#1c1d22',0,.55,0],[B.boxGeo(.5,.35,.03),'brushed:#1c1d22',0,1.2,0]]);
    rug(15,18.5,6,5,'#6b2f5a','#d4a640');}
-  /* ---------- garage: a car (it blows up), fuel drums, a workbench, tyres, back stairs up to the roof terrace ---------- */
+  /* ---------- garage: two dirt bikes (they blow up), fuel drums, a workbench, tyres, back stairs up to the roof terrace ---------- */
   {SS.stairs(9.6,1,36.6,39.8,0,17,UF/17,.42,'#9aa0a8',true);
-   FUN.tank=mansionTank(30.5,20);drum(25.2,26.2);drum(26,26.2,0,'#f4c22b');drum(25.2,25.4,0,'#2f62c8');
+   mansionBike(29,20,0,null);mansionBike(31.8,19.4,Math.PI,null);/* two dirt bikes on their stands (the Tripo Dirt Bike 2) */drum(25.2,26.2);drum(26,26.2,0,'#f4c22b');drum(25.2,25.4,0,'#2f62c8');
    P(31,26.2,0,4,1.1,1,'#8a5a34',{hp:90},[[B.boxGeo(4,.1,1),'grain:#8a5a34',0,1.05,0],[B.boxGeo(.1,1,.9),'brushed:#55585f',-1.9,.5,0],[B.boxGeo(.1,1,.9),'brushed:#55585f',1.9,.5,0],[B.boxGeo(.5,.28,.24),'gloss:#e8463a',-1,1.24,0],[B.boxGeo(.08,.3,.08),'brushed:#9aa0a8',.8,1.25,0]]);
    for(const [x,z] of [[33,10.6],[34.2,10.6]])P(x,z,0,.9,1.05,.9,'#1c1d22',{hp:60,wood:false,snd:'bin'},[0,1,2,3].map(i=>[new THREE.TorusGeometry(.33,.12,8,18).rotateX(Math.PI/2),'#1c1d22',0,.13+i*.26,0]));
    sign('GARAGE',32,4.4,26.75,Math.PI,3.6,.8,'#1c1d22','#f4c22b');}
@@ -7125,7 +7125,6 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* the arcade cabinets pay out in coins when you hit them, the popcorn machine sprays popcorn, the tank sparks */
   for(const a of FUN.arcade)a.onDmg=at=>{sfx('cash',at,{range:18});emit(at.x,at.y,at.z,{n:10,speed:3,up:3,size:.1,life:.8,grav:12,colors:['#f4c22b','#d4a640','#ffe08a']});};
   if(FUN.popcorn)FUN.popcorn.onDmg=at=>emit(-10,1.6,-8,{n:20,speed:2.5,up:3.5,size:.1,life:1,grav:10,colors:['#fff8e0','#ffe9a8','#ffffff']});
-  if(FUN.tank)FUN.tank.onDmg=at=>{emit(at.x,at.y,at.z,{n:8,speed:5,up:2,size:.07,life:.25,colors:['#ffd23f','#ffffff','#ff8a2a']});sfx('bin',at,{rate:.6,range:20});};
   /* globes spin slowly */
   M.life.push((t,dt)=>{for(const g of FUN.globes)if(g.alive&&g.mesh.children[1])g.mesh.children[1].rotation.y+=dt*.6;});
   /* a dartboard in the games room: it keeps the darts you throw (bullets), and a bullseye rings a bell and throws up stars */
@@ -7148,10 +7147,10 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* candles flicker on the dining table and the bar's high tables */
   {const fl=[];for(const z of [-21,-18,-15])for(const dx of [-.12,0,.12]){deco(gC(.025,.025,.22,8),mat('#f4ead8'),-16+dx,1.4,z);fl.push(flick(-16+dx,1.56,z,.28,'#ffb35a'));}
    M.life.push(t=>{for(let i=0;i<fl.length;i++){const s=.24+Math.sin(t*17+i*2.1)*.04+Math.sin(t*9.3+i)*.03;fl[i].scale.set(s,s*1.3,1);}});}
-  /* rubber ducks bobbing round the pool, two in the spa tub */
+  /* rubber ducks bobbing round the pool (none in the hot tub) */
   {const duck=(x,y,z)=>{const g=new THREE.Group();const yl=mat('#ffd23f',null,{roughness:.4});const b=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),yl);b.scale.set(1,.8,1.3);g.add(b);const h=new THREE.Mesh(new THREE.SphereGeometry(.1,12,10),yl);h.position.set(0,.14,.13);g.add(h);
      const bk=new THREE.Mesh(new THREE.ConeGeometry(.04,.08,8).rotateX(Math.PI/2),mat('#ff6a1a'));bk.position.set(0,.13,.24);g.add(bk);for(const s of [-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.018,6,4),mat('#1c1d22'));e.position.set(s*.05,.18,.2);g.add(e);}g.position.set(x,y,z);g.userData.dyn=1;M.group.add(g);return g;};
-   const ds=[];for(let i=0;i<5;i++)ds.push({g:duck(16,-.27,0),ph:i*1.3,r:1+i*.75});for(let i=0;i<2;i++)ds.push({g:duck(-16,UF+.62,4),ph:i*3,r:.6,spa:1});
+   const ds=[];for(let i=0;i<5;i++)ds.push({g:duck(16,-.27,0),ph:i*1.3,r:1+i*.75});
    M.life.push(t=>{for(const D of ds){const a=t*(D.spa?.4:.12)+D.ph;const cx=D.spa?-16:16,cz=D.spa?4:0;D.g.position.x=cx+Math.cos(a)*D.r*(D.spa?1:1.6);D.g.position.z=cz+Math.sin(a)*D.r*(D.spa?1:.9);D.g.position.y=(D.spa?UF+.62:-.27)+Math.sin(t*2+D.ph)*.02;D.g.rotation.y=-a;}});}
   /* a toy train chuffing round a track on the kids' room rug */
   {const cx=-15,cz=19,Rr=2.1;const tr=deco(new THREE.TorusGeometry(Rr,.05,6,64),mat('#7a4c2a'),cx,U+.04,cz);tr.rotation.x=Math.PI/2;tr.castShadow=false;const tr2=deco(new THREE.TorusGeometry(Rr,.03,4,64),mat('#9aa0a8'),cx,U+.06,cz);tr2.rotation.x=Math.PI/2;
@@ -7223,45 +7222,12 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    segmented tracks, a turret with a long barrel, muzzle brake, commander's hatch, machine gun, periscopes, smoke launchers, jerry cans and a star).
    The turret slowly swings round to keep its gun on the nearest player. It soaks up a lot of fire; once it's had enough it goes up like a fuel drum
    (a big fireball), and it's back next round */
-function mansionTank(x,z){const camo=canvasTex(256,256,(g,w,h)=>{g.fillStyle='#55603a';g.fillRect(0,0,w,h);let a=31;const r=()=>{a=(a*16807)%2147483647;return a/2147483647;};
-    for(const c of ['#3d4729','#6e6a45','#2b2f22']){g.fillStyle=c;for(let i=0;i<9;i++){const cx=r()*w,cy=r()*h;g.beginPath();for(let k=0;k<9;k++){const an=k/9*Math.PI*2,rr=18+r()*26;g.lineTo(cx+Math.cos(an)*rr,cy+Math.sin(an)*rr);}g.fill();}}
-    for(let i=0;i<1400;i++){g.fillStyle=`rgba(${r()<.5?'0,0,0':'255,255,230'},${r()*.08})`;g.fillRect(r()*w,r()*h,2,2);}});
-  const CM=new THREE.MeshStandardMaterial({map:camo,roughness:.85,metalness:.15}),DK=mat('#24271f',null,{roughness:.9}),TRK=pm('weave:#2b2b2b'),MT=pm('brushed:#55585f'),WH=mat('#3d4729',null,{roughness:.8});
-  const b=box(x,0,z,3.6,2.4,6.6,'#55603a',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:900,snd:'bin',wood:false});b.boom=true;b.prop='fuel';
-  const root=b.mesh,add=(geo,m,px,py,pz,rx=0,ry=0,rz=0,par=root)=>{const o=new THREE.Mesh(geo,m);o.position.set(px,py-1.2,pz);o.rotation.set(rx,ry,rz);o.castShadow=true;o.receiveShadow=true;par.add(o);return o;};
-  /* tracks: a run of track links round each side, road wheels, a drive sprocket and an idler, side skirts above */
-  for(const sx of [-1,1]){const X0=sx*1.42;add(B.boxGeo(.7,.12,6.2),TRK,X0,.06,0);add(B.boxGeo(.7,.12,5.4),TRK,X0,1.02,0);
-    for(let i=0;i<26;i++){const zz=-3+i*.24;add(B.boxGeo(.74,.05,.08),DK,X0,.13,zz);add(B.boxGeo(.74,.05,.08),DK,X0,1.09,zz*.9);}
-    for(let i=0;i<6;i++)add(new THREE.CylinderGeometry(.4,.4,.5,18).rotateZ(Math.PI/2),WH,X0,.48,-2.3+i*.92);
-    for(let i=0;i<6;i++)add(new THREE.CylinderGeometry(.16,.16,.52,10).rotateZ(Math.PI/2),MT,X0,.48,-2.3+i*.92);
-    add(new THREE.CylinderGeometry(.42,.42,.52,10).rotateZ(Math.PI/2),MT,X0,.62,2.9);add(new THREE.CylinderGeometry(.36,.36,.52,14).rotateZ(Math.PI/2),WH,X0,.6,-2.95);
-    add(B.boxGeo(.08,.55,5.6),CM,sx*1.8,1.0,-.1);for(let i=0;i<5;i++)add(B.boxGeo(.1,.06,.06),DK,sx*1.83,.75,-2.2+i*1.1);}
-  /* hull: the box, a sloped front plate, a sloped rear deck with engine grilles, headlights, jerry cans and a star */
-  add(B.boxGeo(2.4,.8,5.2),CM,0,1.25,-.2);add(B.boxGeo(3.5,.12,5.6),CM,0,1.68,-.1);
-  add(B.boxGeo(3.3,.12,1.5),CM,0,1.45,2.85,-.55);add(B.boxGeo(3.3,.1,1.2),CM,0,1.55,-2.95,.18);
-  for(let i=0;i<6;i++)add(B.boxGeo(2.6,.03,.06),DK,0,1.66-i*.02,-2.4-i*.17);
-  for(const sx of [-1,1]){add(new THREE.CylinderGeometry(.12,.12,.12,12).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:'#fff3c4'}),sx*1.3,1.62,3.45);add(B.boxGeo(.3,.42,.16),pm('paint:#4a5233'),sx*1.25,1.97,-3.25);}
-  {const st=canvasTex(64,64,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='#e9e6df';g.beginPath();for(let k=0;k<10;k++){const an=k/10*Math.PI*2-Math.PI/2,rr=k%2?12:30;g.lineTo(32+Math.cos(an)*rr,32+Math.sin(an)*rr);}g.fill();});
-   for(const sx of [-1,1]){const o=add(new THREE.PlaneGeometry(.7,.7),new THREE.MeshBasicMaterial({map:st,transparent:true}),sx*1.86,1.15,.6,0,sx*Math.PI/2);o.castShadow=false;}}
-  /* turret: on a ring, with the gun, mantlet, hatch, machine gun, periscopes, smoke launchers and a stowage basket at the back */
-  const tur=new THREE.Group();tur.position.set(0,1.74-1.2,-.4);root.add(tur);const T=(geo,m,px,py,pz,rx=0,ry=0,rz=0)=>add(geo,m,px,py+1.2,pz,rx,ry,rz,tur);
-  T(new THREE.CylinderGeometry(1.15,1.2,.18,24),DK,0,.05,0);T(B.boxGeo(2.3,.7,2.6),CM,0,.5,.1);T(B.boxGeo(2.1,.5,1),CM,0,.42,1.65,-.35);T(B.boxGeo(1.8,.5,.9),CM,0,.45,-1.55,.25);
-  T(B.boxGeo(.9,.6,.4),CM,0,.5,2.15);const gun=T(new THREE.CylinderGeometry(.11,.13,3.6,14).rotateX(Math.PI/2),MT,0,.52,4.1);T(new THREE.CylinderGeometry(.16,.16,.5,14).rotateX(Math.PI/2),MT,0,.52,3.1);
-  T(B.boxGeo(.36,.26,.36),DK,0,.52,5.95);T(new THREE.CylinderGeometry(.34,.36,.14,16),CM,.55,.92,-.3);T(new THREE.CylinderGeometry(.3,.3,.06,16),DK,.55,1.02,-.3);
-  T(B.boxGeo(.08,.08,.8),DK,-.5,1.05,.2);T(B.boxGeo(.12,.25,.12),DK,-.5,.92,-.1);for(const [px,pz] of [[.1,1],[-.2,1],[.8,.4]])T(B.boxGeo(.14,.14,.1),new THREE.MeshStandardMaterial({color:'#2a3a4a',metalness:.6,roughness:.1}),px,.9,pz);
-  for(const sx of [-1,1])for(let i=0;i<3;i++)T(new THREE.CylinderGeometry(.06,.06,.3,8).rotateX(-.7),DK,sx*1.05,.75+i*.03,1.1-i*.15);
-  T(B.boxGeo(1.9,.3,.06),DK,0,.62,-2.05);for(let i=0;i<5;i++)T(B.boxGeo(.06,.3,.6),DK,-.9+i*.45,.62,-1.8);T(B.boxGeo(.7,.25,.45),pm('weave:#6e6a45'),.4,.82,-1.8);
-  const ant=T(new THREE.CylinderGeometry(.01,.015,2.2,4),DK,-.85,1.8,-1.3);ant.rotation.x=-.15;
-  /* extra kit: tow cables along the hull, twin exhausts that puff smoke, a shovel and pick on the side, unit markings on the turret, track guards and grab handles */
-  for(const sx of [-1,1]){for(let k=0;k<5;k++){const o=add(new THREE.TorusGeometry(.18,.025,6,10),DK,sx*1.25,1.78,-1.5+k*.55);o.rotation.y=Math.PI/2;o.scale.set(1,.4,1);}
-    add(gC(.08,.08,.35,10).rotateX(Math.PI/2),MT,sx*.6,1.55,-3.4);add(B.boxGeo(.08,.05,1.1),pm('grain:#7a4c2a'),sx*1.86,1.45,-1.6);add(B.boxGeo(.04,.16,.25),MT,sx*1.88,1.45,-1.02);
-    for(let k=0;k<3;k++){const h2=add(new THREE.TorusGeometry(.09,.015,4,8,Math.PI),MT,sx*1.6,1.75,1.4-k*.9);h2.rotation.y=Math.PI/2;}}
-  {const um=canvasTex(128,48,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='#e9e6df';g.font='bold 26px Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('IMOK 01',w/2,h/2);});
-   for(const sx of [-1,1]){const o=add(new THREE.PlaneGeometry(.9,.34),new THREE.MeshBasicMaterial({map:um,transparent:true}),sx*1.17,1.2+.5,-.3,0,sx*Math.PI/2,0,tur);o.castShadow=false;}}
-  M.life.push(()=>{if(b.alive&&Math.random()<.12)for(const sx of [-1,1])emit(x+sx*.6,1.55,z-3.6,{n:1,speed:.3,up:.7,size:.3,life:1.4,grav:-.5,colors:['#55585f','#6e665c','#3a3d45']});});
-  const at=new V3(),dir=new V3();let yaw=0;
-  M.life.push((t,dt)=>{if(!b.alive)return;let best=null,bd=32;for(const f of FS){if(!f.alive||f.downed)continue;const d=Math.hypot(f.pos.x-x,f.pos.z-z);if(d<bd){bd=d;best=f;}}
-    const want=best?Math.atan2(best.pos.x-x,best.pos.z-z):Math.sin(t*.15)*1.2;let d=want-yaw;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;yaw+=Math.max(-dt*.6,Math.min(dt*.6,d));tur.rotation.y=yaw;});
+/* a dirt bike (images/Vehicles/Dirt Bike 2.glb, baked to models/cars/dirtbike.glb) leaning on its stand; an invisible solid round it, and a few shots blow it up */
+function mansionBike(x,z,ry,tint){const b=box(x,0,z,.7,1.15,2.05,'#ffffff',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:70,snd:'bin',wood:false});b.boom=true;b.prop='fuel';
+  const grp=M.group,root=b.mesh,go=()=>{const V=VEHM.dirtbike;if(!V||root.userData.bk||M.group!==grp)return;root.userData.bk=1;const hold=new THREE.Group();hold.position.y=-1.15/2;hold.rotation.set(0,ry,.1);root.add(hold);
+    for(const pt of V.parts){const mt=tint?Object.assign(pt.mat.clone(),{color:new THREE.Color(tint)}):pt.mat;const m=new THREE.Mesh(pt.geo,mt);m.castShadow=true;m.receiveShadow=true;hold.add(m);}
+    const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4,6),mat('#2b2b2b'));st.position.set(-.16,.17,0);st.rotation.z=-.5;hold.add(st);};
+  if(VEHM.dirtbike)go();else{VEH_WAIT.push(go);loadVehicle('dirtbike').catch(()=>{});}
   return b;}
 /* ---- detail helpers for the Mansion's showpieces (each returns a parts list for P) ---- */
 function mnCanvas(w,h,f){return canvasTex(w,h,f);}
@@ -11625,7 +11591,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=S.snipers&&m!=='rumble'&&m!=='parkour'?'Snipers only: pick one of six snipers (HDR, Kar98, Reaper, Titan .50, Vanguard or Phantom). It is your only gun, plus fists (or a bat) and your lethal; the shop still works. '+who:m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='074e813d3c52';
+const MODEL_STAMP='7090e1eb4b84';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */

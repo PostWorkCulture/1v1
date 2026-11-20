@@ -3280,13 +3280,13 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
   const NAMES=['uiselect','uifwd','uiback','uitick','uiland','uistart','akm','famas','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','shotty','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
-    'step1','step2','step3','step4','step5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','djump','fistwhoosh','fisthit','batswing','swordswing','swordhit','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
+    'step1','step2','step3','step4','step5','fs_wood1','fs_wood2','fs_wood3','fs_wood4','fs_wood5','fs_carpet1','fs_carpet2','fs_carpet3','fs_carpet4','fs_carpet5','fs_stone1','fs_stone2','fs_stone3','fs_stone4','fs_stone5','fs_grass1','fs_grass2','fs_grass3','fs_grass4','fs_grass5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','djump','fistwhoosh','fisthit','batswing','swordswing','swordhit','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','heli','bing'];
   const LOOPS={waves:1,engine:1,boat:1,heli:1,clubmusic:1,discomusic:1,cinemasound:1,spamusic:1};
   const LAZY={clubmusic:1,discomusic:1,cinemasound:1,spamusic:1},lazyReq={};/* big beds (Club Night's music) only download the first time they're needed */ // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
   const MIX={uiselect:.35,uifwd:.35,uiback:.35,uitick:.3,uiland:.4,uistart:.4,djump:.36,clubmusic:.3,discomusic:.55,cinemasound:.4,spamusic:.32,heli:.6,akm:.7,famas:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,shotty:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
-    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,batswing:.45,swordswing:.45,swordhit:.6,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
+    step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,fs_wood1:.24,fs_wood2:.24,fs_wood3:.24,fs_wood4:.24,fs_wood5:.24,fs_carpet1:.2,fs_carpet2:.2,fs_carpet3:.2,fs_carpet4:.2,fs_carpet5:.2,fs_stone1:.26,fs_stone2:.26,fs_stone3:.26,fs_stone4:.26,fs_stone5:.26,fs_grass1:.22,fs_grass2:.22,fs_grass3:.22,fs_grass4:.22,fs_grass5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fistwhoosh:.42,fisthit:.6,batswing:.45,swordswing:.45,swordhit:.6,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.41,bing:.25,reel:.5,boing:.45}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
   let ctx=null,master=null,buf={},voices={},vol=1,wvol=1,svol=1;
@@ -4405,13 +4405,13 @@ function fence(x0,z0,x1,z1,h,color,gap,o){const L=Math.hypot(x1-x0,z1-z0),alongX
 function batchStatic(g=M.group){g.updateMatrixWorld(true);const groups=new Map(),lines=[],drop=[];
   const sig=geo=>Object.keys(geo.attributes).sort().join(',');
   for(const o of g.children){if(!o.isMesh||o.userData.dyn||Array.isArray(o.material)||!o.geometry||!o.geometry.attributes.position)continue;
-    const geo=o.geometry;const k=o.material.uuid+'|'+(o.castShadow?1:0)+(o.receiveShadow?1:0)+'|'+sig(geo);if(!groups.has(k))groups.set(k,{mat:o.material,cast:o.castShadow,recv:o.receiveShadow,items:[]});
+    const geo=o.geometry,zn=M.batchZone?M.batchZone(o):'';const k=o.material.uuid+'|'+(o.castShadow?1:0)+(o.receiveShadow?1:0)+'|'+sig(geo)+'|'+zn;if(!groups.has(k))groups.set(k,{mat:o.material,cast:o.castShadow,recv:o.receiveShadow,items:[],zn});
     groups.get(k).items.push(o);drop.push(o);for(const c of o.children)if(c.isLineSegments)lines.push(c);}
   const bake=(items,isLine)=>{let n=0;const parts=[];for(const o of items){let geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(o.matrixWorld);parts.push(geo);n+=geo.attributes.position.count;}
     const out=new THREE.BufferGeometry();for(const name of Object.keys(parts[0].attributes)){const sz=parts[0].attributes[name].itemSize;const arr=new Float32Array(n*sz);let off=0;
       for(const p of parts){const a=p.attributes[name];arr.set(a.array.subarray(0,a.count*sz),off);off+=a.count*sz;}out.setAttribute(name,new THREE.BufferAttribute(arr,sz));}
     for(const p of parts)p.dispose();out.computeBoundingSphere();out.computeBoundingBox();return out;};
-  let made=0;for(const G of groups.values()){if(G.items.length<2)continue;const m=new THREE.Mesh(bake(G.items),G.mat);m.castShadow=G.cast;m.receiveShadow=G.recv;m.matrixAutoUpdate=false;g.add(m);made++;
+  let made=0;for(const G of groups.values()){if(G.items.length<2)continue;const m=new THREE.Mesh(bake(G.items),G.mat);m.castShadow=G.cast;m.receiveShadow=G.recv;m.matrixAutoUpdate=false;if(G.zn)m.userData.zone=G.zn;g.add(m);made++;
     for(const o of G.items){g.remove(o);for(const b of M.boxes)if(b.mesh===o)b.mesh=null;}}
   if(lines.length){const kept=lines.filter(l=>!l.parent||l.parent.parent!==g);const merge=lines.filter(l=>l.parent&&l.parent.parent===null||l.parent&&l.parent.parent!==g);
     const L=new THREE.LineSegments(bake(lines,true),EDGE);L.matrixAutoUpdate=false;g.add(L);for(const l of lines)if(l.parent)l.parent.remove(l);}
@@ -4430,7 +4430,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){M.onReset=[];if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.floorAt=null;M.noDrums=null;M.clubMusic=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.walls=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.navWarps=null;M.spotBias=null;M.stepSurf=null;M.batchZone=null;M.byPlayers=null;M.floorName=null;M.floorAt=null;M.noDrums=null;M.clubMusic=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.heli=null;M.edgeN=null;M.thumb=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -6499,7 +6499,7 @@ const MAPS={
    Ways up and down: the grand staircase, back stairs in the kitchen and the garage, two lifts (ballroom, pool), a fireman's pole drop (playroom to games room),
    a launch trampoline (gym up into the trophy room), and two pairs of portals linking opposite corners on each floor. */
 function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  const SEG=[],WINS=[],DOORS=[],ROOF=[],LIGHTS=[];
+  const SEG=[],WINS=[],DOORS=[],GAPS=[],ROOF=[],LIGHTS=[];
   const GO={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false},GFX_={mat:HOUSE_GLASS,wood:false,shadow:false,edges:false},FRM=mat('#2c3036',null,{metalness:.5,roughness:.4}),chrome=mat('#d7dbe0',null,{metalness:.85,roughness:.22}),gold=mat('#d4a640',null,{metalness:.8,roughness:.3});
   const Dr=(c,w=3.2)=>({a:c-w/2,b:c+w/2,k:'d'}),Gl=(a,b)=>({a,b,k:'g'}),Wn=(c,w=3)=>({a:c-(w+.6)/2,b:c+(w+.6)/2,k:'w'}),Wf=(c,w=3)=>({a:c-(w+.6)/2,b:c+(w+.6)/2,k:'w',fx:1}),Op=(a,b)=>({a,b,k:'o'});
   /* a wall run between heights y0 and y1 with doorways, glass panels, windows and open gaps; each solid piece is recorded so rooms can paint their own side */
@@ -6508,30 +6508,34 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
     const bar=(c,h0,h1)=>deco(new THREE.BoxGeometry(ax?.08:T+.04,h1-h0,ax?T+.04:.08),FRM,ax?c:at,(h0+h1)/2,ax?at:c).castShadow=false;
     let cur=a0;for(const f of (fs||[]).slice().sort((p,q)=>p.a-q.a)){seg(cur,f.a,y0,y1);
       if(f.k==='d'){seg(f.a,f.b,y0+DH,y1);DOORS.push({x:ax?(f.a+f.b)/2:at,z:ax?at:(f.a+f.b)/2,y:y0,ax,w:f.b-f.a});}
-      else if(f.k==='o'){}
+      else if(f.k==='o'){GAPS.push({x:ax?(f.a+f.b)/2:at,z:ax?at:(f.a+f.b)/2,y:y0,ax});}
       else if(f.k==='w'){/* big single-pane windows on a low sill: shoot the glass and jump straight through */const s0=y0+.8,s1=Math.min(y1-.5,y0+3.8);seg(f.a,f.b,y0,s0);const n=1,w=(f.b-f.a)/n;
         let pane=null;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;pane=box(ax?c:at,s0,ax?at:c,ax?w-.03:.1,s1-s0,ax?.1:w-.03,'#bfe6ff',f.fx?GFX_:GO);}if(f.fx)pane=null;/* side windows are fixed glass: no way out to the sides */for(let i=0;i<=n;i++)bar(f.a+i*w,s0,s1);
         deco(new THREE.BoxGeometry(ax?f.b-f.a+.16:T+.14,.09,ax?T+.14:f.b-f.a+.16),mat('#e9e6df'),ax?(f.a+f.b)/2:at,s0,ax?at:(f.a+f.b)/2).castShadow=false;
         WINS.push({ax,at,c:(f.a+f.b)/2,y:(s0+s1)/2,w:f.b-f.a,a:f.a,b:f.b,s0,s1,pane});seg(f.a,f.b,s1,y1);}
       else{const n=Math.max(1,Math.round((f.b-f.a)/1.6)),w=(f.b-f.a)/n,gh=y0+3;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;box(ax?c:at,y0,ax?at:c,ax?w-.03:.1,3,ax?.1:w-.03,'#bfe6ff',GO);}
-        bar(f.a,y0,gh);bar(f.b,y0,gh);seg(f.a,f.b,gh,y1);}/* frame posts only at the ends, so smashed glass leaves a clear gap with no poles in it */
+        bar(f.a,y0,gh);bar(f.b,y0,gh);seg(f.a,f.b,gh,y1);GAPS.push({x:ax?(f.a+f.b)/2:at,z:ax?at:(f.a+f.b)/2,y:y0,ax});}/* frame posts only at the ends, so smashed glass leaves a clear gap with no poles in it */
       cur=f.b;}
     seg(cur,a1,y0,y1);};
   /* ---------- the grounds ---------- */
   for(const [a,b,c,d] of [[-150,11,-150,150],[21,150,-150,150],[11,21,-150,-5],[11,21,5,150]])floor(a,b,c,d,'#ffffff','lawn',-.02,10);/* (with a gap for the sunken indoor pool) */
   floor(-4,4,-X,-MZ,'#d9d2c4','slab',.01,2);floor(-14,14,-40,-31,'#d9d2c4','slab',.012,2);/* the front drive and turning circle */
-  for(const [a,b,c,d] of [[-X,-MX,-3,3],[MX,X,-1,7],[MX,X,17,27],[-3,3,MZ,Z]])floor(a,b,c,d,'#d9d2c4','slab',.01,2);/* paths out of the side and back doors */
+  floor(-3,3,MZ,Z,'#d9d2c4','slab',.01,2);/* the path out of the back door */
   /* the side lawns are out of bounds (too much going on out there): tall hedges run from each corner of the house out to the boundary hedge,
      so outside you can only fight on the front and back lawns */
   {const hm=mat('#3e7a32','grass',{roughness:.95});for(const sx of [-1,1])for(const sz of [-1,1]){const x0=sx*(MX+.2),x1=sx*X,zc=sz*(MZ+.45);
      box((x0+x1)/2,0,zc,Math.abs(x1-x0),3,.9,'#3e7a32',{mat:hm,tx:'grass',shadow:true});
-     for(let x=Math.min(x0,x1)+.6;x<Math.max(x0,x1);x+=1.2){const o=deco(new THREE.IcosahedronGeometry(.42,0),hm,x,3+Math.random()*.1,zc+(Math.random()-.5)*.3);o.castShadow=false;}}}
+     for(let x=Math.min(x0,x1)+.6;x<Math.max(x0,x1);x+=1.2){const o=deco(new THREE.IcosahedronGeometry(.42,0),hm,x,3+Math.random()*.1,zc+(Math.random()-.5)*.3);o.castShadow=false;}}
+   /* the hedges alone could be double-jumped (bots got onto them and stuck in the side strips), so invisible walls close the sides for good:
+      one along each corner hedge line and one hugging each side wall, both up past the roof edge (no dropping off the roof's sides either) */
+   const iw={mat:INVIS,shadow:false,edges:false},TOPW=H2+3.5;for(const sx of [-1,1]){const wx=sx*(MX+T/2+.2);box(wx,0,0,.4,TOPW,2*MZ+1.7,'#3e7a32',iw).see=true;
+     for(const sz of [-1,1]){const x0=sx*(MX+.2),x1=sx*X;box((x0+x1)/2,0,sz*(MZ+.45),Math.abs(x1-x0),TOPW,.9,'#3e7a32',iw).see=true;}}}
   /* the boundary: a tall clipped hedge on invisible walls */
   {const iv={mat:INVIS,shadow:false,edges:false},hm=mat('#3e7a32','grass',{roughness:.95});for(const [x0,z0,x1,z1] of [[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]]){const ax=z0===z1;
     box((x0+x1)/2,0,(z0+z1)/2,ax?2*X:.4,3,ax?.4:2*Z,'#3e7a32',iv);const o=deco(B.boxGeo(ax?2*X+1.6:1.6,2.6,ax?1.6:2*Z+1.6),hm,(x0+x1)/2+(ax?0:Math.sign(x0)*.6),1.3,(z0+z1)/2+(ax?Math.sign(z0)*.6:0));o.castShadow=true;}}
   /* garden cover: hedge blocks, stone planters and urns, statues and a fountain out front, spread round the house */
   const hedge=(x,z,w,d,h=1.6)=>{const b=box(x,0,z,w,h,d,'#3e7a32',{tx:'grass',prop:'bush',hp:160,snd:'bush',wood:false});return b;};
-  for(const [x,z,w,d] of [[-24,-36,10,1.4],[24,-36,10,1.4],[-46,-34,1.4,10],[46,-34,1.4,10],[-46,34,1.4,10],[46,34,1.4,10],[-24,36,10,1.4],[24,36,10,1.4],[-50,-12,1.4,8],[50,-12,1.4,8],[-50,14,1.4,8],[52,12,1.4,6],[-14,38,6,1.4],[14,38,6,1.4]])hedge(x,z,w,d);
+  for(const [x,z,w,d] of [[-24,-36,10,1.4],[24,-36,10,1.4],[-46,-34,1.4,10],[46,-34,1.4,10],[-46,34,1.4,10],[46,34,1.4,10],[-24,36,10,1.4],[24,36,10,1.4],[-14,38,6,1.4],[14,38,6,1.4]])hedge(x,z,w,d);
   for(const [x,z] of [[-36,-38],[36,-38],[-36,38],[36,40],[0,40]]){box(x,0,z,1.8,1,1.8,'#d9d4c8',{tx:'slab'});deco(gC(.7,.5,.9,12),mat('#cfc8bb','slab'),x,1.45,z);const t=deco(new THREE.IcosahedronGeometry(.8,1),pm('leafy:#3f8f3a'),x,2.3,z);t.scale.y=.9;}
   /* the fountain, out by the front hedge: a round stone basin, a three-tier spout and a jet of water that shoots up, arcs over and
      rains back into the basin with splashes and ripples where it lands */
@@ -6569,7 +6573,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   {const SG=Object.assign({},GO,{snd:'frost'});for(const [x0,x1,z0,z1] of SKYH){const mx=(x0+x1)/2,mz=(z0+z1)/2;
      for(const sx of [-1,1])for(const sz of [-1,1]){const b=box(mx+sx*1.6,H2+.02,mz+sz*1.9,3.16,.31,3.76,'#bfe6ff',SG);ROOF.push(b);}
      for(const [a,b,c,d] of [[x0,x1,z0,z0+.12],[x0,x1,z1-.12,z1],[x0,x0+.12,z0,z1],[x1-.12,x1,z0,z1],[mx-.05,mx+.05,z0,z1],[x0,x1,mz-.05,mz+.05]]){const o=deco(B.boxGeo(b-a,.08,d-c),FRM,(a+b)/2,H2+.37,(c+d)/2);o.castShadow=false;o.userData.dyn=1;ROOF.push({mesh:o});}}}
-  /* outside walls: cream render with stone quoins; doors front, back and sides; windows on both floors (the roof terrace has a parapet only) */
+  /* outside walls: red brick with stone quoins; doors front and back; windows on both floors (the roof terrace has a parapet only) */
   const ext='#ffffff',EX='redbrick';
   W(-MX,-MZ,MX,-MZ,0,H1,[Wn(-36),Wn(-30),Wn(-20),Wn(-12),Dr(0,5),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
   W(-MX,MZ,MX,MZ,0,H1,[Wn(-20),Wn(-12),Dr(0),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
@@ -6581,8 +6585,22 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   W(-MX,-MZ,-MX,MZ,UF,H2,[Wf(-24),Wf(-14),Wf(-4),Wf(4)],ext,EX);
   W(MX,-MZ,MX,9,UF,H2,[Wf(-24),Wf(-12),Wf(-3),Wf(5)],ext,EX);W(MX,9,MX,MZ,UF,UF+1.2,[],ext,EX);
   for(const [x,z] of [[-MX,-MZ],[MX,-MZ],[-MX,MZ],[MX,MZ]])box(x,0,z,1,H2+.6,1,'#d9d4c8',{tx:'slab'});/* stone corner quoins */
-  /* ladders up the outside walls onto the roof: front (two), back and the west side */
-  {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);}
+  /* ladders up the outside walls onto the roof: two at the front, one at the back (and one up from the roof terrace, below) */
+  {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);
+   wLadder(24+T/2+.12,14,UF,top,-1,0);/* up from the roof terrace onto the roof */}
+  /* the roof: a cream stone parapet all round (1.1 m: crouch behind it), with piers and a coping, gaps where the ladders come up;
+     four brick chimney stacks to hide behind */
+  {const RY=H2+.35,PH=1.1,stone='#e9e4da',cap=pm('marble:#f4f1ea'),pier=mat('#d9d4c8','slab'),n0=M.group.children.length;
+   const run=(x0,z0,x1,z1,gaps)=>{const ax=z0===z1,at=ax?z0:x0,a0=Math.min(ax?x0:z0,ax?x1:z1),a1=Math.max(ax?x0:z0,ax?x1:z1);let cur=a0;
+     const seg=(a,b)=>{if(b-a<.1)return;const c=(a+b)/2,L=b-a;box(ax?c:at,RY,ax?at:c,ax?L:T,PH,ax?T:L,stone,{tx:'slab'});const o=deco(B.boxGeo(ax?L+.04:T+.16,.1,ax?T+.16:L+.04),cap,ax?c:at,RY+PH+.05,ax?at:c);o.castShadow=false;
+       for(let q=a+.35;q<=b-.3;q+=Math.max(2,(b-a-.7)/Math.max(1,Math.round((b-a-.7)/6)))){const o2=deco(B.boxGeo(ax?.5:T+.12,PH+.12,ax?T+.12:.5),pier,ax?q:at,RY+(PH+.12)/2,ax?at:q);o2.castShadow=false;}};
+     for(const g of (gaps||[]).slice().sort((p,q)=>p-q)){seg(cur,g-.9);cur=g+.9;}seg(cur,a1);};
+   run(-MX,-MZ,MX,-MZ,[-24,24]);run(-MX,MZ,24,MZ,[-30]);run(-MX,-MZ,-MX,MZ);run(MX,-MZ,MX,9);run(24,9,24,MZ,[14]);run(24,9,MX,9);
+   const brick=mat('#ffffff','redbrick'),pot=pm('clay:#b0583a');
+   for(const [x,z] of [[-24,-15],[8,3],[-8,21],[24,-21]]){box(x,RY,z,1.7,2.5,1.7,'#ffffff',{tx:'redbrick'});const c=deco(B.boxGeo(2,.18,2),cap,x,RY+2.59,z);c.castShadow=false;
+     for(const dx of [-.4,.4]){const pp=deco(gC(.17,.21,.5,10),pot,x+dx,RY+2.93,z);pp.castShadow=false;}}
+   /* all of it in one group, merged, and hidden with the roof for the menu picture */
+   const RG=new THREE.Group();RG.userData.dyn=1;for(const o of M.group.children.slice(n0)){M.group.remove(o);RG.add(o);}M.group.add(RG);batchStatic(RG);ROOF.push({mesh:RG});}
   /* the front porch: four columns and a canopy over the door */
   for(const x of [-3.5,3.5])box(x,0,-29.6,.6,4.6,.6,'#f4f1ea',{tx:'pillar'});/* (no middle pillars, so the doorway's clear) */deco(B.boxGeo(9,.35,3.4),mat('#f4f1ea','slab'),0,4.75,-28.8);
   /* inside walls, ground floor then upper floor (plaster) */
@@ -6816,7 +6834,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   {const tramp=(x,z,Rr,rim,launch)=>{const pit=new THREE.Mesh(new THREE.CircleGeometry(Rr+.12,40),mat('#2b2d33',null,{roughness:.9}));pit.rotation.x=-Math.PI/2;pit.position.set(x,.006,z);M.group.add(pit);
       const pad=new THREE.Mesh(new THREE.TorusGeometry(Rr-.05,.13,8,40),mat(rim,null,{roughness:.6}));pad.rotation.x=Math.PI/2;pad.scale.z=.45;pad.position.set(x,.03,z);M.group.add(pad);
       const matt=new THREE.Mesh(new THREE.CircleGeometry(Rr-.15,40),mat('#1c1d22',null,{roughness:.5}));matt.rotation.x=-Math.PI/2;matt.position.set(x,.014,z);matt.userData.dyn=1;M.group.add(matt);TR.push({x,z,r:Rr-.1,m:matt,t:9,launch});};
-   tramp(32,0,1.5,'#f4c22b',1);tramp(27.5,-5.5,1.3,'#2f7fe0',0);tramp(36.5,5.5,1.3,'#e8463a',0);
+   tramp(32,0,1.5,'#f4c22b',1);(M.navWarps=M.navWarps||[]).push({a:[29.6,0,0],t:[32,0],b:[35,UF,0],c:4});/* bots ride the launch up to the trophy room */tramp(27.5,-5.5,1.3,'#2f7fe0',0);tramp(36.5,5.5,1.3,'#e8463a',0);
    {const ar=new THREE.Mesh(new THREE.ConeGeometry(.35,.6,3),new THREE.MeshBasicMaterial({color:'#f4c22b'}));ar.position.set(32,4.6,0);ar.userData.dyn=1;M.group.add(ar);M.life.push(t=>{ar.position.y=4.4+Math.sin(t*3)*.25;ar.rotation.y=t;});}
    const TRV=Math.sqrt(2*GRAV*2*((JUMP*JUMP+(JUMP*1.05)**2)/(2*GRAV))),LV=Math.sqrt(2*GRAV*7.2);
    M.life.push((t,dt)=>{for(const T of TR){T.t+=dt;T.m.position.y=.014-(T.t<.4?Math.sin(T.t/.4*Math.PI)*.18:0);}
@@ -6834,7 +6852,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    mirror(24.3,6,0,4.5,2.6,'z','#2b2d33',ENV.gym);sign('NO PAIN',32,4.3,-8.75,0,4,.9,'rgba(0,0,0,0)','#e8463a');}
   /* ---------- bar: a long counter with bottles that smash, stools, kegs (they go off), booths, neon ---------- */
   {const amber=new THREE.MeshBasicMaterial({color:'#ffb35a',toneMapped:false}),frost=new THREE.MeshStandardMaterial({color:'#ffe2b8',emissive:'#ff9a3c',emissiveIntensity:.55,transparent:true,opacity:.55,roughness:.15}),
-     clear=new THREE.MeshPhongMaterial({color:'#e8f6ff',transparent:true,opacity:.28,shininess:150,specular:'#ffffff'}),tint=c=>new THREE.MeshPhongMaterial({color:c,transparent:true,opacity:.72,shininess:140,specular:'#ffffff'});
+     clear=new THREE.MeshPhongMaterial({color:'#e8f6ff',transparent:true,opacity:.28,shininess:150,specular:'#ffffff'}),TINT={},tint=c=>TINT[c]||(TINT[c]=new THREE.MeshPhongMaterial({color:c,transparent:true,opacity:.72,shininess:140,specular:'#ffffff'}));
    /* the counter: a dark body behind lit frosted glass, a clear glass top over a gold rail, beer taps, cocktails, a shaker and an ice bucket */
    P(-31.5,24,0,9,1.15,1,'#3a2414',{hp:200},[[B.boxGeo(9,1.02,.9),'grain:#1c1d22',0,.51,.05],[B.boxGeo(9.1,.05,1.1),clear,0,1.1,0],[B.boxGeo(9,.04,.04),gold,0,1.05,-.52],[B.boxGeo(9,.05,.06),amber,0,.06,-.5],
      [B.boxGeo(.5,.55,.25),'brushed:#d7dbe0',-2.6,1.4,.15],...[0,1,2,3].map(i=>[B.boxGeo(.05,.3,.05),'gloss:'+['#1c1d22','#d4a640','#2f8f4a','#7a2a36'][i],-2.78+i*.12,1.8,0]),...[0,1,2,3].map(i=>[gC(.015,.015,.15,6),'brushed:#d7dbe0',-2.78+i*.12,1.45,-.12]),
@@ -7119,12 +7137,14 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
      tx.center.set(.5,.5);tx.wrapS=tx.wrapT=THREE.MirroredRepeatWrapping;tx.needsUpdate=true;const sw=new THREE.Mesh(new THREE.PlaneGeometry(PW,PH),new THREE.MeshBasicMaterial({map:tx,transparent:true,opacity:.95,toneMapped:false,depthWrite:false}));sw.position.set(0,FT+PH/2,PD+.004);sw.userData.dyn=1;g.add(sw);P2.tx=tx;
      const fm=new THREE.MeshBasicMaterial({color:P2.col,toneMapped:false});for(const [w,h,x,y] of [[PW+2*FT,FT,0,FT+PH+FT/2],[PW+2*FT,FT,0,FT/2],[FT,PH+2*FT,-(PW+FT)/2,(PH+2*FT)/2],[FT,PH+2*FT,(PW+FT)/2,(PH+2*FT)/2]]){const bar=new THREE.Mesh(new THREE.BoxGeometry(w,h,PD+.03),fm);bar.position.set(x,y,(PD+.03)/2);g.add(bar);}
      glowSprite(P2.x+P2.nx*.6,P2.y+1.5,P2.z,3,P2.col,.45);}
+   /* bots know the portals as short cuts (worth it only when they save a long walk) */
+   M.navWarps=M.navWarps||[];for(const pair of PO)for(let i=0;i<2;i++){const A=pair[i],O=pair[1-i];M.navWarps.push({a:[A.x+A.nx*1.7,A.y,A.z],t:[A.x+A.nx*.15,A.z],b:[O.x+O.nx*1.3,O.y,O.z],c:10});}
    M.life.push((t,dt)=>{for(const pair of PO)for(const P2 of pair)P2.tx.rotation-=dt*2.2*P2.nx;
      for(const f of FS){if(!f.alive||f.downed||S.t-(f._ptT||-9)<1)continue;
        for(const pair of PO)for(let i=0;i<2;i++){const A=pair[i],O=pair[1-i];if(Math.abs(f.pos.y-A.y)>1.2||Math.abs(f.pos.z-A.z)>.85||(f.pos.x-A.x)*A.nx>.7||(f.pos.x-A.x)*A.nx<-.2)continue;
-         const sp=Math.max(4,Math.hypot(f.vel.x,f.vel.z));emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:8,speed:2,up:.5,size:.18,life:.4,colors:[A.col,'#ffffff']});
+         const sp=Math.max(4,Math.hypot(f.vel.x,f.vel.z));/* (no coloured burst: the swirl says it all) */
          f.pos.set(O.x+O.nx*1.1,O.y+(f.pos.y-A.y),O.z);f.vel.z=0;f.vel.x=O.nx*sp;f.yaw=O.nx>0?Math.PI/2:-Math.PI/2;f._ptT=S.t;if(f.prev)f.prev.copy(f.pos);
-         emit(f.pos.x,f.pos.y+1.2,f.pos.z,{n:8,speed:2,up:.5,size:.18,life:.4,colors:[O.col,'#ffffff']});sfx('respawn',f,{vol:.55,rate:1.3,range:16});break;}}});}
+         sfx('blink',f,{vol:.6,range:16});break;}}});}
   /* ================= small touches, trims and toys ================= */
   const NOTES=[.5,.561,.63,.749,.841,1,1.122,1.26];
   const flick=(x,y,z,s,col)=>{const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOWT,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sp.position.set(x,y,z);sp.scale.set(s,s,1);sp.userData.dyn=1;M.group.add(sp);return sp;};
@@ -7137,7 +7157,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* light switches and sockets beside every doorway, on both sides of the wall */
   {const pl=mat('#f4f1ea'),bt=mat('#d9d4c8');for(const d of DOORS){for(const sg of [-1,1]){const off=sg*(T/2+.012);const at=(a,y,w,h,m)=>{const o=deco(B.boxGeo(d.ax?w:.02,h,d.ax?.02:w),m,d.ax?a:d.x+off,y,d.ax?d.z+off:a);o.castShadow=false;};
      const c=(d.ax?d.x:d.z)+d.w/2+.45;at(c,d.y+1.25,.09,.13,pl);at(c,d.y+1.27,.03,.05,bt);at(c+.3,d.y+.32,.14,.09,pl);}}}
-  /* a grandfather clock in the hall: the hands tell the real time, the pendulum swings, and it chimes on the minute. Shoot it and it breaks */
+  /* a grandfather clock in the hall: the hands tell the real time, the pendulum swings, and it chimes on the quarter hours. Shoot it and it breaks */
   {const face=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#f4ead8';g.beginPath();g.arc(64,64,62,0,7);g.fill();g.strokeStyle='#3a2414';g.lineWidth=4;g.stroke();g.fillStyle='#3a2414';g.font='bold 16px serif';g.textAlign='center';g.textBaseline='middle';
       for(let k=1;k<=12;k++){const a=k/12*Math.PI*2;g.fillText(['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][k-1],64+Math.sin(a)*48,64-Math.cos(a)*48);}});
    const ck=P(-7.35,4.2,0,.8,2.7,.55,'#3a2414',{hp:60},[[B.boxGeo(.8,2.1,.5),'grain:#3a2414',0,1.05,0],[B.boxGeo(.9,.6,.55),'grain:#3a2414',0,2.4,0],[new THREE.ConeGeometry(.5,.25,4).rotateY(Math.PI/4),'grain:#3a2414',0,2.82,0],
@@ -7145,7 +7165,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    const mk=(w,l,c)=>{const g=new THREE.Group();const m=new THREE.Mesh(B.boxGeo(.02,l,w),mat(c));m.position.y=l/2;g.add(m);g.position.set(.47,2.4-1.35,0);ck.mesh.add(g);return g;};const hh=mk(.03,.13,'#1c1d22'),mh=mk(.02,.2,'#1c1d22');
    const pen=new THREE.Group();pen.position.set(.415,1.6-1.35,0);ck.mesh.add(pen);{const r=new THREE.Mesh(gC(.008,.008,.8,4),gold);r.position.y=-.4;pen.add(r);const bob=new THREE.Mesh(gC(.1,.1,.03,16).rotateZ(Math.PI/2),gold);bob.position.y=-.82;pen.add(bob);}
    let lastMin=-1;M.life.push(t=>{if(!ck.alive)return;const d=new Date(),m=d.getMinutes()+d.getSeconds()/60,hr=(d.getHours()%12)+m/60;mh.rotation.x=-m/60*Math.PI*2;hh.rotation.x=-hr/12*Math.PI*2;pen.rotation.x=Math.sin(t*Math.PI)*.22;
-     if(d.getMinutes()!==lastMin){if(lastMin>=0)for(let k=0;k<3;k++)setTimeout(()=>sfx('bing',{x:-7.35,y:2.4,z:4.2},{rate:.5+k*.13,range:30,vol:.8}),k*450);lastMin=d.getMinutes();}});}
+     if(d.getMinutes()!==lastMin){if(lastMin>=0&&d.getMinutes()%15===0)for(let k=0;k<3;k++)setTimeout(()=>sfx('bing',{x:-7.35,y:2.4,z:4.2},{rate:.5+k*.13,range:30,vol:.8}),k*450);lastMin=d.getMinutes();}});}
   /* ceiling fans turning slowly (shoot one and it drops its blades) */
   for(const [x,z,top,col] of [[32,-13.5,H1,'#c99a5b'],[16,-12.5,H2,'#3a2414'],[-31,-17,H2,'#f4f1ea'],[14,-1,H2,'#b9895a'],[-31,15.5,H1,'#3a2414'],[-16,-5,H2,'#c8a27a']]){
     const parts=[[gC(.03,.03,.5,6),'brushed:#d4a640',0,.75,0],[gC(.18,.14,.22,14),'brushed:#d4a640',0,.4,0],[new THREE.SphereGeometry(.14,12,8,0,Math.PI*2,Math.PI/2,Math.PI/2),new THREE.MeshBasicMaterial({color:'#ffe7b0'}),0,.29,0]];
@@ -7159,9 +7179,9 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
      for(const F of fish){const a=t*F.sp+F.ph;F.f.position.set(Math.sin(a*1.3)*.2,.45+Math.sin(a*2.1)*.15,Math.sin(a)*.95);F.f.rotation.y=Math.cos(a)>0?0:Math.PI;}if(Math.random()<.35)emit(23.05+rnd(-.05,.05),U+1.0,-21.55,{n:1,speed:.05,up:1,size:.05,life:.8,grav:-1,colors:['#ffffff']});if(Math.random()<.2)emit(23.2+rnd(-.2,.2),U+1.0,-21+rnd(-1,1),{n:1,speed:.1,up:.8,size:.05,life:.8,grav:-1,colors:['#ffffff']});});}
   /* the instruments play: hit the piano and it plays a note; hit the drums and they boom */
   if(FUN.piano)FUN.piano.onDmg=at=>sfx('bing',at,{rate:NOTES[Math.floor(Math.random()*NOTES.length)],range:28,vol:.9});
-  if(FUN.drums)FUN.drums.onDmg=at=>{sfx('land',at,{rate:.55+Math.random()*.3,range:24,vol:1});emit(at.x,at.y,at.z,{n:6,speed:2,up:1,size:.08,life:.3,colors:['#d4a640','#ffffff']});};
-  /* the arcade cabinets pay out in coins when you hit them, the popcorn machine sprays popcorn, the tank sparks */
-  for(const a of FUN.arcade)a.onDmg=at=>{sfx('cash',at,{range:18});emit(at.x,at.y,at.z,{n:10,speed:3,up:3,size:.1,life:.8,grav:12,colors:['#f4c22b','#d4a640','#ffe08a']});};
+  if(FUN.drums)FUN.drums.onDmg=at=>sfx('land',at,{rate:.55+Math.random()*.3,range:24,vol:1});
+  /* the arcade cabinets ring like a payout when you hit them, the popcorn machine sprays popcorn */
+  for(const a of FUN.arcade)a.onDmg=at=>sfx('cash',at,{range:18});
   if(FUN.popcorn)FUN.popcorn.onDmg=at=>emit(-10,1.6,-8,{n:20,speed:2.5,up:3.5,size:.1,life:1,grav:10,colors:['#fff8e0','#ffe9a8','#ffffff']});
   /* globes spin slowly */
   M.life.push((t,dt)=>{for(const g of FUN.globes)if(g.alive&&g.mesh.children[1])g.mesh.children[1].rotation.y+=dt*.6;});
@@ -7171,12 +7191,12 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    const db=P(-36,-8.72,1.6,1,1,.12,'#1c1d22',{hp:1e12,wood:false,snd:'crate'},[[gC(.5,.5,.06,32).rotateX(Math.PI/2),'grain:#1c1d22',0,.5,0],[new THREE.CircleGeometry(.47,32),new THREE.MeshLambertMaterial({map:t}),0,.5,.035]]);const DARTS=[];
    db.onDmg=at=>{db.hp=1e12;const dx=at.x+36,dy=at.y-2.1,r=Math.hypot(dx,dy);if(DARTS.length>=12){const o=DARTS.shift();db.mesh.remove(o);}
      const d=new THREE.Group();d.position.set(dx,dy,.06);const sh=new THREE.Mesh(gC(.01,.01,.18,5).rotateX(Math.PI/2),mat('#9aa0a8'));sh.position.z=.09;d.add(sh);const fl=new THREE.Mesh(B.boxGeo(.08,.08,.04),mat(['#e8463a','#2f7fe0','#f4c22b'][DARTS.length%3]));fl.position.z=.18;d.add(fl);db.mesh.add(d);DARTS.push(d);
-     if(r<.06){sfx('bing',at,{rate:1.5,range:30,vol:1});emit(at.x,at.y,at.z+.2,{n:24,speed:4,up:3,size:.12,life:.9,grav:6,colors:['#ffd23f','#ffffff','#ff4fa3']});}else sfx('crate',at,{rate:1.6,range:14,vol:.5});};
+     if(r<.06)sfx('bing',at,{rate:1.5,range:30,vol:1});else sfx('crate',at,{rate:1.6,range:14,vol:.5});};
    (M.onReset||(M.onReset=[])).push(()=>{for(const o of DARTS)db.mesh.remove(o);DARTS.length=0;});}
   /* a gumball machine: shoot the glass globe and the gumballs spray everywhere */
   {const gm=P(-25.2,-5.6,0,.7,1.7,.7,'#e8463a',{prop:'glass',hp:1,snd:'frost',wood:false},[[gC(.12,.2,.9,12),'gloss:#e8463a',0,.45,0],[B.boxGeo(.4,.25,.4),'gloss:#e8463a',0,.95,0],[new THREE.SphereGeometry(.3,18,14),new THREE.MeshPhongMaterial({color:'#e8f6ff',transparent:true,opacity:.3,shininess:150}),0,1.35,0],
      ...Array.from({length:22},(_,i)=>[new THREE.SphereGeometry(.05,8,6),['#e8463a','#f4c22b','#2f7fe0','#3bb54a','#ff8fab','#ffffff'][i%6],Math.cos(i*2.4)*.16*((i%3)/2+.4),1.18+Math.floor(i/6)*.09,Math.sin(i*2.4)*.16*((i%3)/2+.4)]),[gC(.06,.06,.02,8),'brushed:#d7dbe0',.21,.95,0,0]]);
-   let was=true;M.life.push(()=>{if(!gm.alive){if(was){was=false;for(let k=0;k<4;k++)emit(-25.2,1.35,-5.6,{n:8,speed:5,up:4,size:.1,life:1.6,grav:16,colors:[['#e8463a','#f4c22b'],['#2f7fe0','#3bb54a'],['#ff8fab','#ffffff'],['#f4c22b','#2f7fe0']][k]});}}else was=true;});}
+   /* (it just smashes like any glass: no spray of coloured bits) */}
   /* basketball hoop in the gym, with balls to kick about */
   {deco(B.boxGeo(.06,1.1,1.6),pm('gloss:#f4f5f7'),24.25,3.6,-6.5);deco(B.boxGeo(.065,.4,.5),new THREE.MeshBasicMaterial({color:'#e8463a'}),24.26,3.4,-6.5);const rim=deco(new THREE.TorusGeometry(.25,.025,8,20),mat('#ff6a1a'),24.55,3.15,-6.5);rim.rotation.x=Math.PI/2;
    const net=deco(new THREE.CylinderGeometry(.25,.15,.4,12,1,true),new THREE.MeshBasicMaterial({color:'#ffffff',wireframe:true}),24.55,2.93,-6.5);net.castShadow=false;
@@ -7189,7 +7209,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   {const duck=(x,y,z)=>{const g=new THREE.Group();const yl=mat('#ffd23f',null,{roughness:.4});const b=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),yl);b.scale.set(1,.8,1.3);g.add(b);const h=new THREE.Mesh(new THREE.SphereGeometry(.1,12,10),yl);h.position.set(0,.14,.13);g.add(h);
      const bk=new THREE.Mesh(new THREE.ConeGeometry(.04,.08,8).rotateX(Math.PI/2),mat('#ff6a1a'));bk.position.set(0,.13,.24);g.add(bk);for(const s of [-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.018,6,4),mat('#1c1d22'));e.position.set(s*.05,.18,.2);g.add(e);}g.position.set(x,y,z);g.userData.dyn=1;M.group.add(g);return g;};
    const ds=[];for(let i=0;i<5;i++)ds.push({g:duck(16,-.27,0),ph:i*1.3,r:1+i*.75});
-   M.life.push(t=>{for(const D of ds){const a=t*(D.spa?.4:.12)+D.ph;const cx=D.spa?-16:16,cz=D.spa?4:0;D.g.position.x=cx+Math.cos(a)*D.r*(D.spa?1:1.6);D.g.position.z=cz+Math.sin(a)*D.r*(D.spa?1:.9);D.g.position.y=(D.spa?UF+.62:-.27)+Math.sin(t*2+D.ph)*.02;D.g.rotation.y=-a;}});}
+   M.life.push(t=>{for(const D of ds){const a=t*.12+D.ph;D.g.position.x=16+Math.cos(a)*D.r*1.6;D.g.position.z=Math.sin(a)*D.r*.9;D.g.position.y=-.27+Math.sin(t*2+D.ph)*.02;D.g.rotation.y=-a;}});}
   /* a toy train chuffing round a track on the kids' room rug */
   {const cx=-15,cz=19,Rr=2.1;const tr=deco(new THREE.TorusGeometry(Rr,.05,6,64),mat('#7a4c2a'),cx,U+.04,cz);tr.rotation.x=Math.PI/2;tr.castShadow=false;const tr2=deco(new THREE.TorusGeometry(Rr,.03,4,64),mat('#9aa0a8'),cx,U+.06,cz);tr2.rotation.x=Math.PI/2;
    const cars=[];for(let i=0;i<4;i++){const g=new THREE.Group();g.userData.dyn=1;M.group.add(g);const c=i?['#2f7fe0','#f4c22b','#3bb54a'][i-1]:'#e8463a';const bd=new THREE.Mesh(B.boxGeo(.22,.2,.42),mat(c));bd.position.y=.16;g.add(bd);
@@ -7206,11 +7226,18 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   M.life.push(()=>{if(Math.random()<.3)emit(-32.5+rnd(-.1,.1),1.55,-26.4,{n:1,speed:.2,up:.9,size:.25,life:1.2,grav:-.5,colors:['#ffffff','#e8ecf0']});if(Math.random()<.3)emit(-19.5+rnd(-.3,.3),U+2,-3.9,{n:1,speed:.2,up:.6,size:.35,life:1.4,grav:-.4,colors:['#ffffff','#f0f2f4']});});
   M.quietWade=1;
   /* music by room: full inside, fading out through the doorways, a faint trace through the floor */
-  {const zone=(x0,x1,z0,z1,y0)=>(x,y,z)=>{const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1),same=Math.abs(y-(y0+1.6))<2.6;const d=Math.hypot(dx,dz);return same?(d<=0?1:Math.max(0,.45-d/14)):(d<=0?.12:0);};
+  {const zone=(x0,x1,z0,z1,y0)=>{const dr=DOORS.filter(d=>Math.abs(d.y-y0)<.1&&(d.ax?(Math.abs(d.z-z0)<.05||Math.abs(d.z-z1)<.05)&&d.x>x0&&d.x<x1:(Math.abs(d.x-x0)<.05||Math.abs(d.x-x1)<.05)&&d.z>z0&&d.z<z1));
+     return (x,y,z)=>{const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1),same=Math.abs(y-(y0+1.6))<2.6;const d=Math.hypot(dx,dz);if(!same)return d<=0?.1:0;if(d<=0)return 1;
+       let dd=1e9;for(const D2 of dr)dd=Math.min(dd,Math.hypot(x-D2.x,z-D2.z));return Math.max(Math.max(0,.5-dd/12),d<2.5?.08:0);};};/* through a doorway it carries; through a wall only a faint thump */
    const disco=zone(-24,-8,9,27,0),cine=zone(-24,-8,-9,9,0),spa=zone(-24,-8,-9,9,UF);M.roomBeds=(x,y,z)=>({discomusic:disco(x,y,z),cinemasound:cine(x,y,z),spamusic:spa(x,y,z)});}
   /* keep the mirrors' reflections fresh: once at the start, then a few times a second while you're in that room (High graphics only) */
+  /* (a full shot is six faces; a live mirror redraws one face at a time, about 20 a second, so there's no burst of six renders every 0.3 s) */
+  const face=(E,i)=>{const c=E.cam;if(c.parent===null)c.updateMatrixWorld();if(c.coordinateSystem!==renderer.coordinateSystem){c.coordinateSystem=renderer.coordinateSystem;c.updateCoordinateSystem();}
+    const cr=renderer.getRenderTarget(),cf=renderer.getActiveCubeFace(),cm=renderer.getActiveMipmapLevel(),xr=renderer.xr.enabled;renderer.xr.enabled=false;renderer.setRenderTarget(E.rt,i);renderer.render(scene,c.children[i]);renderer.setRenderTarget(cr,cf,cm);renderer.xr.enabled=xr;if(i===5)E.rt.texture.needsPMREMUpdate=true;};
   M.life.push(t=>{const c=camera.position,hi=!window.GFX||!GFX.lv||GFX.lv()==='high';for(const E of ENVS){const inR=c.x>E.x0-2&&c.x<E.x1+2&&c.z>E.z0-2&&c.z<E.z1+2&&Math.abs(c.y-(E.y+1.6))<3;
-      if(E.done&&!(hi&&inR&&t-E.t>.3))continue;E.done=1;E.t=t;for(const F of ENVS)for(const m of F.meshes)m.visible=false;try{E.cam.update(renderer,scene);}catch(e){}for(const F of ENVS)for(const m of F.meshes)m.visible=true;break;}});
+      if(E.done&&!(hi&&inR&&t-E.t>.05))continue;E.t=t;for(const F of ENVS)for(const m of F.meshes)m.visible=false;M.zoneAll&&M.zoneAll(1);
+      try{if(!E.done){for(let i=0;i<6;i++)face(E,i);E.done=1;E.f=0;}else{face(E,E.f);E.f=(E.f+1)%6;}}catch(e){}
+      M.zoneAll&&M.zoneAll(0);for(const F of ENVS)for(const m of F.meshes)m.visible=true;break;}});
   /* chandeliers drop when shot: a quick fall, a crash of crystal on the floor, anyone underneath gets hurt */
   M.life.push((t,dt)=>{for(const C of CHAND){if(C.t<0){C.chain.position.y=(C.y0+(C.top||H2))/2;C.chain.scale.y=Math.max(.1,(C.top||H2)-C.y0);continue;}if(!C.grp.visible)continue;C.chain.visible=false;C.t+=dt;const fy=C.y0-.5*24*C.t*C.t,floorY=C.y0>UF+1?UF:0;
       C.grp.position.y=Math.max(floorY+.3,fy);if(fy<=floorY+.3){C.grp.visible=false;const p=C.grp.position;emit(p.x,floorY+.4,p.z,{n:40,speed:7,up:4,size:.14,life:.9,grav:14,colors:['#e8f6ff','#ffffff','#d4a640','#bfe6ff']});sfx('frost',{x:p.x,y:floorY,z:p.z},{range:30,vol:1.5});
@@ -7235,6 +7262,10 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   {const bb=new THREE.Box3();M.group.traverse(o=>{if(!o.isMesh||!o.castShadow||!o.geometry)return;bb.copy(o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox)).applyMatrix4(o.matrixWorld);
      if(inFoot(bb.min.x,bb.max.x,bb.min.z,bb.max.z)&&bb.max.y<H2-.2&&!(bb.max.x>TR0.x0&&bb.min.x<TR0.x1&&bb.max.z>TR0.z0&&bb.min.z<TR0.z1&&bb.max.y>UF-.3))o.castShadow=false;});}
   const roomOf=(x,y,z)=>{const fl=y>UF-.2?1:0;for(const r of RM){const Q=R[r[0]];if(Q.fl===fl&&x>=Q.x0&&x<=Q.x1&&z>=Q.z0&&z<=Q.z1)return Q.n;}return null;};
+  M.floorName=(x,y,z)=>Math.abs(x)<MX+1&&Math.abs(z)<MZ+1?(y>H2-.3?'ROOF':y>UF-.2?'1ST FLOOR':'GROUND'):null;
+  /* footsteps by floor: marble and tiles ring, boards knock, carpet is soft, the lawns are grass (the drive, paths and roof are stone) */
+  {const FL={chequer:'stone',tile:'stone',mosaic:'stone',slab:'stone',wtile:'stone',wood:'wood',teak:'wood',plush:'carpet',carpet:'carpet',felt:'carpet'},SURF={};for(const r of RM)SURF[r[0]]=FL[r[9]]||'stone';
+   M.stepSurf=(x,y,z)=>{if(y>H2-.3)return 'stone';const inH=Math.abs(x)<MX&&Math.abs(z)<MZ;if(!inH)return y>.3||(Math.abs(x)<4&&z<-MZ)||(Math.abs(x)<14&&z>-40&&z<-31)||(Math.abs(x)<3&&z>MZ)?'stone':'grass';const rm=roomOf(x,y,z);return rm?SURF[rm]:'stone';};}
   {const VL=[];M.group.traverse(o=>{if(o.isPointLight)VL.push(o);});for(const l of VL){l.parent.remove(l);l._rm=roomOf(l.position.x,l.position.y,l.position.z);}
    const POOL=[0,1,2].map(()=>{const l=new THREE.PointLight('#ffffff',0,10,1.6);window.GFX&&GFX.light(l);M.group.add(l);return l;});const c0=new V3();
    M.life.push(()=>{const c=camera.position,rm=roomOf(c.x,c.y,c.z);const L=rm?VL.filter(l=>l._rm===rm):[];if(L.length>1)L.sort((a,b)=>a.position.distanceToSquared(c)-b.position.distanceToSquared(c));
@@ -7247,19 +7278,48 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
    let ct=0;M.life.push((t,dt)=>{if((ct-=dt||.016)>0)return;ct=.15;const c=camera.position,away=Math.abs(c.x)>X+12||Math.abs(c.z)>Z+12||c.y>H2+3,inside=inFoot(c.x,c.x,c.z,c.z)&&c.y<H2,cf=c.y>UF-.2?1:0,D=inside?28:42;
      for(const u of U){let on=true;if(!away){let d=Math.hypot(u.x-c.x,u.y-c.y,u.z-c.z)-u.r;if(inside&&u.inn&&u.fl!==cf)d*=1.7;on=d<D+u.r*5;}if(on!==u.on){u.on=on;for(const l of u.L)l.layers.mask=on?1:0;}}});
    M.perf={units:U.length};}
+  /* ---------- drawing room by room: everything that sits inside one room goes in that room's group, and only the rooms you could see are drawn:
+     the room you're in and up to two doorways, glass walls, open gaps, stairwells, lift shafts or glass floors away (and the rooms of anyone
+     near the camera, for finisher and spectator shots). From outside you see the rooms behind that face of the house; from the roof, upstairs. ---------- */
+  {const roomAt=(x,z,fl)=>{for(const r of RM){const Q=R[r[0]];if(Q.fl===fl&&x>Q.x0&&x<Q.x1&&z>Q.z0&&z<Q.z1)return Q.n;}return null;};
+   const LK={};const link=(a,b)=>{if(!a||!b||a===b)return;(LK[a]||(LK[a]=new Set())).add(b);(LK[b]||(LK[b]=new Set())).add(a);};
+   for(const O of DOORS.concat(GAPS)){const fl=O.y>1?1:0;const a=O.ax?roomAt(O.x,O.z-1,fl):roomAt(O.x-1,O.z,fl),b=O.ax?roomAt(O.x,O.z+1,fl):roomAt(O.x+1,O.z,fl);link(a,b);}
+   for(const h of HOLES){const cx=(h[0]+h[1])/2,cz=(h[2]+h[3])/2;link(roomAt(cx,cz,0),roomAt(cx,cz,1));}
+   const bfs=(starts,depth,out)=>{let fr=starts.filter(Boolean);for(const n of fr)out.add(n);for(let d=0;d<depth;d++){const nx=[];for(const n of fr)for(const m of (LK[n]||[]))if(!out.has(m)){out.add(m);nx.push(m);}fr=nx;}return out;};
+   /* only things clear of the walls, floors and roof (those stay drawn: they're the shell you see from everywhere) */
+   const zoneOf=bb=>{if(bb.isEmpty())return '';const e=T/2-.05;for(const r of RM){const Q=R[r[0]],y0=Q.fl?UF-.02:-.4,y1=Q.n==='hall'||Q.fl?H2+.02:H1+.02;
+       if(bb.min.x>=Q.x0+e&&bb.max.x<=Q.x1-e&&bb.min.z>=Q.z0+e&&bb.max.z<=Q.z1-e&&bb.min.y>=y0&&bb.max.y<=y1)return Q.n;}return '';};
+   const bb=new THREE.Box3();M.batchZone=o=>{if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);return zoneOf(bb);};
+   const ZG={};let zoned=false;const KN=new Set((M.knocks||[]).map(k=>k.m));
+   const zoneUp=()=>{zoned=true;for(const r of RM){const g=new THREE.Group();g.userData.dyn=1;g.userData.noCull=1;ZG[r[0]]=g;}
+     for(const o of M.group.children.slice()){if(o.isLight||KN.has(o)||o.userData.noCull||ZG[o.userData.zone]===o)continue;let z=o.userData.zone;if(z===undefined){bb.setFromObject(o);z=zoneOf(bb);}if(!z||!ZG[z])continue;M.group.remove(o);ZG[z].add(o);}
+     for(const k in ZG)M.group.add(ZG[k]);};
+   const nodeOf=(x,y,z)=>{if(Math.abs(x)<MX&&Math.abs(z)<MZ)return y>H2-.3?'ROOF':roomAt(x,z,y>UF-.2?1:0);return 'OUT';};
+   const want=new Set(),FACE=[];
+   const viewFrom=(n,out)=>{if(n==='ROOF'){for(const r of RM)if(R[r[0]].fl)out.add(r[0]);return;}
+     if(n==='OUT'){const c=camera.position,st=[];for(const r of RM){const Q=R[r[0]],ci=r[2],ri=r[3];if((c.z<-MZ&&ri===0)||(c.z>MZ&&ri===2)||(c.x<-MX&&ci===0)||(c.x>MX&&ci===4))st.push(r[0]);}bfs(st,1,out);if(Math.abs(c.z)>MZ)for(const k of ['foyer','hall','gallery','atrium'])out.add(k);/* the front and back doors line up through the house */return;}
+     if(n)bfs([n],2,out);};
+   let saved=null;M.zoneAll=on=>{if(on){saved={};for(const k in ZG){saved[k]=ZG[k].visible;ZG[k].visible=true;}}else if(saved){for(const k in saved)ZG[k].visible=saved[k];saved=null;}};/* mirrors see their whole room while they redraw */
+   M.life.push(()=>{if(!zoned)zoneUp();const c=camera.position;want.clear();
+     if(S.state==='menu')for(const k in ZG)want.add(k);
+     else{const n=nodeOf(c.x,c.y,c.z);if(n===null)for(const k in ZG)want.add(k);else viewFrom(n,want);
+       for(const f of FS){if(!f||!f.pos)continue;if(Math.hypot(f.pos.x-c.x,f.pos.y-c.y,f.pos.z-c.z)>12)continue;const m=nodeOf(f.pos.x,f.pos.y+1,f.pos.z);if(m&&m!=='OUT'&&m!=='ROOF')bfs([m],1,want);}}
+     for(const k in ZG){const v=want.has(k);if(ZG[k].visible!==v)ZG[k].visible=v;}});
+   M.zones=()=>Object.fromEntries(Object.entries(ZG).map(([k,g])=>[k,{n:g.children.length,on:g.visible}]));}
   /* the roof, the upper ceilings and upstairs lights are hidden for the menu picture */
+  M.byPlayers=1;if(S.players==='1v1'||S.players==='2v2'){const iw={mat:INVIS,shadow:false,edges:false},TOPW=H2+3.5;for(const sz of [-1,1])box(0,0,sz*(MZ+T/2+.2),2*MX+1.2,TOPW,.4,'#3e7a32',iw).see=true;
+    const dm=pm('grain:#3a2414'),brass=pm('brushed:#d4a640');for(const [z,w] of [[-MZ,5],[MZ,3.2]]){box(0,0,z,w,DH,T+.06,'#3a2414',{mat:dm,wood:false});
+      for(const sg of [-1,1]){for(const dx of [-.35,.35]){const h=deco(B.boxGeo(.08,.3,.08),brass,dx,1.15,z+sg*(T/2+.08));h.castShadow=false;}const l=deco(B.boxGeo(.04,DH-.3,.02),pm('grain:#241509'),0,DH/2,z+sg*(T/2+.04));l.castShadow=false;}}
+  }
   M.dbg={R,DOORS,WINS};/* for the layout checks */
   M.thumb=on=>{for(const b of ROOF)if(b.mesh)b.mesh.visible=!on;};
-  M.shopAt=[{x:-14,z:-43.6,q:0},{x:14,z:43.6,q:2}];/* one on the front lawn, one on the back */
+  /* bots look for spots indoors most of the time (the lawns pulled the fighting outside), unless their fight is already out there */
+  M.spotBias=(x,z)=>(Math.abs(x)<MX-.5&&Math.abs(z)<MZ-.5)||Math.random()<.25;
+  M.shopAt=[{x:-7.15,z:1,q:1}];/* one shop, against the grand hall's west wall facing the staircase */
   const sp=(x,z,y=0)=>({x,z,y,yaw:Math.atan2(-x,-z)});
   M.spawns=[sp(-32,-13),sp(-16,-12),sp(16,-23),sp(30,-14),sp(-36,-2),sp(-11,2),sp(4,3),sp(28,5),sp(-34,13),sp(-12,12),sp(4,20),sp(18,13),
-    sp(-32,-15,UF),sp(-12,-24,UF),sp(18,-14,UF),sp(-30,-5,UF),sp(-14,-2,UF),sp(13,1,UF),sp(-20,14,UF),sp(17,23,UF),
-    sp(9,-34),sp(-30,-38),sp(30,-38),sp(-34,40),sp(34,40),sp(0,38)];
-  M.noDrums=DOORS.map(d=>({x:d.x,z:d.z,r:3.2})).concat([[0,2.5],[-38.2,-13],[38.2,13],[-22.5,25.5],[22.5,-7.5],[-32,0],[32,0],[16,0],[-39,18],[39,-18]].map(([x,z])=>({x,z,r:4})));}
-/* the Mansion's garage tank: a detailed tank built from parts (camouflaged hull with a sloped glacis, side skirts, road wheels and sprockets inside
-   segmented tracks, a turret with a long barrel, muzzle brake, commander's hatch, machine gun, periscopes, smoke launchers, jerry cans and a star).
-   The turret slowly swings round to keep its gun on the nearest player. It soaks up a lot of fire; once it's had enough it goes up like a fuel drum
-   (a big fireball), and it's back next round */
+    sp(-32,-15,UF),sp(-12,-24,UF),sp(18,-14,UF),sp(-30,-5,UF),sp(-14,-2,UF),sp(13,1,UF),sp(-20,14,UF),sp(17,23,UF)];/* everyone starts inside */
+  M.noDrums=DOORS.map(d=>({x:d.x,z:d.z,r:3.2})).concat([[0,2.5],[-6,1],[-22.5,25.5],[22.5,-7.5],[-32,0],[32,0],[16,0],[-39,18],[39,-18]].map(([x,z])=>({x,z,r:4})));}
 /* a dirt bike (images/Vehicles/Dirt Bike 2.glb, baked to models/cars/dirtbike.glb) leaning on its stand; an invisible solid round it, and a few shots blow it up */
 function mansionBike(x,z,ry,tint,y=0,lean=.1){const b=box(x,y,z,.7,1.15,2.05,'#ffffff',{mat:INVIS,edges:false,shadow:false,prop:'crate',hp:70,snd:'bin',wood:false});b.boom=true;b.prop='fuel';
   const grp=M.group,root=b.mesh,go=()=>{const V=VEHM.dirtbike;if(!V||root.userData.bk||M.group!==grp)return;root.userData.bk=1;const hold=new THREE.Group();hold.position.y=-1.15/2;hold.rotation.set(0,ry,lean);root.add(hold);
@@ -7444,7 +7504,7 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble'||md.drums=
     for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
     placed.push({x,z});}
   return true;}
-function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;M.ru=S.mode==='rumble';/* shop, armour and barrels depend on the mode, not the map */applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
+function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;M.pl=S.players;M.ru=S.mode==='rumble';/* shop, armour and barrels depend on the mode, not the map */applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
 /* ---------- shop kiosk: open on all four sides, on the most open ground near the middle of every map ---------- */
 function placeShop(){M.shop=null;M.shops=[];if(S.mode==='rumble')return;/* Rumble: fists only, no shop (any map) */
   if(M.shopAt){for(const p of [].concat(M.shopAt))buildShop(p.x,p.z,p.y||0,p.k||1,p.q);return;}/* q: which way it faces, in quarter turns (front towards +z at 0, +x at 1) */const b=M.bounds,c=M.center,sp=M.spawns||[],half=Math.min(b.x1-b.x0,b.z1-b.z0)/2;
@@ -7595,9 +7655,13 @@ function buildGrid(rg){const b=M.bounds;let g=M.grid;
 // can you actually fall into cell k2 (down to h2) from height h? Not if a floor edge or ledge between the two heights still holds your feet up there
 // ladders: link the node at the foot to the node you step off onto at the top (both ways), so bots path up and down them
 function ladSpot(L,up){const ax=L.nx!==0,cx=(L.x0+L.x1)/2,cz=(L.z0+L.z1)/2,rp=L.rung??(ax?cx:cz),o=up?1.0:-.75;return ax?{x:rp+L.nx*o,z:cz}:{x:cx,z:rp+L.nz*o};}
-function ladLinks(g){g.lk=new Map();if(!M.ladders)return;const add=(a,b,L,up)=>{let A=g.lk.get(a);if(!A)g.lk.set(a,A=[]);A.push({to:b,L,up,jmp:!L,fail:0});};
+function ladLinks(g){g.lk=new Map();g.wp=null;if(!M.ladders)return;const add=(a,b,L,up)=>{let A=g.lk.get(a);if(!A)g.lk.set(a,A=[]);A.push({to:b,L,up,jmp:!L,fail:0});};
   for(const L of M.ladders){const lo=ladSpot(L,false),hi=ladSpot(L,true),a=nearestNode(lo.x,L.y0,lo.z),b=nearestNode(hi.x,L.y1,hi.z);
     if(a<0||b<0||a===b||Math.abs(g.h[a]-L.y0)>.6||Math.abs(g.h[b]-L.y1)>.6)continue;add(a,b,L,true);add(b,a,L,false);}
+  /* warps (a map's portals and launch pads): a one-way link from the spot in front of the entry to where it puts you; the bot walks into the trigger point t */
+  for(const W of (M.navWarps||[])){const a=nearestNode(W.a[0],W.a[1],W.a[2]),b=nearestNode(W.b[0],W.b[1],W.b[2]);if(a<0||b<0||a===b||Math.abs(g.h[a]-W.a[1])>.6||Math.abs(g.h[b]-W.b[1])>.6)continue;
+    let A=g.lk.get(a);if(!A)g.lk.set(a,A=[]);A.push({to:b,L:{warp:W,nx:0,nz:0},up:true,jmp:false,fail:0,c:W.c||0});
+    const ka=(a/NL)|0,kb=(b/NL)|0;(g.wp||(g.wp=[])).push({ai:ka%g.nx,aj:(ka-ka%g.nx)/g.nx,ah:g.h[a],bi:kb%g.nx,bj:(kb-kb%g.nx)/g.nx,bh:g.h[b],c:2+(W.c||0)});}
   // jumps: a ledge up to ~1.2 m (single jump) or ~3 m (double jump) within 1.5 m straight ahead. Coming back down is an ordinary drop
   const nx=g.nx,nz=g.nz;for(let j=2;j<nz-2;j++)for(let i=2;i<nx-2;i++){const k=i+j*nx;for(let l=0;l<g.n[k];l++){const id=k*NL+l,h=g.h[id];
     for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){let top=h;for(let r=1;r<=3;r++){const a=i+di*r,b=j+dj*r;if(a<1||b<1||a>=nx-1||b>=nz-1)break;const k2=a+b*nx;let hit=-1,hm=-1e9;
@@ -7663,7 +7727,10 @@ function findPath(fx,fy,fz,tx,ty,tz,partial){const g=M.grid,nx=g.nx,N=nx*g.nz*NL
   const pop=()=>{const HK=P.hk,HV=P.hv,top=HV[0];hn--;if(hn>0){const f=HK[hn],k=HV[hn];let i=0;for(;;){const l=2*i+1;if(l>=hn)break;const r=l+1,m=r<hn&&HK[r]<HK[l]?r:l;if(HK[m]>=f)break;HK[i]=HK[m];HV[i]=HV[m];i=m;}HK[i]=f;HV[i]=k;}return top;};
   const tk=(t/NL)|0,ti=tk%nx,tj=(tk-ti)/nx,th=g.h[t];const hasNear=(k,h)=>{for(let l=0;l<g.n[k];l++){const hh=g.h[k*NL+l];if(hh-h<=STEP+.02&&h-hh<=STEP+.02)return true;}return false;};
   // octile distance, weighted a little so the search heads for the goal instead of flooding the whole map
-  const H=(a,b,h2)=>{const dx=Math.abs(a-ti),dz=Math.abs(b-tj);return 1.25*((dx>dz?dx-dz+1.414*dz:dz-dx+1.414*dx)+Math.abs(h2-th)*.5);};
+  const oct=(a,b,c,d)=>{const dx=Math.abs(a-c),dz=Math.abs(b-d);return dx>dz?dx-dz+1.414*dz:dz-dx+1.414*dx;};
+  /* with warps (portals, launch pads) the estimate also considers walking to one and coming out of the other end, so a route through a portal behind you is still found */
+  const WP=g.wp&&g.wp.map(w=>({ai:w.ai,aj:w.aj,ah:w.ah,k:w.c+oct(w.bi,w.bj,ti,tj)+Math.abs(w.bh-th)*.5}));
+  const H=(a,b,h2)=>{let e=oct(a,b,ti,tj)+Math.abs(h2-th)*.5;if(WP)for(const w of WP){const v=oct(a,b,w.ai,w.aj)+Math.abs(h2-w.ah)*.5+w.k;if(v<e)e=v;}return 1.25*e;};
   // parked/driving cars aren't in the grid (they move), so block the cells they're sitting on right now (moving trains are only dodged most of the time so bots very occasionally get clipped or step on live rails)
   const mv=PF.mv||(PF.mv=new Map());mv.clear();if(M.movers)for(const b of M.movers){if(b.train&&Math.random()<.18)continue;const i0=Math.max(0,Math.floor((b.x0-CLR-g.x0)/CS)),i1=Math.min(nx-1,Math.floor((b.x1+CLR-g.x0)/CS)),j0=Math.max(0,Math.floor((b.z0-CLR-g.z0)/CS)),j1=Math.min(g.nz-1,Math.floor((b.z1+CLR-g.z0)/CS));
     for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=i+j*nx,cx=g.x0+(i+.5)*CS,cz=g.z0+(j+.5)*CS;if(cx>b.x0-CLR&&cx<b.x1+CLR&&cz>b.z0-CLR&&cz<b.z1+CLR){const o=mv.get(k);mv.set(k,o?[Math.min(o[0],b.y0),Math.max(o[1],b.y1)]:[b.y0,b.y1]);}}}
@@ -7675,13 +7742,13 @@ function findPath(fx,fy,fz,tx,ty,tz,partial){const g=M.grid,nx=g.nx,N=nx*g.nz*NL
       if(di&&dj&&(!gn[i+di+j*nx]||!gn[i+(j+dj)*nx]||!hasNear(i+di+j*nx,h)||!hasNear(i+(j+dj)*nx,h)))continue;
       for(let l=0;l<gn[k2];l++){const h2=gh[k2*NL+l],dh=h2-h,n2=k2*NL+l;if((dh>STEP+.02&&!(g.st&&!(di&&dj)&&g.st.has(id*N+n2)))||dh<-17)continue;if(di&&dj&&Math.abs(dh)>.05)continue;if(P.cl[n2]===gen)continue;if(dh<-STEP-.02&&!canDrop(g,k2,h2,h))continue;if(mv.size&&k2!==sk){const o=mv.get(k2);if(o&&o[1]>h2+STEP&&o[0]<h2+NAV_H-.05)continue;}
         let rc=0;if(M.railGlow&&h2<.45){const cz=g.z0+(b+.5)*CS;if(Math.abs(cz+50)>=3.1){const cx=g.x0+(a+.5)*CS;for(const G of M.railGlow)if(G.hot&&Math.abs(cx-G.x)<1.2){rc=3.5;break;}}}const ng=P.g[id]+c+Math.abs(dh)*.6+(dh<-1?3:0)+rc;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;push(n2,ng+H(a,b,h2));}}}
-    const LK=g.lk&&g.lk.get(id);if(LK)for(const e of LK){if(e.L&&e.L.ruin&&e.L.ruin.stage===2)continue;const n2=e.to;if(P.cl[n2]===gen)continue;if(e.jmp&&mv.size&&mv.has((n2/NL)|0))continue;const ng=P.g[id]+(e.jmp?1.5+(gh[n2]-h>1.8?3:0):2)+Math.abs(gh[n2]-h)*1.2;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;const k2=(n2/NL)|0,a=k2%nx;push(n2,ng+H(a,(k2-a)/nx,gh[n2]));}}}
+    const LK=g.lk&&g.lk.get(id);if(LK)for(const e of LK){if(e.L&&e.L.ruin&&e.L.ruin.stage===2)continue;const n2=e.to;if(P.cl[n2]===gen)continue;if(e.jmp&&mv.size&&mv.has((n2/NL)|0))continue;const ng=P.g[id]+(e.jmp?1.5+(gh[n2]-h>1.8?3:0):2+(e.c||0))+Math.abs(gh[n2]-h)*1.2;if(P.st[n2]!==gen||ng<P.g[n2]){P.st[n2]=gen;P.g[n2]=ng;P.f[n2]=id;const k2=(n2/NL)|0,a=k2%nx;push(n2,ng+H(a,(k2-a)/nx,gh[n2]));}}}
   pfBudget-=it;
   // can't get all the way there (target up somewhere you can't walk to): head for the closest point you can reach instead of standing still
   if(P.cl[t]!==gen&&t!==s){if(!partial||best===s)return null;t=best;}const ids=[];for(let k=t;k>=0&&k!==s;k=P.f[k])ids.push(k);ids.reverse();
   const pts=ids.map((id,q)=>{const k=(id/NL)|0,i=k%nx,j=(k-i)/nx,pv=q?ids[q-1]:s,LK=g.lk&&g.lk.get(pv),e=LK&&LK.find(e=>e.to===id);const p={x:g.x0+(i+.5)*CS,z:g.z0+(j+.5)*CS,h:g.h[id]};if(e){if(e.jmp){p.jmp=g.h[id]-g.h[pv];p.lk=e;p.from=pv;if(e.eave)p.eave=1;}else{p.lad=e.L;p.up=e.up;}}return p;});
   const out=[];let cx=fx,cz=fz,ch=g.h[s],i=0;
-  while(i<pts.length){let j=i;while(j+1<pts.length&&j-i<36&&Math.abs(pts[j+1].h-ch)<.05&&Math.abs(pts[i].h-ch)<.05)j++;
+  while(i<pts.length){let j=i;while(j+1<pts.length&&j-i<36&&!pts[j+1].lad&&!pts[i].lad&&Math.abs(pts[j+1].h-ch)<.05&&Math.abs(pts[i].h-ch)<.05)j++;
     while(j>i&&!flatLine(cx,cz,pts[j].x,pts[j].z,ch))j--;out.push(pts[j]);cx=pts[j].x;cz=pts[j].z;ch=pts[j].h;i=j+1;}
   return out;}
 
@@ -8599,7 +8666,7 @@ function depen(f){const H=hhOf(f);for(let it=0;it<4;it++){let moved=false;
     if(!moved)break;}}
 // long frames (low frame rate, hitches) and fast moves are split into short steps so you can't skip through a thin wall or land differently at different frame rates
 // bot path step that uses a ladder: walk to the foot (or the top edge), then push into it to climb up / back off it to climb down
-function ladSteer(f,n){const L=n.lad,d=n.up?1:-1;if(L.ruin&&L.ruin.stage===2)return null;f._ladT=S.t;f._ladDir=d;if(f.onLadder===L)return[L.nx*d,L.nz*d];
+function ladSteer(f,n){const L=n.lad,d=n.up?1:-1;if(L.warp){if(!f.grounded)return null;const W=L.warp,dx=W.t[0]-f.pos.x,dz=W.t[1]-f.pos.z,l=Math.hypot(dx,dz)||1;return[dx/l,dz/l];}/* a portal or launch pad: walk into it */if(L.ruin&&L.ruin.stage===2)return null;f._ladT=S.t;f._ladDir=d;if(f.onLadder===L)return[L.nx*d,L.nz*d];
   const A=ladSpot(L,!n.up),ax=L.nx!==0,cx=(L.x0+L.x1)/2,cz=(L.z0+L.z1)/2,rp=L.rung??(ax?cx:cz),o=n.up?-.55:.35,tx=ax?rp+L.nx*o:cx,tz=ax?cz:rp+L.nz*o,dx=tx-f.pos.x,dz=tz-f.pos.z,l=Math.hypot(dx,dz);
   if(l>.3&&!(n.up&&f.pos.y>L.y0+.4))return[dx/l,dz/l];return[L.nx*d,L.nz*d];}
 /* the same run speed for players and bots (aiming down sights slows you; the shop speed boost speeds you up) */
@@ -10118,7 +10185,7 @@ function bodyPush(){for(let i=0;i<FS.length;i++){const a=FS[i];if(!a.alive||a.co
     const pa=a===ME||NET.R===a,pb=b===ME||NET.R===b;if(pa&&pb)continue;const wa=pa&&!pb?0:!pa&&pb?1:.5,wb=1-wa;
     if(wa){a.pos.x-=ux*o*wa;a.pos.z-=uz*o*wa;depen(a);}if(wb){b.pos.x+=ux*o*wb;b.pos.z+=uz*o*wb;depen(b);}}}}
 const CLOSE=id=>id==='shotgun'||id==='autoshot'||id==='flamer'||id==='sword'||id==='fists'||id==='bat';
-function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const px=cx+Math.cos(ang)*rr,pz=cz+Math.sin(ang)*rr;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))return null;
+function sampleSpot(cx,cz,r0,r1){const ang=Math.random()*TAU,rr=rnd(r0,r1);const px=cx+Math.cos(ang)*rr,pz=cz+Math.sin(ang)*rr;if(M.spotBias&&!M.spotBias(px,pz))return null;const [ci,cj]=cellOf(px,pz);if(!free(ci,cj))return null;
   const g=M.grid,kk=cellK(ci,cj),h=g.h[kk*NL+Math.floor(Math.random()*g.n[kk])];return{x:px,h,z:pz,eye:new V3(px,h+2.35*SC,pz)};}
 // kinds: view (sees you, near preferred range), vantage (sees you, high and far), hide (you can't see it), ambush (hidden and close to you), flank (near cx,cz, ideally hidden)
 function botSpot(kind,f,o){const TG=o.T||ME;const meEye=eyeOf(TG,new V3()),body=new V3(TG.pos.x,TG.pos.y+1.25*SC,TG.pos.z),cx=o.cx??f.pos.x,cz=o.cz??f.pos.z;let best=null,bs=1e9;
@@ -10644,7 +10711,9 @@ function updMinimap(){{const now=performance.now();if(now-(updMinimap.t||0)<30)r
   for(const f of FS){if(f===ME||!f.alive)continue;if(!isFoe(ME,f)){const [x,y]=toS(f.pos.x,f.pos.z);g.fillStyle='#2f7fe0';g.beginPath();g.arc(x,y,6,0,TAU);g.fill();continue;}
     const age=S.t-(f.shotT??-99);if(age>2.5||!f.shotP)continue;const [x,y]=toS(f.shotP.x,f.shotP.z);g.globalAlpha=Math.max(0,1-age/2.5);g.fillStyle='#ff2a2a';g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.globalAlpha=1;}
   for(const m of S.deathMarks||[]){const age=S.t-m.t;if(age>3)continue;const [x,y]=toS(m.x,m.z);g.globalAlpha=age>2.4?(3-age)/.6:1;g.strokeStyle='#14161c';g.lineWidth=5;g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x+5,y+5);g.moveTo(x+5,y-5);g.lineTo(x-5,y+5);g.stroke();g.strokeStyle='#ff3b3b';g.lineWidth=2.5;g.stroke();g.globalAlpha=1;}
-  g.fillStyle='#ffffff';g.strokeStyle='#14161c';g.lineWidth=2.5;g.beginPath();g.moveTo(C,C-11);g.lineTo(C+8,C+8);g.lineTo(C,C+4);g.lineTo(C-8,C+8);g.closePath();g.fill();g.stroke();}
+  g.fillStyle='#ffffff';g.strokeStyle='#14161c';g.lineWidth=2.5;g.beginPath();g.moveTo(C,C-11);g.lineTo(C+8,C+8);g.lineTo(C,C+4);g.lineTo(C-8,C+8);g.closePath();g.fill();g.stroke();
+  /* which floor you're on, for maps with more than one (The Mansion) */
+  {const t=M.floorName&&M.floorName(ME.pos.x,ME.pos.y,ME.pos.z);if(t){g.font='bold 19px Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';const tw=g.measureText(t).width+20,y=W-40;g.fillStyle='rgba(0,0,0,.72)';g.fillRect(C-tw/2,y-14,tw,28);g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5;g.strokeRect(C-tw/2,y-14,tw,28);g.fillStyle='#ffffff';g.fillText(t,C,y+1);}}}
 const HUD_PARTS=[['score','Score'],['lb','Leaderboard'],['mm','Minimap'],['feed','Kill feed'],['vitals','Health, armour & stamina'],['items','Items'],['weapon','Weapon & ammo'],['hint','Match intro'],['tags','Name tags',1]];
 S.hud=Object.assign({},store.get('duel:hud',{}));S.hudZ=Object.assign({},store.get('duel:hudz',{}));S.hudO={};
 const HUD_O0={feed:.65};const hudOp=k=>S.hudO[k]??HUD_O0[k]??1;
@@ -11085,7 +11154,7 @@ function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
   // stairs and kerbs move you up or down a step instantly; the body and camera glide over it instead of snapping
   {const v=f.visY??f.pos.y,d=f.pos.y-v;f.visY=f.grounded&&Math.abs(d)<.8&&!f.finishing&&!menu?v+d*(1-Math.exp(-20*dt)):f.pos.y;}
   ch.root.position.copy(f.pos);ch.root.position.y=f.visY+(f.celLift||0);if(!f.finishing||f.finishing.fx!=='Disco')ch.root.rotation.y=f.downed&&!f.finishing?downYaw(f):visYaw(f,dt,menu);if(!(f.finishing&&f.finishing.move&&f.finishing.done))ch.root.rotation.x=damp(ch.root.rotation.x,f.downed?1.3:f.corpse&&!f.alive||f.finishing&&f.finishing.fx==='Fall'?(CFX.rag&&ch.up&&!menu?ch.root.rotation.x:1.5):0,f.corpse?11:8,dt);if(f.downed||f.corpse&&(!f.alive||f.finishing&&f.finishing.fx==='Fall'))ch.root.position.y+=CFX.rag&&ch.up&&!menu?.32*clamp(ch.root.rotation.x/1.3,0,1):.32;const sp=Math.hypot(f.vel.x,f.vel.z);
-  if(f.grounded){f.phase+=sp*dt*(ch.up&&CFX.legs?Math.PI/((.7+.18*sp)*(STRIDE[f.char]||1)):1.15);if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;sfx('step'+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
+  if(f.grounded){f.phase+=sp*dt*(ch.up&&CFX.legs?Math.PI/((.7+.18*sp)*(STRIDE[f.char]||1)):1.15);if(sp>1.5&&!f.downed&&!f.finishing&&f.alive&&!(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z))){const k=Math.floor(f.phase/Math.PI);if(k!==f.stepK){f.stepK=k;const sk=M.stepSurf&&M.stepSurf(f.pos.x,f.pos.y,f.pos.z);/* footsteps that match the floor (Kenney Impact Sounds, CC0) where a map says what it's made of */sfx((sk?'fs_'+sk:'step')+(1+Math.floor(Math.random()*5)),f,{vol:.3*(f.crouching?.35:1)*clamp(sp/9,.4,1.3),range:12,jitter:.08});}}}const s=f.grounded?Math.sin(f.phase)*clamp(sp/9,0,1)*.9:.5;
   const KN=ch.knee,cv=KN&&ch.up&&CFX.legs&&f.downed?0:(f.cv||0);let lean=KN?KN.lean*cv:0,lean2=lean;
   if(KN&&ch.up){lean=legsMo(f,ch,dt,sp,s,cv,menu);lean2=lean+spineMo(f,ch,dt,menu);}
   else if(KN){/* crouch = a ready kneel: front foot planted with the shin upright, back knee on the ground, chest leaning a little into the gun.
@@ -11184,7 +11253,7 @@ function startMatch(){S.qr=null;if(S.one)S.players='1v1';if(S.randMap){/* the ma
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
     if(S.mode==='rumble')b.primary=b.secondary='fists';if(S.simple)Object.assign(b,SIMPLE_KIT);tagFor(b);}
   const P=S.players;if(P!=='1v1')txt('d-botname',P==='2v2'?'Enemy team':'Bots');document.querySelector('.d-side.you .eyebrow').textContent=P==='2v2'?'Your team':'You';
-  $('d-feed').innerHTML='';if(M.id!==S.map||M.ru!==(S.mode==='rumble'))buildMap(S.map);$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
+  $('d-feed').innerHTML='';if(M.id!==S.map||M.ru!==(S.mode==='rumble')||(M.byPlayers&&M.pl!==S.players))buildMap(S.map);try{const pc=renderer.compileAsync&&renderer.compileAsync(scene,camera);if(pc&&pc.catch)pc.catch(()=>{});}catch(e){}/* get every material's shader ready in the background, so new rooms don't hitch the first time you see them */$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
   const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.snipers?'Snipers only':S.one?(S.simple?'1v1 · Simple':'1v1 · Normal'):'Duels'} · ${S.one&&!S.snipers?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':P==='2v2'&&!ru?(S.simple?' · Simple':' · Normal'):'')+' · '}${MAPS[S.map].name}`;
   $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · most kills in '+dmLen()+' minutes wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · fists only':S.snipers?' · snipers only':S.simple?' · M4, sword & grenade':'');
   h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}

@@ -6503,7 +6503,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
         deco(new THREE.BoxGeometry(ax?f.b-f.a+.16:T+.14,.09,ax?T+.14:f.b-f.a+.16),mat('#e9e6df'),ax?(f.a+f.b)/2:at,s0,ax?at:(f.a+f.b)/2).castShadow=false;
         WINS.push({ax,at,c:(f.a+f.b)/2,y:(s0+s1)/2,w:f.b-f.a,a:f.a,b:f.b,s0,s1,pane});seg(f.a,f.b,s1,y1);}
       else{const n=Math.max(1,Math.round((f.b-f.a)/1.6)),w=(f.b-f.a)/n,gh=y0+3;for(let i=0;i<n;i++){const c=f.a+(i+.5)*w;box(ax?c:at,y0,ax?at:c,ax?w-.03:.1,3,ax?.1:w-.03,'#bfe6ff',GO);}
-        for(let i=0;i<=n;i++)bar(f.a+i*w,y0,gh);seg(f.a,f.b,gh,y1);}
+        bar(f.a,y0,gh);bar(f.b,y0,gh);seg(f.a,f.b,gh,y1);}/* frame posts only at the ends, so smashed glass leaves a clear gap with no poles in it */
       cur=f.b;}
     seg(cur,a1,y0,y1);};
   /* ---------- the grounds ---------- */
@@ -6522,11 +6522,20 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const hedge=(x,z,w,d,h=1.6)=>{const b=box(x,0,z,w,h,d,'#3e7a32',{tx:'grass',prop:'bush',hp:160,snd:'bush',wood:false});return b;};
   for(const [x,z,w,d] of [[-24,-36,10,1.4],[24,-36,10,1.4],[-46,-34,1.4,10],[46,-34,1.4,10],[-46,34,1.4,10],[46,34,1.4,10],[-24,36,10,1.4],[24,36,10,1.4],[-50,-12,1.4,8],[50,-12,1.4,8],[-50,14,1.4,8],[52,12,1.4,6],[-14,38,6,1.4],[14,38,6,1.4]])hedge(x,z,w,d);
   for(const [x,z] of [[-36,-38],[36,-38],[-36,38],[36,40],[0,40]]){box(x,0,z,1.8,1,1.8,'#d9d4c8',{tx:'slab'});deco(gC(.7,.5,.9,12),mat('#cfc8bb','slab'),x,1.45,z);const t=deco(new THREE.IcosahedronGeometry(.8,1),pm('leafy:#3f8f3a'),x,2.3,z);t.scale.y=.9;}
-  /* the fountain: a round stone basin with a three-tier spout, water that ripples, and spray */
-  {const fx=0,fz=-35.5;box(fx,0,fz,6,.7,6,'#d9d4c8',{tx:'slab',edges:false});const wm=new THREE.MeshStandardMaterial({color:'#4fc3e6',map:TX.ripple,transparent:true,opacity:.75,roughness:.08,emissive:'#1d7fa8',emissiveIntensity:.25});
-   const w=deco(new THREE.CircleGeometry(2.7,32),wm,fx,.72,fz);w.rotation.x=-Math.PI/2;w.castShadow=false;w.userData.dyn=1;
+  /* the fountain, out by the front hedge: a round stone basin, a three-tier spout and a jet of water that shoots up, arcs over and
+     rains back into the basin with splashes and ripples where it lands */
+  {const fx=0,fz=-40.5,WY=.72;box(fx,0,fz,5.4,.7,5.4,'#d9d4c8',{mat:INVIS,edges:false,shadow:false});
+   const rim=deco(gC(3,3.1,.7,40),mat('#d9d4c8','slab'),fx,.35,fz);const lip=deco(new THREE.TorusGeometry(3,.12,8,40),mat('#e6e1d6','slab'),fx,.72,fz);lip.rotation.x=Math.PI/2;
+   const wm=new THREE.MeshStandardMaterial({color:'#4fc3e6',map:TX.ripple.clone(),transparent:true,opacity:.78,roughness:.06,emissive:'#1d7fa8',emissiveIntensity:.25});wm.map.needsUpdate=true;wm.map.wrapS=wm.map.wrapT=THREE.RepeatWrapping;wm.map.repeat.set(3,3);
+   const w=deco(new THREE.CircleGeometry(2.9,40),wm,fx,WY,fz);w.rotation.x=-Math.PI/2;w.castShadow=false;w.userData.dyn=1;
    for(const [r,y,h] of [[.5,.7,1.6],[1.2,2.3,.25],[.25,2.5,.9],[.7,3.4,.18]])deco(gC(r,r*1.05,h,16),mat('#e2ddd2','slab'),fx,y+h/2,fz);
-   M.life.push(t=>{if(Math.random()<.5)emit(fx+rnd(-.2,.2),3.7,fz+rnd(-.2,.2),{n:2,speed:1.6,up:3,size:.12,life:.9,grav:9,colors:['#bfe9ff','#ffffff']});});}
+   const jm=new THREE.MeshBasicMaterial({color:'#dff6ff',transparent:true,opacity:.55,depthWrite:false});const jet=new THREE.Mesh(new THREE.CylinderGeometry(.05,.11,1.9,10,1,true),jm);jet.position.set(fx,3.58+.95,fz);jet.userData.dyn=1;M.group.add(jet);
+   const RG=new THREE.RingGeometry(.12,.2,16);RG.rotateX(-Math.PI/2);const rings=[];for(let i=0;i<8;i++){const m=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));m.userData.dyn=1;m.visible=false;M.group.add(m);rings.push({m,t:9});}let ri=0;
+   M.life.push((t,dt)=>{dt=dt||.016;wm.map.offset.set(Math.sin(t*.5)*.2,t*.08);jet.scale.y=1+Math.sin(t*9)*.05;jm.opacity=.45+Math.sin(t*13)*.1;
+     for(let k=0;k<3;k++){const a=Math.random()*TAU,sp=rnd(.9,1.8);emit(fx+Math.cos(a)*.08,5.45,fz+Math.sin(a)*.08,{n:1,speed:.05,up:rnd(.6,1.6),vx:Math.cos(a)*sp,vz:Math.sin(a)*sp,size:rnd(.07,.11),life:1.15,grav:9,colors:['#e6fbff','#bfe9ff','#ffffff']});}/* the jet's arc */
+     if(Math.random()<.7){const a=Math.random()*TAU,r=rnd(1.2,2.4),x=fx+Math.cos(a)*r,z=fz+Math.sin(a)*r;emit(x,WY+.02,z,{n:3,speed:.5,up:1.1,size:.06,life:.35,grav:9,colors:['#ffffff','#cfefff']});
+       if(Math.random()<.5){const R2=rings[ri];ri=(ri+1)%rings.length;R2.t=0;R2.m.position.set(x,WY+.015,z);R2.m.visible=true;}}/* where the drops land */
+     for(const R2 of rings){if(R2.t>.9)continue;R2.t+=dt;const k=R2.t/.9;R2.m.visible=k<1;R2.m.scale.setScalar(1+k*4);R2.m.material.opacity=.55*(1-k);}});}
   /* lamp posts along the drive */
   for(const x of [-6,6])for(const z of [-31,-40]){deco(gC(.08,.12,3.6,8),FRM,x,1.8,z);deco(B.boxGeo(.4,.5,.4),mat('#fff3c4',null,{emissive:'#ffcf6b',emissiveIntensity:.9}),x,3.8,z);glowSprite(x,3.8,z,2.2,'#ffd88a',.55);}
   /* ---------- the house shell ---------- */
@@ -6553,8 +6562,8 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const ext='#ffffff',EX='redbrick';
   W(-MX,-MZ,MX,-MZ,0,H1,[Wn(-36),Wn(-30),Wn(-20),Wn(-12),Dr(0,5),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
   W(-MX,MZ,MX,MZ,0,H1,[Wn(-20),Wn(-12),Dr(0),Wn(12),Wn(20),Wn(30),Wn(36)],ext,EX);
-  W(-MX,-MZ,-MX,MZ,0,H1,[Wf(-22),Wf(-4.4),Wf(-.2),Wf(13),Wf(24)],ext,EX);/* the sides are fenced off: no doors, fixed windows *//* (no window over the kitchen's back stairs) */
-  W(MX,-MZ,MX,MZ,0,H1,[Wf(-24),Wf(-12),Wf(-5.2),Wf(4),Wf(22.5)],ext,EX);/* (no window over the garage stairs) */
+  W(-MX,-MZ,-MX,MZ,0,H1,[Wn(-22),Wn(-4.4),Wn(-.2),Wn(13),Wn(24)],ext,EX);/* the sides are fenced off: no doors; the ground-floor windows still break *//* (no window over the kitchen's back stairs) */
+  W(MX,-MZ,MX,MZ,0,H1,[Wn(-24),Wn(-12),Wn(-5.2),Wn(4),Wn(22.5)],ext,EX);/* (no window over the garage stairs) */
   for(const [x0,z0,x1,z1] of [[-MX,-MZ,MX,-MZ],[-MX,MZ,MX,MZ],[-MX,-MZ,-MX,MZ],[MX,-MZ,MX,MZ]]){const ax=z0===z1;box((x0+x1)/2,H1,(z0+z1)/2,ax?2*MX+T:T,UF-H1,ax?T:2*MZ+T,'#d9d4c8',{tx:'slab'});}
   W(-MX,-MZ,MX,-MZ,UF,H2,[Wn(-34),Wn(-28),Wn(-18),Wn(-12),Wn(-4,4),Wn(4,4),Wn(12),Wn(18),Wn(28),Wn(36)],ext,EX);
   W(-MX,MZ,24,MZ,UF,H2,[Wn(-20),Wn(-12),Wn(-4),Wn(4),Wn(12),Wn(20)],ext,EX);W(24,MZ,MX,MZ,UF,UF+1.2,[],ext,EX);
@@ -6564,7 +6573,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* ladders up the outside walls onto the roof: front (two), back and the west side */
   {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);}
   /* the front porch: four columns and a canopy over the door */
-  for(const x of [-3.5,-1.2,1.2,3.5])box(x,0,-29.6,.6,4.6,.6,'#f4f1ea',{tx:'pillar'});deco(B.boxGeo(9,.35,3.4),mat('#f4f1ea','slab'),0,4.75,-28.8);
+  for(const x of [-3.5,3.5])box(x,0,-29.6,.6,4.6,.6,'#f4f1ea',{tx:'pillar'});/* (no middle pillars, so the doorway's clear) */deco(B.boxGeo(9,.35,3.4),mat('#f4f1ea','slab'),0,4.75,-28.8);
   /* inside walls, ground floor then upper floor (plaster) */
   const IN='#ece7de',PL='plaster';
   W(-24,-MZ,-24,-9,0,H1,[Gl(-24,-19.5),Dr(-14)],IN,PL);W(-24,-9,-24,9,0,H1,[Dr(3)],IN,PL);W(-24,9,-24,MZ,0,H1,[Gl(11,17),Dr(20)],IN,PL);
@@ -6915,7 +6924,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
      for(let i=-3.2;i<=3.21;i+=.4){const o=deco(B.boxGeo(.025,.012,6.8),dark,x+i,dy+.006,z);o.castShadow=false;}/* plank seams */
      for(const [dx,dz,w,d] of [[0,-3.37,6.9,.12],[0,3.37,6.9,.12],[-3.37,0,.12,6.9],[3.37,0,.12,6.9]]){const o=deco(B.boxGeo(w,.08,d),trim,x+dx,dy-.02,z+dz);o.castShadow=false;}/* nosing round the edge */
      for(const [dx,dz,w,d] of [[0,-3.41,6.8,.02],[0,3.41,6.8,.02],[-3.41,0,.02,6.8],[3.41,0,.02,6.8]])for(let k=-3.1;k<=3.11;k+=.45){const o=deco(B.boxGeo(w>1?.03:.02,DK-.06,w>1?.02:.03),dark,x+dx+(w>1?k:0),y+DK/2,z+dz+(w>1?0:k));o.castShadow=false;}/* skirt boards */
-     for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const px=x+sx*3.1,pz=z+sz*3.1;deco(B.boxGeo(.14,.9,.14),trim,px,dy+.45,pz);deco(B.boxGeo(.26,.3,.26),mat('#fff1c8',null,{emissive:'#ffcf6b',emissiveIntensity:.9}),px,dy+1.05,pz);deco(B.boxGeo(.32,.05,.32),dark,px,dy+1.22,pz);glowSprite(px,dy+1.05,pz,1.1,'#ffd88a',.45);}
+     for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const px=x+sx*3.1,pz=z+sz*3.1;deco(B.boxGeo(.14,.9,.14),trim,px,dy+.45,pz);deco(B.boxGeo(.26,.3,.26),mat('#fff1c8',null,{emissive:'#ffcf6b',emissiveIntensity:.9}),px,dy+1.05,pz);deco(B.boxGeo(.32,.05,.32),dark,px,dy+1.22,pz);}
      /* the shell: invisible rim colliders, a timber barrel outside, a teak cap ring and tiles inside */
      for(let i=0;i<14;i++){const a=i/14*TAU;box(x+Math.cos(a)*(r+.25),dy,z+Math.sin(a)*(r+.25),.62,.55,.62,'#7a4e2c',{mat:INVIS,edges:false,shadow:false,wood:true});}
      const stone=mat('#f4f5f7','slab'),joint=mat('#c9ccd1');const sh=deco(new THREE.CylinderGeometry(r+.5,r+.5,.55,40,1,true),stone,x,dy+.275,z);sh.castShadow=false;
@@ -6936,10 +6945,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
      const splash=(px,pz,s)=>{const R2=rings[ri];ri=(ri+1)%rings.length;R2.t=0;R2.s=s;R2.m.position.set(px,WY+.02,pz);R2.m.visible=true;
        emit(px,WY+.05,pz,{n:Math.round(6+s*16),speed:1.4+s*2,up:2.4+s*4.5,size:.08+s*.06,life:.5+s*.25,grav:15,colors:['#ffffff','#e6fbff','#9fe8f5']});};
      M.life.push((t,dt)=>{wt.offset.set(Math.sin(t*.4)*.3,t*.12);tw.position.y=WY+Math.sin(t*2.3)*.012;
-       for(const a of JA){if(Math.random()<.55)emit(x+Math.cos(a)*(r-.1),WY-.06,z+Math.sin(a)*(r-.1),{n:2,speed:.25,up:.35,vx:-Math.cos(a)*2.6,vz:-Math.sin(a)*2.6,size:.07,life:.35,grav:3,colors:['#e6fbff','#ffffff','#9fe8f5']});/* jet streams */
-         if(Math.random()<.35)emit(x+Math.cos(a)*(r-.55),WY+.02,z+Math.sin(a)*(r-.55),{n:2,speed:.35,up:.9,size:.1,life:.45,grav:-1,colors:['#ffffff','#bff3ff']});}/* bubbles boiling over each jet */
-       if(Math.random()<.6)emit(x+rnd(-r,r)*.7,WY+.02,z+rnd(-r,r)*.7,{n:1,speed:.3,up:.8,size:.12,life:.5,grav:-1,colors:['#ffffff','#bff3ff']});
-       if(Math.random()<.12)emit(x+rnd(-r,r)*.6,WY+.25,z+rnd(-r,r)*.6,{n:1,speed:.15,up:.5,size:.45,life:1.8,grav:-.6,colors:['#f4fbff','#e9f6fa']});/* steam */
+       for(const a of JA){if(Math.random()<.55)emit(x+Math.cos(a)*(r-.1),WY-.06,z+Math.sin(a)*(r-.1),{n:2,speed:.25,up:.35,vx:-Math.cos(a)*2.6,vz:-Math.sin(a)*2.6,size:.07,life:.35,grav:3,colors:['#e6fbff','#ffffff','#9fe8f5']});/* jet streams */}
        for(const R2 of rings){if(R2.t>1.2)continue;R2.t+=dt;R2.m.visible=R2.t<1.2;const k=R2.t/1.2;R2.m.scale.setScalar(.15+R2.s*1.3*Math.sqrt(k));R2.m.material.opacity=.6*(1-k)*(1-k);}
        for(const f of FS){if(!f)continue;const inn=f.alive&&Math.hypot(f.pos.x-x,f.pos.z-z)<r+.05&&f.pos.y<WY+.6&&f.pos.y>dy-.3;
          if(inn&&!f[TK]){const s=Math.min(1.6,.6+Math.max(0,-f.vel.y)/9);splash(f.pos.x,f.pos.z,s);sfx('splash',f,{vol:Math.min(1,.45+s*.35),range:18});}
@@ -7237,7 +7243,7 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   const sp=(x,z,y=0)=>({x,z,y,yaw:Math.atan2(-x,-z)});
   M.spawns=[sp(-32,-13),sp(-16,-12),sp(16,-23),sp(30,-14),sp(-36,-2),sp(-11,2),sp(4,3),sp(28,5),sp(-34,13),sp(-12,12),sp(4,20),sp(18,13),
     sp(-32,-15,UF),sp(-12,-24,UF),sp(18,-14,UF),sp(-30,-5,UF),sp(-14,-2,UF),sp(13,1,UF),sp(-20,14,UF),sp(17,23,UF),
-    sp(0,-40),sp(-30,-38),sp(30,-38),sp(-34,40),sp(34,40),sp(0,38)];
+    sp(9,-34),sp(-30,-38),sp(30,-38),sp(-34,40),sp(34,40),sp(0,38)];
   M.noDrums=DOORS.map(d=>({x:d.x,z:d.z,r:3.2})).concat([[0,2.5],[-38.2,-13],[38.2,13],[-22.5,25.5],[22.5,-7.5],[-32,0],[32,0],[16,0],[-39,18],[39,-18]].map(([x,z])=>({x,z,r:4})));}
 /* the Mansion's garage tank: a detailed tank built from parts (camouflaged hull with a sloped glacis, side skirts, road wheels and sprockets inside
    segmented tracks, a turret with a long barrel, muzzle brake, commander's hatch, machine gun, periscopes, smoke launchers, jerry cans and a star).
@@ -9382,12 +9388,6 @@ function decal(x,y,z,r,col,ring){const g=new THREE.Group();g.position.set(x,y+.0
 /* a finisher's decisive hit: a split-second freeze (only in moments you're part of) */
 function hitStop(t,...who){if(who.includes(ME))S.hitT=Math.max(S.hitT||0,t);}
 /* white impact flash: a ring, a bright core and eight rays that burst out, always facing the camera */
-function impactFlash(p,size,col){const g=new THREE.Group(),mt=o=>new THREE.MeshBasicMaterial({color:col||'#ffffff',transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
-  const ring=new THREE.Mesh(new THREE.RingGeometry(.82,1,40),mt(1)),core=new THREE.Mesh(new THREE.CircleGeometry(.55,24),mt(.9));g.add(ring,core);const rays=[];
-  for(let i=0;i<8;i++){const r=new THREE.Mesh(new THREE.PlaneGeometry(.09,1),mt(.9));g.add(r);rays.push(r);}g.position.copy(p);scene.add(g);size=size||1;
-  debris.push({o:g,t:0,ttl:.36,fx:d=>{const k=Math.min(1,d.t/.35);g.quaternion.copy(camera.quaternion);ring.scale.setScalar(size*(.3+2.4*easeOut(k)));ring.material.opacity=1-k;core.scale.setScalar(size*(1-k*.7));core.material.opacity=.95*(1-k)*(1-k);
-    rays.forEach((r,j)=>{const a=j/8*TAU,dd=size*(.8+2*easeOut(k));r.position.set(-Math.sin(a)*dd,Math.cos(a)*dd,0);r.rotation.z=a;r.scale.set(size,size*(1.4-k),1);r.material.opacity=1-k;});
-    if(d.t>=.355)g.traverse(o=>{if(o.geometry){o.geometry.dispose();o.material.dispose();}});}});}
 /* Roast's fire: dense billowing flame sprites that cling to the body (they follow running, rolling and kneeling), hot cores,
    a column of black smoke and a flickering firelight on the floor and anyone nearby */
 const FIRE_COLS=['#fff1a8','#ffc21f','#ff7a10','#e83a0c','#8a1c08'];
@@ -9468,7 +9468,7 @@ function flingStart(v,F,t,dir,spd,upV,pass){F.fall={v:dir.clone().multiplyScalar
 // moves the flying body; on impact: crater or wall dust, the body bursts into blocks, and the move's call-out
 function flingUpd(v,F,t,dt,big,sub,lose,sh){const a=F.by,P=F.fall,prev=new V3(v.pos.x,v.pos.y+1.0*SC,v.pos.z);P.v.y-=FLING_G*dt;v.pos.addScaledVector(P.v,dt);P.rx+=dt*P.spin;const k=S.t*10;
   v.pose=sh&&sh.stiff?Object.assign({},v.pose||{},{root:[P.rx,v.yaw,0]}):{root:[P.rx,v.yaw,Math.sin(P.rx*.7)*.4],ar:[-2.8,0,.6+Math.sin(k)*.3],al:[-2.8,0,-.6-Math.sin(k)*.3],ll:.5,lr:-.4};
-  if(Math.random()<.6)emit(v.pos.x,v.pos.y+1,v.pos.z,{n:1,speed:.2,size:.25,life:.4,grav:0,colors:['#ffffff']});
+
   F.dur=Math.max(F.dur,t+.6);a.finishT=Math.max(a.finishT,F.dur-t);
   const cur=new V3(v.pos.x,v.pos.y+1.0*SC,v.pos.z),dd=cur.clone().sub(prev),L=dd.length();let wh=L>1e-4?rayBoxes(prev,dd.divideScalar(L),L+.35*SC):null;if(wh&&wh.box.touch&&wh.box.alive){breakProp(wh.box,prev.clone());P.edgeOK=true;wh=null;}if(wh&&edgeBox(wh.box)){if(P.edgeOK==null){const q=prev.clone().addScaledVector(dd,wh.t+.4),hd=new V3(dd.x,0,dd.z).normalize();P.edgeOK=P.pass||dropBeyond(q.x,q.z,F.v0.y,hd)>=0;}if(P.edgeOK)wh=null;}
   const bd=M.bounds,out=v.pos.x<bd.x0-2||v.pos.x>bd.x1+2||v.pos.z<bd.z0-2||v.pos.z>bd.z1+2,gs0=out?null:surfaceAt(v.pos.x,v.pos.z,prev.y-1.0*SC),gs=gs0!=null?gs0:meshGround(v.pos.x,v.pos.z,prev.y,40),gy=gs==null?-1e9:gs;
@@ -9479,7 +9479,7 @@ function flingUpd(v,F,t,dt,big,sub,lose,sh){const a=F.by,P=F.fall,prev=new V3(v.
       if(x){const wy=M.waterY?M.waterY(x.point.x,x.point.z):null;if(wy==null||x.point.y>wy+.3){const n=x.face.normal.clone().transformDirection(x.object.matrixWorld);mh={p:x.point.clone(),flat:n.y>.6};}}}catch(e){}}
   let hit=null;if(mh)hit={p:mh.p,wall:!mh.flat,fl:mh.flat?mh.p.y:null};else if(wh)hit={p:prev.clone().addScaledVector(dd,wh.t),wall:true};else if((P.v.y<0&&v.pos.y<=gy)||t-P.t0>4)hit={p:new V3(v.pos.x,Math.max(gs??v.pos.y,v.pos.y),v.pos.z),wall:false};
   if(!hit)return false;
-  F.done=1;const c=hit.p,fl=hit.fl!=null?hit.fl:!hit.wall&&gs!=null?gs:groundAt(c.x,c.z,c.y);if(sh.onHit)sh.onHit(c,hit.wall);S.shake=1.1;hitStop(.16,a,v);impactFlash(c.clone().add(new V3(0,.8,0)),1.4);slowMo(.5,a,v);vig(.25);F.imp=c.clone();
+  F.done=1;const c=hit.p,fl=hit.fl!=null?hit.fl:!hit.wall&&gs!=null?gs:groundAt(c.x,c.z,c.y);if(sh.onHit)sh.onHit(c,hit.wall);S.shake=1.1;hitStop(.16,a,v);slowMo(.5,a,v);vig(.25);F.imp=c.clone();
   if(!hit.wall){v.pos.y=fl;decal(c.x,fl,c.z,2.0,'#2b2622','#8a7f72');spray(new V3(c.x,fl+.3,c.z),{n:36,cols:['#8a7f72','#6e665c','#a89c8a','#4a4540'],s0:.12,s1:.32,box:new V3(1.2,.2,1.2),power:7,up:9,floor:fl});
     for(let i=0;i<24;i++){const an=i/24*TAU;emit(c.x+Math.cos(an)*.8,fl+.2,c.z+Math.sin(an)*.8,{n:2,speed:8,up:1,size:.4,life:.7,grav:0,colors:['#c9bfae','#9a8f80']});}
     shatter(v,{power:sh.power,up:sh.up,floor:fl,from:new V3(c.x,fl-.5,c.z)});}
@@ -9580,7 +9580,7 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       if(u>=1&&!F.stuck){F.stuck=1;S.shake=Math.max(S.shake,.3);slowMo(.45,a,v);vig(.12);spray(chest,{n:6,cols:palOf(v),s0:.05,s1:.1,power:2,up:2,floor:F.v0.y});}
       tracer(tip,p,'#e9e2c8',.02);}else F.sp.visible=false;
     // the uppercut
-    if(t>=1.8&&!F.fall){hitStop(.3,a,v);impactFlash(chest.clone(),1.3);flashBall(chest.clone(),'#ffe08a',1.4);emit(chest.x,chest.y,chest.z,{n:30,speed:9,size:.16,life:.35,grav:0,colors:['#ffffff','#ffd23f']});S.shake=1;slowMo(.35,a,v);vig(.2);
+    if(t>=1.8&&!F.fall){hitStop(.3,a,v);S.shake=1;slowMo(.35,a,v);vig(.2);
       const k=flingOut(F,v.pos.clone(),18);flingStart(v,F,t,k.dir,k.spd,k.up,k.pass);}
     if(F.fall&&!F.done)flingUpd(v,F,t,dt,'Combat!','Combat','You got harpooned and uppercut',{power:9,up:6});
     F.focus=new V3((a.pos.x+v.pos.x)/2,F.v0.y+1.4,(a.pos.z+v.pos.z)/2);F.camD=8;}
@@ -9607,13 +9607,13 @@ function updMove2(v,F,dt){const a=F.by,t=F.t,r=v.ch.root,fw=F.fwd,up=new V3(0,1,
       :t>=.4?{ar:[ph-Math.PI,0,-th],al:[ph-Math.PI,0,-th],lr:-.25,ll:.25}:{ar:[-1.2,0,0],al:[-1.2,0,0]};
     const hit=(tt,key)=>{if(t>=tt&&!F[key]){F[key]=1;const g=S0.clone().addScaledVector(dir,armL+2.4*SC);g.y=F.v0.y;S.shake=Math.max(S.shake,.5);
         
-        impactFlash(g.clone().add(new V3(0,.4,0)),.7);}};
+        }};
     if(F.pat!==1){hit(1.15,'h1');hit(1.75,'h2');}
     if(F.toss&&t>=2.45&&!F.fall){S.shake=Math.max(S.shake,.6);slowMo(.3,a,v);const k=flingOut(F,v.pos.clone(),12);flingStart(v,F,t,k.dir,k.spd,k.up,k.pass);}
     if(F.fall&&!F.done)flingUpd(v,F,t,dt,'Pancake!','Pancake','You got thrown out',{power:9,up:6});
     if(!F.toss&&t>=2.55&&!F.done){F.done=1;F.flatT=t;const feet=new V3(a.pos.x,F.v0.y,a.pos.z).addScaledVector(fw,1.75);F.flat=new V3(feet.x,F.v0.y+.06,feet.z);const c=F.flat.clone().addScaledVector(fw,1.55);
       decal(c.x,F.v0.y,c.z,1.8,'#2b2622','#8a7f72');
-      S.shake=1.2;hitStop(.22,a,v);impactFlash(c.clone().add(new V3(0,.4,0)),1.5);slowMo(.5,a,v);vig(.25);say(a,v,'Pancake!','Pancake','You got pancaked',false);}
+      S.shake=1.2;hitStop(.22,a,v);slowMo(.5,a,v);vig(.25);say(a,v,'Pancake!','Pancake','You got pancaked',false);}
     /* flattened like a cartoon, wobbles, then springs back into shape with a boing */
     if(F.done&&F.flat){v.pos.copy(F.flat);const e=t-F.flatT;let thk=.16*(1+Math.sin(e*30)*.45*Math.exp(-e*6)),wide=1.3;
       if(e>=.75){const u=segT(e,.75,1.05),ob=1+2.7*Math.pow(u-1,3)+1.7*Math.pow(u-1,2);thk=lerp(.16,1,ob);wide=lerp(1.3,1,u);v.pos.y+=Math.sin(u*Math.PI)*.35;

@@ -9270,8 +9270,8 @@ function untintLook(f){f.ch.root.traverse(o=>{if(!o.isMesh)return;const ms=Array
 // close to the edge of the arena (its fence, railing or rope)? then the finisher is one that throws you out over it
 function nearFence(p){const b=M.bounds;return !!b&&Math.min(p.x-b.x0,b.x1-p.x,p.z-b.z0,b.z1-p.z)<7;}
 const FENCE_MOVES=['Pancake'];
-function moveFor(a,v){if(v&&nearFence(v.pos)){const L=FENCE_MOVES.filter(k=>MOVE_DUR[k]&&k!==S.lastFin);const m=L[(Math.random()*L.length)|0];S.lastFin=m;return m;}
-  const L=Object.keys(MOVE_DUR).filter(k=>k!==S.lastFin);if(L.includes('Pancake'))L.push('Pancake');/* Pancake comes up twice as often as any other move */const m=L[(Math.random()*L.length)|0];S.lastFin=m;return m;}
+function moveFor(a,v){if(v&&nearFence(v.pos)){const L=FENCE_MOVES.filter(k=>MOVE_DUR[k]&&k!==S.lastFin);const m=L.length?L[(Math.random()*L.length)|0]:FENCE_MOVES[0];/* only Pancake throws over a fence, so it can repeat there */S.lastFin=m;return m;}
+  const L=Object.keys(MOVE_DUR).filter(k=>k!==S.lastFin);/* the four moves are evenly split (never the same one twice running) */const m=L[(Math.random()*L.length)|0];S.lastFin=m;return m;}
 // nearest spot (same floor) with room all round, reachable in a straight line: finishers and celebrations shuffle over to it first
 // so arms, bodies and props never swing through a wall or post
 function roomAt(x,z,h,need){for(const r of [.9,1.6,2.3,3.0]){if(r>need+.01)break;for(let k=0;k<8;k++){const a=k/8*TAU;if(!bodyFits(x+Math.cos(a)*r,z+Math.sin(a)*r,h))return r-.7;}}return need;}

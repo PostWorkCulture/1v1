@@ -8164,7 +8164,11 @@ const SKIN_CHARS={roboid:{url:'chars/roboid_sk.glb',h:1.7623,
   /* [clip, its natural ground speed in m/s] per direction, slowest first */
   fw:[['Rifle Walk',1.14],['Rifle Run',2.91],['Sprint',4.28]],bk:[['Walking Backwards',1.08]],
   /* strafes are the upright side-step clips (the running strafe clips turn the whole body sideways), sped up to keep pace */
-  lt:[['Walk Strafe Left',.58]],rt:[['Walk Strafe Right',.58]],tsMax:{lt:2,rt:2,bk:1.6},grip:'Rifle Aiming Idle'}};
+  lt:[['Walk Strafe Left',.58]],rt:[['Walk Strafe Right',.58]],tsMax:{lt:1.5,rt:1.5,bk:1.5},grip:'Rifle Aiming Idle',
+  /* where in each walking clip the left foot is planted (0-1): the clips are kept in step so a blend never shows two strides at once */
+  ph:{'Rifle Walk':.833,'Rifle Run':.7,'Sprint':.467,'Walking Backwards':.217,'Walk Strafe Left':.683,'Walk Strafe Right':.667,'Crouch Walk Forward':.75},
+  /* his suit is near-black: a deeper lift, a satin sheen and the relief map keep his arms and legs readable on dark ground */
+  look:{lift:[.72,2.1],rough:.42,metal:.3,relief:.9}}};
 const skSan=n=>n.replace(/\s/g,'_').replace(/[\[\].:\/]/g,'');
 function loadSkinGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(url+' '+r.status);return r.arrayBuffer();}).then(buf=>{
   const dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
@@ -8199,7 +8203,9 @@ function skAim(B,C,T){const v=SKV;B.getWorldPosition(v.a);C.getWorldPosition(v.b
   v.q.setFromUnitVectors(v.b.normalize(),v.c.normalize());B.getWorldQuaternion(v.q2);v.q2.premultiply(v.q);B.parent.getWorldQuaternion(v.q3);B.quaternion.copy(v.q3.invert().multiply(v.q2));B.updateMatrixWorld(true);}
 function skTurn(B,axis,ang){const v=SKV;v.q.setFromAxisAngle(axis,ang);B.getWorldQuaternion(v.q2);v.q2.premultiply(v.q);B.parent.getWorldQuaternion(v.q3);B.quaternion.copy(v.q3.invert().multiply(v.q2));B.updateMatrixWorld(true);}
 function skinOn(ch,M,id){const C=SKIN_CHARS[id],D=M.sk;if(!C||!D)return;
-  const I=skinInstance(D);charShade(I.mat,M,false);
+  const I=skinInstance(D),L=C.look||{};I.mat.roughness=L.rough??I.mat.roughness;I.mat.metalness=L.metal??I.mat.metalness;
+  if(L.relief&&!(window.GFX&&GFX.lv&&GFX.lv()==='low')){D.relief=D.relief||reliefTex(D.map.image);I.mat.normalMap=D.relief;I.mat.normalScale.set(L.relief,L.relief);}
+  charShade(I.mat,{lift:L.lift||M.lift},false);
   const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET),s=3.03*k/C.h,bb=D.g.boundingBox;
   const holder=new THREE.Group();holder.scale.setScalar(s);holder.position.set(-(bb.min.x+bb.max.x)/2*s,-1.25-bb.min.y*s,-(bb.min.z+bb.max.z)/2*s);holder.add(I.root);ch.flip.add(holder);
   const six=[];ch.body.traverse(o=>{if(o.isMesh&&(o.material===M.mat||o.material===M.capMat))six.push(o);});
@@ -8212,7 +8218,8 @@ function skinOn(ch,M,id){const C=SKIN_CHARS[id],D=M.sk;if(!C||!D)return;
     B.arms.push([(x>0)===(ch.aR.p.position.x>0)?ch.aR:ch.aL,up,I.bone(s2+'ForeArm'),I.bone(s2+'Hand')]);}
   // the visor glow follows the real head
   ch.root.updateMatrixWorld(true);if(ch.glowG)for(const g of ch.glowG)B.head.attach(g);
-  ch.sk={holder,six,mixer,act,grip,B,C,u:1/s,show:null,airT:0,vis:null};}
+  for(const n in C.ph)if(act[n])act[n].sync=C.ph[n];
+  ch.sk={holder,six,mixer,act,grip,B,C,u:1/s,show:null,airT:0,vis:null,ph:0};}
 function skinAnim(f,ch,dt,sp,menu){const K=ch.sk;if(!K)return;const C=K.C;
   const special=!f.alive||f.downed||f.finishing||f.rd||f.dangle||f.tumble||f.carriedBy||f.skySlam||f.onLadder||f.ladK>.01||f.heapFall||CR.run;
   const show=!special;if(K.show!==show){K.show=show;K.holder.visible=show;for(const m of K.six)m.visible=!show;}
@@ -8228,7 +8235,11 @@ function skinAnim(f,ch,dt,sp,menu){const K=ch.sk;if(!K)return;const C=K.C;
   add(C.idle,st*(1-mv));band(C.fw,st*mv*wf);band(C.bk,st*mv*wb,C.tsMax.bk);band(C.lt,st*mv*wl,C.tsMax.lt);band(C.rt,st*mv*wr,C.tsMax.rt);
   add(C.cIdle,cr*(1-mv));add(C.cWalk[0],cr*mv,tsOf(v,C.cWalk[1],1.4));add(C.air,air);
   let tot=0;const a2=1-Math.exp(-12*dt);for(const n in K.act){const A=K.act[n];A.w+=((W[n]||0)-A.w)*a2;if(A.w<.002)A.w=0;tot+=A.w;}
-  for(const n in K.act){const A=K.act[n];A.setEffectiveWeight(tot>0?A.w/tot:0);if(TS[n]!=null)A.timeScale=TS[n];}
+  // one shared stride phase for every walking clip, moving at their weighted cadence
+  let rw=0,rs=0;for(const n in K.act){const A=K.act[n];if(A.sync==null||!A.w)continue;const ts=TS[n]!=null?TS[n]:1;rw+=A.w;rs+=A.w*ts/A.getClip().duration;}
+  if(rw>0)K.ph=(K.ph+dt*rs/rw)%1;
+  for(const n in K.act){const A=K.act[n];A.setEffectiveWeight(tot>0?A.w/tot:0);
+    if(A.sync!=null){A.timeScale=0;A.time=((K.ph+A.sync)%1)*A.getClip().duration;}else if(TS[n]!=null)A.timeScale=TS[n];}
   K.mixer.update(dt);
   for(const [o,q] of K.grip)o.quaternion.copy(q);
   K.holder.updateMatrixWorld(true);ch.root.updateMatrixWorld(true);

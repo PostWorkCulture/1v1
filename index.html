@@ -8126,8 +8126,93 @@ const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday
 function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
   for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
   for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
+/* ---- Skinned characters: a fighter built in Blender on a real skeleton (Shadow) plays his own motion-captured clips for everyday movement
+   (idle, walk, run, sprint, backpedal, strafes, crouch, falling), blended by how fast and which way he is moving. The six-piece model is
+   still built underneath: the game keeps posing it (gun hold, punches, ladders, finishers, ragdoll, crawl) and the skinned arms reach for
+   where its hands are, so the gun sits in his hands. For the rare moments the clips don't cover (downed, finishers, ragdoll, ladders,
+   the throne) the six-piece model shows instead. chars/<id>_sk.glb: one skinned mesh, 1024 px colour, the clips listed in SKIN_CHARS. */
+const SKIN_CHARS={roboid:{url:'chars/roboid_sk.glb',h:1.7623,
+  idle:'Rifle Aiming Idle',air:'Falling Idle',cIdle:'Crouch Idle',cWalk:['Crouch Walk Forward',1.62],
+  /* [clip, its natural ground speed in m/s] per direction, slowest first */
+  fw:[['Rifle Walk',1.14],['Rifle Run',2.91],['Sprint',4.28]],bk:[['Walking Backwards',1.08]],
+  /* strafes are the upright side-step clips (the running strafe clips turn the whole body sideways), sped up to keep pace */
+  lt:[['Walk Strafe Left',.58]],rt:[['Walk Strafe Right',.58]],tsMax:{lt:2,rt:2,bk:1.6},grip:'Rifle Aiming Idle'}};
+const skSan=n=>n.replace(/\s/g,'_').replace(/[\[\].:\/]/g,'');
+function loadSkinGLB(url){return fetch(url).then(r=>{if(!r.ok)throw new Error(url+' '+r.status);return r.arrayBuffer();}).then(buf=>{
+  const dv=new DataView(buf),jl=dv.getUint32(12,true),J=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,20,jl))),bo=20+jl+8;
+  const T={5126:Float32Array,5125:Uint32Array,5123:Uint16Array,5121:Uint8Array},NC={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16};
+  const acc=i=>{const a=J.accessors[i],v=J.bufferViews[a.bufferView],C=T[a.componentType],o=bo+(v.byteOffset||0)+(a.byteOffset||0);
+    const raw=new C(buf.slice(o,o+a.count*NC[a.type]*C.BYTES_PER_ELEMENT));if(!a.normalized)return raw;const f=new Float32Array(raw.length),d=a.componentType===5121?255:65535;for(let k=0;k<raw.length;k++)f[k]=raw[k]/d;return f;};
+  const tex=i=>{const im=J.images[J.textures[i].source],v=J.bufferViews[im.bufferView];const u=URL.createObjectURL(new Blob([new Uint8Array(buf,bo+(v.byteOffset||0),v.byteLength)],{type:im.mimeType}));
+    return new Promise((ok,no)=>{new THREE.TextureLoader().load(u,t=>{URL.revokeObjectURL(u);t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.needsUpdate=true;ok(t);},undefined,no);});};
+  const Mt=J.materials[0],pb=Mt.pbrMetallicRoughness;
+  return Promise.all([tex(pb.baseColorTexture.index),Mt.emissiveTexture?tex(Mt.emissiveTexture.index):null]).then(([map,em])=>{
+    const mi=J.nodes.findIndex(n=>n.skin!=null),mn=J.nodes[mi],p=J.meshes[mn.mesh].primitives[0],g=new THREE.BufferGeometry(),A=p.attributes;
+    g.setAttribute('position',new THREE.BufferAttribute(acc(A.POSITION),3));g.setAttribute('normal',new THREE.BufferAttribute(acc(A.NORMAL),3));g.setAttribute('uv',new THREE.BufferAttribute(acc(A.TEXCOORD_0),2));
+    g.setAttribute('skinIndex',new THREE.BufferAttribute(new Uint16Array(acc(A.JOINTS_0)),4));g.setAttribute('skinWeight',new THREE.BufferAttribute(acc(A.WEIGHTS_0),4));
+    g.setIndex(new THREE.BufferAttribute(acc(p.indices),1));g.computeBoundingBox();g.computeBoundingSphere();
+    const sk=J.skins[mn.skin],ibm=acc(sk.inverseBindMatrices),inv=sk.joints.map((_,k)=>new THREE.Matrix4().fromArray(ibm,k*16));
+    const clips={};for(const an of J.animations||[]){const tr=[];for(const c of an.channels){const s=an.samplers[c.sampler],nm=skSan(J.nodes[c.target.node].name),t=acc(s.input),v=acc(s.output);
+      if(c.target.path==='rotation')tr.push(new THREE.QuaternionKeyframeTrack(nm+'.quaternion',t,v));else if(c.target.path==='translation')tr.push(new THREE.VectorKeyframeTrack(nm+'.position',t,v));}
+      clips[an.name]=new THREE.AnimationClip(an.name,-1,tr);}
+    return {J,g,inv,mi,joints:sk.joints,clips,map,em,mr:[pb.metallicFactor??.05,pb.roughnessFactor??.72]};});});}
+/* a fresh skeleton + mesh for one fighter (geometry, textures and clips are shared) */
+function skinInstance(D){const J=D.J,objs=J.nodes.map((n,i)=>{const o=D.joints.includes(i)?new THREE.Bone():new THREE.Group();o.name=skSan(n.name||'n'+i);
+    if(n.translation)o.position.fromArray(n.translation);if(n.rotation)o.quaternion.fromArray(n.rotation);if(n.scale)o.scale.fromArray(n.scale);return o;});
+  const isChild=new Set();J.nodes.forEach((n,i)=>(n.children||[]).forEach(c=>{objs[i].add(objs[c]);isChild.add(c);}));
+  const root=new THREE.Group();J.scenes[J.scene||0].nodes.forEach(i=>root.add(objs[i]));
+  const mat=new THREE.MeshStandardMaterial({map:D.map,emissiveMap:D.em||null,emissive:D.em?0xffffff:0x000000,metalness:D.mr[0],roughness:D.mr[1]});
+  const mesh=new THREE.SkinnedMesh(D.g,mat);mesh.castShadow=true;mesh.frustumCulled=false;const mo=objs[D.mi];mo.add(mesh);
+  root.updateMatrixWorld(true);mesh.bind(new THREE.Skeleton(D.joints.map(j=>objs[j]),D.inv),mesh.matrixWorld);
+  const bone=n=>root.getObjectByName(skSan('mixamorig:'+n));return {root,mesh,mat,bone};}
+const SKV={a:new THREE.Vector3(),b:new THREE.Vector3(),c:new THREE.Vector3(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),q3:new THREE.Quaternion(),x:new THREE.Vector3()};
+/* turn bone B (in world space) so its child C points at T */
+function skAim(B,C,T){const v=SKV;B.getWorldPosition(v.a);C.getWorldPosition(v.b);v.b.sub(v.a);v.c.copy(T).sub(v.a);if(v.b.lengthSq()<1e-8||v.c.lengthSq()<1e-8)return;
+  v.q.setFromUnitVectors(v.b.normalize(),v.c.normalize());B.getWorldQuaternion(v.q2);v.q2.premultiply(v.q);B.parent.getWorldQuaternion(v.q3);B.quaternion.copy(v.q3.invert().multiply(v.q2));B.updateMatrixWorld(true);}
+function skTurn(B,axis,ang){const v=SKV;v.q.setFromAxisAngle(axis,ang);B.getWorldQuaternion(v.q2);v.q2.premultiply(v.q);B.parent.getWorldQuaternion(v.q3);B.quaternion.copy(v.q3.invert().multiply(v.q2));B.updateMatrixWorld(true);}
+function skinOn(ch,M,id){const C=SKIN_CHARS[id],D=M.sk;if(!C||!D)return;
+  const I=skinInstance(D);charShade(I.mat,M,false);
+  const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET),s=3.03*k/C.h,bb=D.g.boundingBox;
+  const holder=new THREE.Group();holder.scale.setScalar(s);holder.position.set(-(bb.min.x+bb.max.x)/2*s,-1.25-bb.min.y*s,-(bb.min.z+bb.max.z)/2*s);holder.add(I.root);ch.flip.add(holder);
+  const six=[];ch.body.traverse(o=>{if(o.isMesh&&(o.material===M.mat||o.material===M.capMat))six.push(o);});
+  const mixer=new THREE.AnimationMixer(I.root),act={};for(const n in D.clips){const a=mixer.clipAction(D.clips[n]);a.play();a.setEffectiveWeight(0);a.w=0;act[n]=a;}
+  // the hands and fingers keep the rifle grip from the aiming clip whatever the legs are doing
+  const grip=[];{const a=act[C.grip];a.setEffectiveWeight(1);mixer.setTime(.5);I.root.traverse(o=>{if(o.isBone&&/Hand/.test(o.name))grip.push([o,o.quaternion.clone()]);});a.setEffectiveWeight(0);mixer.setTime(0);}
+  const B={sp2:I.bone('Spine2'),neck:I.bone('Neck'),head:I.bone('Head'),arms:[]};
+  // pair each skinned arm with the game arm on the same side (the game's armL/armR are named from the viewer's side)
+  for(const s2 of ['Left','Right']){const up=I.bone(s2+'Arm');I.root.updateMatrixWorld(true);const x=I.root.worldToLocal(up.getWorldPosition(SKV.a.clone())).x;
+    B.arms.push([(x>0)===(ch.aR.p.position.x>0)?ch.aR:ch.aL,up,I.bone(s2+'ForeArm'),I.bone(s2+'Hand')]);}
+  // the visor glow follows the real head
+  ch.root.updateMatrixWorld(true);if(ch.glowG)for(const g of ch.glowG)B.head.attach(g);
+  ch.sk={holder,six,mixer,act,grip,B,C,u:1/s,show:null,airT:0,vis:null};}
+function skinAnim(f,ch,dt,sp,menu){const K=ch.sk;if(!K)return;const C=K.C;
+  const special=!f.alive||f.downed||f.finishing||f.rd||f.dangle||f.tumble||f.carriedBy||f.skySlam||f.onLadder||f.ladK>.01||f.heapFall||CR.run;
+  const show=!special;if(K.show!==show){K.show=show;K.holder.visible=show;for(const m of K.six)m.visible=!show;}
+  if(!show)return;
+  // velocity in his own frame (x = his left, z = forward), in metres a second at his size
+  const sy=Math.sin(f.yaw),cy=Math.cos(f.yaw),lx=(f.vel.x*cy-f.vel.z*sy)*K.u*(ch.root.scale.x?1/ch.root.scale.x:1),lz=(f.vel.x*sy+f.vel.z*cy)*K.u*(ch.root.scale.x?1/ch.root.scale.x:1),v=f.grounded||menu?Math.hypot(lx,lz):0;
+  K.airT=f.grounded||menu?0:K.airT+dt;const air=clamp((K.airT-.1)/.15,0,1),cv=clamp(f.cv||0,0,1),mv=clamp((v-.15)/.6,0,1);
+  const W={},TS={},add=(n,w,ts)=>{if(!n||w<=0)return;W[n]=(W[n]||0)+w;if(ts!=null)TS[n]=ts;},tsOf=(v,s,hi)=>clamp(v/s,.6,hi||1.2);
+  const band=(L,w,hi)=>{if(w<=0)return;if(v<=L[0][1]||L.length<2){const [n,s]=v<=L[0][1]?L[0]:L[L.length-1];add(n,w,tsOf(v,s,hi));return;}
+    for(let i=0;i<L.length-1;i++){const [a,sa]=L[i],[b,sb]=L[i+1];if(v<=sb||i===L.length-2){const t=clamp((v-sa)/(sb-sa),0,1);add(a,w*(1-t),tsOf(v,sa,1.6));add(b,w*t,tsOf(v,sb));return;}}};
+  const dn=Math.abs(lx)+Math.abs(lz)||1,wf=Math.max(0,lz)/dn,wb=Math.max(0,-lz)/dn,wl=Math.max(0,lx)/dn,wr=Math.max(0,-lx)/dn;
+  const st=(1-air)*(1-cv),cr=(1-air)*cv;
+  add(C.idle,st*(1-mv));band(C.fw,st*mv*wf);band(C.bk,st*mv*wb,C.tsMax.bk);band(C.lt,st*mv*wl,C.tsMax.lt);band(C.rt,st*mv*wr,C.tsMax.rt);
+  add(C.cIdle,cr*(1-mv));add(C.cWalk[0],cr*mv,tsOf(v,C.cWalk[1],1.4));add(C.air,air);
+  let tot=0;const a2=1-Math.exp(-12*dt);for(const n in K.act){const A=K.act[n];A.w+=((W[n]||0)-A.w)*a2;if(A.w<.002)A.w=0;tot+=A.w;}
+  for(const n in K.act){const A=K.act[n];A.setEffectiveWeight(tot>0?A.w/tot:0);if(TS[n]!=null)A.timeScale=TS[n];}
+  K.mixer.update(dt);
+  for(const [o,q] of K.grip)o.quaternion.copy(q);
+  K.holder.updateMatrixWorld(true);ch.root.updateMatrixWorld(true);
+  // look up and down: the chest and head bend with the aim
+  const p=clamp(f.pitch||0,-1.2,1.2),ax=SKV.x.set(1,0,0).applyQuaternion(ch.root.getWorldQuaternion(SKV.q3));
+  skTurn(K.B.sp2,ax,-p*.35);skTurn(K.B.neck,ax,-p*.2);skTurn(K.B.head,ax,-p*.2);
+  // arms: reach for where the game's own arms put the hands (on the gun, in the guard, on the ladder rung)
+  for(const [A,up,fo,ha] of K.B.arms){if(!A.e||!A.hand)continue;
+    const E=A.e.getWorldPosition(SKV.a.clone()),H=A.e.localToWorld(SKV.b.set(A.hand[0],A.hand[1]-A.e.position.y,A.hand[2]).clone());
+    skAim(up,fo,E);skAim(fo,ha,H);}}
 function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))return MODEL_LOAD[id];
-  return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>{MODELS[id]=levelModel(charPrep(m,id),id);try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
+  return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>SKIN_CHARS[id]?loadSkinGLB(SKIN_CHARS[id].url).then(d=>{m.sk=d;return m;},e=>{console.warn('skin',id,e);return m;}):m).then(m=>{MODELS[id]=levelModel(charPrep(m,id),id);try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
     .catch(e=>{console.warn('model',id,e);delete MODEL_LOAD[id];});}
 function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
 setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const p=needModel(MODEL_IDS[i++]);(p||Promise.resolve()).then(next,next);};next();},2500);
@@ -8141,7 +8226,7 @@ function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=ne
     g.userData.flames=fl;ch.body.add(g);ch.jet=g;}
   // Jet's helmet is an open shell: fill the back of his head and neck so you don't see into it from above
   if(id==='jet'){const f=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),new THREE.MeshStandardMaterial({color:'#22348a',roughness:.6}));f.scale.set(.3,.24,.26);f.position.set(0,.38,-.02);f.castShadow=true;ch.headG.add(f);}
-  ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};glowFX(ch,id);rigUp(ch,M,id);}
+  ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};glowFX(ch,id);rigUp(ch,M,id);if(M.sk)try{skinOn(ch,M,id);}catch(e){console.warn('skinOn',id,e);}}
 /* Knees: each model leg is cut in two at the knee (thigh stays on the hip, shin hangs from a knee joint) so crouching can kneel properly
    instead of sitting with stiff legs. The cut is made once per model and shared; a small cap, coloured from the leg's own texture at the
    knee, hides the seam when the knee bends. CROUCH works out the kneeling stance from each model's hip height and leg length. */
@@ -11197,6 +11282,7 @@ function animFighter(f,dt,menu){const ch=f.ch;if(f.rd)rdUnder(f,ch);
       ch.aR.p.rotation.set(mix(ch.aR.p.rotation.x,-2.75+.55*a),mix(ch.aR.p.rotation.y,0),mix(ch.aR.p.rotation.z,-.08));ch.aL.p.rotation.set(mix(ch.aL.p.rotation.x,-2.75-.55*a),mix(ch.aL.p.rotation.y,0),mix(ch.aL.p.rotation.z,.08));
       ch.lL.p.rotation.x=mix(ch.lL.p.rotation.x,-.95*(.5+.5*a));ch.lR.p.rotation.x=mix(ch.lR.p.rotation.x,-.95*(.5-.5*a));ch.headG.rotation.x=mix(ch.headG.rotation.x,-.18);ch.body.position.y=-1.25;ch.body.rotation.x=0;ch.body.position.z=0;if(ch.knee){ch.lL.k.rotation.x=ch.lR.k.rotation.x=.25*a+.25;}}
     if(L){f.ladHid=1;for(const k in f.guns)f.guns[k].visible=false;}else if(f.ladHid){f.ladHid=0;const g=f.guns[gunOf(f)];if(g&&!f.finishing)g.visible=true;}}
+  if(ch.sk)skinAnim(f,ch,dt,sp,menu);
   if(ch.anim)ch.anim(dt,S.t);
 
 
@@ -11741,7 +11827,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=S.snipers&&m!=='rumble'&&m!=='parkour'?'Snipers only: pick one of six snipers (HDR, Kar98, Reaper, Titan .50, Vanguard or Phantom). It is your only gun, plus fists (or a bat) and your lethal; the shop still works. '+who:m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just fists. '+who:who+(P==='1v1'?' Use the houses, build walls for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='133e89c300ca';
+const MODEL_STAMP='2deddb0bc902';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */

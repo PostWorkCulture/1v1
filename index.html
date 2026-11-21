@@ -5522,6 +5522,13 @@ function arenaStadium(X,Z){const G=M.group,rows=16,rd=1.1,rh=.75,base=1.2,off=4;
     M.life.push((t,dt)=>{cube.rotation.y=t*.12;const i=Math.floor(t/6)%ADS.length;if(i!==adI){adI=i;drawAd(i);}trim.color.setHSL(.52+.08*Math.sin(t*.7),1,.55);});}
   /* the LED boards scroll */
   M.life.push((t,dt)=>{if(ARENA_LED)ARENA_LED.offset.x=-t*.04;});}
+/* Test Arena (?test): a plain 40 x 60 m yard for working on a fighter. Left half dark tarmac, right half pale tiles (to check how he reads on both),
+   grass round the outside, boxes 1 m and 2 m tall to jump onto, a long dark wall and a white wall to see him against */
+function testArenaMap(){const X=20,Z=30;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  floor(-130,130,-140,140,'#ffffff','lawn',-.02,8);floor(-X,0,-Z,Z,'#4a4d55','asphalt',0,1);floor(0,X,-Z,Z,'#d9dce1','tile',.002,4);
+  arenaWalls(X,Z);
+  box(-8,0,6,3,1,3,'#8a6a4a');box(-8,0,12,3,2,3,'#7a5a3a');box(8,0,6,3,1,3,'#6a8ab0');box(8,0,12,3,2,3,'#5a7aa0');
+  box(-12,0,-8,.6,3,10,'#2a2c32');box(12,0,-8,.6,3,10,'#f2f2f2');}
 function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-120,120,-120,120,'#3a3e48','asphalt',-.02,1);floor(-X,X,-Z,Z,'#d9dce1','tile',0,4);
   /* markings: centre circle and halfway line */
@@ -6249,6 +6256,7 @@ function clubNight(){const X=24,Z=14,HX=14,H=12;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z}
   /* the music (sfx/clubmusic.wav, original 122 bpm deep house): full in the hall and inside the lounge, half out in the alley and up on the lounge roof deck */
   M.clubMusic=(x,y,z)=>(Math.abs(x)<=12&&y<12)||(x<-12&&y<4.6)?1:.5;}
 const MAPS={
+ testarena:{modes:['duel'],dev:true,name:'Test Arena',desc:'A plain yard for working on a fighter: half dark tarmac, half pale tiles, on grass, with a few boxes to jump on and a dark wall',sw:['#55b443','#4a4d55','#d9dce1'],build(){testArenaMap();}},
  arena:{modes:['duel'],in1v1:true,name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
  skyhigh:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Sky High',desc:'A helipad on top of a skyscraper at golden hour: air-con units, water tanks and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
@@ -8011,9 +8019,9 @@ const CHARS={
   dracula:{skin:'dracula_vamp',fx:['Black hole','Spirit'],name:'Dracz',hp:100,look:{shirt:'#3a2350',shirtSolid:'#2a1838',hair:'#1a1420'},color:'#c4122e'},
   astronaut:{skin:'space_suit',fx:['Rainbow beam','Firework'],name:'Spacebot',hp:100,look:{shirt:'#eceff3',shirtSolid:'#d3d8de',hair:'#2d6fd8'},color:'#ff7a1f'},
   lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'},
-  roboid:{skin:'black_roboid',fx:['Lightning','Black hole'],name:'Shadow',hp:100,look:{shirt:'#16161a',shirtSolid:'#0c0c0e',hair:'#0c0c0e'},color:'#e0202a'}};
+  roboid:{dev:true/* Test Arena only (?test): not in the menu, Random or the bots */,skin:'black_roboid',fx:['Lightning','Black hole'],name:'Shadow',hp:100,look:{shirt:'#16161a',shirtSolid:'#0c0c0e',hair:'#0c0c0e'},color:'#e0202a'}};
 const ABIL_KILL={crush:'crushed by the chopper',fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain',turret:'Sentry'};
-const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula','jet','astronaut'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))]; // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
+const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula','jet','astronaut'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))].filter(k=>!CHARS[k].dev); // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
 function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
 /* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or
    mouths a skin used to stick on top are removed, so features never double up. mode 'smirk' is the crowning close-up. */
@@ -8221,7 +8229,7 @@ function skinOn(ch,M,id){const C=SKIN_CHARS[id],D=M.sk;if(!C||!D)return;
   for(const n in C.ph)if(act[n])act[n].sync=C.ph[n];
   ch.sk={holder,six,mixer,act,grip,B,C,u:1/s,show:null,airT:0,vis:null,ph:0};}
 function skinAnim(f,ch,dt,sp,menu){const K=ch.sk;if(!K)return;const C=K.C;
-  const special=!f.alive||f.downed||f.finishing||f.rd||f.dangle||f.tumble||f.carriedBy||f.skySlam||f.onLadder||f.ladK>.01||f.heapFall||CR.run;
+  const special=K.force6||!f.alive||f.downed||f.finishing||f.rd||f.dangle||f.tumble||f.carriedBy||f.skySlam||f.onLadder||f.ladK>.01||f.heapFall||CR.run;
   const show=!special;if(K.show!==show){K.show=show;K.holder.visible=show;for(const m of K.six)m.visible=!show;}
   if(!show)return;
   // velocity in his own frame (x = his left, z = forward), in metres a second at his size
@@ -8254,7 +8262,7 @@ function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))re
   return MODEL_LOAD[id]=loadPartsGLB('chars/'+id+'.glb').then(m=>SKIN_CHARS[id]?loadSkinGLB(SKIN_CHARS[id].url).then(d=>{m.sk=d;return m;},e=>{console.warn('skin',id,e);return m;}):m).then(m=>{MODELS[id]=levelModel(charPrep(m,id),id);try{if(S.state==='menu'||S.state==='countdown')for(const f of FS)if(f.char===id&&f.ch&&!f.ch.model){f.char=null;setLook(f,id);}}catch(e){}})
     .catch(e=>{console.warn('model',id,e);delete MODEL_LOAD[id];});}
 function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
-setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const p=needModel(MODEL_IDS[i++]);(p||Promise.resolve()).then(next,next);};next();},2500);
+setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const id=MODEL_IDS[i++];const p=CHARS[id]&&CHARS[id].dev?null:needModel(id);(p||Promise.resolve()).then(next,next);};next();},2500);
 /* Boxing gloves: with fists out, every character punches in a small pair of padded gloves in their own colours ([mitt, cuff trim]).
    Each glove is sized off the model's own hand box (fingertips up to the wrist, in elbow-joint space), only just bigger than the hand.
    They replace bare fists only: the moment a gun, bat or sword comes out they're hidden (see gloveShow). Looks only. */
@@ -8396,7 +8404,7 @@ const CHAR_GLOW={
   ghost:[...CGLOW_SYM({p:'head',t:'halo',at:[.1,.34,.32],s:.2,c:'#ff2030'}),...CGLOW_SYM({p:'head',t:'flame',at:[.6,.98,0],s:[.24,.56],rot:-.2,c:'#3fe8ff'})],
   crusty:[{p:'head',t:'halo',at:[.02,.16,.54],s:.36,c:'#ff2018'}],
   lilpink:[{p:'torso',t:'halo',at:[0,1.72,.47],s:.42,c:'#ff5ab0'}],
-  roboid:[{p:'head',t:'halo',at:[0,.81,.26],s:.26,c:'#ff1a10'},{p:'head',t:'glint',at:[0,.81,.24],s:[.5,.07],c:'#ff4a30'}],
+  /* roboid (Shadow): no glow sprites; his visor and bracer stripes glow from his own emissive map (the sprites smeared into red blurs round his head) */
   patch:[{p:'head',t:'halo',at:[0,.83,.42],s:.3,c:'#5dff8a'},{p:'head',t:'glint',at:[0,.83,.44],s:[.7,.12],c:'#c8ffd8'}],
   astronaut:[{p:'head',t:'glint',at:[-.2,.47,.69],s:[.55,.1],rot:.6,c:'#ffffff'},{p:'torso',t:'blink',at:[-.22,1.66,.71],s:.16,c:'#3dff6a'},{p:'torso',t:'blink',at:[.2,1.66,.71],s:.16,c:'#ff3030',ph:1.4}]};
 const CGLOWTEX={};
@@ -8897,7 +8905,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[1,'40 × 30 m'],house:[1,'40 × 30 m'],club:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[1,'40 × 30 m'],house:[1,'40 × 30 m'],club:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[3,5,10].includes(+store.get('duel:dmlen',5))?+store.get('duel:dmlen',5):5,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
@@ -10419,7 +10427,7 @@ function nadeAim(f,a,T,see,dist){const fo=foesOf(f).filter(o=>!o.downed&&!o.fini
   if(see&&dist>7&&dist<22)return{p:T.pos,rate:a.mode==='rush'?.6:.2};return null;}
 const lob=(f,tgt)=>{const e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.max(.1,Math.hypot(dx,dz)),sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
   return{e,dx,dz,hd,ang:.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05};};
-function botThink(f,dt){botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
+function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);const a=f.ai,dif=botDif(f);if(!f.alive||f.stunT>0)return{wx:0,wz:0,jump:false};const T=botTarget(f);if(!T){updCrouch(f,f.downed,dt);return{wx:0,wz:0,jump:false};}
   if(f.downed){updCrouch(f,true,dt);const dd=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z);const seen=T.alive&&los(eyeOf(T,new V3()),new V3(f.pos.x,f.pos.y+.5,f.pos.z));
     f.reviving=!seen||dd>16;if(f.reviving)return{wx:0,wz:0,jump:false};const tx=f.pos.x-T.pos.x,tz=f.pos.z-T.pos.z,l=Math.hypot(tx,tz)||1;return{wx:tx/l,wz:tz/l,jump:false};}
   // when the target goes down the bot either walks over to finish them (50%) or stays put and shoots them on the ground (50%)
@@ -11393,7 +11401,7 @@ function updCamera(dt){S.camFollow=0;
   const look=head.clone().addScaledVector(right,scoped?0:(f.ads?1.0:1.45)).addScaledVector(dir,60);camera.lookAt(look);}
 
 /* ================= round flow ================= */
-function startMatch(){S.qr=null;if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!mapOK(MAPS[S.map]))S.map=mapList()[0];if(!priOK(S.gun)||!SECONDARIES.includes(S.sec)||!secOK(S.sec))rollLoad();D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
+function startMatch(){S.qr=null;if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!mapOK(MAPS[S.map])&&!(S.test&&MAPS[S.map]))S.map=mapList()[0];if(!priOK(S.gun)||!SECONDARIES.includes(S.sec)||!secOK(S.sec))rollLoad();D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.rlog=[];S.stats={shots:0,hits:0,heads:0,dmg:0,walls:0,kills:0,elims:0};
   for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;f.sh=0;f.hi=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;snipeKit(ME);ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='fists';if(S.simple)Object.assign(ME,SIMPLE_KIT);
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
@@ -11786,7 +11794,7 @@ const SIM=1/60;let simAcc=0;
    Any click, slider or key on the pause screen (or a resize) draws a few fresh frames so changes like FOV or graphics show straight away */
 let pzDirty=0;const pzStill=()=>S.paused&&!(typeof NET!=='undefined'&&NET.live)&&!$('duel-pause').hidden;
 for(const ev of ['click','input','change','keydown'])$('duel-pause').addEventListener(ev,()=>{pzDirty=4;},true);addEventListener('resize',()=>{pzDirty=4;});
-function frame(rdt){if(pzStill()){if(pzDirty<=0)return;pzDirty--;}else pzDirty=3;simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;try{step(SIM);}catch(err){const m=String(err&&err.message);if(!frame.seen)frame.seen=new Set();if(!frame.seen.has(m)){frame.seen.add(m);console.error('step failed:',err);}}n++;}
+function frame(rdt){rdt*=S.tspd||1;if(pzStill()){if(pzDirty<=0)return;pzDirty--;}else pzDirty=3;simAcc=Math.min(simAcc+rdt,SIM*4);let n=0;while(simAcc>=SIM-1e-6){simAcc-=SIM;try{step(SIM);}catch(err){const m=String(err&&err.message);if(!frame.seen)frame.seen=new Set();if(!frame.seen.has(m)){frame.seen.add(m);console.error('step failed:',err);}}n++;}
   if(!n&&S.state!=='menu')updCamera(rdt);if(S.state==='menu'&&!$('menu').hidden)return;drawLerp(1);render();drawLerp(0);capFrame(rdt);}
 /* ================= kill replays ================= */
 // a small rolling buffer of what you see; when a kill involving you happens the last few seconds become a clip
@@ -13689,7 +13697,7 @@ const IMG_DB={db:null,open(){if(this.db)return this.db;return this.db=new Promis
   async put(k,v){const db=await this.open();return new Promise(r=>{try{const tx=db.transaction('k','readwrite'),st=tx.objectStore('k');st.clear();st.put(v,k);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false);}catch(e){r(false);}});}};
 let imgVer=null,imgQ=null,imgLoad=null;
 function imgVersion(){if(imgVer)return imgVer;let h=2166136261;for(const sc of document.querySelectorAll('script:not([src])')){const t=sc.textContent;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}}return imgVer='v1_'+(h>>>0).toString(36);}
-function menuImagesReady(){return previewsMade&&Object.keys(MAPS).every(k=>thumbs[k]);}
+function menuImagesReady(){return previewsMade&&Object.keys(MAPS).filter(k=>!MAPS[k].dev).every(k=>thumbs[k]);}
 // the saved set is looked up the moment the page starts, while the maps are still being built
 /* the saved set is keyed on the game's code AND the published version (sw.js cache name, bumped on every publish), so a change to a map's
    models or textures with no code change still redraws the map pictures; offline it falls back to the code-only key */
@@ -13701,16 +13709,16 @@ const imgCached=imgVerP.then(v=>IMG_DB.get(v)).catch(()=>null);
 let imgLastIn=-1e9;for(const ev of ['pointerdown','pointermove','keydown','wheel','touchstart'])addEventListener(ev,()=>{imgLastIn=performance.now();},{passive:true,capture:true});
 function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
   if(!imgLoad)imgLoad=Promise.race([imgCached,new Promise(r=>setTimeout(()=>r(null),15000))]).catch(()=>null).then(async v=>{
-    const full=x=>x&&x.prev&&x.thumbs&&Object.keys(MAPS).every(k=>x.thumbs[k]),use=x=>{Object.assign(PREV,x.prev);setCharPrev();Object.assign(thumbs,x.thumbs);previewsMade=true;if(S.state==='menu')renderDuelMenu();};
+    const full=x=>x&&x.prev&&x.thumbs&&Object.keys(MAPS).filter(k=>!MAPS[k].dev).every(k=>x.thumbs[k]),use=x=>{Object.assign(PREV,x.prev);setCharPrev();Object.assign(thumbs,x.thumbs);previewsMade=true;if(S.state==='menu')renderDuelMenu();};
     if(full(v)){use(v);return;}
     const old=await IMG_DB.any().catch(()=>null);
     /* an older version's gun and lethal pictures are never shown: guns change often, so they're drawn fresh straight away (first in the queue, without waiting for the menu to go idle) */
-    if(old&&old.prev&&old.thumbs){const have=Object.keys(MAPS).filter(k=>old.thumbs[k]),pv={};for(const k in old.prev)if(!k.startsWith('g_'))pv[k]=old.prev[k];use({prev:pv,thumbs:old.thumbs});startImgQueue(true,have);}
+    if(old&&old.prev&&old.thumbs){const have=Object.keys(MAPS).filter(k=>!MAPS[k].dev&&old.thumbs[k]),pv={};for(const k in old.prev)if(!k.startsWith('g_'))pv[k]=old.prev[k];use({prev:pv,thumbs:old.thumbs});startImgQueue(true,have);}
     else startImgQueue();});
   else if(!menuImagesReady())imgLoad.then(()=>{if(!menuImagesReady())startImgQueue();});}
 /* refresh: redraw everything (the shown set is from an older version); new maps the old set lacks go first */
 function startImgQueue(refresh,have){if(imgQ||(!refresh&&menuImagesReady()))return;
-  const maps=Object.keys(MAPS),miss=maps.filter(k=>!thumbs[k]),again=refresh?maps.filter(k=>thumbs[k]&&(!have||have.includes(k))):[];
+  const maps=Object.keys(MAPS).filter(k=>!MAPS[k].dev),miss=maps.filter(k=>!thumbs[k]),again=refresh?maps.filter(k=>thumbs[k]&&(!have||have.includes(k))):[];
   const gunT=previewsMade&&!refresh?[]:previewTasks();for(const t of gunT)t.urgent=true;
   imgQ=[...gunT,...miss.map(k=>()=>makeThumb(k)),...again.map(k=>()=>makeThumb(k,true))];setTimeout(runImgQ,60);}
 function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
@@ -14011,6 +14019,32 @@ $('net-code').addEventListener('keydown',e=>{if(e.key==='Enter')netJoin(e.target
 document.addEventListener('click',e=>{if(NET.role==='client'&&e.target.closest('#menu'))setTimeout(()=>netSend({t:'load',load:myLoad()}),0);});
 renderDuelMenu();renderRecord();
 {let sm=store.get('mode','duels');if(sm!=='rumble'&&sm!=='simple'&&sm!=='one'&&sm!=='snipers')sm='duels';{const w=()=>{if(B.G.state==='menu'&&!$('menu').hidden)setMode(sm);else setTimeout(w,100);};setTimeout(w,100);}}
+/* ---- Test Arena: open the game with ?test to play Shadow (or another fighter: ?test=wednesday) on the Test Arena map against a dummy that just stands
+   there. A small panel top left: restart, slow motion, graphics level, real skeleton vs six-piece model, visor glow, surface relief, and a live readout of
+   which of his clips are playing. Nothing here touches saved settings, records or stats. */
+{const q=new URLSearchParams(location.search);if(q.has('test')){const cid=CHARS[q.get('test')]?q.get('test'):'roboid';
+  const start=()=>{S.test=1;S.map='testarena';S.char=cid;S.randChar=false;S.randMap=false;if(S.one)S.one=false;try{enterMenu();startMatch();}catch(e){console.warn('test arena',e);}};
+  const panel=()=>{const d=document.createElement('div');d.id='test-panel';
+    d.style.cssText='position:fixed;left:8px;top:8px;z-index:99999;background:rgba(10,12,16,.82);color:#fff;font:12px/1.35 system-ui,sans-serif;padding:8px;border-radius:8px;max-width:260px;user-select:none';
+    const B=(label,fn)=>{const b=document.createElement('button');b.textContent=label;b.style.cssText='margin:2px;padding:6px 8px;border:0;border-radius:6px;background:#2d3340;color:#fff;font:12px system-ui';
+      b.addEventListener('click',e=>{e.stopPropagation();fn(b);});b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});d.appendChild(b);return b;};
+    const sk=()=>ME&&ME.ch&&ME.ch.sk;
+    d.innerHTML='<b>Test Arena</b> · '+CHARS[cid].name+'<br>';
+    B('Restart',()=>start());
+    const sp=[1,.5,.25];let si=0;B('Speed 1x',b=>{si=(si+1)%3;S.tspd=sp[si];b.textContent='Speed '+sp[si]+'x';});
+    const lv=['low','med','high'];let li=Math.max(0,lv.indexOf(window.GFX&&GFX.lv?GFX.lv():'high'));B('Gfx '+lv[li],b=>{li=(li+1)%3;try{GFX.set(lv[li]);}catch(e){}b.textContent='Gfx '+lv[li];});
+    B('Model: skeleton',b=>{const K=sk();if(!K)return;K.force6=!K.force6;b.textContent='Model: '+(K.force6?'six-piece':'skeleton');});
+    B('Glow on',b=>{const g=ME.ch.glowG||[];const on=!(g[0]&&g[0].visible===false);for(const o of g)o.visible=!on;b.textContent='Glow '+(on?'off':'on');});
+    B('Relief on',b=>{const K=sk();if(!K)return;let m;K.holder.traverse(o=>{if(o.isSkinnedMesh)m=o.material;});if(!m)return;
+      if(m.normalMap){m.userData.nm=m.normalMap;m.normalMap=null;}else m.normalMap=m.userData.nm||null;m.needsUpdate=true;b.textContent='Relief '+(m.normalMap?'on':'off');});
+    B('Exit',()=>{location.href=location.pathname;});
+    const info=document.createElement('div');info.style.cssText='margin-top:4px;font:11px/1.3 ui-monospace,monospace;color:#cfe;white-space:pre';d.appendChild(info);
+    document.body.appendChild(d);
+    setInterval(()=>{const K=sk();if(!ME){info.textContent='';return;}const v=Math.hypot(ME.vel.x,ME.vel.z);let t='speed '+v.toFixed(1)+(K?'  '+(K.show?'skeleton':'six-piece'):'')+'\n';
+      if(K){const w=Object.entries(K.act).map(([n,a])=>[n,a.getEffectiveWeight(),a.timeScale]).filter(x=>x[1]>.04).sort((a,b)=>b[1]-a[1]);for(const [n,wt,ts] of w)t+=(wt*100|0).toString().padStart(3)+'% '+n+(ts?' x'+ts.toFixed(2):'')+'\n';}
+      info.textContent=t;},250);};
+  const go=()=>{if(!window.__duel)return setTimeout(go,200);start();panel();};setTimeout(go,600);}}
+
 })();
 </script>
 </body>

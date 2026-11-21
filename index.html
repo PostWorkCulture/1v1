@@ -8323,7 +8323,7 @@ const HOLD={sniper:{s:.78,h:{r:[0,-.2,-.36],l:[.02,-.04,.5]}},reaper:{s:.8,h:{r:
   ar:{},gar:{},burst:{},smg:{},vector:{},p90:{},hornet:{},shotgun:{},autoshot:{},crossbow:{nf:1},rocket:{nf:1,sh:1},ump:{},sting:{s:.95},swarm:{nf:1,s:.92},duals:{twin:1},flamer:{nf:1}};
 const HELD={};
 function heldParts(id){if(HELD[id])return HELD[id];const g=heroModel(id,B.roundedBox,true),C=HOLD[id];g.updateMatrixWorld(true);const by={};
-  g.traverse(o=>{if(!o.isMesh||Array.isArray(o.material)||!o.visible)return;const q=o.geometry.clone().applyMatrix4(o.matrixWorld);(by[o.material.uuid]??={mat:o.material,list:[]}).list.push(q);});
+  g.traverse(o=>{if(!o.isMesh||Array.isArray(o.material)||(!o.visible&&!(o.material&&o.material.userData.fired)))return;const q=o.geometry.clone().applyMatrix4(o.matrixWorld);(by[o.material.uuid]??={mat:o.material,list:[]}).list.push(q);});
   const parts=[];for(const k in by){const L=by[k].list,names=Object.keys(L[0].attributes).filter(n=>L.every(q=>q.attributes[n]&&q.attributes[n].itemSize===L[0].attributes[n].itemSize));
     const out=new THREE.BufferGeometry();let vo=0;const idx=[];for(const n of names){const sz=L[0].attributes[n].itemSize;let len=0;for(const q of L)len+=q.attributes[n].count*sz;const arr=new Float32Array(len);let off=0;
       for(const q of L){arr.set(q.attributes[n].array.subarray?q.attributes[n].array:q.attributes[n].array,off);off+=q.attributes[n].count*sz;}out.setAttribute(n,new THREE.BufferAttribute(arr,sz));}
@@ -8366,6 +8366,7 @@ const HV={r:new THREE.Vector3(),l:new THREE.Vector3(),t:new THREE.Vector3(),pr:n
 function holdGun(f,ch,dt,sp,lean,on){const id=gunOf(f),C=HOLD[id],low=f.guns&&f.guns[id];
   for(const k in ch.held||{})if(k!==id||!on||!C)ch.held[k].rig.visible=false;
   const show=on&&C&&low&&(low.visible||(low.userData.twin&&low.userData.twin.visible));
+  if(id==='crossbow'&&ch.held&&ch.held.crossbow){const h=ch.held.crossbow;h.loadM??=h.rig.children.filter(o=>o.isMesh&&o.material&&o.material.userData&&o.material.userData.loaded);h.firedM??=h.rig.children.filter(o=>o.isMesh&&o.material&&o.material.userData&&o.material.userData.fired);const has=(f.ammo.crossbow||0)>0;for(const o of h.loadM)o.visible=has;for(const o of h.firedM)o.visible=!has;}
   for(const k in f.guns||{}){const g=f.guns[k],z=show&&k===id?0:1;if(g.scale.x!==z){g.scale.setScalar(z);if(g.userData.twin)g.userData.twin.scale.setScalar(z);}}
   if(!show){if(ch.aR.e&&ch.aR.e.rotation.x){ch.aR.e.rotation.set(0,0,0);ch.aL.e.rotation.set(0,0,0);}return false;}
   const G=heldRig(ch,id),R=G.rig,P=G.P,H=P.H,sh=ch.aR.p.position,sx=Math.abs(sh.x),sy=sh.y;R.visible=true;
@@ -8966,10 +8967,28 @@ const flashMesh=()=>lethMesh('c_flash',.68);
 const clusterMesh=()=>lethMesh('c_cluster',.62);
 const bombletMesh=()=>lethMesh('bomblet',1);
 const stunMesh=()=>lethMesh('c_stun',.68);
-const boltMesh=()=>{const g=new THREE.Group(),Z=ge=>ge.rotateX(Math.PI/2);g.add(new THREE.Mesh(Z(new THREE.CylinderGeometry(.016,.016,.75,8)),mat('#e8edf5',null,{metalness:.9,roughness:.15})));const tip=new THREE.Mesh(Z(new THREE.ConeGeometry(.045,.18,4)),new THREE.MeshBasicMaterial({color:'#3bff7a',toneMapped:false}));tip.position.z=.44;g.add(tip);for(const r of [0,Math.PI/2]){const v=new THREE.Mesh(new THREE.BoxGeometry(.09,.008,.16),new THREE.MeshBasicMaterial({color:'#3bff7a',toneMapped:false}));v.position.z=-.28;v.rotation.z=r;g.add(v);}return g;};
+/* crossbow bolt: small and very thin carbon shaft, slim steel broadhead, three short vanes and a lighted nock so you can follow it */
+const BOLTM={};const boltMesh=()=>{const g=new THREE.Group(),Z=ge=>ge.rotateX(Math.PI/2);
+  BOLTM.s??=mat('#24272c',null,{metalness:.4,roughness:.45});BOLTM.t??=mat('#d5dae2',null,{metalness:1,roughness:.2});BOLTM.v??=new THREE.MeshBasicMaterial({color:'#3bff7a',toneMapped:false});BOLTM.n??=new THREE.MeshBasicMaterial({color:'#b8ffd0',toneMapped:false});
+  BOLTM.sg??=Z(new THREE.CylinderGeometry(.0055,.0055,.5,6));BOLTM.tg??=Z(new THREE.ConeGeometry(.013,.05,4));BOLTM.vg??=new THREE.BoxGeometry(.028,.0015,.06);BOLTM.ng??=new THREE.SphereGeometry(.008,8,6);
+  g.add(new THREE.Mesh(BOLTM.sg,BOLTM.s));const tip=new THREE.Mesh(BOLTM.tg,BOLTM.t);tip.position.z=.275;g.add(tip);
+  for(let i=0;i<3;i++){const v=new THREE.Mesh(BOLTM.vg,BOLTM.v);v.position.z=-.2;v.rotation.z=i*Math.PI*2/3;v.position.x=Math.cos(i*Math.PI*2/3+Math.PI/2)*.012;v.position.y=Math.sin(i*Math.PI*2/3+Math.PI/2)*.012;g.add(v);}
+  const nk=new THREE.Mesh(BOLTM.ng,BOLTM.n);nk.position.z=-.25;g.add(nk);return g;};
+/* bolts that hit stick for a while: in people (moving with the head or body), wood, props, walls and the ground; not in glass, bricks, cars or turrets */
+const STUCK=[];
+function stickBolt(at,d,o){const m=boltMesh();m.position.copy(at).addScaledVector(d,.09);m.lookAt(at.x+d.x*3,at.y+d.y*3,at.z+d.z*3);scene.add(m);
+  const st={m,t:8,who:o.who||null,box:o.box||null,dead:false};
+  if(st.who&&st.who.ch){const ch=st.who.ch,par=o.part==='head'&&ch.headG?ch.headG:(ch.body||ch.root);par.attach(m);}
+  else if(st.box&&st.box.mesh&&st.box.prop){const s=st.box.mesh.scale;if(Math.abs(s.x-s.y)<.01&&Math.abs(s.y-s.z)<.01)st.box.mesh.attach(m);}
+  STUCK.push(st);while(STUCK.length>16)dropStuck(0);}
+function dropStuck(i){const st=STUCK[i];if(st.m.parent)st.m.parent.remove(st.m);STUCK.splice(i,1);}
+function updStuck(dt){for(let i=STUCK.length-1;i>=0;i--){const st=STUCK[i];st.t-=dt;const w=st.who,b=st.box;if(w){if(!w.alive)st.dead=true;else if(st.dead){dropStuck(i);continue;}}
+    if(b&&(b.alive===false||(b.chip&&st.m.parent===scene&&st.m.position.y>b.y1+.05))){dropStuck(i);continue;}
+    if(st.t<=0){dropStuck(i);continue;}if(st.t<.3)st.m.scale.setScalar(Math.max(.01,st.t/.3));}}
+function clearStuck(){while(STUCK.length)dropStuck(STUCK.length-1);}
 function spawnProj(f,id,from,dir){const g=GUNS[id];const mesh=id==='swarm'?swarmMesh():id==='rocket'?rocketMesh():id==='crossbow'?boltMesh():id==='grenade'?grenMesh():id==='stun'?stunMesh():id==='flash'?flashMesh():id==='cluster'?clusterMesh():id==='bomblet'?bombletMesh():starMesh();mesh.position.copy(from);scene.add(mesh);
   projs.push({f,id,pos:from.clone(),vel:dir.clone().multiplyScalar(g.speed),life:g.landFuse?8:(g.fuse||4),armed:!g.landFuse,mesh});}
-function clearProjs(){for(const p of projs)scene.remove(p.mesh);projs.length=0;clearMines();}
+function clearProjs(){for(const p of projs)scene.remove(p.mesh);projs.length=0;clearMines();clearStuck();}
 function wetBoom(at){if(M.splash&&M.waterY(at.x,at.z)!=null&&at.y<1.2){M.splash(at.x,at.z,2.6);sfx('splash',at,{range:24,rate:.8});for(let i=0;i<3;i++)emit(at.x,.4,at.z,{n:10,speed:3,up:9-i*2,size:.2,life:1,grav:16,colors:['#ffffff','#d8f6f8','#9fe3ea']});}}
 function rocketNear(p,st,L){let best=null;for(const o of foesOf(p.f)){if(o.finishing)continue;const sc=o.scale||1;for(let k=1;k<=5;k++){const u=k/5,x=p.pos.x+st.x*u,y=p.pos.y+st.y*u,z=p.pos.z+st.z*u;const h=Math.hypot(x-o.pos.x,z-o.pos.z);if(h<.55&&y>o.pos.y+.1&&y<o.pos.y+2.7*sc){const t=L*u;if(!best||t<best.t)best={t,who:o};break;}}}return best;}
 let ROCKET_SKIP=null;
@@ -8994,15 +9013,15 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
       for(let k=0;k<5;k++){const a=k/5*TAU+rnd(-.3,.3),sp=rnd(4,7);spawnProj(p.f,'bomblet',at.clone().add(new V3(0,.25,0)),new V3(Math.cos(a)*sp/8,rnd(.7,1.1)*7/8,Math.sin(a)*sp/8));projs[projs.length-1].life=rnd(.7,1.2);}}
     else if(p.id==='bomblet')explode(p.f,at.add(new V3(0,.15,0)),null,{dmg:g.dmg,radius:g.radius,wall:60,gun:'grenade',small:true,colors:['#ffd23f','#ff7a1f','#3a3d45','#ffffff']});
     else if(hit&&hit.f){const head=hit.f.part==='head',dm=Math.round(g.dmg*(head?g.head:1));if(p.f)(p.f).hi=((p.f).hi||0)+1;if(p.f===ME){S.stats.hits++;if(head)S.stats.heads++;S.stats.dmg+=Math.min(dm,100);hitMarker(head);dmgNumber(foe,dm,head);}
-      emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});damage(foe,dm,p.f,head,p.id);}
-    else{if(hit)knockRay(p.pos,d,hit.t,g.dmg,p.f);if(hit&&hit.mine){if(NET.role!=='client')popMine(hit.mine.x,hit.mine.z,p.f);}else if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);if(hit.b.box.turret)hitTurret(hit.b.box.turret,p.id==='crossbow'?90:40,p.f);else if(hit.b.box.car)hitCar(hit.b.box.car,g.dmg,at);damageWood(hit.b.box,p.id==='crossbow'?70:40,at,p.vel);}emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#3bff7a','#ffffff']:['#ffffff','#c9ced8']});}
+      emit(at.x,at.y,at.z,{n:8,speed:4,size:.12,colors:['#ff4a3d','#ffffff']});if(p.id==='crossbow')stickBolt(at,d,{who:foe,part:hit.f.part});damage(foe,dm,p.f,head,p.id);}
+    else{if(hit)knockRay(p.pos,d,hit.t,g.dmg,p.f);if(hit&&hit.mine){if(NET.role!=='client')popMine(hit.mine.x,hit.mine.z,p.f);}else if(hit&&hit.b){damageBrick(brickOf(hit.b.box),p.id==='crossbow'?90:60,p.vel);if(hit.b.box.turret)hitTurret(hit.b.box.turret,p.id==='crossbow'?90:40,p.f);else if(hit.b.box.car)hitCar(hit.b.box.car,g.dmg,at);damageWood(hit.b.box,p.id==='crossbow'?70:40,at,p.vel);}if(p.id==='crossbow'&&hit&&!hit.mine&&(hit.g||(hit.b&&!brickOf(hit.b.box)&&!hit.b.box.car&&!hit.b.box.turret)))stickBolt(at,d,{box:hit.b?hit.b.box:null});emit(at.x,at.y,at.z,{n:6,speed:3,size:.08,life:.3,colors:p.id==='crossbow'?['#c9a06a','#ffffff']:['#ffffff','#c9ced8']});}
     continue;}
   if(M.splash&&!p.wet){const ny=p.pos.y+st.y,wy=M.waterY(p.pos.x+st.x,p.pos.z+st.z);if(wy!=null&&p.pos.y>wy&&ny<=wy){p.wet=true;M.splash(p.pos.x+st.x,p.pos.z+st.z,Math.min(1.4,.45+L/dt*.025));if(M.deepWater&&THROWN.has(p.id)){p.armed=true;p.life=Math.min(p.life,g.fuse||1);}}}
   if(p.wet&&M.deepWater&&THROWN.has(p.id)){p.vel.multiplyScalar(Math.exp(-5*dt));p.vel.y=Math.max(p.vel.y,-1.2);}/* Lagoon: a grenade lobbed over the rail sinks and goes off under the water */
-  if(p.id==='crossbow')knockRay(p.pos,d,L,g.dmg,p.f);if(p.id==='crossbow')tracer(p.pos,p.pos.clone().add(st),p.f===ME?'#b8ffcc':'#7dff9a',.022);
+  if(p.id==='crossbow')knockRay(p.pos,d,L,g.dmg,p.f);if(p.id==='crossbow')tracer(p.pos,p.pos.clone().add(st),p.f===ME?'#b8ffcc':'#7dff9a',.006);
   p.pos.add(st);p.mesh.position.copy(p.pos);if(p.id==='swarm'){p.mesh.lookAt(p.pos.clone().add(d));const fl=p.mesh.userData.flame;if(fl)fl.scale.set(1,1,.7+Math.random()*.6);if(p.f!==ME||p.age>.1)emit(p.pos.x-d.x*.25,p.pos.y-d.y*.25,p.pos.z-d.z*.25,{n:1,speed:.3,size:.11,life:.45,grav:-1,colors:['#e6e8ec','#c4c8cf']});}
   if(p.id==='rocket'){p.mesh.lookAt(p.pos.clone().add(d));const fl=p.mesh.userData.flame;if(fl)fl.scale.set(1,1,.7+Math.random()*.6);p.age=(p.age||0)+dt;if(p.f!==ME||p.age>.15)emit(p.pos.x-d.x*.6,p.pos.y-d.y*.6,p.pos.z-d.z*.6,{n:2,speed:.5,size:.2,life:.7,grav:-1.2,colors:['#d8dbe0','#a9adb5','#f4f4f4']});if(Math.random()<.5)emit(p.pos.x-d.x*.5,p.pos.y-d.y*.5,p.pos.z-d.z*.5,{n:1,speed:.8,size:.14,life:.18,grav:0,colors:['#ffb347','#ffd23f']});}
-  else if(p.id==='crossbow'){p.mesh.lookAt(p.pos.clone().add(d));if(Math.random()<.6)emit(p.pos.x,p.pos.y,p.pos.z,{n:1,speed:.2,size:.07,life:.22,grav:0,colors:['#3bff7a','#b8ffd0']});}
+  else if(p.id==='crossbow')p.mesh.lookAt(p.pos.clone().add(d));
   else p.mesh.rotation.y+=dt*30;}}
 // explosion: white-hot flash, rolling fireball, smoke and embers, scorch mark
 const BOOM={geo:new THREE.SphereGeometry(1,16,12)};
@@ -11013,7 +11032,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
       const tg=lk.querySelector('.tag'),tx=lockT?'LOCK':'SEARCH';if(tg.textContent!==tx)tg.textContent=tx;const rg=lk.querySelector('.rng'),rt=lockT?Math.round(hf.t)+' m':'';if(rg.textContent!==rt)rg.textContent=rt;
       const am=ME.ammo.swarm||0,left=am>4?am-4:am;lk.querySelectorAll('.pips b').forEach((b,i)=>b.classList.toggle('l',i<left));}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(isSn(id)?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':xhClass())+(id==='sting'&&ME.ads&&VM.raise>.3?' chev':'');cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'||(id==='sting'&&ME.ads)?1:clamp(1-(VM.fp>0?VM.aim:VM.raise)*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
+  cr.style.setProperty('--g',((id==='shotgun'||id==='autoshot')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(isSn(id)?' reddot':id==='rocket'?' ring':scoped||id==='sword'?' dot':id==='grenade'?' dot':xhClass())+'';cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'?1:clamp(1-(VM.fp>0?VM.aim:VM.raise)*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':id==='sting'&&ME.ads?'#25e0cf':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*1.65);$('d-flash').style.opacity=flashA.toFixed(3);{const ao=(Math.min(1,flashA*1.5)*.55).toFixed(3);const ae=$('d-after');if(ae.style.opacity!==ao)ae.style.opacity=ao;}{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.hidden=true;numPool.push(n.el);nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -11768,7 +11787,7 @@ function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).cop
   updWalls(dt);updTurrets(dt);updProps(dt);updPlates(dt);updBat(dt);updShoes(dt);updSwarm(dt);updCelebrate(dt);updCrown(dt);updLife(dt);updAmb(dt);for(const sh of M.shops||[]){sh.pad.material.opacity=.22+.14*Math.sin(S.t*4);if(sh.tick)sh.tick(S.t);else sh.glowMat.opacity=.28+.18*Math.sin(S.t*3);}
   {const bd=M.bounds;if(bd)for(const x of FS){if(x.finishing&&x.finishing.fall||freeEdge(x))continue;/* a flung body may sail off the map */x.pos.x=clamp(x.pos.x,bd.x0,bd.x1);x.pos.z=clamp(x.pos.z,bd.z0,bd.z1);}}
   for(const x of FS)animFighter(x,dt,S.state==='menu');bodyFXend();
-  updProjs(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);if(FIRE_LIGHT.intensity>0&&S.t-(FIRE_LIGHT.userData.at||0)>.12)FIRE_LIGHT.intensity=0;updScorch(dt);updParts(dt);updFlames(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
+  updProjs(dt);updStuck(dt);updMines(dt);if(S.needR>0)S.needR-=rdt;updDebris(dt);if(FIRE_LIGHT.intensity>0&&S.t-(FIRE_LIGHT.userData.at||0)>.12)FIRE_LIGHT.intensity=0;updScorch(dt);updParts(dt);updFlames(dt);updVM(rdt);updTracers(dt);S.shake=Math.max(0,S.shake-rdt*1.5);
   updCamera(rdt);if(S.state!=='menu')updHUD(rdt);
   sky.position.copy(camera.position);const c=S.state==='menu'?M.center:ME.pos;placeSun(c);
   fillL.position.copy(camera.position);fillL.target.position.copy(c);}
@@ -12558,6 +12577,7 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
     BY=.05;const hw=.034,rec=FIN('#3f8f88'),recD=RAW('#1d4844',{metalness:.7,roughness:.6}),MK='#e2f5f3';
     extZ([[-hw,-.03],[hw,-.03],[hw,.066],[.022,.088],[-.022,.088],[-hw,.066]],-.15,.29,rec,.006);
     box(.074,.124,.03,0,.03,.292,phos,.009);box(.074,.112,.026,0,.03,-.16,phos,.009);cylX(.006,.08,0,-.005,.292,bolt,8);
+    if(vm){const ec=RAW('#1c1e22',{roughness:.82,metalness:.35,roughnessMap:NT.rough});box(.066,.1,.006,0,.03,-.175,ec,.004);box(.03,.012,.006,0,.07,-.179,phos,.002);cylX(.005,.08,0,.0,-.17,bolt,8);} /* aiming: matte end cap with its latch, not a glossy slab */
     box(.03,.006,.12,0,.088,.07,hole,.002);box(.022,.005,.1,0,.088,.062,bolt,.002);box(.024,.006,.02,0,.089,.12,phos,.002);
     for(const s of [-1,1]){box(.004,.016,.2,s*hw,.04,-.03,recD,.006);box(.004,.012,.11,s*hw,.008,-.07,recD,.005);box(.004,.012,.1,s*hw,.008,.2,recD,.005);
       box(.005,.012,.16,s*hw,.046,.19,hole,.002);cylX(.008,.02,s*(hw+.008),.046,.21,bolt,10);cylX(.019,.022,s*(hw+.024),.046,.21,bolt,18);for(let i=0;i<4;i++)cylX(.0195,.0025,s*(hw+.016+i*.0052),.046,.21,hole,18);}
@@ -12577,7 +12597,7 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
       add(new THREE.TorusGeometry(.043,.0055,8,22,Math.PI),wire,0,.108,.34).rotation.x=Math.PI/2;box(.03,.012,.012,0,.108,.383,rub,.004);}
     tor(.013,.0035,hw+.002,.05,-.13,bolt,0);
     decal(['vz. 61  7,65 Br.'],.11,.016,hw,.066,-.02,-1,MK);decal(['STING  No 20411'],.11,.016,hw,.066,-.02,1,MK);
-    if(vm)vmS({none:1,y:.165,rz:-.1,rr:.028,fz:.27,fr:.02,base:.11,m:dkm,dot:X.sting,muz:.49,my:.05,hands:{r:[0,-.17,-.1],l:[.02,-.23,.14]}});
+    if(vm)vmS({kind:'notch',y:.118,rz:-.1,fz:.27,base:.09,muz:.49,my:.05,hands:{r:[0,-.17,-.1],l:[.02,-.23,.14]}}); /* the vz. 61's own low notch and eared post, aimed straight like the other SMGs */
   }
   else if(id==='vector'){ /* Vector: black flat-top upper with full rail, pink-anodised "Super V" lower that drops into the forward mag well, steep grip, slotted shroud, folding skeleton stock, holo sight */
     BY=.09;acc='#2a2b2f';const hw=.042,rec=FIN('#1e1f23',{roughness:.34}),MK='#d5d8de';
@@ -12751,9 +12771,12 @@ function heroModelV2(id,RB,vm){
     ext([[.4,.02],[.62,.02],[.6,-.1],[.44,-.1]],.08,poly,0,.012);slots(.45,4,.04,-.04,.08,accent,.016,.008); // foregrip
     box(.2,.1,.12,0,.06,.98,al,.015);box(.24,.03,.08,0,.11,.98,poly,.008); // riser
     for(const s of [-1,1]){const l=box(.42,.035,.07,s*.29,.06,.9,poly,.012);l.rotation.y=s*.4;const l2=box(.3,.012,.074,s*.26,.06,.915,accent,.004);l2.rotation.y=s*.4;cylY(.045,.035,s*.47,.06,.8,al,20);cylY(.02,.04,s*.47,.06,.8,cf,12);}
-    for(const s of [-1,1]){const dx=s*.47,dz=.8-.26,L=Math.hypot(dx,dz);const st=box(.006,.006,L,dx/2,.08,.26+dz/2,M('#f4f4f4'),.002);st.rotation.y=Math.atan2(dx,dz);}
+    {const sd=M('#f4f4f4'),sr=M('#f4f4f4');sd.userData.loaded=1;sr.userData.fired=1; /* the string: drawn back to the latch while loaded, snapped forward between the cams once fired */
+    for(const s of [-1,1]){const dx=s*.47,dz=.8-.26,L=Math.hypot(dx,dz);const st=box(.006,.006,L,dx/2,.08,.26+dz/2,sd,.002);st.rotation.y=Math.atan2(dx,dz);}
+    box(.94,.006,.006,0,.08,.8,sr,.002).visible=false;}
     box(.08,.05,.06,0,.1,.24,cf,.01);
-    cyl(.008,.78,0,.12,.66,al);add(new THREE.ConeGeometry(.018,.07,8).rotateX(Math.PI/2),al,0,.12,1.08);for(let i=0;i<3;i++){const a=i*Math.PI*2/3,f=box(.003,.03,.07,Math.cos(a)*.014,.12+Math.sin(a)*.014,.3,glw,.001);f.rotation.z=a-Math.PI/2;}
+    {const bS=M('#2b2e33',{keep:1,metalness:.5,roughness:.45}),bT=M('#c9ced6',{keep:1,metalness:1,roughness:.25}),bV=glow('#c9ff3b',.9);for(const q of [bS,bT,bV])q.userData.loaded=1; /* the loaded bolt: gone once fired, back after the reload */
+    cyl(.006,.78,0,.12,.66,bS);add(new THREE.ConeGeometry(.012,.06,8).rotateX(Math.PI/2),bT,0,.12,1.08);for(let i=0;i<3;i++){const a=i*Math.PI*2/3,f=box(.002,.022,.06,Math.cos(a)*.011,.12+Math.sin(a)*.011,.3,bV,.001);f.rotation.z=a-Math.PI/2;}}
     box(.12,.025,.03,0,-.02,1.1,al,.006);for(const s of [-1,1])box(.025,.09,.025,s*.055,.02,1.08,al,.006);
     box(.02,.08,.3,-.07,.0,.62,cf,.006);for(let i=0;i<3;i++){cyl(.006,.5,-.085,.02-i*.02,.62,al,null,8);cyl(.01,.03,-.085,.02-i*.02,.88,glw,null,8);} // bolt quiver
     sling(.05,.0,-.6,al);
@@ -13587,7 +13610,7 @@ function vmModel(id,charId){const key=id+'|'+charId;if(VM.models[key])return VM.
   const RBx=B.roundedBox;const g=heroModel(id,RBx,true);g.traverse(o=>{if(o.userData.fpOnly)o.visible=true;});const sightY=g.userData.sightY||.25,rearZ=g.userData.rearZ||-.1;
   /* aim-down-sights clean-up: small parts of the gun (rounds, brass, screws, rail teeth, knobs) hide while aiming so nothing pulls the eye off the dot; the sight keeps all its detail */
   const small=[];if(g.userData.sightY){g.updateMatrixWorld(true);const inv=g.matrixWorld.clone().invert(),bx=new THREE.Box3(),v=new THREE.Vector3();
-    g.traverse(m=>{if(!m.isMesh||m.userData.sight||m.userData.keep)return;for(let a=m;a&&a!==g;a=a.parent)if(a.userData.optic)return;bx.setFromObject(m).applyMatrix4(inv);bx.getSize(v);if(Math.max(v.x,v.y,v.z)<.075)small.push(m);});}
+    g.traverse(m=>{if(!m.isMesh||m.userData.sight||m.userData.keep||(m.material&&m.material.userData&&(m.material.userData.loaded||m.material.userData.fired)))return;for(let a=m;a&&a!==g;a=a.parent)if(a.userData.optic)return;bx.setFromObject(m).applyMatrix4(inv);bx.getSize(v);if(Math.max(v.x,v.y,v.z)<.075)small.push(m);});}
   const look=(CHARS[charId]&&CHARS[charId].look)||{};const sleeve=new THREE.MeshStandardMaterial({color:look.shirt||'#2b2d33',roughness:.8}),hand=new THREE.MeshStandardMaterial({color:'#efe7d6',roughness:.7});
   const blk=(w,h,d,m,x,y,z,rx=0)=>{const me=new THREE.Mesh(RBx(w,h,d,Math.min(.03,w/2-.002,h/2-.002,d/2-.002),3),m);me.position.set(x,y,z);me.rotation.x=rx;g.add(me);return me;};
   // gloved hands: right hand wrapped round the pistol grip, left hand cupping the handguard, woven sleeves running back out of view
@@ -13662,10 +13685,10 @@ function updVM(dt){const f=ME,id=gunOf(f),live=D.active&&S.state!=='menu'&&!S.pa
   m.rotation.set(lerp(lerp(-.25,H[3],q),0,e)+VM.kick*.05+relo*.5,lerp(lerp(.18,H[4],q),0,e),lerp(lerp(.25,H[5],q),0,e)-relo*.3);m.scale.setScalar(sc);
   if(VM.curId==='sword'||VM.curId==='bat'){const sw=f.swingT>0?Math.sin(clamp(1-f.swingT/.32,0,1)*Math.PI):0,sd=f.swL?1:-1; /* melee: held low right, raised over the shoulder, slashing across on each swing */
     m.scale.setScalar(VM.curId==='bat'?.24:.34);m.position.set(.2-sd*sw*.16+swx,-.21+sw*.05+swy,-.48);m.rotation.set(1.1-sw*1.6,-.4+sd*sw*.5,.3-sd*sw*1.0);} /* knife turned so you see the flat of the blade */
-  if(VM.curId==='sting'){m.position.x+=.05*e;m.position.y-=.035*e;m.rotation.z-=.38*e;m.rotation.y+=.06*e;} /* point-shooting: canted low and right, chevron reticle on the HUD */
   if((VM.curId==='rocket'||VM.curId==='swarm')&&VM.aim>.85&&f.ads)m.visible=false;if(isSn(VM.curId)&&f.ads&&VM.aim>.5)m.visible=false; /* the scope overlay takes over */ /* the RPG optic and the Swarm display take over the screen */
   if(!ud.retM){ud.retM=[];m.traverse(o=>{if(o.material&&o.material.userData&&o.material.userData.ret&&!ud.retM.includes(o.material))ud.retM.push(o.material);});}
   {const ro=VM.fp>0?clamp((VM.aim-.55)/.35,0,1):1;for(const rm of ud.retM)rm.opacity=ro;}
+  if(VM.curId==='crossbow'){if(!ud.loadM){ud.loadM=[];ud.firedM=[];m.traverse(o=>{const u=o.isMesh&&o.material&&o.material.userData;if(u&&u.loaded)ud.loadM.push(o);if(u&&u.fired)ud.firedM.push(o);});}const has=(f.ammo.crossbow||0)>0;for(const o of ud.loadM)o.visible=has;for(const o of ud.firedM)o.visible=!has;} /* the bolt leaves the rail when fired */
   if(ud.small&&ud.small.length){const hide=VM.aim>.6; /* both camera modes */if(ud.hid!==hide){ud.hid=hide;for(const x of ud.small)x.visible=!hide;}} /* aiming: small gun parts step aside, the sight stays fully detailed */ /* first person: the sight's reticle only lights up as you aim, so at the hip there's just the crosshair */
   {const on=f.flashT>.02;for(const fl of ud.flash){fl.material.opacity=on?.5:0;fl.rotation.z=Math.random()*.6;fl.scale.setScalar(.45+Math.random()*.08);}}}
 /* the gun in your hands is lit like the map you're on: the sun's colour and strength, the sky/ground ambience, and dimmer reflections on night maps */

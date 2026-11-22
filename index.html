@@ -9451,7 +9451,7 @@ function swordTrail(f,on,gid='sword'){const tk=gid==='sword'?'swTr':'batTr';let 
   pos.needsUpdate=col.needsUpdate=true;}
 function melee(f){const gid=gunOf(f),g=GUNS[gid];f.swingT=.32;if(gid==='sword'||gid==='bat')f.swL=!f.swL;if(gid==='fists'){f.punchT=.26;f.punchL=!f.punchL;}const aerial=S.mode==='rumble'&&!f.grounded&&f.vel.y<-1;const lg=g.lunge||6;f.vel.x+=Math.sin(f.yaw)*lg;f.vel.z+=Math.cos(f.yaw)*lg;
   const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3()); /* no particle squares on swings or punches */
-  for(const foe of foesOf(f).sort(byDist(f))){const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dy=foe.pos.y-f.pos.y,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
+  for(const foe of foesOf(f).sort(byDist(f))){if(foe.finishing||foe.edgeFall)continue;const dx=foe.pos.x-f.pos.x,dz=foe.pos.z-f.pos.z,dy=foe.pos.y-f.pos.y,dist=Math.hypot(dx,dz);const ang=Math.abs(((Math.atan2(dx,dz)-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI);
     if(dist<g.reach+(aerial?.5:0)&&(Math.abs(dy)<1.9||(aerial&&dy<0&&dy>-3.2))&&ang<g.arc&&los(e,new V3(foe.pos.x,foe.pos.y+1.2*SC,foe.pos.z))){const dm=g.dmg;
       if(aerial){const nx=dx/(dist||1),nz=dz/(dist||1);foe.vel.x+=nx*11;foe.vel.z+=nz*11;foe.vel.y=Math.max(foe.vel.y,5);foe.grounded=false;f.vel.x=-nx*7;f.vel.z=-nz*7;f.vel.y=Math.max(f.vel.y,6);foe.stunT=1;
         S.shake=Math.max(S.shake,.5);if(f===ME)center('Air strike!',dm+' damage · stunned','win');}hitSpray(foe.pos.x,foe.pos.y+1.4,foe.pos.z,null,{n:10,k:1.3});
@@ -9473,11 +9473,12 @@ function fireFlame(f,origin,dir){const id='flamer',g=GUNS[id];f.fireT=g.rate;f.a
   const R=g.range,hb=rayBoxes(origin,dir,R+2),d2=origin.clone().addScaledVector(dir,hb?hb.t:R).sub(mz);let stop=d2.length();if(stop<.3){d2.copy(dir);stop=.3;}else d2.normalize();stop=Math.min(stop,R);
   FLAME.jet(mz,d2,stop);if(NET.role==='client')return;
   {const hF=rayBoxes(mz,d2,stop+.3);knockRay(mz,d2,stop,g.dmg,f);if(hF){const at=mz.clone().addScaledVector(d2,hF.t);if(hF.box.turret)hitTurret(hF.box.turret,g.dmg,f);else if(!hF.box.car)damageWood(hF.box,g.dmg*3,at,d2);}}
-  for(const v of foesOf(f)){if(!v.alive)continue;const rel=new V3(v.pos.x,v.pos.y+1.1,v.pos.z).sub(mz),along=rel.dot(d2);if(along<-.3||along>stop+.6)continue;
+  let flHitAny=false;for(const v of foesOf(f)){if(!v.alive||v.finishing||v.edgeFall)continue;const rel=new V3(v.pos.x,v.pos.y+1.1,v.pos.z).sub(mz),along=rel.dot(d2);if(along<-.3||along>stop+.6)continue;
     if(rel.clone().addScaledVector(d2,-along).length()>.7+Math.max(0,along)*.12)continue;
     const L=rel.length();if(L>.6&&rayBoxes(mz,rel.clone().divideScalar(L),L-.5))continue;
-    const dm=g.dmg*(along<5?1:lerp(1,.45,clamp((along-5)/(R-5),0,1)));damage(v,dm,f,false,id);v.burnT=Math.max(v.burnT||0,2.5);v.burnBy=f;v.burnGun=id;
+    const dm=g.dmg*(along<5?1:lerp(1,.45,clamp((along-5)/(R-5),0,1)));damage(v,dm,f,false,id);flHitAny=true;v.burnT=Math.max(v.burnT||0,2.5);v.burnBy=f;v.burnGun=id;
     if(f===ME){S.stats.dmg+=dm;S.flHit=(S.flHit||0)+dm;if(S.t-(S.flHitT??-9)>.25){S.flHitT=S.t;hitMarker(false);dmgNumber(v,Math.round(S.flHit),false);S.flHit=0;}}}
+  if(flHitAny&&f===ME)S.stats.hits++;
   flameOut(f);}
 function flameOut(f){if(f.secondary!=='flamer'||f.ammo.flamer>0)return;f.secondary=f.flamerPrev||'smg';f.flamerPrev=null;f.flameT=0;equip(f,f.slot);}
 function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='crossbow'){f.shotT=S.t;S.lastShooter=f;f.shotP=f.pos.clone();}
@@ -10097,8 +10098,8 @@ function botShopWant(f){const L=shopList();const want=id=>{const i=L.findIndex(i
   let i;if(f.hp<f.hpMax*.6&&(i=want('health'))>=0)return i;if((f.armor||0)<50&&(i=want('armor'))>=0)return i;if(Math.random()<.3&&(i=want('gold'))>=0)return i;if(Math.random()<.25&&(i=want('turret'))>=0)return i;if(Math.random()<.2&&(i=want('flamer'))>=0)return i;if((f.nades||0)<3&&(i=want('nades'))>=0)return i;if(!(f.speedT>0)&&(i=want('speed'))>=0)return i;if((i=want('stamina'))>=0)return i;return -1;}
 function botBuy(f){if(botShopWant(f)<0||f.shopCD>0)return false;const L=shopList().filter(it=>it.can(f)),it=L[Math.floor(Math.random()*L.length)];if(!it)return false;it.buy(f);shopPress(f,it);f.shopCD=SHOP_CD;sfx('bing',f,{range:14});
   emit(f.pos.x,f.pos.y+1.4,f.pos.z,{n:20,speed:4,size:.2,life:.5,grav:-1,colors:[it.col,'#ffc61a','#ffffff']});return true;}
-function throwNade(f){if(!(f.nades>0||f.goldNade>0)||f.nadeT>0||!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight')return false;
-  const from=throwFrom(f);sfx('throw',f,{wpn:1});spawnProj(f,'grenade',from,throwDirFor(f));if(f.goldNade>0){f.goldNade--;const P=projs[projs.length-1];P.gold=true;P.mesh.traverse(o=>{if(o.isMesh){o.material=GOLD_NADE_M;}});}else f.nades--;f.nadeT=.9;f.swingT=.32;return true;}
+function throwNade(f,dir){if(!(f.nades>0||f.goldNade>0)||f.nadeT>0||!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=='fight')return false;
+  const from=throwFrom(f);sfx('throw',f,{wpn:1});spawnProj(f,'grenade',from,dir||throwDirFor(f));if(f.goldNade>0){f.goldNade--;const P=projs[projs.length-1];P.gold=true;P.mesh.traverse(o=>{if(o.isMesh){o.material=GOLD_NADE_M;}});}else f.nades--;f.nadeT=.9;f.swingT=.32;return true;}
 const GOLD_NADE_M=new THREE.MeshStandardMaterial({color:'#ffc61a',metalness:.9,roughness:.22,emissive:'#7a4a00',emissiveIntensity:.6});
 /* ===== Sentry turret (shop item): a tripod gun you put down with V (the Sentry button on phones). It turns to the nearest enemy it can see within 28 m,
    paints them with a red laser and fires weak bursts (4 damage a shot, a small fraction of a rifle), so it harasses rather than wins fights on its own.
@@ -10200,7 +10201,7 @@ function updTurrets(dt){if(!turrets.length)return;
     const hpF=t.hp/TUR.hp;m.bar.visible=false;if(m.bar.visible){m.bar.quaternion.copy(camera.quaternion);m.barFg.scale.x=Math.max(.01,hpF);m.barFg.position.x=-.38*(1-hpF);m.barFg.material.color.set(hpF>.5?'#3bd16f':hpF>.25?'#ffc61a':'#ff3b3b');}}}
 
 /* explosions hurt enemy sentries in the blast (a grenade at its feet nearly finishes one) */
-function splashTurrets(at,Rr,dmg,src){for(const t of turrets.slice()){const c=new V3(t.pos.x,t.pos.y+1.2,t.pos.z),dd=c.distanceTo(at);if(dd<Rr+.6)hitTurret(t,Math.max(20,dmg*1.3*(1-dd/(Rr+.6))),src);}}
+function splashTurrets(at,Rr,dmg,src){for(const t of turrets.slice()){const c=new V3(t.pos.x,t.pos.y+1.2,t.pos.z),dd=c.distanceTo(at);if(dd>=Rr+.6)continue;/* walls block the blast, like they do for fighters */if(dd>1.2){const d=c.clone().sub(at).divideScalar(dd),h=rayBoxes(at,d,dd,true);if(h&&!(h.box&&h.box.turret===t))continue;}hitTurret(t,Math.max(20,dmg*1.3*(1-dd/(Rr+.6))),src);}}
 
 /* sense-pack x-ray: copies of the enemy's meshes drawn on top of everything */
 const XR={grp:new THREE.Group(),sig:'',list:[]};XR.grp.renderOrder=999;scene.add(XR.grp);
@@ -10483,8 +10484,8 @@ function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);co
   if(f.secondary==='grenade'&&f.slot===0&&f.ammo.grenade>0&&a.lastSeen&&dist>7&&dist<24&&f.fireT<=0&&Math.random()<dt*(see?.25:.6)){
     const tgt=see?T.pos:a.lastSeen,e=eyeOf(f,new V3()),dx=tgt.x-e.x,dz=tgt.z-e.z,hd=Math.hypot(dx,dz);const sp=GUNS.grenade.speed,gg=GUNS.grenade.grav;
     const ang=.5*Math.asin(clamp(gg*hd/(sp*sp),-1,1))+.05;const dir=new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang));f.slot=1;f.switchT=0;f.yaw=Math.atan2(dx,dz);fire(f,e,dir);f.slot=0;for(const k in f.guns)f.guns[k].visible=k===f.primary;}
-  if((f.nades>0||f.goldNade>0)&&f.nadeT<=0){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate){const {dx,dz,ang}=lob(f,na.p);
-    const p0=f.pitch;f.yaw=Math.atan2(dx,dz);f.pitch=ang;throwNade(f);f.pitch=p0;}}
+  if((f.nades>0||f.goldNade>0)&&f.nadeT<=0){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate){const {dx,dz,hd,ang}=lob(f,na.p);
+    f.yaw=Math.atan2(dx,dz);throwNade(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}}
   if(f.turretKit>0&&a.lastSeen&&dist<25&&Math.random()<dt*(see?.8:.3)){const y0=f.yaw;if(a.lastSeen){f.yaw=Math.atan2(a.lastSeen.x-f.pos.x,a.lastSeen.z-f.pos.z);}if(!deployTurret(f))f.yaw=y0;}
   if(!see&&f.reloadT<=0&&f.ammo[gunOf(f)]<GUNS[gunOf(f)].mag*.5)startReload(f);
   a.crT=(a.crT||0)-dt;if(a.crT<=0){a.crT=rnd(.8,1.8);a.crouch=see&&!CLOSE(id)&&Math.random()<.12*dif.strafe;}
@@ -11775,7 +11776,7 @@ function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).cop
       const head=eyeOf(f,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);const o=cam.addScaledVector(d,t0);fire(f,o,d);if(NET.role==='client')netSend({t:'shot',o:[o.x,o.y,o.z],d:[d.x,d.y,d.z]});}
     else if(live&&cmd.fire&&!hasAmmo(f,id)&&f.reloadT<=0){if(!f.triggerWas)sfx('dry',null,{wpn:1});startReload(f);}
     f.triggerWas=cmd.fire;if(SNQ.rel){SNQ.rel=false;mouseL=false;mouseR=SNQ.prevR;}}
-  for(const x of FS){if(x.dazeT>0){x.dazeT-=dt;if(!x.alive)x.dazeT=0;}if(x.stunT>0)x.stunT-=dt;if(x.thrownT>0)x.thrownT-=dt;/* a train knock-back takes your control for just over half a second, then it comes back */stunStars(x);x.finishT-=dt;if(S.state==='fight'||S.state==='roundEnd')tickStatus(x,dt);x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.trigger?1:3));x.buildT-=(x===ME||x===NET.R)?dt:0;if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}else if(!(x.reloadT<=0))x.reloadT=0;if(x.burstN>0){x.burstT-=dt;if(x.burstT<=0){const bid=gunOf(x),bg=GUNS[bid];if(!x.alive||x.downed||x.stunT>0||x.reloadT>0||x.switchT>0||x.ammo[bid]<=0||!bg.burst||S.state!=='fight'){x.burstN=0;}else{x.burstN--;x.burstT=bg.burstGap;if(x===ME){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const head=eyeOf(x,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(x,cam.addScaledVector(d,t0),d,true);}else{const e=eyeOf(x,new V3()),d=dirOf(x.yaw,x.pitch,new V3());fire(x,e,d,true);}if(x.ammo[bid]===0&&x.reloadT<=0){x.burstN=0;startReload(x);}}}}}
+  for(const x of FS){if(x.dazeT>0){x.dazeT-=dt;if(!x.alive)x.dazeT=0;}if(x.stunT>0)x.stunT-=dt;if(x.thrownT>0)x.thrownT-=dt;/* a train knock-back takes your control for just over half a second, then it comes back */stunStars(x);x.finishT-=dt;if(S.state==='fight'||S.state==='roundEnd')tickStatus(x,dt);x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.triggerWas?1:3));x.buildT-=(x===ME||x===NET.R)?dt:0;if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}else if(!(x.reloadT<=0))x.reloadT=0;if(x.burstN>0){x.burstT-=dt;if(x.burstT<=0){const bid=gunOf(x),bg=GUNS[bid];if(!x.alive||x.downed||x.stunT>0||x.reloadT>0||x.switchT>0||x.ammo[bid]<=0||!bg.burst||S.state!=='fight'){x.burstN=0;}else{x.burstN--;x.burstT=bg.burstGap;if(x===ME){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const head=eyeOf(x,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(x,cam.addScaledVector(d,t0),d,true);}else{const e=eyeOf(x,new V3()),d=dirOf(x.yaw,x.pitch,new V3());fire(x,e,d,true);}if(x.ammo[bid]===0&&x.reloadT<=0){x.burstN=0;startReload(x);}}}}}
   /* finishing moves can't be interrupted: not by shooting the finisher, not by firing during your own */
   updFinish(dt);if(NET.role!=='client'){teamWipe();dmTick(dt);}
   // a finisher's scripted moves mustn't leave the attacker standing inside a wall or post
@@ -13985,7 +13986,7 @@ function netDrive(f,dt,live){const c=NET.cmd||{fi:0,si:0,yaw:f.yaw,pitch:f.pitch
 function netFollow(f,dt){const t=f._np;if(!t)return;const k=1-Math.exp(-14*dt);const d=f.pos.distanceTo(t);if(d>4)f.pos.copy(t);else f.pos.lerp(t,k);
   let dy=(f._ny??f.yaw)-f.yaw;dy=((dy+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=dy*k;f.pitch+=((f._npi??f.pitch)-f.pitch)*k;}
 // host -> friend, 30 times a second
-function netSnap(){const sn=snapshot();sn.t0=S.t0;sn.matchOver=!!S.matchOver;for(let i=0;i<FS.length;i++){const f=FS[i],x=sn.f[i];x.prim=f.primary;x.sec=f.secondary;x.cons=f.cons;x.k=f.k||0;x.d=f.d||0;x.as=f.as||0;x.name=f===ME?(NET.myName||'Host'):f.name;x.fin=!!f.finishing;}
+function netSnap(){const sn=snapshot();sn.t0=S.t0;sn.matchOver=!!S.matchOver;for(let i=0;i<FS.length;i++){const f=FS[i],x=sn.f[i];x.prim=f.primary;x.sec=f.secondary;x.cons=f.cons;x.k=f.k||0;x.d=f.d||0;x.as=f.as||0;x.name=f===ME?(NET.myName||'Host'):f.name;x.fin=!!f.finishing;x.gold=f.goldNade||0;x.tk=f.turretKit||0;x.spd=+(f.speedT||0).toFixed(2);x.cn=f.consN||0;}
   sn.ev=NET.ev.splice(0);return sn;}
 function netApplySnap(sn){NET.lastRx=performance.now();
   for(const [name,args] of sn.ev||[]){if(name==='fire'){const a0=deser(args[0]);if(a0===ME)continue;}NET.replay=true;try{MIRROR[name].apply(null,args.map(deser));}catch(e){console.warn('net',name,e);}finally{NET.replay=false;}}
@@ -13993,6 +13994,7 @@ function netApplySnap(sn){NET.lastRx=performance.now();
   for(const x of sn.f){const f=FS[netMap(x.id)];if(!f)continue;
     if(x.char&&f.char!==x.char)setLook(f,x.char);f.team=x.team;if(f!==ME)f.name=x.name;f.primary=x.prim||f.primary;f.secondary=x.sec||f.secondary;f.cons=x.cons;
     f.hp=x.hp;f.armor=x.armor;f.alive=x.alive;f.downed=x.downed;f.k=x.k;f.d=x.d;f.as=x.as;f.walls=x.walls;f.nades=x.nades;
+    if(x.cn!==undefined){f.goldNade=x.gold;f.turretKit=x.tk;f.speedT=x.spd;f.consN=x.cn;}if(x.stam!=null)f.stam=x.stam;
     const tp=new V3(x.x,x.y,x.z);
     if(f===ME){const e=f.pos.distanceTo(tp);if(e>2.5||!x.alive||x.fin)f.pos.copy(tp);else if(e>.15)f.pos.lerp(tp,.12);if(f.slot!==x.slot&&x.slot>=0&&performance.now()-(NET.swapAt||0)>800)equip(f,x.slot);}
     else{f._np=tp;f._ny=x.yaw;f._npi=x.pitch;f.vel.set(x.vx,x.vy,x.vz);f.ads=x.ads;f.crouchOn=x.crouch;Object.assign(f.ammo,x.ammo);if(x.slot>=0&&(f.slot!==x.slot||gunOf(f)!==x.gun))equip(f,x.slot);if(!f._seen){f.pos.copy(tp);f._seen=1;}}}
@@ -14008,7 +14010,7 @@ function netPump(){if(!NET.live)return;const now=performance.now();
 {const f0=frame;frame=function(rdt){f0(rdt);netPump();};D.frame=frame;}
 D.__netPump=()=>netPump();
 // jumps are sent as events so a quick tap is never missed
-window.addEventListener('keydown',e=>{if(NET.role==='client'&&e.code==='Space'&&!e.repeat&&D.active)netSend({t:'jump'});},true);
+window.addEventListener('keydown',e=>{if(NET.role==='client'&&mapKey(e)==='Space'&&!e.repeat&&D.active)netSend({t:'jump'});},true);
 function netOnData(m){if(!m||typeof m!=='object')return;
   if(NET.role==='host'){if(m.t==='hello'){NET.load=m.load;NET.peerName=m.name||'Friend';netMsg(`Friend joined: <b>${NET.code}</b> · pick your mode and press Start`,true);if(D.active&&S.state!=='menu'){if(!NET.R)NET.R=FS.find(f=>f!==ME&&isFoe(ME,f))||null;if(NET.R)netApplyLoad(NET.R);netSend({t:'start',cfg:netCfg()});}}
     else if(m.t==='load'){NET.load=m.load;}

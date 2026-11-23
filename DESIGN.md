@@ -54,7 +54,7 @@ Last updated: 2026-11-23
 - Rumble: fists only, no armour; bat and Speed Shoes pickups appear 10 s into each round.
 - Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + fists/melee + throwables; Sentry stays.
 - Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
-- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets) and bats; collect 10 stars to win and cash in at the shop; going down costs 2 stars, dying loses them all; leaderboard shows stars; anyone on 8+ stars is outlined through walls and marked on every minimap.
+- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets, no reload) and bats; collect 10 stars and cash in at the shop on the front lawn, first to cash in wins; each star taken is replaced at once by one 12+ m away; going down costs 2 stars, dying loses them all; leaderboard shows stars; anyone on 8+ stars is outlined through walls and marked on every minimap; bots only go for stars/weapons they've seen and otherwise search room to room.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
 
 ### Weapons
@@ -99,7 +99,7 @@ Last updated: 2026-11-23
 
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena. (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
-- Weapons/items: .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Golden Armour, auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Weapons/items: .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
@@ -109,7 +109,7 @@ Last updated: 2026-11-23
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-23
-- Golden Armour removed from the game.
+- Gold Armour lethal removed from the game (shop armour, plates and Gold Grenade unchanged).
 - New Collection mode on The Mansion (8 players, start with fists, collect stars, cash in at the shop); later the same day: 10 stars to win, going down costs 2, dying loses all, stars respawn 12+ m away, bots search only for what they've seen.
 - Collection: 10 stars to win confirmed; the through-walls outline and minimap marker now start at 8 stars (was 4).
 

@@ -469,7 +469,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .vrow{display:grid;grid-template-columns:58px 1fr 34px;align-items:center;gap:8px;font:700 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .vrow b{font:800 14px/1 var(--f-body);letter-spacing:0;text-align:right;color:var(--panel-ink);font-variant-numeric:tabular-nums}
 .vbar{height:10px;border-radius:99px;background:color-mix(in srgb,var(--panel-ink) 12%,transparent);overflow:hidden}.vbar i{display:block;height:100%;width:100%;transform-origin:left;transition:transform .12s}
-.vrow.hp .vbar i{background:#2bd44f}.vrow.hp.down .vbar i{background:var(--accent)}.vrow.ar .vbar i{background:#2f7fe0}.vrow.ar.gold .vbar i{background:linear-gradient(90deg,#e0a800,#ffd84a)}.vrow.st .vbar i{background:#9b5de5}.vrow.st.low .vbar i{background:#c9a8ef}.vrow.fu .vbar i{background:var(--gold)}
+.vrow.hp .vbar i{background:#2bd44f}.vrow.hp.down .vbar i{background:var(--accent)}.vrow.ar .vbar i{background:#2f7fe0}.vrow.st .vbar i{background:#9b5de5}.vrow.st.low .vbar i{background:#c9a8ef}.vrow.fu .vbar i{background:var(--gold)}
 .vrow.hp b{font-size:18px}
 /* items: icon, key, count */
 .d-items{display:flex;gap:6px;padding:6px 8px;zoom:calc(var(--z-items,1)*var(--tb-items,1))}.d-items:empty{display:none}
@@ -1346,7 +1346,6 @@ body:has(#duel-pause:not([hidden])) #d-intro,body:has(#menu:not([hidden])) #d-in
 #duel-hud .vrow.hp.low b,#duel-hud .vrow.hp.down b{color:var(--mono-red)}
 #duel-hud .vrow.ar .vbar{background:repeating-linear-gradient(90deg,#2a2a2a 0 calc(50% - 1px),#0a0a0a calc(50% - 1px) 50%)}
 #duel-hud .vrow.ar .vbar i{background:#9aa3ad}
-#duel-hud .vrow.ar.gold .vbar i{background:linear-gradient(90deg,#d9d9d9,#ffffff)}
 #duel-hud .vrow.st .vbar{height:4px}
 #duel-hud .vrow.st .vbar i{background:#6b6b6b}
 #duel-hud .vrow.st.low .vbar i{background:#454545}
@@ -7929,7 +7928,7 @@ function emit(x,y,z,o){const cols=o.colors||['#fff'];for(let k=0;k<(o.n||8);k++)
   Object.assign(p,{a:true,x,y,z,vx:Math.cos(a)*s*sp+(o.vx||0),vy:u*sp+(o.up||0),vz:Math.sin(a)*s*sp+(o.vz||0),life:0,max:(o.life||.5)*(.7+Math.random()*.6),size:(o.size||.12)*(.6+Math.random()*.8),g:o.grav??12,rx:Math.random()*6,ry:Math.random()*6});
   pMesh.setColorAt(i,tc.set(cols[Math.floor(Math.random()*cols.length)]));}pMesh.instanceColor.needsUpdate=true;}
 /* hit spray: small dark-red droplets (on the shared particle blocks) plus a soft red mist puff that swells and fades.
-   Puffs are a small pool of camera-facing sprites with a radial-gradient texture. Armour hits use the same spray tinted blue (gold for Gold Armour). */
+   Puffs are a small pool of camera-facing sprites with a radial-gradient texture. Armour hits use the same spray tinted blue. */
 const PUFF={list:[],i:0,tex:null};
 function puffTex(){if(PUFF.tex)return PUFF.tex;const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),r=g.createRadialGradient(32,32,0,32,32,32);
   r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.5,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return PUFF.tex=new THREE.CanvasTexture(c);}
@@ -9518,7 +9517,7 @@ function damage(f,dmg,src,head,gun){
   return damage0(f,dmg,src,head,gun);}
 function damage0(f,dmg,src,head,gun){if(NET.role==='client'&&!NET.replay)return false;if(f.edgeFall||!f.alive||S.state!=='fight'||f.finishing)return false;if(f===ME&&src&&src.bot&&isFoe(src,ME)){const k=botDif(src).dmg;if(k)dmg*=k;}/* Easy bots hit you softer */if(f.finishT>0&&FS.some(x=>x.finishing&&x.finishing.finisher&&x.finishing.by===f))return false;/* whoever is doing a finishing move can't be hurt or stopped until it's done */if(f===ME&&src&&src!==ME&&src.pos&&dmg>0&&gun!=='turret')hitDir(src);dmg=Math.max(1,Math.round(dmg));if(src&&src!==f&&src.alive!==undefined&&isFoe(src,f))src.dmgM=(src.dmgM||0)+Math.min(dmg,Math.max(0,f.hp));f.lastHurt=S.t;hitMark(f,dmg,src,gun,head);if(f===ME&&(gun==='grenade'||gun==='rocket'))ME.blastT=1.1;if(src&&src!==f){f.lastBy=src;if(isFoe(src,f))(f.hitBy||(f.hitBy=new Map())).set(src,S.t);}
   if(f===ME){vig(.55);S.shake=Math.max(S.shake,.18);if(S.t-(S.hurtSnd||-9)>.09){S.hurtSnd=S.t;sfx('hurt',null,{vol:clamp(dmg/30,.45,1)});}}
-  if(!f.downed&&f.armor>0){const ab=Math.min(f.armor,dmg);f.armor-=ab;dmg-=ab;f.stam=Math.max(0,(f.stam??STAM_MAX)-ab*.4);if(ab){const gd=f.cons==='gold';hitSpray(f.pos.x,f.pos.y+1.3,f.pos.z,null,{n:5,colors:gd?['#ffc61a','#fff1a8','#d99a00']:['#2f7fe0','#bfe3ff','#1b4fa0'],mist:gd?'#ffd447':'#4d9dff'});}if(dmg<=0)return false;}
+  if(!f.downed&&f.armor>0){const ab=Math.min(f.armor,dmg);f.armor-=ab;dmg-=ab;f.stam=Math.max(0,(f.stam??STAM_MAX)-ab*.4);if(ab)hitSpray(f.pos.x,f.pos.y+1.3,f.pos.z,null,{n:5,colors:['#2f7fe0','#bfe3ff','#1b4fa0'],mist:'#4d9dff'});if(dmg<=0)return false;}
   if(!f.downed&&dmg>0){f.stam=Math.max(0,(f.stam??STAM_MAX)-dmg*1.2);if(f.stam<=0){if(f===ME&&!f.stamLock&&S.t-(S.breathT||-9)>3){S.breathT=S.t;sfx('breath');}f.stamLock=true;}f.stamRest=0;}
   if(f.downed){f.dhp-=dmg;if(f.dhp<=0){kill(f,src,head,gun);return true;}return false;}
   f.hp=Math.max(0,f.hp-dmg);
@@ -9957,14 +9956,12 @@ const CONS={
   sense:{name:'HeartBeat',short:'HeartBeat',desc:'Locate 6s',cd:25,dur:6,meta:'25s cooldown'},
   flash:{name:'Flash Bang',short:'Flash',desc:'Blinded 1s',uses:2,meta:'2 per round'},
   mine:{name:'Proximity Mine',short:'Mine',desc:'Proximity',uses:2,meta:'2 per round'},
-  cluster:{name:'Cluster Grenade',short:'Cluster',desc:'Multi BOOM!!!',uses:2,meta:'2 per round'},
-  gold:{name:'Golden Armour',short:'Gold Armour',desc:'Armour + Rebuilds',passive:true,meta:'Always on'}};
+  cluster:{name:'Cluster Grenade',short:'Cluster',desc:'Multi BOOM!!!',uses:2,meta:'2 per round'}};
 const THROWN=new Set(['grenade','stun','flash','cluster','bomblet']),AIMED=new Set(['grenade','stun','flash','cluster']);
-const CONS_FIRST=['grenade','cluster','mine','gold'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='sense')]; /* loadout order: Grenade, Cluster, Mine, Gold Armour first */
+const CONS_FIRST=['grenade','cluster','mine'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='sense')]; /* loadout order: Grenade, Cluster, Mine first */
 let flashA=0;
-function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.senseT=0;f.blindT=0;if(f.cons==='gold')f.armor=Math.max(f.armor||0,GOLD_ARMOUR);}
-const GOLD_ARMOUR=30;
-function consReady(f){const c=CONS[f.cons];if(!c||c.passive)return false;return f.consT<=0&&(!c.uses||f.consN>0||(f.cons==='grenade'&&f.nades>0));}
+function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.senseT=0;f.blindT=0;}
+function consReady(f){const c=CONS[f.cons];if(!c)return false;return f.consT<=0&&(!c.uses||f.consN>0||(f.cons==='grenade'&&f.nades>0));}
 function throwFrom(f){const e=eyeOf(f,new V3()),fw=dirOf(f.yaw,0,new V3());if(!f.downed&&f.cv>0)e.y=f.pos.y+2.35*(f.scale||1);/* crouched: the arm comes up to standing height to throw, so a lob clears the cover you're crouched behind */return e.addScaledVector(fw,.7).add(new V3(0,-.2,0));}
 /* Throws land where the crosshair points: find the spot under the crosshair (whatever it's on, else the ground), then solve the flattest arc that reaches it
    at the throwable's speed and gravity. Out of reach (or aiming at the sky) throws at 45°, the furthest it can go, and THROW_OUT dims the aim trail. */
@@ -10053,8 +10050,6 @@ function tickStam(f,dt){if(f===ME&&S.state==='fight'&&f.alive&&!f.downed&&f.hp<f
   if(walking||(f.ads&&f.alive&&!f.downed&&S.state==='fight')){f.stam=Math.max(0,f.stam-STAM_DRAIN*(f.ads?.6:.075)*dt);f.stamRest=0;if(f.stam<=0)f.stamLock=true;}
   else{f.stamRest=(f.stamRest||0)+dt;if(f.stamRest>STAM_DELAY)f.stam=Math.min(STAM_MAX,f.stam+STAM_REGEN*(f.stamBoost?2:1)*dt);if(f.stam>=STAM_MIN)f.stamLock=false;}
   // slow health regen once you've been out of fire for a while
-  // golden armour rebuilds to 50 slowly (1.5 a second below half health, 0.75 above)
-  if(f.cons==='gold'&&S.state==='fight'&&f.alive&&!f.downed&&(f.armor||0)<GOLD_ARMOUR&&S.t-f.lastHurt>REGEN_DELAY)f.armor=Math.min(GOLD_ARMOUR,(f.armor||0)+(f.hp<f.hpMax*.5?6:3)*.25*dt);
   if(S.state==='fight'&&f.alive&&!f.downed&&!f.finishing&&f.hp<f.hpMax&&S.t-f.lastHurt>REGEN_DELAY)f.hp=Math.min(f.hpMax,f.hp+REGEN_RATE*dt);
   // automatic reload: an empty gun in your hands starts reloading after a short beat, even if a reload was cancelled by switching or being downed
   {const id=gunOf(f),g=GUNS[id];if(f.alive&&!f.downed&&g&&isFinite(g.mag)&&!g.noReload&&!(f.ammo[id]>0)&&f.reloadT<=0&&f.switchT<=0){f.autoRT=(f.autoRT??AUTO_RELOAD_DELAY)-dt;if(f.autoRT<=0){f.autoRT=null;startReload(f);}}else f.autoRT=null;}}
@@ -10856,7 +10851,7 @@ function updTouchLabels(){if(!S.touch)return;const c=$('dt-c'),f=$('dt-f');const
   const set=(el,html,dim,hide)=>{if(el._h!==html){el._h=html;el.innerHTML=html;}el.classList.toggle('dim',!!dim);hide=hide&&!S.hudEdit;if(el.hidden!==!!hide)el.hidden=!!hide;};
   set($('dt-q'),`Wall<small>${ME.walls|0}</small>`,ME.walls<=0,false);
   const cc=CONS[ME.cons],merge=ME.cons==='grenade',n=cc&&cc.uses?(ME.consN||0)+(merge?ME.nades||0:0):0;
-  set($('dt-g'),cc&&cc.uses?`Item<small>${n}</small>`:ME.consT>0?`Item<small>${Math.ceil(ME.consT)}s</small>`:'Item',cc&&!consReady(ME),!cc||cc.passive||(cc.uses&&n<=0));}
+  set($('dt-g'),cc&&cc.uses?`Item<small>${n}</small>`:ME.consT>0?`Item<small>${Math.ceil(ME.consT)}s</small>`:'Item',cc&&!consReady(ME),!cc||(cc.uses&&n<=0));}
 /* name tag colour: the player's team colour, or in free for all the colour of their character (lifted so it reads on dark backgrounds) */
 const tagColC=new THREE.Color(),tagColH={};
 function tagCol(f){const raw=S.players==='ffa'?(typeof stageCC==='function'?stageCC(f.char):null)||TEAMC[f.team]:TEAMC[f.team]||'#ffffff';const k=raw;if(tagColH[k])return tagColH[k];
@@ -10969,16 +10964,15 @@ const ICON={
   flash:'<svg viewBox="0 0 24 24"><path d="M12 1v3M4 5l2 2M20 5l-2 2M1 13h3M23 13h-3" stroke="#ffc61a" stroke-width="2" stroke-linecap="round"/><rect x="8" y="8" width="8" height="13" rx="2" fill="#fff" stroke="#14161c" stroke-width="1.6"/><path d="M8 11h8M8 18h8" stroke="#ffc61a" stroke-width="2"/></svg>',
   mine:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="9" ry="4" fill="#3a3d45" stroke="#14161c" stroke-width="1.6"/><path d="M6 15c0-3 2.7-5 6-5s6 2 6 5" fill="#55585f" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="9" r="2" fill="#ff2a2a" stroke="#14161c" stroke-width="1.2"/></svg>',
   cluster:'<svg viewBox="0 0 24 24"><circle cx="11" cy="14" r="6" fill="#ff8a1f" stroke="#14161c" stroke-width="1.6"/><circle cx="4" cy="8" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="20" cy="9" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="19" cy="20" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><rect x="9" y="4" width="5" height="4" rx="1" fill="#2b2d33" stroke="#14161c" stroke-width="1.4"/></svg>',
-  gold:'<svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#ffc61a" stroke="#14161c" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 6v12M7 10h10" stroke="#fff3b0" stroke-width="1.6"/></svg>',
   sense:'<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="#fff" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="#36c3ff" stroke="#14161c" stroke-width="1.4"/></svg>',
   wall:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="#e8463a" stroke="#14161c" stroke-width="1.6"/><path d="M3 10h18M3 15h18M9 5v5M15 10v5M9 15v4" stroke="#14161c" stroke-width="1.4"/></svg>',
   turret:'<svg viewBox="0 0 24 24"><path d="M12 13 5 22M12 13l7 9M12 13v9" stroke="#2b2d33" stroke-width="2" stroke-linecap="round"/><rect x="6" y="5" width="10" height="8" rx="2" fill="#ffc61a" stroke="#14161c" stroke-width="1.6"/><path d="M16 8h6M16 11h6" stroke="#14161c" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="8" r="1.4" fill="#ff2a3a"/></svg>',
   boots:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="#f08a24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 /* throwables in yellow when you have one ready (grey again while it recharges or when you're out) */
-const THR_AC={grenade:'#ffd400',stun:'#ffd400',flash:'#ffd400',mine:'#ffd400',cluster:'#ffd400',gold:'#ffd400'};/* one colour for every throwable: yellow = ready */
+const THR_AC={grenade:'#ffd400',stun:'#ffd400',flash:'#ffd400',mine:'#ffd400',cluster:'#ffd400'};/* one colour for every throwable: yellow = ready */
 function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
   const ru=S.mode==='rumble';
-  const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',cc.passive?'':keyOf('leth'),cc.passive?String(Math.ceil(ME.armor||0)):cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),cc.passive?false:!rd]);}
+  const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',keyOf('leth'),cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),!rd]);}
   if((ME.nades>0||ME.goldNade>0)&&!merge)L.push(['grenade',keyOf('nade'),String((ME.nades||0)+(ME.goldNade||0)),ME.nadeT>0]);
   if(ME.turretKit>0)L.push(['turret',keyOf('sentry'),String(ME.turretKit),false]);
   if(!ru)L.push(['wall',keyOf('wall'),String(ME.walls),ME.walls<=0]);
@@ -10993,7 +10987,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
     const rc=$('d-rcard'),show=S.state==='roundEnd'&&!S.matchOver&&!dm&&S.t0>0;if(rc.hidden===show)rc.hidden=!show;if(show){const h=`<div class="sd"><span class="lbl">You</span><b>${my}</b><span class="d-pips">${pp5(my)}</span></div><span class="sep"></span><div class="sd o"><span class="lbl">${$('d-botname').textContent}</span><b>${ot}</b><span class="d-pips">${pp5(ot,1)}</span></div><span class="sep"></span><div class="nx"><span class="lbl">Next round</span><b>${Math.max(1,Math.ceil(S.t0))}</b></div>`;if(rc._h!==h){rc._h=h;rc.innerHTML=h;}}}if(S.players==='ffa'){const lf=FS.find(x=>x.team===oi);txt('d-botname',ot>0&&lf?'Best · '+lf.name:'Bots');}}txt('d-round',isDM()?'Deathmatch':'Round '+S.round);txt('d-time',fmt(S.timer));
   const V=specOf()||ME;{const sp=$('v-spec');if(sp.hidden!==(V===ME))sp.hidden=V===ME;if(V!==ME){const h=`Watching ${V.name}<em>${V.k||0} K · ${V.as||0} A · ${V.d||0} D</em>`;if(sp.innerHTML!==h)sp.innerHTML=h;}}
   {const hp=$('v-hp'),pct=V.downed?V.dhp/30:V.hp/V.hpMax;hp.style.transform=`scaleX(${clamp(pct,0,1)})`;txt('v-hp-n',V.downed?'DOWN':String(Math.ceil(V.hp)));hp.parentElement.parentElement.classList.toggle('down',!!V.downed);{const lo=!V.downed&&pct<=.3,rw=hp.parentElement.parentElement;if(rw.classList.contains('low')!==lo)rw.classList.toggle('low',lo);}
-    const ar=V.armor||0;{const rw=$('v-ar').parentElement.parentElement,gd=V.cons==='gold';if(rw.classList.contains('gold')!==gd)rw.classList.toggle('gold',gd);}$('v-ar').style.transform=`scaleX(${clamp(ar/100,0,1)})`;txt('v-ar-n',String(Math.ceil(ar)));
+    const ar=V.armor||0;$('v-ar').style.transform=`scaleX(${clamp(ar/100,0,1)})`;txt('v-ar-n',String(Math.ceil(ar)));
     if(S.touch){const ga=ar<=0&&!S.hudEdit,ra=$('v-ar').parentElement.parentElement;if(ra.classList.contains('gone')!==ga)ra.classList.toggle('gone',ga);}
     const st=V.stam??STAM_MAX;$('v-st').style.transform=`scaleX(${st/STAM_MAX})`;txt('v-st-n',String(Math.round(st)));$('v-st').parentElement.parentElement.classList.toggle('low',!!V.stamLock);
     if(S.touch){const gs=st>=STAM_MAX-.5&&!V.stamLock&&!S.hudEdit,rs=$('v-st').parentElement.parentElement;if(rs.classList.contains('gone')!==gs)rs.classList.toggle('gone',gs);}}
@@ -11968,7 +11962,6 @@ const HERO={
   c_flash:{bg:['#14140a','#3a3a20','#f0e27a']},
   c_mine:{bg:['#170808','#3d1414','#e8463a']},
   c_cluster:{bg:['#170c04','#40230b','#ff8a1f']},
-  c_gold:{bg:['#171204','#3d300b','#ffc23d']},
   sword:{bg:['#151005','#3b2c0c','#c08d1c']},
   burst:{bg:['#0d061c','#24104d','#6c3bff']},
   shotgun:{bg:['#1a0a05','#421b0d','#e85d22']},
@@ -12972,7 +12965,7 @@ const LETH_TEX={};
 function lethTex(key,w,h,draw){if(LETH_TEX[key])return LETH_TEX[key];const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);
   const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return LETH_TEX[key]=t;}
 function lethalModel(id,RB,lite){
-  const IDS=['c_grenade','c_stun','c_sense','c_flash','c_mine','c_cluster','c_gold','bomblet'];
+  const IDS=['c_grenade','c_stun','c_sense','c_flash','c_mine','c_cluster','bomblet'];
   if(!IDS.includes(id))return null;
   const g=new THREE.Group();
   const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:0},o||{}));
@@ -13125,25 +13118,6 @@ function lethalModel(id,RB,lite){
     cylY(.05,.03,.25,.145,.08,steel,.045,20);box(.07,.012,.016,.25,.163,.08,chrome,.004);if(!lite)add(new THREE.CircleGeometry(.008,10),glow('#3bff8a',2),.28,.161,.08).rotation.x=-Math.PI/2;
     // folding carry handle lying flat
     if(!lite){const h=tor(.12,.01,-.12,.142,-.12,lever,Math.PI,24);h.rotation.set(-Math.PI/2,0,Math.PI*.75);for(const s of [-1,1])box(.03,.025,.03,-.12+Math.cos(Math.PI*.75)*.12*s,.14,-.12+Math.sin(Math.PI*.75)*.12*s,steel,.006);}
-  }
-  else if(id==='c_gold'){ // golden armour: plate carrier facing +z (gold plate bag, MOLLE webbing, admin panel, shoulder straps, cummerbund)
-    const pl=M('#ffc23d',{metalness:1,roughness:.24}),pl2=M('#d99a1a',{metalness:1,roughness:.3}),web=M('#1c1e23',{roughness:.8}),web2=M('#2b2e35',{roughness:.75}),
-      shine=M('#fff3b0',{metalness:1,roughness:.12});
-    const sapi=(w,h,cut)=>[[-w/2,-h/2+.04],[-w/2+.04,-h/2],[w/2-.04,-h/2],[w/2,-h/2+.04],[w/2,h/2-cut*1.3],[w/2-cut,h/2],[-w/2+cut,h/2],[-w/2,h/2-cut*1.3]];
-    extF(sapi(.6,.74,.13),.06,web,-.005,.012); // binding / backing
-    extF(sapi(.56,.7,.12),.07,pl,.005,.02); // gold plate bag
-    box(.08,.04,.03,0,.38,.0,web,.01); // drag handle
-    // MOLLE: 3 rows of webbing, bar-tacked every few cm
-    for(let r=0;r<3;r++){const y=-.26+r*.085;box(.5,.032,.012,0,y,.047,web,.004);if(!lite)for(let i=0;i<7;i++)box(.012,.036,.016,-.21+i*.07,y,.05,web2,.003);}
-    // admin panel with a velcro field and a gold patch
-    box(.3,.17,.025,0,.06,.048,web2,.012);box(.26,.11,.01,0,.075,.062,web,.006);
-    extF([[0,.035],[.03,.02],[.03,-.015],[0,-.035],[-.03,-.015],[-.03,.02]],.012,shine,.07,.004).position.y=.075;
-    box(.22,.012,.01,0,-.02,.062,glow('#ffe27a',1.4),.004); // glow stitch strip
-    // shoulder straps (padded, running back over the top) and cummerbund side wings
-    for(const s of [-1,1]){const st=ext([[.005,.28],[.005,.39],[-.03,.425],[-.1,.435],[-.17,.41],[-.17,.37],[-.1,.39],[-.045,.38],[-.04,.28]],.1,web,s*.19,.01);
-      if(!lite)box(.07,.014,.014,s*.19,.36,.008,pl2,.004);
-      const cb=box(.035,.28,.22,s*.31,-.17,-.09,web,.012);cb.rotation.y=s*.5;if(!lite){box(.04,.024,.2,s*.315,-.1,-.09,web2,.004).rotation.y=s*.5;box(.04,.024,.2,s*.315,-.2,-.09,web2,.004).rotation.y=s*.5;}}
-    if(!lite)for(const [x,y] of [[-.22,.22],[.22,.22],[-.24,-.32],[.24,-.32]])add(new THREE.CylinderGeometry(.013,.013,.012,14).rotateX(Math.PI/2),shine,x,y,.044);
   }
   return g;}
 /* ===== Knife (replaces the sword; keeps the id 'sword'): "Arctic Chrome" combat knife built along +z, edge down, handle towards -z.
@@ -13530,7 +13504,7 @@ function heroShots(ids,RB,W=640,H=320){const out={};let r;
   const rim=new THREE.DirectionalLight('#ffffff',2.4);rim.position.set(-4,3,-5);S.add(rim);
   const C=new THREE.PerspectiveCamera(24,W/H,.05,100);
   for(const id of ids){const m=heroModel(id,RB);if(!REAL_GUNS.has(id))heroOutline(m,.014);const wrap=new THREE.Group();
-    m.rotation.y=id==='c_sense'||id==='c_gold'?-.4:Math.PI/2; // muzzle to the right
+    m.rotation.y=id==='c_sense'?-.4:Math.PI/2; // muzzle to the right
     if(id==='sword'){wrap.rotation.z=.42;}
     else{wrap.rotation.z=.06;}
     wrap.add(m);S.add(wrap);wrap.rotation.y+=-.42;wrap.rotation.x=.3;wrap.updateMatrixWorld(true);
@@ -13560,7 +13534,7 @@ function ws3Init(){if(WS3.r!==null)return !!WS3.r;
     WS3.yaw+=dx*.012;WS3.pitch=Math.max(-.6,Math.min(.6,WS3.pitch+dy*.008));WS3.vy=WS3.vy*.5+(dx*.012/dt)*.5;});
   const up=e=>{if(WS3.drag!==e.pointerId)return;WS3.drag=null;WS3.idle=0;if(performance.now()-lt>90)WS3.vy=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   return true;}
-function ws3Model(id){if(WS3.cache[id])return WS3.cache[id];const m=heroModel(id,B.roundedBox);if(!REAL_GUNS.has(id))heroOutline(m,.014);m.rotation.y=id==='c_sense'||id==='c_gold'?-.4:Math.PI/2;
+function ws3Model(id){if(WS3.cache[id])return WS3.cache[id];const m=heroModel(id,B.roundedBox);if(!REAL_GUNS.has(id))heroOutline(m,.014);m.rotation.y=id==='c_sense'?-.4:Math.PI/2;
   const tilt=new THREE.Group();tilt.rotation.z=id==='sword'?.42:.06;tilt.add(m);tilt.updateMatrixWorld(true);
   const bx=new THREE.Box3().setFromObject(tilt),c=bx.getCenter(new THREE.Vector3()),sz=bx.getSize(new THREE.Vector3());tilt.position.sub(c);
   const piv=new THREE.Group();piv.add(tilt);piv.rotation.order='XYZ';piv.updateMatrixWorld(true);

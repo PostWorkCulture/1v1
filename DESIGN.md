@@ -1,0 +1,241 @@
+# imok 1v1 – Design memory
+
+**Read this before any design change.** It is the single record of what Pete has decided the game should look and play like, so new chats don't drift from it or bring back things he's removed.
+
+- **Part 1 – Current design rules**: the decisions in force today, by area. Where a later decision replaced an earlier one, only the latest is kept.
+- **Part 2 – Never add back**: things that were removed on purpose.
+- **Part 3 – Daily log**: what changed in the design each day, newest first, built from the commit history.
+
+How to use it:
+1. Before designing or changing anything, read Parts 1 and 2 for the area you're touching.
+2. If a request contradicts a rule here, follow the new request (Pete's latest word wins), then update the rule here in the same push so it doesn't drift back.
+3. README.md describes how things work in detail; this file records *what was decided and why it must stay that way*. If they disagree, ask Pete.
+
+Updating: a scheduled task adds the day's entry to Part 3 (and adjusts Parts 1–2) at the end of each day, from that day's commits. Chats that make a design decision can also update it in the same commit. Pushing only this file does not redeploy the game.
+
+Last updated: 2026-11-23
+
+---
+
+## Part 1 – Current design rules
+
+### General look and feel
+- Premium, realistic, not cartoony or toy-like. No confetti, no over-the-top sparks, no coloured particle squares/blocks on anything (hits, punches, respawns, double jumps, breaks).
+- Breakables are everywhere: all upright glass (windows, glass walls, railings) breaks with one bullet, punch or blade hit and shatters into lots of tiny shards that fall and lie on the surface. Floor/roof glass (e.g. Railed roofs) stays tougher so one stray shot doesn't drop people through. Glass is thin (3 cm), very see-through, no tint, no outline.
+- Explosive barrels go off from a single hit; cars blow up on the 3rd shot; shooting a mine sets it off for real. Every weapon (melee and crossbow included) breaks glass, barrels, mines and props.
+- Damaged buildings never show black zig-zag crack lines and never smoke.
+- Stairs on every map: clear to go up and down, nothing near the top or bottom, small low guardrails, room at the foot.
+- Climbing aids are white ladders (no stacked crates/boxes as hop-ups). Exception: Lagoon uses creative hop-ups, no ladders.
+- A downed, crawling player must never visibly pass through solid blocks; thrown bodies never pass through solid objects.
+- Show new maps (4 preview images), new characters and major visual changes to Pete before publishing.
+
+### Maps
+- Standard sizes: **Biggest** 120 × 90 m (sniping), **Big** 70 × 50 m, **Small** 40 × 30 m. Each map's size shows with its picture.
+- Every map is available in every mode. Arena is always the last map. Street Life is selected when the game opens.
+- One shop per map, near the middle.
+- Spawns: on land (never in the sea), different each round, never the same spot twice in a row; in 1v1 nobody starts facing their opponent.
+- Menu map pictures are HQ renders that always match the real map; map names in cinematic type; the map name shows as the match loads, before the countdown.
+- New maps need creative navigation, platforms and height, not flat layouts.
+- **Street Life** (Biggest): 2 big buildings (red hospital with all-white floors/walls; home with homely moveable/destructible furniture) facing each other across the road, slightly off-centre; 4 smaller open-roof buildings with their own interiors; white picket fence; Tripo trees outside the fence only; white van + light grey van only; white Victorian lantern street lights with smashable bulbs; no rooftop boxes/brown walls; small buildings' rooftop walls have glass middles.
+- **Railed**: small and bare-bones: one live line with the Tripo train out of a lit tunnel (blinking front lights), two sheds, footbridge, walk-through shipping containers (glass inward side). Half-glass roofs you can fall through; chain-link + barbed wire fence; trees well outside the fence; illuminated signs. Goods Shed: one straight stair to the top, high tool shelves, glass front. Engine Shed: train waiting room (benches, departure boards, newspaper), glass front. Train head-on = blown to pieces.
+- **Beach Please**: simple, modern, expensive. No grey blocks, logs, boats, picnic benches or boxes. Big classy Tiki Bar (glass, smashable bottles, roof reachable by ladder, shop inside in a corner); small hut at each end; colourful lookout stairs; straight walkway along the bay edge with tall glass; halved deck chairs/parasols along the shore; waves.
+- **Arena**: floodlit night stadium with crowd; max 6 spread-out pillars; wide double-height ramps on 2 sides; no red/blue on floor or pillars; breakable glass along walkways; shootable lamps/poles; 2 straight-edged portals in the pillars.
+- **Sky High**: rooftop helipad at golden hour; 2.1 m glass railing is the only edge barrier and smashes even on touch; falling off = "Man Down" (red spooky text, slow-mo) and loses the round; Tripo chopper lands for 5 s, crushes anyone under it; 2 single-level buildings with big opening doors/windows; white explosive barrels.
+- **Lagoon**: 2 pavilions, 2 wide crossovers, 1 bar per side, decks clear; lights and torches, Tripo boats; rogue waves; snapping rope rails; all roofs jumpable via hop-ups.
+- **Club Night**: warehouse nightclub; empty dance floor ringed by low unbreakable glass; glass inner walls; wide glass high walkway; small fast lifts, no spiral stairs; faint deep house (full inside, 50% outside).
+- **The House**: rooms with distinct colours/textures, glass partitions, brick outside, wide doorways, hop-overs, straight wide stairs, destructible furniture, shop against a wall.
+- **Backyard**: same picket fence and lawn inside and out; sunken splashing pool; 2 sunken trampolines (fling to 2× double-jump height, one with a yellow rim); open-topped terrace; no shed, no swings.
+- **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
+
+### Modes
+- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only, Collection.
+- Simple = fixed M4, knife (replaced the sword), grenades; no loadout screen.
+- Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
+- Rumble: fists only, no armour; bat and Speed Shoes pickups appear 10 s into each round.
+- Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + fists/melee + throwables; Sentry stays.
+- Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
+- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets) and bats; collect stars (10 to win as of Nov 23) and cash in at the shop; going down costs 2 stars, dying loses them all; leaderboard shows stars; players near winning are outlined through walls and marked on minimaps.
+- Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
+
+### Weapons
+- Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
+- M4 is first in the primary list; snipers sit at the end; Random is the default for primary, secondary and lethal and sits at the end of each category, jiggling slightly.
+- Fists are always the 3rd slot (20% faster with any melee out); wheel up = next weapon, wheel down = fists; ADS with fists does nothing. Fists down in 3 punches; bat/knife in 2. Boxing gloves in the character's colours replace bare fists only.
+- No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
+- SMGs: iron sights only, fastest ADS. Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
+- Gun colours: Kar98 white with black frame; HDR black with silver barrel; Shotty Horror and FAMAS shiny silver; Vector black; P90 black/silver.
+- Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Flash/stun last 1 s. Mines always sit on a surface.
+- Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
+
+### Sound
+- Top quality, never cheesy or harsh; preview new sounds before publishing. Sources: CC0 Freesound/Pixabay/Kenney etc. (ElevenLabs is unreliable).
+- Volume: Sound (master), SFX, Weapons, Music; Weapons controls only weapon sounds.
+- Near-miss puff only on extremely close misses. Round start = gong. Menu sounds subtle (Kenney Interface pack).
+- Music: dark, bass-led trap on menus/between rounds/end of game; Club Night deep house.
+
+### Characters
+- Current roster (10): Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty, Dracz, then Gorillaz, Jet, Murda Medic, Spacebot. Shadow is dev-only (Test Arena) for now.
+- All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
+- Crusty: purple hair, green top and trousers. Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
+- Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
+
+### Finishers
+- Only 4: Pancake, Heartbreaker, Roast (Inferno fire), Combat; always random, 25% each, never per-character. Can't be interrupted. "Eliminated" shows at the top as soon as one starts. No bells, no white flash/sparks, no rubble squares.
+
+### Bots
+- Levels Easy, Normal, Hard (Easy is much gentler, no revenge). 10 hidden random play styles. Bot teammates no better than enemies.
+- A bot you kill hunts you until its next kill but doesn't ignore others; slight pull towards whoever's winning. Bots shoot through glass, can fall off things, go for nearby explosives.
+
+### Menus and HUD
+- Monochrome (black/white, occasional colour highlight) everywhere, menus and in-game HUD alike, copied from the Unity version.
+- Fits a laptop screen without scrolling. Back and forward buttons the same size side by side, centred.
+- Map and character pickers: one box of small pictures plus Random; selection shown by a white edge; Random spins only when you move on. Quick start beside the Level bar.
+- Sliders: sensitivities 0–10 whole steps; volumes in 10% steps. Countdown small and red, the 1 dissolves.
+- Minimap is a plain circle. No permanent in-game Home icon. Clips only at game end as one video icon. Pete's phone HUD layout is the default mobile layout.
+
+---
+
+## Part 2 – Never add back
+
+- Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena. (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
+- Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
+- Weapons/items: .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Golden Armour, auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
+- Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
+- Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
+
+---
+
+## Part 3 – Daily log (newest first)
+
+### 2026-11-23
+- Golden Armour removed from the game.
+- New Collection mode on The Mansion (8 players, start with fists, collect stars, cash in at the shop); later the same day: 10 stars to win, going down costs 2, dying loses all, stars respawn 12+ m away, bots search only for what they've seen.
+
+### 2026-11-22
+- Bug fixes only: bot grenade aim, sentry splash through walls, bloom, melee on finishers, flamer accuracy, online sync.
+
+### 2026-11-21
+- Shadow pulled from the game (dev-only) and a Test Arena (`?test`) added for working on characters.
+- Mansion: nothing over windows or glass ceilings.
+- Sting aims straight through its iron sights; crossbow bolt small, thin, visible and sticks in what it hits.
+
+### 2026-11-20
+- Mansion: ball pit, jump-through windows, one-shot roof skylights, hot tubs, refurnished bedrooms, dirt bikes on garage racks with black walls, side lawns closed, porch pillars/fountain/hot tub tidy-ups, review fixes (bots use portals, one shop in the grand hall).
+- Railed train head-on and Sky High chopper crush now blow the body to pieces.
+- Weapon weight sets move speed. Low guardrails on every staircase.
+- Ninja Stars removed. Clouds removed from every sky. Butterflies removed from every map.
+- Knife (Arctic Chrome) replaces the sword; Swarm becomes a random pickup.
+- New rifles SCAR-H "Crimson" and AUG "Shadow"; new finishes for SPAS-12, Shotty Horror, P90; polished triggers on all ARs.
+- SMGs: iron sights only, fastest ADS. Pancake loses dust/rubble; finishers evenly split; Roast gets the Inferno fire; no white flash/sparks on finishers. Respawn block burst removed.
+- Menu sounds (Kenney CC0). Boxing gloves on fists. Built walls 3 bricks high.
+- Shadow character added (later pulled on the 21st). Lagoon sea fixed, all roofs walkable, ladders replaced by hop-ups.
+
+### 2026-11-19
+- Finishers cut to four (Pancake, Heartbreaker, Roast, Combat); finisher polish; harsh finisher sounds removed.
+- Melee: fists 3 punches to down, bat/sword 2, speed boost with melee out; new fist swing/land and bat swing sounds; first-person fists.
+- Snipers only mode, then 4 new snipers (Reaper, Titan .50, Vanguard, Phantom) exclusive to it; small-map weapon limits.
+- New SFX volume slider; Weapons volume only for weapons.
+- Railed: Goods Shed single stair, glass front, tool shelves; Engine Shed becomes a waiting room; locomotive removed.
+- Club Night deep house music. No repeat spawns. Bot cover/peek tactics.
+- Glass: thin, very see-through, no outline. Live TVs and departure boards.
+- Street Life small houses get interiors. The House study desk removed, bath, race car.
+- New map: The Mansion (Biggest). Throne-room crown scene removed; results screen becomes a scorecard. First-person camera option. No glass in red-dot/holo sights.
+
+### 2026-11-18
+- Menu: map size groups, Random last, Quick start; pickers become one box of small pictures with Random; Street Life selected on open; character box matches map box.
+- Street Life clean-up (2 vans, picket fence), then facing buildings, four roof-deck houses, white lantern lamps.
+- Characters removed: Angel, Ice Maiden, Xero, Pyro, Blaze, Thor, Isaac, Blink. All character abilities removed; all same speed.
+- Crossbow fast and accurate; every weapon breaks things. Hot potato and Ice sculpture removed; finisher throws never pass through solid things; finishers can't be interrupted.
+- 2v2 gets Normal/Simple rules. Fists always the 3rd slot. Weapon balance pass (AKM long-range).
+- The House rebuilt (glass partitions, colour-themed rooms, straight wide stairs, destructible furniture). Backyard rebuilt (sunken pool, sunken trampolines, picket fence).
+- Shop becomes a lucky dip. Standard map sizes. Sky High tweaks. Beach Please huts, classy Tiki Bar, shop inside it.
+- Free for all: 8 players back; timed matches. In-game look goes monochrome. Home icon removed. Throws land on the crosshair.
+- Crusty recoloured (purple hair, green suit). Easy bots much gentler. Arena portals. Remastered gun sounds. Bat pickup for Rumble; Neon Runners speed shoes; pickups wait 10 s.
+
+### 2026-11-17
+- Menus go monochrome (copied from the Unity version). Kar98 black-frame model back.
+- New options: Weapons volume, key rebinding, FOV, brightness, crosshair, hit sound/hitmarker toggles, kill commentary toggle, reset; Auto frame rate.
+- Every map available in every mode. Revenge-hunting bots no longer blind to others.
+- New map: Club Night.
+
+### 2026-11-11
+- Character motion upgrade; Beach Please single straight walkway, waves; Lagoon rogue waves, rope rails, Man Down into the water.
+- Downed smoke faint dark red; no revive effects. M4 laser and light removed. Near-miss sound only on very close misses.
+- Sky High: buildings with opening glass doors, chopper landing crush, chopper sound. Bots see through glass and play more human.
+- Realistic finish rolled out to all guns; Kar98 black frame (reverted, then back on the 17th). Stim removed.
+- Run speed +25% then -10%; players and bots share one speed. Loadout preview bigger and studio-lit with 1–10 ratings.
+- Extreme bots added (later removed). Cars blow up on 3rd shot. Gong round start. Minimap zoomed out. Different spawns each round. Bots pick range-appropriate guns.
+
+### 2026-11-10
+- 1v1 map list trimmed, then Small Arena removed. 1v1 spawns face away from the opponent.
+- Realistic gun models; M4 premium finish. Sky High glass balustrade is the only edge barrier. Arena colours toned down.
+
+### 2026-11-09
+- Each secondary gets its own ADS view. Auto weapon switch removed.
+- Beach Please: fishing boat gone, jetties become a long glass promenade.
+- New AKM, M4 and FAMAS sounds. Explosive barrels go off from one hit. Mines never float.
+- Arena always last in the map list. Back/forward buttons same size side by side. LMG renamed Fireblade; class tags on gun cards. Menu fits the screen.
+
+### 2026-11-08
+- Shooting a mine sets it off. Beach Please made simple and premium (glass pavilions, big Tiki Bar). Cinematic map titles.
+- Red spray hit effect replaces coloured blocks. Shop grenades show a throw arc.
+- Glass shatters into tiny shards; upright glass breaks with one bullet, roof glass stays tougher.
+- Railed Engine Shed glass front and lit signs. Loadout preview spins in 3D.
+- New secondaries: UMP, Sting, Swarm.
+
+### 2026-11-07
+- Arena becomes a floodlit night stadium; ramps doubled in height.
+- Throw arc ends in a small landing dot. Visible sword swing. Character pictures rendered from the in-game models. HQ menu map pictures.
+- Lagoon rebuilt clean (decks cleared, 2 crossovers). Loadout Showcase layout.
+
+### 2026-11-06
+- Lagoon Tripo models. Railed container glass. Map title card before round 1.
+- Xero red with eye flames; glow features for other characters (Xero later removed).
+- FAMAS full-auto. Toy Town removed. Bots hold a grudge; kill call-outs.
+- Street Life trees outside the fence.
+
+### 2026-11-05
+- Shotty Horror (double barrel) replaces AA-12; Thumper out. Vector and P90 added. Sentry and Flamethrower shop items.
+- Railed: half-glass roofs, trees outside the fence, real lit tunnels, chain-link fence.
+- Menu becomes 3 full-width screens. Characters hold their real guns. Keyboard E = lethal.
+- New explosions; damage numbers halved; no in-game health bars. Character menu order set. Lagoon split into 2 pavilions with evening lights.
+- New characters: Dracula (later Dracz), Spaceman (later Spacebot), Lil Pink.
+
+### 2026-11-04
+- Clips only at game end. New M4 sound. Random default for all weapons; lethals under secondaries; flash/stun 1 s.
+- Street Life simplified to 2 buildings (hospital and home), white ladders replace hop-ups, Tripo trees, cars and furniture; black Lambo.
+- Countdown smaller and red. Characters levelled to the same height. Crouch is a ready-to-fire kneel.
+- Railed rebuilt small with the Tripo train. Vending machine shop with Gold Grenade first; Health/Stamina out. Pancake weighted double (since reversed).
+
+### 2026-11-03
+- ARs/SMGs faster with lighter hits and bigger mags. 1v1 moves into Players. Shootable mines. Brick walls easy to shoot down; bot teammates same level as enemies.
+
+### 2026-11-02
+- Aiming dots halved; red-dot glow ring removed.
+
+### 2026-11-01
+- 1v1 mode (Simple/Normal); Sky High and Lagoon added. Map tiles below the option rows. Sky Islands removed.
+
+### 2026-10-31
+- Safety checks and GitHub Actions publishing added. Snipers to the bottom of primaries, M4 first. Dragon Sword model.
+- Sliders 0–10 / 10% steps. One shop per map near the middle. Simple 1v1s. Pete's phone HUD becomes the default. Boxing-guard fists.
+
+### 2026-10-30
+- Shotguns only one-shot at point blank (else max 75%). Arena added. Snipers fire from the hip. Random character tile. "Eliminated" shows as soon as a finisher starts. Rumble fists only.
+
+### 2026-10-29
+- Detailed real-gun models (MP5 style on every gun); .44 Magnum removed; red dot designs per gun. Playtime map added (later removed).
+
+### 2026-10-28
+- Tripo models for all characters. Volt, Zip, Hook removed; Angel, Crusty, Wednesday, Anti Hero, Thor added; six renamed. Full-screen white menu (since monochrome).
+
+### 2026-10-25 to 10-27
+- FAMAS, SPAS-12, AA-12, Crossbow and others added. Fixed 60 Hz clock and peer-to-peer "Play a friend" online play.
+- Beach Please opened up; ladder climbing animation; bots reach everywhere; explosive drums on every map; character models rebuilt.
+- Menu split into Lobby and Loadout.
+
+### 2026-10-18 to 10-23
+- Game created as Block Rush, renamed imok 1v1. Duels, Rumble, 2v2, free for all; 10 hidden bot styles.
+- Finishers, characters and skins; shops; stamina; ElevenLabs sounds; dark trap menu music.
+- Maps renamed Street Life, Railed and Beach Please; Rail Yard and Wreck Cove built. Phone controls, HUD editor, performance modes. Sprinting removed.

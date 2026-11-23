@@ -54,7 +54,7 @@ Last updated: 2026-11-23
 - Rumble: fists only, no armour; bat and Speed Shoes pickups appear 10 s into each round.
 - Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + fists/melee + throwables; Sentry stays.
 - Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
-- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets) and bats; collect stars (10 to win as of Nov 23) and cash in at the shop; going down costs 2 stars, dying loses them all; leaderboard shows stars; players near winning are outlined through walls and marked on minimaps.
+- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets) and bats; collect 10 stars to win and cash in at the shop; going down costs 2 stars, dying loses them all; leaderboard shows stars; anyone on 8+ stars is outlined through walls and marked on every minimap.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
 
 ### Weapons
@@ -111,6 +111,7 @@ Last updated: 2026-11-23
 ### 2026-11-23
 - Golden Armour removed from the game.
 - New Collection mode on The Mansion (8 players, start with fists, collect stars, cash in at the shop); later the same day: 10 stars to win, going down costs 2, dying loses all, stars respawn 12+ m away, bots search only for what they've seen.
+- Collection: 10 stars to win confirmed; the through-walls outline and minimap marker now start at 8 stars (was 4).
 
 ### 2026-11-22
 - Bug fixes only: bot grenade aim, sentry splash through walls, bloom, melee on finishers, flamer accuracy, online sync.

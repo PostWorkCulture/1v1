@@ -3821,7 +3821,8 @@ function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
         bx(Math.min(a,b),Math.max(a,b),v0,v1,top-Math.min(rise*1.6,top-y0),top,{solid:false});
         // open stairs (Railed): each step is its own slab, so you can walk underneath where there's headroom; otherwise one solid wedge to the ground
         const e=OPEN_STAIRS?b:uS+dir*run*n,A0=Math.min(a,e),A1=Math.max(a,e);let p,q,r,s;if(alongV){p=X(v0);q=X(v1);r=Z(A0);s=Z(A1);}else{p=X(A0);q=X(A1);r=Z(v0);s=Z(v1);}
-        collider(Math.min(p,q),Math.max(p,q),OPEN_STAIRS?top-Math.min(rise*1.6,top-y0):y0,top,Math.min(r,s),Math.max(r,s));}
+        const cb=collider(Math.min(p,q),Math.max(p,q),OPEN_STAIRS?top-Math.min(rise*1.6,top-y0):y0,top,Math.min(r,s),Math.max(r,s));
+          if(!OPEN_STAIRS){cb.noShot=true;const B0=Math.min(a,b),B1=Math.max(a,b);let p2,q2,r2,s2;if(alongV){p2=X(v0);q2=X(v1);r2=Z(B0);s2=Z(B1);}else{p2=X(B0);q2=X(B1);r2=Z(v0);s2=Z(v1);}collider(Math.min(p2,q2),Math.max(p2,q2),top-Math.min(rise*1.6,top-y0),top,Math.min(r2,s2),Math.max(r2,s2));}} /* a solid stair wedge stops you walking under; shots, throws and sight skip it and meet only the visible tread (a thin collider inside the wedge) */
       stairRails(n,run,rise,uS,dir,v0,v1,y0,alongV,X,Z);},
     X,Z};return S;}
 /* small, low guardrails up both sides of every flight: a steel handrail about 55 cm above the treads, a mid rail and posts every few steps
@@ -7583,7 +7584,7 @@ function downYaw(f){if(S.t-(f._dyLast??-9)>.3){f._dyOn=false;f._dyT=0;}f._dyLast
     f._dyw=best;if(!f._dyOn)f._dyv=f.yaw;f._dyOn=true;}
   let df=f._dyw-f._dyv;df=Math.atan2(Math.sin(df),Math.cos(df));f._dyv+=df*Math.min(1,.25);return f._dyv;}
 function rayBoxes(o,d,maxT,skipSee,proj){let best=maxT,hit=null,nAx=0,nS=0;
-  for(const b of allBoxes()){if(skipSee&&(b.see||(b.prop==='glass'&&b.alive!==false)))continue;/* sight passes through glass (bots spot and shoot you through windows) */let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
+  for(const b of allBoxes()){if(b.noShot)continue;if(skipSee&&(b.see||(b.prop==='glass'&&b.alive!==false)))continue;/* sight passes through glass (bots spot and shoot you through windows) */let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
     for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?ty:b.z1;
       if(Math.abs(dd)<1e-9){if(oo<mn||oo>mx){t0=1e9;break;}continue;}let ta=(mn-oo)/dd,tb=(mx-oo)/dd,s=-1;if(ta>tb){const q=ta;ta=tb;tb=q;s=1;}
       if(ta>t0){t0=ta;ax=a;sg=s;}if(tb<t1)t1=tb;if(t0>t1)break;}
@@ -10931,7 +10932,7 @@ function rpWorker(){if(RP.w0!==undefined)return RP.w0;try{if(!window.OffscreenCa
       postMessage({t:d.t,bl:await c.convertToBlob({type:'image/jpeg',quality:d.q})});}catch(err){postMessage({t:d.t,bl:null});}};`;
     const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
     w.onmessage=e=>{RP.busy=Math.max(0,RP.busy-1);const {t,bl}=e.data;if(!bl)return;RP.ring.push({t,bl});RP.ring.sort((a,b)=>a.t-b.t);trimRing();};RP.w0=w;}catch(e){RP.w0=null;}return RP.w0;}
-D.__pick={vm:()=>renderVM(),hero:(ids,W,H)=>heroShots(ids,B.roundedBox,W,H),swm:()=>SWM,batModel,moveSpeed,rollBat,throwNade,spawnProj,projs:()=>projs,mines:()=>mines,layMine,placeSwarm,swarmOut,flameOut,shop:()=>SHOP_ITEMS,acts:applyActs,menu:st=>{menuStep(st);renderDuelMenu();}};D.__down=(f,src)=>down(f,src);D.__kill=(f,src)=>kill(f,src);D.__view=(p,t)=>{S.camOv=p?{p,t}:null;};D.__RP=RP;D.__projs=()=>projs;D.__boom=(at,R)=>boomFX(at,R);D.__fx={FXG,fxGrab,frostTex,set:a=>{flashA=a;}};D.__debris=()=>debris;D.__RV=()=>RV;
+D.__pick={ray:rayBoxes,scn:()=>scene,vm:()=>renderVM(),hero:(ids,W,H)=>heroShots(ids,B.roundedBox,W,H),swm:()=>SWM,batModel,moveSpeed,rollBat,throwNade,spawnProj,projs:()=>projs,mines:()=>mines,layMine,placeSwarm,swarmOut,flameOut,shop:()=>SHOP_ITEMS,acts:applyActs,menu:st=>{menuStep(st);renderDuelMenu();}};D.__down=(f,src)=>down(f,src);D.__kill=(f,src)=>kill(f,src);D.__view=(p,t)=>{S.camOv=p?{p,t}:null;};D.__RP=RP;D.__projs=()=>projs;D.__boom=(at,R)=>boomFX(at,R);D.__fx={FXG,fxGrab,frostTex,set:a=>{flashA=a;}};D.__debris=()=>debris;D.__RV=()=>RV;
 const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4a3d" stroke="#14161c" stroke-width="1.8"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg>';
 function rpButtons(list,keys){return list.map((c,i)=>`<button class="rp-b" data-rp="${RP.clips.indexOf(c)}">${keys&&i<9?`<kbd>${i+1}</kbd>`:''}${PLAY_SVG}${c.label}</button>`).join('');}
 // the round-end bar never releases the mouse (that used to leave mouse-look dead in the next round): use 1-9 for replays and H for home, or click if the cursor is free

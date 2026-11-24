@@ -20,6 +20,7 @@ Last updated: 2026-11-24
 ## Part 1 – Current design rules
 
 ### General look and feel
+- What you can see is what stops a shot: no invisible blockers. Stairs walk as solid blocks, but bullets, throws and sight only meet the visible treads.
 - Premium, realistic, not cartoony or toy-like. No confetti, no over-the-top sparks, no coloured particle squares/blocks on anything (hits, punches, respawns, double jumps, breaks).
 - Breakables are everywhere: all upright glass (windows, glass walls, railings) breaks with one bullet, punch or blade hit and shatters into lots of tiny shards that fall and lie on the surface. Floor/roof glass (e.g. Railed roofs) stays tougher so one stray shot doesn't drop people through. Glass is thin (3 cm), very see-through, no tint, no outline.
 - Explosive barrels go off from a single hit; cars blow up on the 3rd shot; shooting a mine sets it off for real. Every weapon (melee and crossbow included) breaks glass, barrels, mines and props. Throwables smash any glass they hit and carry straight on through it (no bounce, no blast). A thrown grenade sets off every barrel and mine inside its whole blast.
@@ -118,6 +119,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Fixed invisible walls under staircases (Street Life's house and hospital, The Mansion, The House): stairs keep their solid blocks for walking, but shots, throws and sight now only meet the visible steps, so you can shoot under and between them.
 - Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.
 - Ziplines: stand on the pad at either end for 1.5 s to grab the handle (no jump); after a ride you step off the pad before it can take you back.
 - Rocket Launcher re-skinned as "Hellfire" (black-and-red horns) with matching rockets; lethals re-skinned as "Neon Arcade". Picked from four concepts each.

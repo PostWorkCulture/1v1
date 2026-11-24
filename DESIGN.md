@@ -71,7 +71,7 @@ Last updated: 2026-11-24
 - Gun colours: HDR black with silver barrel; Vanguard shiny mirror chrome (the M4 is the gold gun); Vector black.
 - Rocket Launcher is "Hellfire" (Pete picked it, 24 Nov): black chrome tube with glowing molten cracks, bone rings and spikes, a demon skull round the muzzle (burning eyes, fangs, fire in its throat) with black-and-red ram horns; its rockets match (cracked body, bone fins, red-hot nose).
 - Lethals are "Neon Arcade" (Pete picked it, 24 Nov): gloss black bodies with glowing neon in each lethal's colour (Grenade lime, Cluster orange, Mine red with a glowing hex top, Stun cyan with a lightning bolt). The Gold Grenade still turns fully gold.
-- Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
+- Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface; mines you laid before dying vanish 3 s after you respawn (ones laid after respawning stay).
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina. Gold Grenade: double damage, an explosion twice the size of a normal one, and a slight shake of your screen wherever you are. Flamethrower: 16 m wide jet, 6 a tick (downs someone up close in about a second), 3 s of fuel, harder burn.
 
 ### Sound
@@ -82,7 +82,7 @@ Last updated: 2026-11-24
 
 ### Characters
 - Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair; Glitch's trim is neon orange, not cyan; Raven keeps black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
-- Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat still adds 20%.
+- Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat adds 40%.
 - Strafing (Pete, 24 Nov): the hips turn up to about 60° towards where you're going and the legs run that way, while the upper body twists back to keep the aim (going back and to the side, they turn the other way and backpedal); legs never side-step across each other. Shoes stay level and on top of the floor (the bottom of each shin bends at the ankle; a stretched leg lifts its foot), never dipping through it.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
@@ -113,6 +113,7 @@ Last updated: 2026-11-24
 - Finishers: all finishing moves (removed 24 Nov: Pancake, Heartbreaker, Roast, Combat, the F key and the Finish button), Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: stun stars over the head (removed 24 Nov), floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
+- Arena: the live floor's marked hazard panels that shocked (replaced by unmarked trapdoors, 24 Nov) and the 6-pillar layout.
 - Street Life: the 4 smaller side buildings, the big buildings' middle floor, the hospital theme (red, crosses, medical kit, helipad) and the home's brown cedar (all removed 24 Nov).
 - Other: the separate aim control (touch Aim button, right-click aim, Aim-when-firing setting), the UMP's micro red dot and the Vector's holo box, throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
 
@@ -124,6 +125,7 @@ Last updated: 2026-11-24
 - Mines laid before you die disappear 3 s after you respawn (mines laid after respawning stay).
 - Smoother strafing: hips turn towards the way you're going and the legs run that way with the chest still on aim, so legs no longer cross and wobble; shoes stay level on the floor instead of dipping through it (forward running too).
 - Ziplines: 1 s on the pad to grab (was 1.5 s), with a small "Zipline in 0.6s" countdown pop-up while you wait.
+- Map picker: small square pictures on the left and a big preview of the picked map beside them (follows hover, no pop-up; map size tagged in its corner), name and description stacked on the right, the mode summary as a pink label by the Bots buttons; it shrinks to fit when the options row wraps so nothing overlaps.
 - Character menu pictures re-rendered for all 10 at high res (picker tile 512 px, full body 960 x 1216, face 360 px) with transparent backgrounds: no black squares behind the characters on the dark blue tiles or scoreboard avatars.
 - Glitch's cyan trim (zip, socks, trainers) changed to neon orange, menu colour too; Raven keeps her black hair (blonde tried, Pete chose to keep black).
 - Bot navigation checked on every map: bots now use the Arena portals, double-jump onto container tops and the Street Life ledge, hop counters, railings and low walls, get into both Street Life under-stair nooks and up the arcade stairs, find the Mansion roof from anywhere inside (route planned on a coarse map when it's far), and shoot away breakable cover a player hides behind. Sky High cabana doorways widened to fit a body; one Street Life arcade machine by the stairs removed (it blocked the way).
@@ -132,15 +134,21 @@ Last updated: 2026-11-24
 - Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.
 - Ziplines: stand on the pad at either end for 1.5 s to grab the handle (no jump); after a ride you step off the pad before it can take you back.
 - Rocket Launcher re-skinned as "Hellfire" (black-and-red horns) with matching rockets; lethals re-skinned as "Neon Arcade". Picked from four concepts each.
+- Arena: the floor and walkways became 5 m slabs and any of them (not the ramps or middle cross) can flash amber 3 times and drop open as a trapdoor, replacing the earlier same-day live floor of marked shock panels; pillars cut from 6 to 4, evenly spaced, with the portals moved onto them.
 - Vanguard re-finished in shiny mirror chrome (was gold, which clashed with the gold M4).
+- Loadout: hovering a gun shows it in the showcase panel on the left (picture, name, stats), and your pick comes back when you move off; lethals have no hover.
 - Stun stars removed completely (no stars, halo ring or sparks over a stunned or dazed player's head).
 - Street Life: a zipline from roof top to roof top (small deck on each ridge; stand on the pad for 1 s to grab, with a small countdown pop-up (step off before you can ride back; 3 s cooldown after any ride, players and bots), can be shot while riding (killed outright: the body tumbles off along the cable, falls all the way and explodes where it lands), about 1.7 s across, jump to let go; bots use it both ways); quiet original trap loop playing inside the arcade.
 - Street Life: the arcade's two corner blade signs removed; the ARCADE board scrolls slowly left; arcade carpet, starry ceiling, memphis blue wall, posters, a HIGH SCORES board and a GAME ON sign inside; the two lorries restyled (SCOOPS ice-cream truck, GAME TRUCK).
 - Gold Bat made the obvious special one: brighter polished gold with glitter, a glow, twinkling stars, a gold swing arc and gold sparks on hits; gold name on the HUD.
 - Street Life arcade: the star on the ridge removed and the roof made black.
+- Lagoon: open steps (you can walk under the high end of every staircase); boats, jet skis and the seaplane stay out on the water. Railed: the strip light hanging in the goods shed's roof hatch removed, train twice as fast (22 m/s). Arena shop moved against the middle of the south end wall.
+- Backyard removed from the game completely (map, code, menu and ticker mentions).
+- Vanguard shot is now a real rifle recording (CC0) instead of the pitched-up Kar98 shot.
 - Bat: 40% speed boost while held (was 20%) and swings twice as quick. Six bat colours at random each spawn; the Gold Bat downs in 2, the rest in 3.
 - Throwables smash through any glass without bouncing or going off; thrown grenades set off barrels and mines anywhere in their blast; Gold Grenade blast twice as big with a slight screen shake; Flamethrower more powerful (6 a tick, 16 m, wider jet, 3 s fuel, harder burn).
 - Stun stars half the size (and a little lower). Watching someone after you're out no longer judders/looks fuzzy (the camera now moves with their smoothed position).
+- Sharp loading picture; after a win the results offer just Rematch or Menu.
 - Mansion: the side hedges (out of bounds) raised to the full height of the house (11 m), and the roof's side parapets to 2.6 m, so both are obvious.
 - Street Life: the home all yellow (black frame kept); the arcade's outside frames black like the home's, and loud dark clashing colours inside (red floor, electric-blue wall, deep purple ceiling/upstairs floor, loft lined blue/purple/teal/magenta).
 - 8 new characters added (North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic), and Crusty, Dracz, Starscreen and Anti Hero removed completely; roster is now 10 (Wednesday, Lil Pink and the 8).
@@ -149,8 +157,10 @@ Last updated: 2026-11-24
 - Gorillaz, Jet, Murda Medic and Spacebot removed completely (characters, skins, models, menu pictures, glows, faces, Jet's jetpack flames); the roster is Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty and Dracz.
 - Rocket Launcher joins the snipers on hold Fire to aim, release to fire (desktop and phone).
 - Player speed cut by 25% for everyone, players and bots (running about 9.5 m/s, was 12.7).
+- Sky High middle cover raised to 1.8 m (hidden crouched, shoot over standing); sculpture plinths 1.4 m.
 - SMG sights (MP5, Vector, UMP) get a blue dot.
 - Sky High rebuilt as an infinity-pool roof terrace: helipad, chopper (model and rotor sound), stairwell buildings, tanks and skylights removed; wooden-ended glass pool, raised sun decks with solid cover, teak cover walls.
+- Mode & map screen: options in one row across the top with Quick start first (Free for all, 4 players, 5 min, random map and weapons), map picker full width below.
 - Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.
 - Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.
 - Street Life: the hospital became the yellow ARCADE (game machines on both floors, star signs, a star on the ridge); both buildings turned sideways and made bigger; the home's brown wood replaced by bright boards (a colour per wall, black frame kept); fewer, bigger glass panes; deep green plain ground outside the fence; the shop moved to the south end of the road against the fence.
@@ -164,9 +174,11 @@ Last updated: 2026-11-24
 - One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, a clear gap, then the lethals, no tabs. Swarm and Flamethrower now stand in for your gun.
 - Beach Please downsized to Big (70 × 50 m) and its walkway removed (both jetties, the glass promenade, its lamps, ladders and promenade waves); huts, loungers, palms, sandcastles and spawns moved in to fit.
 - The House open flow: doorways widened to 4.4 m, glass partitions and low hop walls replaced by open archways, furniture cleared from every opening (kitchen island, dining table, armchair, hop sideboards removed).
+- Menus: red accent becomes neon pink everywhere in the menus (in-game danger reds stay red). Menu music rotates between 3 dark trap tracks, a different one each time the game opens.
 - Gun list cut to 12: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90 and Sting removed completely, and the Kar98 swapped for the Vanguard.
 - Simpler still: reloads capped at 1.5 s (only the Rocket Launcher and Swarm were longer), hip fire halved on ARs/SMGs, instant swaps; shop grenades moved onto E, wall building and the Sentry removed, stamina removed (free double jump); free for all is straight kills; small-map weapon limits and Snipers only mode removed (the four extra snipers kept in code, unused).
 - The Mansion opened up for fast movement: every inside glass wall replaced by an open archway, inside doorways widened to 4.4 m, furniture and wall decor cleared from every doorway (master bed, guest room and dressing room re-laid out), hall of mirrors' mirrors moved from the floor onto the walls.
+- Navy theme: every near-black background, border and shade in menus and HUD panels becomes navy.
 - Back to hard and fast: all guns get the quickest SMG's ADS speed; reload button (R key, phone button, key binding) removed, guns reload only when empty; fists removed completely and replaced by the barbed-wire bat as the permanent 3rd slot (Rumble is bats only; the bat pickup is gone).
 - Lagoon rebuilt as a Big (70 × 50 m) single rectangular deck with high boardwalks, stairs and bridges to the shop canopy.
 - Club Night removed from the game completely (map, code, music, README).

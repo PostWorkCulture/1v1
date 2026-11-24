@@ -1753,11 +1753,6 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
               <button role="radio" data-team="2v2" aria-checked="false">2v2</button>
               <button role="radio" data-team="ffa" aria-checked="false">Free for all</button>
             </div>
-            <div id="d-rulesrow" hidden><div class="msub" id="d-rules-lbl">1v1 rules</div>
-            <div class="seg" role="radiogroup" aria-label="Rules" id="d-rules">
-              <button role="radio" data-rules="normal" aria-checked="true">Normal</button>
-              <button role="radio" data-rules="simple" aria-checked="false">Simple</button>
-            </div></div>
             <div id="d-ffanrow" hidden><div class="msub">Free for all size</div>
             <div class="seg" role="radiogroup" aria-label="Number of players in free for all" id="d-ffan">
               <button role="radio" data-n="2" aria-checked="false">2</button>
@@ -1814,7 +1809,6 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
             <div class="d-guns cons" id="d-consl"></div>
             <div class="wdet" id="d-cdet"></div>
           </div>
-          <div class="rumble-info" id="d-sinfo" hidden><b>M4, Knife &amp; Grenade</b><span id="d-sinfo-t">Simple 1v1: everyone gets the same loadout. Just you against one bot.</span></div>
           <div class="rumble-info" id="d-rinfo" hidden><b>Bats only</b><span>Just your barbed-wire bat in Rumble: no guns, lethals or shop. 50 damage a swing (2 to down), big knockback. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
@@ -8683,14 +8677,12 @@ const STYLES={
   kiter:{name:'Kiter',desc:'Holds its favourite range: backs off as you push, follows as you run.',aggr:.35,range:1,retreat:.4,strafe:1.4,jump:.25,react:.95,err:.95,prim:['ar','vanguard','gar','crossbow'],sec:['smg','duals']},
   camper:{name:'Camper',desc:'Picks one spot with a view, walls up and holds the angle all round.',aggr:.05,range:1,retreat:.6,strafe:.3,jump:0,react:1.05,err:.8,prim:['ar','sniper'],sec:['smg','duals']},
   duelist:{name:'Duelist',desc:'Strafes and trades shots at mid range.',aggr:.5,range:1,retreat:.25,strafe:1,jump:.15,react:1,err:1,prim:['sniper','vanguard','ar','gar','crossbow','shotgun'],sec:['smg','rocket','sword','duals','vector','ump']}};
-const STYLE_IDS=Object.keys(STYLES),RUMBLE_STYLES=['rusher','lurker','flanker','duelist','hunter','breacher'],SIMPLE_STYLES=STYLE_IDS.filter(k=>k!=='sniper');
-// Simple 1v1s: one fixed loadout for everyone
-const SIMPLE_KIT={primary:'gar',secondary:'sword',cons:'grenade'};
+const STYLE_IDS=Object.keys(STYLES),RUMBLE_STYLES=['rusher','lurker','flanker','duelist','hunter','breacher'];
 const pickOf=l=>l[Math.floor(Math.random()*l.length)];
-function pickStyle(b){const ru=S.mode==='rumble',pool=ru?RUMBLE_STYLES:S.simple?SIMPLE_STYLES:STYLE_IDS;if(S.forceStyle&&STYLES[S.forceStyle])return S.forceStyle; // test hook only
+function pickStyle(b){const ru=S.mode==='rumble',pool=ru?RUMBLE_STYLES:STYLE_IDS;if(S.forceStyle&&STYLES[S.forceStyle])return S.forceStyle; // test hook only
   const prev=b.ai.style;let l=pool.filter(k=>k!==prev);if(S.lastWin===b.team&&prev&&Math.random()<.4)return prev;return pickOf(l);}
 function applyStyle(b){const st=pickStyle(b),P=STYLES[st];if(b===BOT)S.botStyle=st;const a=b.ai;a.P=P;a.style=st;a.mode=null;a.spot=null;a.camp=null;a.campMoved=false;a.track=null;a.shots=0;a.fired=0;a.side=Math.random()<.5?-1:1;
-  if(S.simple){b.primary=SIMPLE_KIT.primary;b.secondary=SIMPLE_KIT.secondary;}else if(S.mode!=='rumble'){b.primary=(b===BOT&&S.forceBot)||pickOf(P.prim);b.secondary=pickOf(P.sec);
+  if(S.mode!=='rumble'){b.primary=(b===BOT&&S.forceBot)||pickOf(P.prim);b.secondary=pickOf(P.sec);
     {if(!priOK(b.primary)){const l=P.prim.filter(k=>priOK(k));b.primary=pickOf(l.length?l:PRIMARIES.filter(k=>priOK(k)));}if(!secOK(b.secondary)){const l=SECONDARIES.filter(k=>secOK(k));b.secondary=pickOf(l.length?l:SECONDARIES);}}}
   if(b===BOT&&S.players==='1v1')txt('d-botname',CHARS[BOT.char].name+' · '+GUNS[BOT.primary].name);}
 /* difficulty: react = s before first shot, err = aim spread (deg), head = headshot chance, turn = aim speed,
@@ -8705,9 +8697,9 @@ const DIFF={easy:{name:'Easy',react:2.2,err:10,head:0,turn:2,strafe:.15,settle:.
 function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
-/* 1v1 Simple: 1v1 maps only; 1v1 Normal: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[2,'70 × 50 m'],house:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1 Simple/Normal, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',simple:false,one:false,rules:store.get('duel:rules','normal')==='simple'?'simple':'normal',fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[3,5,10].includes(+store.get('duel:dmlen',5))?+store.get('duel:dmlen',5):5,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+/* 1v1: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
+const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[3,'120 × 90 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[2,'70 × 50 m'],house:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',one:false,fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',sec:'smg',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[3,5,10].includes(+store.get('duel:dmlen',5))?+store.get('duel:dmlen',5):5,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randSec:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -10366,7 +10358,7 @@ function pause(){if(S.state==='menu'||S.state==='done')return;if(SNQ.hold)snipeU
 function resume(){S.paused=false;$('duel-pause').hidden=true;applyTouch();if(!S.touch)lock();}
 /* ---- touch controls ---- */
 const TM={x:0,y:0};let lookId=null,lookX=0,lookY=0;
-function applyTouch(){loadHudProf();$('dtouch').hidden=!S.touch||(S.paused&&!S.hudEdit);$('duel-pause').dataset.touch=S.touch?'1':'0';$('duel-hud').classList.toggle('touch',!!S.touch);$('duel-hud').classList.toggle('rumble',S.mode==='rumble');$('duel-hud').classList.toggle('simple',!!S.simple);$('duel-hud').classList.toggle('solo',S.players==='1v1');syncAimOpts();requestAnimationFrame(applyHudPos);
+function applyTouch(){loadHudProf();$('dtouch').hidden=!S.touch||(S.paused&&!S.hudEdit);$('duel-pause').dataset.touch=S.touch?'1':'0';$('duel-hud').classList.toggle('touch',!!S.touch);$('duel-hud').classList.toggle('rumble',S.mode==='rumble');$('duel-hud').classList.toggle('solo',S.players==='1v1');syncAimOpts();requestAnimationFrame(applyHudPos);
   document.querySelectorAll('#dp-touch button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.t==='1')===!!S.touch)));if(S.touch){S.lockOK=false;try{document.exitPointerLock();}catch(e){}}}
 $('dp-touch').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.touch=b.dataset.t==='1';store.set('duel:touch',S.touch);if(!S.touch)S.lockOK=true;applyTouch();});
 /* touch aiming: a gentle acceleration curve on fast swipes, aim assist (slowdown over a target, a light pull while aiming or firing,
@@ -11018,13 +11010,13 @@ function updCamera(dt){S.camFollow=0;
 /* ================= round flow ================= */
 function startMatch(){S.qr=null;if(S.one)S.players='1v1';if(S.randMap){/* the map the Random picker landed on in the menu is used once; rematches roll fresh */if(S.randPre&&mapList().includes(S.randPre)){S.map=S.lastRand=S.randPre;}else rollMap();S.randPre=null;}if(S.randChar){/* the fighter the Random picker landed on is used once; rematches roll fresh */if(S.randCharPre&&CHARS[S.randCharPre]){S.char=S.lastChar=S.randCharPre;}else rollChar();S.randCharPre=null;}rollLoad();S.seed=(Math.random()*2**31)|0;gSeed=S.seed;window.goFull&&goFull();RP.clips=[];RP.round=[];if(!CHARS[S.char])S.char='wednesday';if(!CONS_IDS.includes(S.cons))S.cons='stun';if(!mapOK(MAPS[S.map])&&!(S.test&&MAPS[S.map]))S.map=mapList()[0];if(!priOK(S.gun)||!SECONDARIES.includes(S.sec)||!secOK(S.sec))rollLoad();D.active=true;applyTouch();xpBar('hx');B.G.state='duel';setLook(ME,S.char);setupRoster();
   const pool=CHAR_IDS.filter(c=>c!==S.char).sort(()=>Math.random()-.5);let pi=0;S.score=[];for(const f of FS)S.score[f.team]=0;S.round=1;S.rlog=[];S.stats={shots:0,hits:0,heads:0,dmg:0,kills:0,elims:0};
-  for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;f.sh=0;f.hi=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='bat';if(S.simple)Object.assign(ME,SIMPLE_KIT);
+  for(const f of allFighters()){f.k=0;f.as=0;f.d=0;f.dmgM=0;f.sh=0;f.hi=0;}lbDirty=1;for(const f of FS)resetShopKit(f);closeShop();ME.primary=S.gun;ME.secondary=S.sec;ME.cons=S.mode==='rumble'?null:(S.cons||'stun');if(S.mode==='rumble')ME.primary=ME.secondary='bat';
   S.botStyle=null;S.lastWin=-1;for(const b of FS){if(b===ME)continue;setLook(b,b===BOT&&S.forceChar?S.forceChar:pool[pi++%pool.length]);b.name=CHARS[b.char].name;b.ai.style=null;b.cons=S.mode==='rumble'?null:CONS_IDS[Math.floor(Math.random()*CONS_IDS.length)];
-    if(S.mode==='rumble')b.primary=b.secondary='bat';if(S.simple)Object.assign(b,SIMPLE_KIT);tagFor(b);}
+    if(S.mode==='rumble')b.primary=b.secondary='bat';tagFor(b);}
   const P=S.players;if(P!=='1v1')txt('d-botname',P==='2v2'?'Enemy team':'Bots');document.querySelector('.d-side.you .eyebrow').textContent=P==='2v2'?'Your team':'You';
   $('d-feed').innerHTML='';if(M.id!==S.map||M.ru!==(S.mode==='rumble')||(M.byPlayers&&M.pl!==S.players))buildMap(S.map);try{const pc=renderer.compileAsync&&renderer.compileAsync(scene,camera);if(pc&&pc.catch)pc.catch(()=>{});}catch(e){}/* get every material's shader ready in the background, so new rooms don't hitch the first time you see them */$('menu').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('duel-hud').hidden=false;S.paused=false;
-  const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1 · Normal'):'Duels'} · ${S.one?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':P==='2v2'&&!ru?(S.simple?' · Simple':' · Normal'):'')+' · '}${MAPS[S.map].name}`;
-  $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · most kills in '+dmLen()+' minutes wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · bats only':S.simple?' · M4, sword & grenade':'');
+  const h=$('d-hint'),ru=S.mode==='rumble';$('in-m').textContent=`${ru?'Rumble':S.one?'1v1':'Duels'} · ${S.one?'':PLAYERS[S.players]+(P==='ffa'?' ('+ffaN()+' players)':'')+' · '}${MAPS[S.map].name}`;
+  $('in-r').textContent=(P==='ffa'?'Deathmatch · everyone respawns · most kills in '+dmLen()+' minutes wins':P==='2v2'?'Teams of two · last team standing takes the round · first to 5 rounds':'Last one standing takes the round · first to 5 rounds')+(ru?' · bats only':'');
   h.classList.remove('fade');clearTimeout(startMatch.ht);startMatch.ht=setTimeout(()=>h.classList.add('fade'),6000);startRound();if(!S.touch)lock();}
 // spawns: 1v1 two far-apart points out of each other's sight; 2v2 two far-apart points with each teammate beside their partner; FFA four points spread as far apart as possible
 // extra spawn spots for big free-for-alls: random open places in the main walkable area of the map (facing the middle)
@@ -11074,8 +11066,8 @@ function warmShaders(){try{if(!GLS.geo){glassShatter({y0:-500},0,-500,0,.1,.1,.1
 function showIntro(){setTimeout(warmShaders,60);const el=$('d-intro'),pic=thumbs[S.map];$('in-pic').style.backgroundImage=pic?`url(${pic})`:'';$('in-chip').textContent=mapChip();$('in-t').textContent=MAPS[S.map].name;$('in-b').textContent=MAP_TAG[S.map]||MAPS[S.map].desc||'';
   el.classList.remove('out');el.hidden=false;for(const n of el.querySelectorAll('*')){n.style.animation='none';void n.offsetWidth;n.style.animation='';}}
 function hideIntro(now){const el=$('d-intro');if(!el||el.hidden)return;if(now){el.hidden=true;return;}if(!el.classList.contains('out')){el.classList.add('out');setTimeout(()=>{if(el.classList.contains('out'))el.hidden=true;},420);}}
-/* the mode shown under the map's name on the title card: 1v1, 1v1 · Simple, 2v2, Free for all or Rumble */
-const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?(S.simple?'1v1 · Simple':'1v1'):S.simple&&S.players==='2v2'?'2v2 · Simple':(PLAYERS[S.players]||'Duels');
+/* the mode shown under the map's name on the title card: 1v1, 2v2, Free for all or Rumble */
+const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?'1v1':(PLAYERS[S.players]||'Duels');
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
 function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
   if(cr&&cr!==v&&isFoe(cr,v))cr.k=(cr.k||0)+1;v.d=(v.d||0)+1;const asd=new Set();if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==cr&&src!==v&&isFoe(src,v)&&S.t-t<15&&!asd.has(src)){asd.add(src);src.as=(src.as||0)+1;}if(by&&by!==cr&&by!==v&&isFoe(by,v)&&!asd.has(by))by.as=(by.as||0)+1;v.hitBy=null;lbDirty=1;
@@ -11492,20 +11484,17 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-rp]');if(b
 function renderRecord(){const el=$('d-record');if(!el)return;let w=0,l=0;for(const k in S.record){w+=S.record[k][0];l+=S.record[k][1];}el.textContent=`${w}–${l}`;}
 function enterMenu(){hideIntro(true);S.manDown=null;$('duel-hud').classList.remove('mdcine');$('mandown').classList.remove('on');clearFx();$('d-homebtn').hidden=true;renderDuelMenu();S.state='menu';S.paused=false;D.active=true;B.G.state='duel';const mp=S.map||mapList()[0];if(M.id!==mp)buildMap(mp);clearGridQ();clearDebris();
   FS=[ME,BOT];ME.team=0;BOT.team=1;for(const b of BOTS.slice(1)){b.alive=false;b.ch.root.visible=false;if(b._tag)b._tag.style.opacity=0;}
-  setLook(ME,CHARS[S.char]?S.char:'wednesday');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'bat':S.simple?SIMPLE_KIT.primary:(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
+  setLook(ME,CHARS[S.char]?S.char:'wednesday');resetFighter(ME,M.spawns[0]);resetFighter(BOT,M.spawns[1]);ME.primary=S.mode==='rumble'?'bat':(S.gun||'gar');equip(ME,0);for(const k in ME.guns)ME.guns[k].visible=k===ME.primary;
   $('duel-hud').hidden=true;$('duel-done').hidden=true;$('duel-pause').hidden=true;$('menu').hidden=false;renderRecord();ensureMenuImages();}
 function leave(){$('d-homebtn').hidden=true;S.mstep='setup';S.qr=null;clearCelebrate();if(S.replayOpen)closeReplay();$('d-rend').hidden=true;if(document.pointerLockElement)document.exitPointerLock();enterMenu();}
-/* 1v1 rules (Normal or Simple) apply to Duels with 1v1 picked under Players */
-/* Normal / Simple rules apply to 1v1 and 2v2 */
-const rulesOn=()=>S.mode==='duel'&&(S.players==='1v1'||S.players==='2v2');
-function syncOne(){S.one=S.mode==='duel'&&S.players==='1v1';S.simple=rulesOn()&&S.rules==='simple';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;}
-function setMode(m){if(m==='simple'||m==='one'){if(m==='simple'){S.rules='simple';store.set('duel:rules','simple');}m='duels';store.set('duel:players','1v1');}const mk=m;if(m!=='duels'&&m!=='rumble')m='duels';S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));S.one=m==='duels'&&S.players==='1v1';S.simple=m==='duels'&&(S.players==='1v1'||S.players==='2v2')&&S.rules==='simple';const mb=m;document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===mb)));
+function syncOne(){S.one=S.mode==='duel'&&S.players==='1v1';if(!mapOK(MAPS[S.map]))S.map=topMap();if(mapList().length<2)S.randMap=false;}
+function setMode(m){if(m==='simple'||m==='one'){m='duels';store.set('duel:players','1v1');}const mk=m;if(m!=='duels'&&m!=='rumble')m='duels';S.players=(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1'));S.one=m==='duels'&&S.players==='1v1';const mb=m;document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.mode===mb)));
   const du=m==='duels'||m==='rumble';$('pk-panel').hidden=m!=='parkour';$('duel-panel').hidden=!du;$('col2').hidden=!du;$('col3').hidden=!du;$('col4').hidden=!du;store.set('mode',mb);
   const mc=document.querySelector('.menu-card');mc.classList.toggle('duels',du);mc.classList.toggle('pk',!du);
   if(du)setDuelMode(m==='rumble'?'rumble':'duel');
   setTag();
   if(du)enterMenu();else{D.active=false;B.G.state='menu';}}
-function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';if(S.one){document.querySelector('.tag').textContent=S.simple?'First to five rounds against a bot. Everyone has an M4, a sword and grenades.':'First to five rounds against a bot, with your own loadout and the shop.';return;}
+function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';if(S.one){document.querySelector('.tag').textContent='First to five rounds against a bot, with your own loadout and the shop.';return;}
   const who=P==='2v2'?'You and a bot teammate against two bots. First team to five rounds.':P==='ffa'?(ffaN()===2?`Deathmatch against one bot: respawns on, most kills in ${dmLen()} minutes wins.`:`${['','','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'][ffaN()]}-way deathmatch against ${ffaN()-1} bots: everyone respawns, most kills in ${dmLen()} minutes wins.`):'First to five rounds against a bot.';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just bats. '+who:who+(P==='1v1'?' Use the houses for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
@@ -13051,10 +13040,10 @@ function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);
   if(!(imgQ[0]&&imgQ[0].urgent)&&performance.now()-imgLastIn<2000){setTimeout(runImgQ,300);return;}// and never while you're using the menu (gun pictures excepted: they're quick and must match the guns)
   const t=imgQ.shift();if(t){let r=null;try{r=t();}catch(e){console.warn('menu image',e);}const next=()=>{if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);};if(r&&r.then)r.then(next,next);else next();return;}
   imgQ=null;if(menuImagesReady()&&!thumbsPartial.size)imgVerP.then(v=>IMG_DB.put(v,{prev:Object.assign({},PREV),thumbs:Object.assign({},thumbs)})).catch(()=>{});}
-// which duels menu screen is showing: 'setup' (mode and map), 'char' (character) or 'loadout'; Rumble and Simple 1v1 start straight from the character screen
-function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep=st;if(!['setup','char','loadout'].includes(S.mstep))S.mstep='setup';if((S.mode==='rumble'||S.simple)&&S.mstep==='loadout')S.mstep='char';c.dataset.step=S.mstep;const mc=document.querySelector('#menu .menu-card');if(mc)mc.scrollTop=0;for(const id of ['col1','col2','col3','col4'])$(id).scrollTop=0;}
+// which duels menu screen is showing: 'setup' (mode and map), 'char' (character) or 'loadout'; Rumble starts straight from the character screen
+function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep=st;if(!['setup','char','loadout'].includes(S.mstep))S.mstep='setup';if(S.mode==='rumble'&&S.mstep==='loadout')S.mstep='char';c.dataset.step=S.mstep;const mc=document.querySelector('#menu .menu-card');if(mc)mc.scrollTop=0;for(const id of ['col1','col2','col3','col4'])$(id).scrollTop=0;}
 const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');return n;};
-const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'&&!S.simple){if(!S.gun)n.push('a primary');if(!S.sec)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
+const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a primary');if(!S.sec)n.push('a secondary');if(!S.cons)n.push('a lethal');}return n;};
 /* ===== lobby character stage: cut-out portrait under coloured stage lights, embers and a floor ring ===== */
 const STAGE_CC={antihero:'#ff3b3b',brute:'#ff5a2a',crusty:'#ffcc33',ghost:'#3fd4ff',jet:'#3d7dff',patch:'#2af0dc',wednesday:'#ff2a4a',dracula:'#ff1a3a',astronaut:'#ff8a2a',lilpink:'#ff6fae',roboid:'#ff2a1a'};
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
@@ -13100,13 +13089,13 @@ function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 /* map picker title: a one-liner per map under the big cinematic name */
 const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
   street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, toe to toe.',mansion:'Thirty rooms. Two floors. One way out.',yard:"Garden party. Nobody's invited.",random:'Roll the dice. Any map, any match.'};
-function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1')+(!ru&&S.simple?' · Simple':'');}
+function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
 function renderDuelMenu(){
-  xpBar('mx');const ru=S.mode==='rumble',sk=ru||!!S.simple;
+  xpBar('mx');const ru=S.mode==='rumble',sk=ru;
   const c=S.char&&CHARS[S.char];
   stageShow(S.randChar?'__rand':c?S.char:null);crgMark();
   setHTML('d-chars',`<button class="opt char-opt rand" data-char="random" aria-pressed="${!!S.randChar}" title="Random: a surprise fighter every match"><span class="rq" aria-hidden="true">?</span><span class="t">Random</span></button>`+CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${!S.randChar&&k===S.char}" title="${ch.name}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join(''));
-  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;$('d-sinfo').hidden=!S.simple;$('d-rulesrow').hidden=!rulesOn();$('d-rules-lbl').textContent=(S.players==='2v2'?'2v2':'1v1')+' rules';$('d-sinfo-t').textContent=S.players==='2v2'?'Simple 2v2: everyone, your teammate and both bots, gets the same loadout.':'Simple 1v1: everyone gets the same loadout. Just you against one bot.';document.querySelectorAll('#d-rules button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.rules===S.rules)));
+  $('d-gungrp').hidden=$('d-secrow').hidden=sk;$('d-rinfo').hidden=!ru;
   const mlist=Object.entries(MAPS).filter(([k,m])=>mapOK(m));{/* maps: one big picture you flick through with the arrows (or a swipe), a strip of dots under it with a small ? for Random */
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
     /* the map picker: every map as a small picture (plus Random); the picked one has a red edge and a soft glow drifts between them */
@@ -13176,7 +13165,6 @@ $('d-prof').addEventListener('click',e=>{if(S.picking)return;const b=e.target.cl
   S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 $('d-chars').addEventListener('click',e=>{const b=e.target.closest('[data-char]');if(!b)return;if(b.dataset.char==='random'){S.randChar=true;renderDuelMenu();return;}S.randChar=false;S.char=b.dataset.char;renderDuelMenu();setLook(ME,S.char);});
 
-$('d-rules').addEventListener('click',e=>{const b=e.target.closest('[data-rules]');if(!b)return;S.rules=b.dataset.rules==='simple'?'simple':'normal';store.set('duel:rules',S.rules);syncOne();renderDuelMenu();setTag();if(S.state==='menu')enterMenu();});
 $('d-team').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(!b)return;S.players=b.dataset.team;store.set('duel:players',S.players);const was=S.map;syncOne();renderDuelMenu();setTag();if(S.state==='menu'&&S.map!==was)enterMenu();});
 $('d-dmlen').addEventListener('click',e=>{const b=e.target.closest('[data-len]');if(!b)return;S.dmLen=+b.dataset.len;store.set('duel:dmlen',S.dmLen);renderDuelMenu();setTag();});
 $('d-ffan').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;S.ffaN=+b.dataset.n;store.set('duel:ffan',S.ffaN);renderDuelMenu();setTag();});
@@ -13184,9 +13172,9 @@ $('d-diff').addEventListener('click',e=>{const b=e.target.closest('[data-diff]')
 const flagNeed=need=>{const cols={map:'col1',character:'col2',primary:'col3',secondary:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}};
 $('d-next').addEventListener('click',()=>{if(S.picking)return;
   /* Random character: stop the glow on the fighter it picked before moving on */
-  const cg=S.randChar&&!S.cpDone&&document.querySelector('#d-prof .crg');if(cg&&cg.children.length&&(S.mode==='rumble'||S.simple||!lobbyNeeds().length)){rollChar();S.randCharPre=S.char;S.picking=true;
+  const cg=S.randChar&&!S.cpDone&&document.querySelector('#d-prof .crg');if(cg&&cg.children.length&&(S.mode==='rumble'||!lobbyNeeds().length)){rollChar();S.randCharPre=S.char;S.picking=true;
     pickSpin(cg,S.char,()=>{S.picking=false;S.cpDone=true;$('d-next').click();S.cpDone=false;setTimeout(()=>{if(STG&&STG.id==='__rand')STG.name.textContent='Random';},700);},()=>{if(STG&&CHARS[S.char])STG.name.textContent=CHARS[S.char].name;});return;}
-  if(S.mode==='rumble'||S.simple){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);if(!S.map)menuStep('setup');return;}menuStep('loadout');});
+  if(S.mode==='rumble'){$('d-start').click();return;}const ln=lobbyNeeds();if(ln.length){flagNeed(ln);if(!S.map)menuStep('setup');return;}menuStep('loadout');});
 $('d-back').addEventListener('click',()=>{S.qr=null;menuStep('char');renderDuelMenu();});$('d-back1').addEventListener('click',()=>{S.qr=null;menuStep('setup');renderDuelMenu();});
 /* the Random picker: the glow speeds up, hops round the pictures, slows and stops (in red) on the pick, then calls done */
 function pickSpin(g,pick,done,onLand,o){o=o||{};const tiles=[...g.children].filter(t=>t.dataset.rk);const ti=Math.max(0,tiles.findIndex(t=>t.dataset.rk===pick));g.classList.add('picking');
@@ -13271,7 +13259,7 @@ for(const [name,get,set] of [['startRound',()=>startRound,f=>startRound=f],['end
     if(name==='startRound'&&NET.role==='host'&&NET.R)netApplyLoad(NET.R);return r;});}
 // the friend's character and guns replace the bot's
 function netApplyLoad(f){const L=NET.load;if(!L)return;if(L.char&&CHARS[L.char]&&f.char!==L.char){setLook(f,L.char);}f.name=NET.peerName||'Friend';
-  if(S.mode!=='rumble'&&!S.simple){if(L.gun&&GUNS[L.gun])f.primary=L.gun;if(L.sec&&GUNS[L.sec])f.secondary=L.sec;}if(L.cons!==undefined&&S.mode!=='rumble'&&!S.simple&&f.cons!==L.cons){f.cons=L.cons;resetCons(f);}
+  if(S.mode!=='rumble'){if(L.gun&&GUNS[L.gun])f.primary=L.gun;if(L.sec&&GUNS[L.sec])f.secondary=L.sec;}if(L.cons!==undefined&&S.mode!=='rumble'&&f.cons!==L.cons){f.cons=L.cons;resetCons(f);}
   for(const k of [f.primary,f.secondary])if(k&&GUNS[k]&&f.ammo)f.ammo[k]=GUNS[k].mag;f.slot=-1;equip(f,0);}
 // host: move the friend's fighter from their latest command
 function netDrive(f,dt,live){const c=NET.cmd||{fi:0,si:0,yaw:f.yaw,pitch:f.pitch};f.yaw=c.yaw??f.yaw;f.pitch=c.pitch??f.pitch;
@@ -13320,8 +13308,8 @@ function netOnData(m){if(!m||typeof m!=='object')return;
     else if(m.t==='cmd')NET.cmd=m.c;else if(m.t==='jump')NET.jumpQ=true;else if(m.t==='shot')NET.shots.push(m);else if(m.t==='act')NET.acts.push(m.a);}
   else{if(m.t==='start'){netStartClient(m.cfg);}else if(m.t==='snap'){if(D.active&&S.state!=='off')netApplySnap(m.s);}else if(m.t==='menu'){if(D.active){NET.replay=true;try{leave();}finally{NET.replay=false;}}netMsg('Connected · waiting for the host to start',true);}
     else if(m.t==='full'){netMsg('That room already has a friend in it');}}}
-function netCfg(){return {mode:S.mode,one:!!S.one,simple:!!S.simple,map:S.map,players:S.players,ffaN:S.ffaN,dmLen:S.dmLen,diff:S.diff,seed:S.seed,rIdx:fIdx(NET.R)};}
-function netStartClient(cfg){NET.rIdx=cfg.rIdx;Object.assign(S,{mode:cfg.mode,one:!!cfg.one,simple:!!cfg.simple,map:cfg.map,players:cfg.players,ffaN:cfg.ffaN,dmLen:cfg.dmLen||5,diff:cfg.diff});NET.replay=true;try{MIRROR.startRound&&startMatch();}finally{NET.replay=false;}S.seed=cfg.seed;
+function netCfg(){return {mode:S.mode,one:!!S.one,map:S.map,players:S.players,ffaN:S.ffaN,dmLen:S.dmLen,diff:S.diff,seed:S.seed,rIdx:fIdx(NET.R)};}
+function netStartClient(cfg){NET.rIdx=cfg.rIdx;Object.assign(S,{mode:cfg.mode,one:!!cfg.one,map:cfg.map,players:cfg.players,ffaN:cfg.ffaN,dmLen:cfg.dmLen||5,diff:cfg.diff});NET.replay=true;try{MIRROR.startRound&&startMatch();}finally{NET.replay=false;}S.seed=cfg.seed;
   for(const f of FS)f._seen=0;netBanner('Online · '+(NET.hostName||'Host'));}
 // host: the friend takes the first enemy slot once a match starts
 {const sm=startMatch;$('dd-again').removeEventListener('click',sm);startMatch=function(){sm();if(NET.role==='host'&&NET.live){NET.R=FS.find(f=>f!==ME&&isFoe(ME,f))||null;if(NET.R){netApplyLoad(NET.R);if(S.players==='1v1')txt('d-botname',(NET.peerName||'Friend')+' · '+GUNS[NET.R.primary].name);}netSend({t:'start',cfg:netCfg()});netBanner('Online · hosting '+NET.code);}};D.startMatch=startMatch;$('dd-again').addEventListener('click',startMatch);}

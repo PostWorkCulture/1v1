@@ -45,7 +45,7 @@ Last updated: 2026-11-24
 - **Club Night**: warehouse nightclub; empty dance floor ringed by low unbreakable glass; glass inner walls; wide glass high walkway; small fast lifts, no spiral stairs; faint deep house (full inside, 50% outside).
 - **The House**: rooms with distinct colours/textures, glass partitions, brick outside, wide doorways, hop-overs, straight wide stairs, destructible furniture, shop against a wall.
 - **Backyard**: same picket fence and lawn inside and out; sunken splashing pool; 2 sunken trampolines (fling to 2× double-jump height, one with a yellow rim); open-topped terrace; no shed, no swings.
-- **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
+- **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; built for fast flow: no inside glass walls (open archways instead), inside doorways 4.4 m wide, nothing solid within ~2 m of a doorway; hall of mirrors has its mirrors flat on the walls, floor clear; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
 
 ### Modes
 - Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only.
@@ -110,6 +110,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- The Mansion opened up for fast movement: every inside glass wall replaced by an open archway, inside doorways widened to 4.4 m, furniture and wall decor cleared from every doorway (master bed, guest room and dressing room re-laid out), hall of mirrors' mirrors moved from the floor onto the walls.
 - Back to hard and fast: all guns get the quickest SMG's ADS speed; reload button (R key, phone button, key binding) removed, guns reload only when empty; fists removed completely and replaced by the barbed-wire bat as the permanent 3rd slot (Rumble is bats only; the bat pickup is gone).
 - Collection mode removed from imok 1v1 (menu, code, README) to be rebuilt as a separate project; last version tagged `collection-v1`.
 

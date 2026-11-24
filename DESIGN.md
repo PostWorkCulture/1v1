@@ -64,7 +64,7 @@ Last updated: 2026-11-24
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
 - The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
-- Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
+- Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers hold Fire to scope and fire on release, right click only cancels a held scope. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
@@ -114,6 +114,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- SMG sights (MP5, Vector, UMP) get a blue dot.
 - Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.
 - Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.
 - Street Life home: plain floors downstairs (flat stone-beige living room, plain pale stone kitchen/dining; the patterned carpet, rugs and chequered tiles are gone).

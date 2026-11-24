@@ -41,8 +41,7 @@ Last updated: 2026-11-24
 - **Beach Please**: simple, modern, expensive. No grey blocks, logs, boats, picnic benches or boxes. Big classy Tiki Bar (glass, smashable bottles, roof reachable by ladder, shop inside in a corner); small hut at each end; colourful lookout stairs; straight walkway along the bay edge with tall glass; halved deck chairs/parasols along the shore; waves.
 - **Arena**: floodlit night stadium with crowd; max 6 spread-out pillars; wide double-height ramps on 2 sides; no red/blue on floor or pillars; breakable glass along walkways; shootable lamps/poles; 2 straight-edged portals in the pillars.
 - **Sky High**: rooftop helipad at golden hour; 2.1 m glass railing is the only edge barrier and smashes even on touch; falling off = "Man Down" (red spooky text, slow-mo) and loses the round; Tripo chopper lands for 5 s, crushes anyone under it; 2 single-level buildings with big opening doors/windows; white explosive barrels.
-- **Lagoon**: 2 pavilions, 2 wide crossovers, 1 bar per side, decks clear; lights and torches, Tripo boats; rogue waves; snapping rope rails; all roofs jumpable via hop-ups.
-- **Club Night**: warehouse nightclub; empty dance floor ringed by low unbreakable glass; glass inner walls; wide glass high walkway; small fast lifts, no spiral stairs; faint deep house (full inside, 50% outside).
+- **Lagoon** (Big, 70 × 50 m): one big rectangular deck over the lagoon, no water in the middle (rebuilt 24 Nov: the two-pavilion version felt small and tricky). High level at 4.6 m: a boardwalk along each short end, two wide straight flights of stairs up to each (low guardrails), and a high bridge from each boardwalk onto the shop canopy in the middle; all high-level railings and stair guardrails are polished shiny silver (classy promenade look). Shop under the walkable thatch canopy (also reached by a tiki totem each side); 1 tiki bar per long side with drum + barrel hop-ups to its roof; no ladders on Lagoon. Rope rails round the outer edge snap; lights and torches, Tripo boats; rogue waves.
 - **The House**: rooms with distinct colours/textures, glass partitions, brick outside, wide doorways, hop-overs, straight wide stairs, destructible furniture, shop against a wall.
 - **Backyard**: same picket fence and lawn inside and out; sunken splashing pool; 2 sunken trampolines (fling to 2× double-jump height, one with a yellow rim); open-topped terrace; no shed, no swings.
 - **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; built for fast flow: no inside glass walls (open archways instead), inside doorways 4.4 m wide, nothing solid within ~2 m of a doorway; hall of mirrors has its mirrors flat on the walls, floor clear; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
@@ -73,7 +72,7 @@ Last updated: 2026-11-24
 - Top quality, never cheesy or harsh; preview new sounds before publishing. Sources: CC0 Freesound/Pixabay/Kenney etc. (ElevenLabs is unreliable).
 - Volume: Sound (master), SFX, Weapons, Music; Weapons controls only weapon sounds.
 - Near-miss puff only on extremely close misses. Round start = gong. Menu sounds subtle (Kenney Interface pack).
-- Music: dark, bass-led trap on menus/between rounds/end of game; Club Night deep house.
+- Music: dark, bass-led trap on menus/between rounds/end of game.
 
 ### Characters
 - Current roster (10): Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty, Dracz, then Gorillaz, Jet, Murda Medic, Spacebot. Shadow is dev-only (Test Arena) for now.
@@ -99,7 +98,7 @@ Last updated: 2026-11-24
 
 ## Part 2 – Never add back
 
-- Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena. (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
+- Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena, Club Night (removed 24 Nov 2026, with its deep house music). (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
 - Weapons/items: Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
@@ -114,6 +113,8 @@ Last updated: 2026-11-24
 - Simpler still: reloads capped at 1.5 s (only the Rocket Launcher and Swarm were longer), hip fire halved on ARs/SMGs, instant swaps; shop grenades moved onto E, wall building and the Sentry removed, stamina removed (free double jump); free for all is straight kills; small-map weapon limits and Snipers only mode removed (the four extra snipers kept in code, unused).
 - The Mansion opened up for fast movement: every inside glass wall replaced by an open archway, inside doorways widened to 4.4 m, furniture and wall decor cleared from every doorway (master bed, guest room and dressing room re-laid out), hall of mirrors' mirrors moved from the floor onto the walls.
 - Back to hard and fast: all guns get the quickest SMG's ADS speed; reload button (R key, phone button, key binding) removed, guns reload only when empty; fists removed completely and replaced by the barbed-wire bat as the permanent 3rd slot (Rumble is bats only; the bat pickup is gone).
+- Lagoon rebuilt as a Big (70 × 50 m) single rectangular deck with high boardwalks, stairs and bridges to the shop canopy.
+- Club Night removed from the game completely (map, code, music, README).
 - Collection mode removed from imok 1v1 (menu, code, README) to be rebuilt as a separate project; last version tagged `collection-v1`.
 
 ### 2026-11-23

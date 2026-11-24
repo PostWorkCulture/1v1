@@ -47,8 +47,7 @@ Last updated: 2026-11-24
 - **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; built for fast flow: no inside glass walls (open archways instead), inside doorways 4.4 m wide, nothing solid within ~2 m of a doorway; hall of mirrors has its mirrors flat on the walls, floor clear; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
 
 ### Modes
-- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble.
-- Simple = fixed M4, knife (replaced the sword), grenades; no loadout screen.
+- Duels (1v1, 2v2, Free for all), Rumble. 1v1 and 2v2 always use your own loadout (the Simple rules were removed on 24 Nov).
 - Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
 - Rumble: bats only, no armour; Speed Shoes pickup appears 10 s into each round.
 - Free for all: straight kills, no downed state (1v1/2v2 keep downs, revives and finishers).
@@ -58,11 +57,12 @@ Last updated: 2026-11-24
 
 ### Weapons
 - Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
-- The weapon set is 12 guns, each with a clear job (Pete, 24 Nov): primaries M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, HDR (long-range sniper) and Vanguard (semi-auto marksman sniper, replaced the Kar98); secondaries MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher and Knife; the Swarm stays a pickup.
-- M4 is first in the primary list; snipers sit at the end; Random is the default for primary, secondary and lethal and sits at the end of each category, jiggling slightly.
+- One gun and the bat (Pete, 24 Nov): you carry a single gun, picked from one list of 11, plus the bat. There is no secondary slot. The list, in order: M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher, HDR (long-range sniper), Vanguard (semi-auto marksman sniper, replaced the Kar98). The Swarm stays a pickup and the shop Flamethrower is still sold; each one temporarily replaces your gun, then gives it back.
+- M4 is first in the gun list; snipers sit at the end; Random is the default for gun and lethal and sits at the end of each row, jiggling slightly.
+- Loadout is one page, no tabs: the showcase (whatever you last picked, big, with its stats) on the left; the gun grid on the right with the lethals on the row directly below it.
 - The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
-- The barbed-wire bat is always the 3rd slot (20% faster with the bat or knife out); wheel up = next weapon, wheel down = bat; ADS with the bat does nothing. Bat/knife down in 2 hits. No fists anywhere.
+- The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - SMGs: iron sights only (real sight pictures). Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
@@ -101,7 +101,7 @@ Last updated: 2026-11-24
 
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena, Club Night (removed 24 Nov 2026, with its deep house music). (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
-- Weapons/items: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Weapons/items: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
@@ -112,6 +112,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, lethals on the row under them, no tabs. Swarm and Flamethrower now stand in for your gun.
 - Beach Please downsized to Big (70 × 50 m) and its walkway removed (both jetties, the glass promenade, its lamps, ladders and promenade waves); huts, loungers, palms, sandcastles and spawns moved in to fit.
 - Gun list cut to 12: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90 and Sting removed completely, and the Kar98 swapped for the Vanguard.
 - Simpler still: reloads capped at 1.5 s (only the Rocket Launcher and Swarm were longer), hip fire halved on ARs/SMGs, instant swaps; shop grenades moved onto E, wall building and the Sentry removed, stamina removed (free double jump); free for all is straight kills; small-map weapon limits and Snipers only mode removed (the four extra snipers kept in code, unused).

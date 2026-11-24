@@ -4127,7 +4127,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
         const K=N(u,v,y,w,h,d,col||'#9aa0a8',{mat:INVIS});furnInto(id,K.m,X(u),y,Z(v),ry);return K;};
       const LL=DIM.L;
       /* the Tripo models are kept out of the rooms (they made them too busy); just a pot plant in two corners of the terrace */
-      tm('plant',-5.4,4.9,LL,'u+');tm('plant',-3.2,-4.9,LL,'u-');}/* (the second one moved clear of the zipline) */
+      tm('plant',-5.4,4.9,LL,'u+');tm('plant',-1.0,-4.9,LL,'u-');}
     /* window boxes of flowers and a doormat out front */
     for(const s of [-1,1]){S.box(-6.45,-6.15,s*3.6-.55,s*3.6+.55,.85,1.1,'#7a4c2a',{solid:false});for(let i=0;i<5;i++){const fl=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),mat(['#ff8fab','#f4c22b','#ffffff','#e8463a','#a05ad6'][i]));fl.position.set(X(-6.3),1.2,Z(s*3.6-.4+i*.2));M.group.add(fl);}}
     decal(-6.9,0,1.2,1.8,'#7a4c2a',1,.04);
@@ -4228,7 +4228,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
       S.wall('u',.16,-5.35,5.35,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],'#c2127f',.02,LO);}S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
   /* no overhang on the terrace end, so the ladder up the loft wall reaches the roof edge without going through the eaves */
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true,null,null,flip>0?[0,.4]:[.4,0]);
-  const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){if(GW&&v<0){S.box(-3.6,-2.05,v-.15,v+.15,L,P,trim);S.box(-.95,-.15,v-.15,v+.15,L,P,trim);}else S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}/* (a gap in the road side where the zipline runs out) */
+  const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
   wLadder(S.X(-.15)-flip*.2,S.Z(4.7),L,R2+1.05,flip,0);/* just the one ladder up to the roof */
   /* lighting for Street Life's two buildings (warm white in the home, cool white in the hospital):
      inside, a grid of ceiling lights on every floor (round downlights in the home, square panels in the hospital) with a real light per room area;
@@ -4265,7 +4265,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   /* the home's terrace gets a glass balustrade: panes standing on the parapets and either side of the two ladder heads (breakable, back next round) */
   if(th==='home'){const g=(u0,u1,v0,v1,y0,y1)=>S.box(u0,u1,v0,v1,y0,y1,'#bfe6ff',{mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false});
     for(let i=0;i<4;i++)g(-6.07,-5.93,-5.65+i*2.825+.02,-5.65+(i+1)*2.825-.02,P,P+.9);
-    for(const v of [-5.5,5.5]){if(v<0){g(-3.58,-2.07,v-.07,v+.07,P,P+.9);g(-.93,-.17,v-.07,v+.07,P,P+.9);}else for(let i=0;i<2;i++)g(-3.6+i*1.725+.02,-3.6+(i+1)*1.725-.02,v-.07,v+.07,P,P+.9);g(-5.85,-5.25,v-.07,v+.07,L,P+.9);g(-4.25,-3.6,v-.07,v+.07,L,P+.9);}}}
+    for(const v of [-5.5,5.5]){for(let i=0;i<2;i++)g(-3.6+i*1.725+.02,-3.6+(i+1)*1.725-.02,v-.07,v+.07,P,P+.9);g(-5.85,-5.25,v-.07,v+.07,L,P+.9);g(-4.25,-3.6,v-.07,v+.07,L,P+.9);}}}
 // single-storey house with a flat roof deck reached by outside stairs
 /* the four small flat-roofed houses each get their own personality inside, all on the same light oak floor:
    an artist's studio, a music den, a pharmacy and a café. Every piece of furniture, picture and mirror breaks when shot (back next round),
@@ -6108,18 +6108,21 @@ const MAPS={
      and the loose bits (chairs, plants, drips, cups, the wheelchair...) smash once they've taken enough */
   for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;
   for(const K of M.knocks)if(!K.pop)K.brk=K.bhp=Math.round(clamp(30+K.w*K.h*K.d*60,30,160));
-  /* the zipline between the two terraces (24 Nov): a steel post on each terrace, a cable sagging across over the road at z 0 (through gaps in the terraces' road-side
-     parapets); jump at either post to ride across (see zipStep). Bots use it as a two-way path link */
-  {const FY=5.2,PX=13.2,TOP=FY+ZIP_HANG+.2,A={x:-PX,y:TOP,z:0},B={x:PX,y:TOP,z:0},len=Math.hypot(B.x-A.x,B.z-A.z),s0=1.2/len;
-   const L={A,B,len,s0,sag:1.0,ux:(B.x-A.x)/len,uz:(B.z-A.z)/len,a:{x:-PX+1.2,y:FY,z:0},b:{x:PX-1.2,y:FY,z:0}};M.zips=[L];
-   const pts=[];for(let i=0;i<=24;i++)pts.push(new V3(...Object.values(zipAt(L,i/24))));const cab=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,.03,6,false),mat('#1c1d22',null,{metalness:.7,roughness:.3}));M.group.add(cab);
-   for(const sx of [-1,1]){const x=sx*PX,pm2=mat('#2c3036',null,{metalness:.5,roughness:.4});box(x,FY,0,.24,TOP+.5-FY,.24,'#2c3036',{extra:{metalness:.5,roughness:.4}});
-     const arm=deco(new THREE.BoxGeometry(.9,.12,.12),pm2,x-sx*.35,TOP+.05,0);arm.castShadow=true;const cap=deco(new THREE.BoxGeometry(.32,.1,.32),mat('#ffe14d'),x,TOP+.55,0);cap.castShadow=false;
-     /* a hazard-striped pad where you stand to grab it, and a little ZIP sign on the post */
-     const hz=canvasTex(64,64,(g,w,h)=>{for(let i=-4;i<8;i++){g.fillStyle=i%2?'#1c1d22':'#ffe14d';g.beginPath();g.moveTo(i*12,0);g.lineTo(i*12+12,0);g.lineTo(i*12+12-h,h);g.lineTo(i*12-h,h);g.closePath();g.fill();}});
-     const pd=new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2),new THREE.MeshLambertMaterial({map:hz,transparent:true,opacity:.9}));pd.rotation.x=-Math.PI/2;pd.position.set(sx*(PX-1.2),FY+.03,0);M.group.add(pd);
-     const zs=canvasTex(128,64,(g,w,h)=>{g.fillStyle='#ffe14d';g.fillRect(0,0,w,h);g.fillStyle='#1c1d22';g.font='bold 38px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('ZIP',w/2,h/2+2);});
-     for(const fz of [-1,1]){const sg=new THREE.Mesh(new THREE.PlaneGeometry(.5,.25),new THREE.MeshBasicMaterial({map:zs}));sg.position.set(x,FY+1.7,fz*.125);sg.rotation.y=fz>0?0:Math.PI;M.group.add(sg);}}
+  /* the zipline from the top of the home's roof to the top of the arcade's (24 Nov): a small flat deck on each ridge (up the roof ladder, then the slope) with a steel
+     post, a ZIP sign and a hazard-striped pad; the cable sags across high over the road. Jump on the pad to ride across, very fast (see zipStep). Bots use it both ways */
+  {const peak=(x,z)=>{let y=0;for(const b of M.boxes)if(b.x0<=x&&b.x1>=x&&b.z0<=z&&b.z1>=z&&b.y1>y)y=b.y1;return y;};
+   const ZA={x:-21.5,z:4.4},ZB={x:21.5,z:-4.4},FY=Math.max(peak(ZA.x,ZA.z),peak(ZB.x,ZB.z))+.18,dx=ZB.x-ZA.x,dz=ZB.z-ZA.z,dl=Math.hypot(dx,dz),ux=dx/dl,uz=dz/dl,PO=1.0,TOP=FY+ZIP_HANG+.2;
+   const A={x:ZA.x-ux*PO,y:TOP,z:ZA.z-uz*PO},B={x:ZB.x+ux*PO,y:TOP,z:ZB.z+uz*PO},len=Math.hypot(B.x-A.x,B.z-A.z),s0=PO/len;
+   const L={A,B,len,s0,sag:2.2,ux,uz,a:{x:ZA.x,y:FY,z:ZA.z},b:{x:ZB.x,y:FY,z:ZB.z}};M.zips=[L];
+   const pts=[];for(let i=0;i<=32;i++)pts.push(new V3(...Object.values(zipAt(L,i/32))));const cab=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),64,.035,6,false),mat('#1c1d22',null,{metalness:.7,roughness:.3}));M.group.add(cab);
+   const hz=canvasTex(64,64,(g,w,h)=>{for(let i=-4;i<8;i++){g.fillStyle=i%2?'#1c1d22':'#ffe14d';g.beginPath();g.moveTo(i*12,0);g.lineTo(i*12+12,0);g.lineTo(i*12+12-h,h);g.lineTo(i*12-h,h);g.closePath();g.fill();}});
+   const zs=canvasTex(128,64,(g,w,h)=>{g.fillStyle='#ffe14d';g.fillRect(0,0,w,h);g.fillStyle='#1c1d22';g.font='bold 38px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('ZIP',w/2,h/2+2);});
+   for(const [E,sg] of [[ZA,-1],[ZB,1]]){/* the deck: a flat top on the ridge, with a yellow edge, the pad and the post behind it */
+     const dk=box(E.x,FY-1.6,E.z,2.2,1.6,2.6,'#2c3036',{extra:{metalness:.3,roughness:.6}});const ed=deco(new THREE.BoxGeometry(2.24,.06,2.64),mat('#ffe14d'),E.x,FY+.01,E.z);ed.castShadow=false;
+     const pd=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshLambertMaterial({map:hz}));pd.rotation.x=-Math.PI/2;pd.position.set(E.x,FY+.05,E.z);M.group.add(pd);
+     const px=E===ZA?A.x:B.x,pz=E===ZA?A.z:B.z;box(px,FY,pz,.24,TOP+.5-FY,.24,'#2c3036',{extra:{metalness:.5,roughness:.4}});
+     const arm=deco(new THREE.BoxGeometry(.12,.12,.12),mat('#2c3036'),px,TOP+.05,pz);arm.castShadow=true;const cap=deco(new THREE.BoxGeometry(.32,.1,.32),mat('#ffe14d'),px,TOP+.55,pz);cap.castShadow=false;
+     for(const fz of [-1,1]){const sgn=new THREE.Mesh(new THREE.PlaneGeometry(.55,.27),new THREE.MeshBasicMaterial({map:zs}));sgn.position.set(px,FY+1.6,pz+fz*.125);sgn.rotation.y=fz>0?0:Math.PI;M.group.add(sgn);}}
    M.navWarps=(M.navWarps||[]).concat([{a:[L.a.x,FY,L.a.z],b:[L.b.x,FY,L.b.z],t:[L.a.x,L.a.z],c:2,zip:L,dir:1},{a:[L.b.x,FY,L.b.z],b:[L.a.x,FY,L.a.z],t:[L.b.x,L.b.z],c:2,zip:L,dir:-1}]);}
   /* quiet trap music inside the arcade (Street Life's own loop, sfx/arcademusic.wav): full inside on both floors, a little out on its terrace, fading out within a few metres outside */
   {const x0=9.8,x1=33.2,z0=-15.4,z1=9.2,YT=9.6;M.roomBeds=(x,y,z)=>{const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1),d=Math.hypot(dx,dz);
@@ -8345,9 +8348,9 @@ function ladderStep(f,dt,wx,wz,jump){if(f.downed||!f.alive||f.finishing){f.onLad
     else if(f.pos.y>=L.y1){const k=L.lift?1.45:1.0;f.pos.y=L.y1+.02;f.pos.x+=L.nx*k;f.pos.z+=L.nz*k;f.onLadder=null;f.grounded=true;if(L.lift)f._liftCD=S.t+.6;}
     return true;}
   f.onLadder=null;return false;}
-/* ziplines (Street Life, between the two buildings' terraces): stand at either end under the cable and jump to grab the handle; you ride across hanging
+/* ziplines (Street Life, from the top of one building's roof to the top of the other's): stand on the pad at either end under the cable and jump to grab the handle; you ride across hanging
    from it and step off on the far terrace; jump again on the way to let go. Bots take it as a path link (M.navWarps with zip set) and grab it the same way */
-const ZIP_V=11,ZIP_HANG=2.15;
+const ZIP_V=26,ZIP_HANG=2.15;/* very fast: about 1.7 s roof to roof */
 function zipAt(L,s){return{x:L.A.x+(L.B.x-L.A.x)*s,y:L.A.y+(L.B.y-L.A.y)*s-L.sag*4*s*(1-s),z:L.A.z+(L.B.z-L.A.z)*s};}
 function zipStep(f,dt,jump,jumpPress){const Z=f.zip;
   if(Z){const L=Z.line;if(!f.alive||f.downed||f.finishing||!M.zips||!M.zips.includes(L)||(Z.last&&Math.hypot(f.pos.x-Z.last.x,f.pos.z-Z.last.z)>2)){f.zip=null;if(f._zt)f._zt.visible=false;return false;}

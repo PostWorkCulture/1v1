@@ -1907,7 +1907,6 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
       <div class="dt-stick" id="dt-stick"><i></i></div>
       <div class="dt-btns">
         <button class="dt-b dt-fire" data-k="fire"><span class="dt-ft">Fire</span><b class="dt-am" id="dt-ammo"></b></button>
-        <button class="dt-b" data-k="aim" id="dt-aim">Aim</button>
         <button class="dt-b dt-jump" data-k="Space" id="dt-j">Jump</button>
         <button class="dt-b" data-k="KeyC" id="dt-c">Crouch</button>
         <button class="dt-b" data-k="KeyG" id="dt-g">Item</button>
@@ -2001,11 +2000,6 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
               <button role="radio" data-aa="on" aria-checked="true">On</button>
               <button role="radio" data-aa="strong" aria-checked="false">Strong</button>
             </div></div>
-          <div data-tab="touch" class="pm-row t-only"><span>Aim when firing <small>holding Fire also aims down sights</small></span>
-            <div class="seg" role="radiogroup" aria-label="Aim when firing" id="dp-autoads">
-              <button role="radio" data-v="1" aria-checked="false">On</button>
-              <button role="radio" data-v="0" aria-checked="true">Off</button>
-            </div></div>
           <div data-tab="touch" class="pm-row t-only"><span>Gyro aim <small>tilt the phone to fine-tune</small></span>
             <div class="seg" role="radiogroup" aria-label="Gyro aim" id="dp-gyro">
               <button role="radio" data-g="1" aria-checked="false">On</button>
@@ -2027,8 +2021,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <span>Mouse</span><em>Look (click the game to lock)</em>
         </div></div>
         <div class="pk-g"><div class="eyebrow">Fight</div><div class="pause-keys">
-          <span>Left click</span><em><i class="gun-k">Fire</i><i class="rumble-k">Punch (34) / bat swing (50)</i></em>
-          <span class="gun-k">Right click</span><em class="gun-k">Aim down sights / scope</em>
+          <span>Left click</span><em><i class="gun-k">Fire (aims down sights while held; snipers: hold to scope, let go to fire)</i><i class="rumble-k">Punch (34) / bat swing (50)</i></em>
           
           <span class="gun-k"><kbd data-kb="prim">1</kbd> <kbd data-kb="sec">2</kbd> <kbd data-kb="fist">3</kbd></span><em class="gun-k">Primary / secondary / bat</em>
           <span class="rumble-k">Falling punch</span><em class="rumble-k">20 damage, both knocked back, they're stunned 1s</em>
@@ -10265,7 +10258,7 @@ const keys={};let mouseL=false,mouseR=false;
    This is the shape a multiplayer client will send to the server. */
 const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueSwap=(d=1)=>{const L=S.mode==='rumble'?[0,1]:[0,1,2],i=Math.max(0,L.indexOf(Math.max(0,ME.slot))),n=L.length;queueAct('Digit'+(L[(i+(d<0?n-1:1))%n]+1));}; /* primary → secondary → bat → primary; wheel up goes forward (primary to secondary), wheel down goes back (primary to bat) */
 function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
-  yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!mouseR,run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
+  yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!(mouseL||mouseR),run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
 function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'||a==='Digit3'){equip(ME,+a.slice(5)-1);NET.swapAt=performance.now();}else if(a==='KeyG'){if(ME.nades>0||ME.goldNade>0)ME.aimNade=true;else if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up'){ME.aimThrow=false;ME.aimNade=false;}continue;}
   if(typeof a==='string'&&a.startsWith('buy:')){const it=shopList()[+a.slice(4)];if(it&&ME.shopCD<=0&&it.can(ME)){it.buy(ME);ME.shopCD=SHOP_CD;sfx('cash',ME,{vol:.5});}continue;}
   /* the Lethal key throws your shop grenades first (aim while held, throw on release), then your lethal */
@@ -10344,8 +10337,8 @@ window.addEventListener('keydown',e=>{const code=mapKey(e),raw=e.code;if(!D.acti
 },true);
 window.addEventListener('keyup',e=>{const code=mapKey(e);keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
-canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){mouseL=true;}/* snipers fire straight from the hip on left click (right click scopes); the hold-to-scope quick-scope stays on the touch fire button */if(e.button===2){if(SNQ.hold){snipeUp(false);return;}mouseR=true;}});
-window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}if(e.button===2&&!SNQ.hold)mouseR=false;});
+canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){if(snipeDown())return;mouseL=true;}/* no aim button: holding fire aims down sights; snipers hold fire to scope and fire on release, as on touch. Right click cancels a sniper scope */if(e.button===2&&SNQ.hold)snipeUp(false);});
+window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
   const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(isSn(gunOf(ME))?(SN.snipe??SN.ads)*(GUNS[gunOf(ME)].zoom<=24?.3:.65):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
 window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)queueSwap(e.deltaY<0?1:-1);},{passive:true});
@@ -10362,15 +10355,14 @@ function applyTouch(){loadHudProf();$('dtouch').hidden=!S.touch||(S.paused&&!S.h
   document.querySelectorAll('#dp-touch button').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.t==='1')===!!S.touch)));if(S.touch){S.lockOK=false;try{document.exitPointerLock();}catch(e){}}}
 $('dp-touch').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;S.touch=b.dataset.t==='1';store.set('duel:touch',S.touch);if(!S.touch)S.lockOK=true;applyTouch();});
 /* touch aiming: a gentle acceleration curve on fast swipes, aim assist (slowdown over a target, a light pull while aiming or firing,
-   a small snap when you press Aim), and optional gyro aim. All touch-only: mouse play is untouched. */
-const AA={fric:1,adsWas:false,lvl:store.get('duel:aa','on'),gyro:!!store.get('duel:gyro',false),autoAds:!!store.get('duel:autoads',false),autoR:false};
+   a small snap when you start firing), and optional gyro aim. All touch-only: mouse play is untouched. */
+const AA={fric:1,adsWas:false,lvl:store.get('duel:aa','on'),gyro:!!store.get('duel:gyro',false)};
 function syncAimOpts(){document.querySelectorAll('#dp-aa [data-aa]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.aa===AA.lvl)));
-  document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));
-  document.querySelectorAll('#dp-autoads [data-v]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.v==='1')===AA.autoAds)));}
+  document.querySelectorAll('#dp-gyro [data-g]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.g==='1')===AA.gyro)));}
 $('d-sx').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();snipeUp(false);});
 
 
-$('dp-autoads').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;AA.autoAds=b.dataset.v==='1';store.set('duel:autoads',AA.autoAds);syncAimOpts();});
+
 $('dp-aa').addEventListener('click',e=>{const b=e.target.closest('[data-aa]');if(!b)return;AA.lvl=b.dataset.aa;store.set('duel:aa',AA.lvl);syncAimOpts();});
 $('dp-gyro').addEventListener('click',async e=>{const b=e.target.closest('[data-g]');if(!b)return;let on=b.dataset.g==='1';
   if(on){const DM=window.DeviceMotionEvent;if(!DM){on=false;}else if(typeof DM.requestPermission==='function'){try{on=(await DM.requestPermission())==='granted';}catch(_){on=false;}}}
@@ -10413,11 +10405,11 @@ const endLook=e=>{if(e.pointerId===lookId)lookId=null;};window.addEventListener(
 const key=(code,down)=>window.dispatchEvent(new KeyboardEvent(down?'keydown':'keyup',{code,bubbles:true}));
 document.querySelectorAll('#dtouch .dt-b').forEach(b=>{const k=b.dataset.k;let fx=0,fy=0;
   b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{b.setPointerCapture(e.pointerId);}catch(_){}b._pid=e.pointerId;if(!playing())return;b._lk=k==='fire'?null:{x:e.clientX,y:e.clientY,on:false};
-    if(k==='fire'){fx=e.clientX;fy=e.clientY;if(snipeDown())return;mouseL=true;if(AA.autoAds&&S.mode!=='rumble'&&!mouseR){mouseR=true;AA.autoR=true;}}else if(k==='aim'){AA.autoR=false;mouseR=!mouseR;b.classList.toggle('on',mouseR);}else if(k==='swap')queueSwap();else key(k,true);});
+    if(k==='fire'){fx=e.clientX;fy=e.clientY;if(snipeDown())return;mouseL=true;}else if(k==='swap')queueSwap();else key(k,true);});
   b.addEventListener('pointermove',e=>{if(e.pointerId!==b._pid)return;if(k==='fire'){if(mouseL||SNQ.hold){lookBy(e.clientX-fx,e.clientY-fy);fx=e.clientX;fy=e.clientY;}return;}
     /* any other button: once the thumb slides past a few pixels it turns the view, so a swipe that starts on Jump or Reload still aims */
     const L=b._lk;if(!L||!playing())return;if(!L.on){if(Math.hypot(e.clientX-L.x,e.clientY-L.y)<8)return;L.on=true;L.x=e.clientX;L.y=e.clientY;return;}lookBy(e.clientX-L.x,e.clientY-L.y);L.x=e.clientX;L.y=e.clientY;});
-  const up=e=>{b._lk=null;if(k==='fire'){if(SNQ.hold){snipeUp(true);return;}mouseL=false;if(AA.autoR){AA.autoR=false;mouseR=false;}}else if(k!=='aim'&&k!=='swap')key(k,false);};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
+  const up=e=>{b._lk=null;if(k==='fire'){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}else if(k!=='swap')key(k,false);};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);});
 [1,2,3].forEach(n=>{const sl=$('d-slot'+n);if(!sl)return;sl.addEventListener('pointerdown',e=>{if(!S.touch||S.hudEdit||!playing()||sl.hidden)return;e.preventDefault();e.stopPropagation();
   queueAct('Digit'+n);sl.classList.add('tap');setTimeout(()=>sl.classList.remove('tap'),140);});});
 $('sh-items').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-buy]');if(b){e.preventDefault();e.stopPropagation();buyShop(+b.dataset.buy);}});

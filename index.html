@@ -3804,9 +3804,10 @@ function parkVehicle(c){c.alive=true;c.home=c.z;c.state='park';for(const b of c.
 function hitCar(c,dmg,at){if(!c.alive)return;const now=S.t;if(now-(c.hitT??-9)>.03){c.hits=(c.hits||0)+1;c.hitT=now;}c.hp=c.hits>=3?0:c.hits>=2?100:300;emit(at.x,at.y,at.z,{n:4,speed:4,up:1.5,size:.08,life:.3,colors:['#ffd23f','#ffffff',c.color]});
   if(c.hp<180){const b=c.boxes[0];emit((b.x0+b.x1)/2,b.y1+.1,(b.z0+b.z1)/2,{n:2,speed:.6,up:2.5,size:.5,life:1.4,grav:-1.2,colors:['#3a3d45','#55585f','#6e665c']});}
   if(c.hp<=0)wreckCar(c,at);}
-/* storey heights for houseA: Street Life's home and hospital have taller rooms on every level (ground 4.9 m, first floor 4.4 m, loft 4.2 m) */
-function houseDims(th){return th==='home'||th==='hospital'?{H:4.9,F:5.2,T:9.6,L:9.9,LH:4.2,NS:11,RUN:.32}:{H:4.1,F:4.4,T:8,L:8.3,LH:3.6,NS:9,RUN:.39};}
-function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.random,DIM=houseDims(th);
+/* storey heights for houseA: Street Life's home and hospital have two storeys (24 Nov: the middle floor is gone): a tall ground floor (4.9 m)
+   and the loft room with its open terrace (4.2 m) straight on top of it, so the first-floor top T and the loft floor L both sit at F */
+function houseDims(th){return th==='home'||th==='hospital'?{H:4.9,F:5.2,T:5.2,L:5.2,LH:4.2,NS:11,RUN:.32,two:1}:{H:4.1,F:4.4,T:8,L:8.3,LH:3.6,NS:9,RUN:.39};}
+function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.random,DIM=houseDims(th),TWO=!!DIM.two;
   // world-sized solid/deco box centred on local (u,v); knock item; child mesh on a box; flat panel facing a direction
   const Bx=(u,v,y,w,h,d,c,o)=>S.box(u-w/2/k,u+w/2/k,v-d/2/k,v+d/2/k,y,y+h,c,o);
   const N=(u,v,y,w,h,d,c,o)=>knock(X(u),y,Z(v),w,h,d,c,o);
@@ -3897,17 +3898,17 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       // the board: red frame, white face, hung from the porch roof between the pillars on two red rods
       sb(pu+u2(.02),pu+u2(.16),-3.45,3.45,sy0,H,RD,{solid:false});panel(pu+u2(.01),0,sy0+.725,6.9*k-.3,1.3,new THREE.MeshBasicMaterial({map:big}),'u-');
       // the name again high on the front wall
-      panel(-6.17,0,T-.25,3.4*k,.48,signTex('HOSPITAL','#ffffff',RD,{cross:RD,stripe:RD}),'u-');
+      if(!TWO)panel(-6.17,0,T-.25,3.4*k,.48,signTex('HOSPITAL','#ffffff',RD,{cross:RD,stripe:RD}),'u-');/* (two storeys: no front wall up there, the terrace is open) */
       // blade crosses on the front corners: a white square with a glowing red cross on both faces, on a bracket off the wall
-      for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=F+2.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});
+      for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=TWO?H-1.3:F+2.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});
         sb(uo-u2(.95),uo+u2(.95),v-u2(.06),v+u2(.06),y-.95,y+.95,'#ffffff',{solid:false});cross(uo,v,y,1.6,'v',.24);}
       // a big cross on each side wall between the upstairs windows, and one on the loft wall over the terrace
-      for(const sv of [-1,1]){cross(.35,sv*(5.65+u2(.06)),F+1.95,2.8,'v');}
+      for(const sv of [-1,1]){cross(TWO?.95:.35,sv*(5.65+u2(.06)),F+1.95,TWO?1.6:2.8,'v');}
       cross(-.15-u2(.06),1.0,L+1.95,1.8,'u');/* one cross on the loft wall, between the door and the window, clear of the ladders */
       // a tall glowing cross standing on the front end of the loft ridge
       {const ry=L+DIM.LH+.3+2.6;sb(.35-u2(.06),.35+u2(.06),-u2(.07),u2(.07),ry-.2,ry+.35,'#9aa0a8');cross(.35,0,ry+1.75,2.8,'u',.3);}
       // red belts round the building at each floor line, red corner posts, red caps on the porch rail; the porch roof keeps a white tiled floor
-      for(const sv of [-1,1]){sb(-6,6,sv*5.35,sv*5.67,H,F,RD);sb(-6,6,sv*5.35,sv*5.67,T,L,RD);/* the belts stop just short of the side ladders */for(const su of [-1,1])sb(su*(6.15+u2(.06)),su*(6.15-u2(.3)),sv*(5.65+u2(.06)),sv*(5.65-u2(.3)),0,T,RD);}
+      for(const sv of [-1,1]){sb(-6,6,sv*5.35,sv*5.67,H,F,RD);if(!TWO)sb(-6,6,sv*5.35,sv*5.67,T,L,RD);/* the belts stop just short of the side ladders */for(const su of [-1,1])sb(su*(6.15+u2(.06)),su*(6.15-u2(.3)),sv*(5.65+u2(.06)),sv*(5.65-u2(.3)),0,T,RD);}
       sb(pu-u2(.02),pu+u2(.27),-4.02,4.02,F+1,F+1.1,RD);for(const v of [-4,4])sb(pu,-6.15,v-u2(.14),v+u2(.14),F+1,F+1.1,RD);S.floor(pu,-6.15,-4,4,F+.02,'#f7f8fa','tile');}
     /* more hospital kit: operating theatre, crash carts, bedside monitors, drips, oxygen bottles, sharps bins, x-ray light boxes and syringes left lying about */
     {const ecgM=new THREE.MeshBasicMaterial({map:ecg}),glass=new THREE.MeshLambertMaterial({color:'#bfe3ff',transparent:true,opacity:.7}),steel='#c9ced6';
@@ -3942,13 +3943,13 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       // upstairs: the operating theatre at the back (table, lights, anaesthetic monitor, drips, instrument trays) and a second smaller one at the front
       /* the back theatre sits well back from the top of the stairs (towards the foot of the loft stairs), so you don't walk into it coming up */
       /* both theatres stand against walls so the floors stay open for fighting: the back one by the back wall (clear of the stair landing), the front one against the side wall */
-      {const TU=5.05,TV=.9;opTable(TU,TV,F,'v+');heartMon(TU+u2(.6),TV+u2(.75),'u-',F);ivStand(TU-u2(.7),TV+u2(.6),F);ivStand(TU+u2(.6),TV-u2(.7),F);
+      if(!TWO){      {const TU=5.05,TV=.9;opTable(TU,TV,F,'v+');heartMon(TU+u2(.6),TV+u2(.75),'u-',F);ivStand(TU-u2(.7),TV+u2(.6),F);ivStand(TU+u2(.6),TV-u2(.7),F);
        Bx(TU-u2(.85),TV-u2(.35),F,.55,.85,.45,steel,{chip:true,hp:80});tray(TU-u2(.85),TV-u2(.35),F+.85);o2(5.7,TV+.75,F);sharps(5.7,TV-.85,F);gloves(TU-u2(.85),TV+u2(.05),F+.85);}
       crash(5.45,3.3,F);
       {const FV=-4.75;opTable(-2.6,FV,F,'v+');ivStand(-2.6+u2(.75),FV+u2(.45),F);bedMon(-2.6-u2(.75),FV,F+.7,'u+');cab(-2.6-u2(.75),FV,F);
        Bx(-2.6+u2(.8),FV-u2(.25),F,.55,.85,.45,steel,{chip:true,hp:80});tray(-2.6+u2(.8),FV-u2(.25),F+.85);}
       bedMon(-5.4,5.0,F+.7,'u+');cab(-5.4,5.0,F);
-      syringe(-1.6,-2.4,F,.6);syringe(1.7,-1.2,F,2.4);syringe(-3.6,1.6,F,1.1);syringe(.4,1.7,F,-.4);syringe(5.0,-.9,F,1.6);}
+      syringe(-1.6,-2.4,F,.6);syringe(1.7,-1.2,F,2.4);syringe(-3.6,1.6,F,1.1);syringe(.4,1.7,F,-.4);syringe(5.0,-.9,F,1.6);}}
     // reception desk, waiting chairs, water cooler
     /* (the desk sits back against the front glass, out of the way) */
     const RU=-5.25,rd=Bx(RU,4.1,0,.95,1.1,3.7,'#f4f5f7',{chip:true,hp:160});kid(rd,gB(.97,.08,3.72),'#2f63c8',RU,4.1,1.12);kid(rd,gB(.02,.2,3.6),'#c8322b',RU-.3,4.1,.8);
@@ -3966,9 +3967,9 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     const cm=new THREE.MeshLambertMaterial({color:'#9fd8c9',transparent:true,opacity:.85,side:THREE.DoubleSide});panel(2.85,4.6,1.3,2.2,2.0,cm,'u-');S.box(2.82,2.88,3.8,5.35,2.3,2.36,'#d9dde3',{solid:false,edges:false});
     const mc=Bx(5.6,-4.6,0,.45,1.9,1.4,'#f4f5f7',{chip:true,hp:150});kid(mc,gB(.02,.4,.4),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g)=>{g.fillStyle='#fff';g.fillRect(0,0,64,64);g.fillStyle='#c8322b';g.fillRect(24,8,16,48);g.fillRect(8,24,48,16);})}),5.6-u2(.24),-4.6,1.5);
     // upstairs: a recovery bed and supplies
-    ivStand(-4.6,5.1,F);
+    if(!TWO){ivStand(-4.6,5.1,F);
     for(const [u,v,y] of [[-5.3,-5.0,F],[-4.75,-5.0,F],[-5.3,-5.0,F+.6]])Bx(u,v,y,.8,.6,.8,'#e9e4d8',{prop:'crate',hp:50});
-    N(-5.2,-3.7,F,.5,.9,.4,'#f4f5f7',{parts:[[gB(.5,.03,.4),'#9aa0a8',0,0,0]]});
+    N(-5.2,-3.7,F,.5,.9,.4,'#f4f5f7',{parts:[[gB(.5,.03,.4),'#9aa0a8',0,0,0]]});}
     // the loft terrace is a helipad
     if(loft){const hp=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(128,128,112,0,7);g.stroke();g.fillStyle='#ffffff';g.fillRect(80,56,26,144);g.fillRect(150,56,26,144);g.fillRect(80,115,96,26);});
       const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2),new THREE.MeshBasicMaterial({map:hp,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=face['u-'];m.position.set(X(-3),L+.02,Z(-1.2));M.group.add(m);}
@@ -4042,6 +4043,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       for(const du of [-.9,0,.9])N(2.4+u2(du),3.7-u2(.85),0,.36,.72,.36,'#2b2d33',{cyl:1,top:1.1,parts:[[gC(.2,.2,.06,12),'#b5523b',0,.36,0]]});}
     rug(4.6,-1.45,.035,3.6,5.2,rugTex('#9a948b','#e4dfd6','#c2bbb0'));
     plant(5.45,-4.9,0,1.0);
+    if(!TWO){/* (two storeys: no first floor) */
     /* ---- upstairs: carpet, a double bedroom on one side and a kid's room on the other (both clear of the walk-out windows) ---- */
     /* carpet round the glass square in the floor */for(const [u0,u1,v0,v1] of [[-5.85,-3.5,-5.35,5.35],[-1.0,.6,-5.35,5.35],[-3.5,-1.0,-5.35,-1.25],[-3.5,-1.0,1.25,5.35]])S.floor(u0,u1,v0,v1,F+.025,'#d4bfa8','carpet');
     {/* the double bed itself is the Tripo wooden bed, placed with the other models below */
@@ -4055,15 +4057,18 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       N(-5.45,-2.25,F+.55,.3,.3,.3,'#2f7fe0');N(-5.2,-2.15,F+.55,.25,.25,.25,'#f4c22b');
       const dk=fur(-.6,-5.05,F,1.2,.75,.6,'#f3efe6',80);lamp(-.35,-5.1,F+.75);N(-.8,-5.1,F+.75,.3,.03,.22,'#ffffff');
       rug(-3.4,-3.0,F+.035,5.0,4.2,rugTex('#b9b3aa','#ece8e1','#d3cdc3'));N(-2.3,-5.0,F,.9,.6,.9,'#a05ad6',{geo:new THREE.SphereGeometry(.45,12,8).scale(1,.65,1)});shelf(.3,-5.12,F,1.6,1.4,.35,true);pic(-5.83,-3.0,F+2.0,.7,.9,'u+',3);pic(-.4,-5.33,F+2.1,.6,.8,'v+',1);}
+    }
     /* ---- the loft: a den with beanbags, a rug and a bookshelf ---- */
     /* modern floors: chequered tiles through the kitchen and dining room, grey-washed oak boards across the upstairs landing, and the terrace
        (the centrepiece) in patterned blue-and-terracotta encaustic tiles inside a terracotta border, with a plant in each corner */
     S.floor(-.13,5.85,-5.35,5.35,.026,'#ffffff','chequer');S.floor(.6,5.85,-2.25,5.35,F+.026,'#ffffff','greyoak');S.floor(4.85,5.85,-5.35,-2.25,F+.026,'#ffffff','greyoak');
-    {const y=DIM.L+.026,bw=.32;S.floor(-5.85+bw,-.15-bw,-5.35+bw,5.35-bw,y,'#ffffff','encaustic');
+    {const y=DIM.L+.026,bw=.32;if(TWO){const u0=-5.85+bw,u1=-.15-bw,v0=-5.35+bw,v1=5.35-bw,g0=-3.56,g1=-.94,h0=-1.31,h1=1.31;/* round the glass square */
+        S.floor(u0,u1,v0,h0,y,'#ffffff','encaustic');S.floor(u0,u1,h1,v1,y,'#ffffff','encaustic');S.floor(u0,g0,h0,h1,y,'#ffffff','encaustic');S.floor(g1,u1,h0,h1,y,'#ffffff','encaustic');}
+      else S.floor(-5.85+bw,-.15-bw,-5.35+bw,5.35-bw,y,'#ffffff','encaustic');
       for(const [u0,u1,v0,v1] of [[-5.85,-.15,-5.35,-5.35+bw],[-5.85,-.15,5.35-bw,5.35],[-5.85,-5.85+bw,-5.35+bw,5.35-bw],[-.15-bw,-.15,-5.35+bw,5.35-bw]])S.floor(u0,u1,v0,v1,y,'#c96f4a','tile');}
-    {const LL=DIM.L;S.floor(.2,5.85,-5.35,2.1,LL+.025,'#c9b79c','carpet');rug(3.0,-2.0,LL+.035,4.0,3.2,rugTex('#5f6368','#c9c4bb','#8f8a83'));
-      for(const [u,v,c] of [[1.2,-5.0,'#e76f51'],[2.35,-5.0,'#2a9d8f'],[3.5,-5.0,'#f4a261']])N(u,v,LL,.9,.6,.9,c,{geo:new THREE.SphereGeometry(.45,12,8).scale(1,.65,1)});
-      shelf(5.6,-4.2,LL,2.2,1.8,.4,false);fur(5.55,.2,LL,.5,.55,1.6,'#5b4a3a',70,{tx:'wood'});N(5.55,.2,LL+.55,.12,.7,1.2,'#1c1d22',{parts:[[gB(.012,.62,1.12),new THREE.MeshBasicMaterial({map:liveTV(256,144,'show',4),toneMapped:false}),-f*.065,0,0]]});plant(5.4,1.4,LL);pic(5.83,-4.2,LL+2.3,1.0,.7,'u-',3);}
+    {const LL=DIM.L,BV=TWO?4.9:-5.0;if(!TWO)S.floor(.2,5.85,-5.35,2.1,LL+.025,'#c9b79c','carpet');else S.floor(.2,5.85,-2.1,5.35,LL+.03,'#c9b79c','carpet');rug(3.0,TWO?2.6:-2.0,LL+.035,4.0,3.2,rugTex('#5f6368','#c9c4bb','#8f8a83'));
+      for(const [u,v,c] of [[1.2,BV,'#e76f51'],[2.35,BV,'#2a9d8f'],[3.5,BV,'#f4a261']])N(u,v,LL,.9,.6,.9,c,{geo:new THREE.SphereGeometry(.45,12,8).scale(1,.65,1)});
+      shelf(5.6,TWO?3.4:-4.2,LL,2.2,1.8,.4,false);/* two storeys: clear of the top of the stairs */fur(5.55,.2,LL,.5,.55,1.6,'#5b4a3a',70,{tx:'wood'});N(5.55,.2,LL+.55,.12,.7,1.2,'#1c1d22',{parts:[[gB(.012,.62,1.12),new THREE.MeshBasicMaterial({map:liveTV(256,144,'show',4),toneMapped:false}),-f*.065,0,0]]});plant(5.4,1.4,LL);pic(5.83,TWO?3.4:-4.2,LL+2.3,1.0,.7,'u-',3);}
     /* ---- Tripo furnishings and the work-from-home man (models/home): the sofas and the desk are solid and break apart when shot (back later); chairs and plants get knocked about ---- */
     {const FD={greysofa:[3.5,1.62],pinksofa:[2.82,1.14],whitesofa:[3.58,1.82],greychair:[0.93,1.01],officechair:[1.1,1.17],plasticchair:[0.99,1.01],plant:[1.39,0.99],greyplant:[1.44,1.46],redplant:[1.58,1.63],wfhman:[1.49,1.57],bed_wood:[2.55,3.0],bed_cream:[2.18,3.0],bed_bunny:[2.17,2.0],bed_bunk:[2.59,1.62],bed_grey:[1.52,2.6]};
       const tm=(id,u,v,y,dir,hp,col)=>{const [w0,d0]=FD[id],ax=dir[0]==='u',w=ax?d0:w0,d=ax?w0:d0,h=FURN_CFG[id].h,ry=face[dir];
@@ -4108,7 +4113,7 @@ function wLadder(x,z,y0,y1,nx,nz,len=1.1){const lm=mat('#eef0f3',null,{metalness
   for(let yy=y0+.3;yy<y1+.8;yy+=.35)deco(B.boxGeo(ax?.06:len,.06,ax?len:.06),lm,x,yy,z);
   (M.ladders||(M.ladders=[])).push({x0:x-(ax?.4:len/2),x1:x+(ax?.4:len/2),z0:z-(ax?len/2:.4),z1:z+(ax?len/2:.4),y0,y1,nx,nz,rung:ax?x:z});}
 // two-storey house; balcony over the porch, optional attic loft that opens onto a rooftop terrace
-function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip,k),{H,F,T,L,LH,NS,RUN}=houseDims(th),inner='#f3efe6',WH=th==='hospital';
+function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip,k),{H,F,T,L,LH,NS,RUN,two:TWO}=houseDims(th),inner='#f3efe6',WH=th==='hospital';
   /* the hospital is white all through: floors, walls, the partition, the upper floors and the stairs */
   const SL=WH?['#f7f8fa','tile']:th==='home'?['#ffffff','greyoak']:['#b9895a','wood'],SC=WH?'#e3e7ec':th==='home'?'#c9c2b6':'#8a5a34';/* the home: grey-washed oak upstairs and pale stairs */
   const FL={garage:['#9a9da3',null],hospital:['#f7f8fa','tile'],store:['#ece5d6','tile']}[th]||['#c99a5b','wood'];S.floor(-5.85,5.85,-5.35,5.35,.02,FL[0],FL[1]);
@@ -4129,7 +4134,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
     /* a warm LED strip along the top of the glass all round (and the two big upstairs front windows get glass too) */
     const led=new THREE.MeshBasicMaterial({color:'#ffe2a8'}),LO={mat:led,solid:false,edges:false,shadow:false};
     S.box(-6.2,-6.12,-5.4,5.4,H-.06,H,null,LO);S.box(6.12,6.2,-5.4,5.4,H-.06,H,null,LO);for(const v of [-5.5,5.5])S.box(-5.8,5.8,v-.04,v+.04,H-.06,H,null,LO);
-    const g=(c,w)=>S.box(-6.04,-5.96,c-w/2,c+w/2,F+.4,T,'#bfe6ff',Object.assign({},GO,{hp:1}));for(const c of [-3.65,3.65])g(c,2.2);
+    const g=(c,w)=>S.box(-6.04,-5.96,c-w/2,c+w/2,F+.4,T,'#bfe6ff',Object.assign({},GO,{hp:1}));if(!TWO)for(const c of [-3.65,3.65])g(c,2.2);
     /* a Tripo pot plant at each outside corner (knocked about and broken like any loose item) */
     const pl=(id,u,v)=>{const D={plant:[1.39,.99],redplant:[1.58,1.63]}[id],x=S.X(u),z=S.Z(v),K=knock(x,0,z,D[0],FURN_CFG[id].h,D[1],'#3f8f3a',{mat:INVIS});furnInto(id,K.m,x,0,z,(u*3+v)%6.28);};
     pl('plant',-6.8,6.3);pl('plant',6.8,-6.3);}
@@ -4148,21 +4153,21 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   if(!th){S.box(-4.4,-1.4,4.4,5.3,0,.9,'#a05ad6');S.box(-5.6,-4.4,-5.2,-4,0,.75,'#7a4c2a');S.box(4.6,5.7,4.2,5.3,0,1.05,'#ffffff');}
   // first floor: balcony door onto the porch roof; big walk-out windows all round (low sill, full height)
   const BW=(c,w,y0,y1)=>({c,w,y0:y0+.4,y1});
-  S.wall('u',-6,-5.5,5.5,F,T,[{c:0,w:3.6,y0:F,y1:F+3.1},BW(-3.65,2.2,F,T),BW(3.65,2.2,F,T)],wall);S.wall('u',6,-5.5,5.5,F,T,[BW(0,3,F,T)],wall);
-  for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,F,T,[BW(-2.5,2.6,F,T),BW(3,2.2,F,T)],wall);
+  if(!TWO){S.wall('u',-6,-5.5,5.5,F,T,[{c:0,w:3.6,y0:F,y1:F+3.1},BW(-3.65,2.2,F,T),BW(3.65,2.2,F,T)],wall);S.wall('u',6,-5.5,5.5,F,T,[BW(0,3,F,T)],wall);
+  for(const v of [-5.5,5.5])S.wall('v',v,-5.85,5.85,F,T,[BW(-2.5,2.6,F,T),BW(3,2.2,F,T)],wall);}
   /* ladders: one up to an upstairs side window, one up each side to the roof / terrace */
-  if(hop)wLadder(S.X(-2.5),S.Z(-5.65)-flip*.1,0,F+.42,0,flip);
+  if(hop&&!TWO)wLadder(S.X(-2.5),S.Z(-5.65)-flip*.1,0,F+.42,0,flip);
 
-  for(const sv of [-1,1])wLadder(S.X(-4.75),S.Z(sv*5.65)+sv*flip*.1,0,T+.3,0,-sv*flip);
+  for(const sv of [-1,1])wLadder(S.X(-4.75),S.Z(sv*5.65)+sv*flip*.1,0,L,0,-sv*flip);/* up to the loft floor / terrace */
   const pu=-6-2.05/k;S.slab(pu,-6.15,-4,4,H,F,trim);for(const v of [-3.75,3.75])S.box(pu+.1/k,pu+.6/k,v-.25/k,v+.25/k,0,H,trim);
   if(HOME){/* the home's balcony over the porch has a glass balustrade */const o=Object.assign({},GO,{hp:1});S.box(pu,pu+.08,-4,4,F,F+1.1,'#bfe6ff',o);for(const v of [-4,4])S.box(pu,-6.15,v-.04,v+.04,F,F+1.1,'#bfe6ff',o);}
   else{S.box(pu,pu+.25/k,-4,4,F,F+1,'#ffffff');for(const v of [-4,4])S.box(pu,-6.15,v-.12/k,v+.12/k,F,F+1,'#ffffff');}
   if(th)dressHouse(th,S,k,flip,cx,cz,H,F,loft);else{S.box(-5.6,-3.4,1.6,4.8,F,F+.7,'#8ecae6');S.box(-5.7,-4.9,-5.3,-4.5,F,F+1.1,'#3bb54a');}
   if(!loft){if(!th)S.box(4.4,5.6,2.4,5.2,F,F+2.4,'#8a5a34');roofGable(cx,cz,12*k,11*k,T,roof,true);return;}
   // attic loft: stairs up from the first floor, a room under a half roof and an open terrace over the front
-  S.wall('u',-6,-5.65,5.65,T,L,[],trim);S.wall('u',6,-5.65,5.65,T,L,[],trim);
+  if(!TWO){S.wall('u',-6,-5.65,5.65,T,L,[],trim);S.wall('u',6,-5.65,5.65,T,L,[],trim);
   S.slab(-5.85,5.85,-5.35,5.35,T,L,SL[0],{u0:-.15,u1:4.55,v0:2.25,v1:5.35},SL[1]);
-  S.stairs(1,1,2.4,5.3,F,NS,(L-F)/NS,RUN,SC);S.box(-.15,3.2,2.1,2.25,L,L+1,'#ffffff');
+  S.stairs(1,1,2.4,5.3,F,NS,(L-F)/NS,RUN,SC);S.box(-.15,3.2,2.1,2.25,L,L+1,'#ffffff');}/* two storeys: the ground-floor stairs come straight up into the loft room */
   /* the home's loft is clad in vertical cedar boards */
   const LW=HOME?'#ffffff':wall,LWO=HOME?{tx:'cedar'}:undefined;
   const R2=L+LH;S.wall('u',6,-5.5,5.5,L,R2,[BW(-2,2.6,L,R2)],LW,.3,LWO);for(const v of [-5.5,5.5])S.wall('v',v,0,5.85,L,R2,[BW(3,2.4,L,R2)],LW,.3,LWO);
@@ -4178,28 +4183,28 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   if(GW){const C=HOME?'#ffe1ad':'#e8f3ff',fx=new THREE.MeshBasicMaterial({color:C}),pl=(u,v,y,i,d)=>{const l=new THREE.PointLight(C,i,d,1.6);window.GFX&&GFX.light(l);l.position.set(S.X(u),y,S.Z(v));M.group.add(l);};
     const fit=HOME?new THREE.CylinderGeometry(.22,.22,.05,16):new THREE.BoxGeometry(2.6,.06,1.15),ceil=(y,pts)=>{for(const [u,v] of pts){const m=new THREE.Mesh(fit,fx);m.position.set(S.X(u),y-.035,S.Z(v));m.userData.dyn=1;M.group.add(m);}};
     if(HOME){ceil(H,[[-4,-1],[-.5,-1],[-4,3],[-1.5,3],[-4,-4],[-1.5,-4],[2,-1],[4.5,-1],[2,3],[4.5,3]]);
-      ceil(T,[[-4,-3.5],[-1.5,-3.5],[-4,0],[-1.5,0],[-4,3.5],[-1.5,3.5],[2,-3.5],[4.5,-3.5],[2,0],[4.5,0]]);ceil(R2,[[1.5,-3.5],[4.5,-3.5],[1.5,0],[4.5,0],[1.5,3.5],[4.5,3.5]]);
-      pl(-3,1,H-1.5,7,13);pl(3,1,H-1.5,7,13);pl(-3,0,T-1.5,7,13);pl(3,-1.5,T-1.5,7,13);pl(3,0,R2-1.5,6,12);}
+      if(!TWO)ceil(T,[[-4,-3.5],[-1.5,-3.5],[-4,0],[-1.5,0],[-4,3.5],[-1.5,3.5],[2,-3.5],[4.5,-3.5],[2,0],[4.5,0]]);ceil(R2,[[1.5,-3.5],[4.5,-3.5],[1.5,0],[4.5,0],[1.5,3.5],[4.5,3.5]]);
+      pl(-3,1,H-1.5,7,13);pl(3,1,H-1.5,7,13);if(!TWO){pl(-3,0,T-1.5,7,13);pl(3,-1.5,T-1.5,7,13);}pl(3,0,R2-1.5,6,12);}
     else{/* hospitals are very bright: big white light panels in a close grid over every floor (none over the stairwells) and plenty of strong real lights,
        each panel ringed with a soft glow so the ceilings read as lit from across the room */
       fx.color.set('#ffffff');const grid=(y,u0,u1,hole,h2)=>{const pts=[];for(let u=u0;u<=u1+.01;u+=1.9)for(let v=-4.4;v<=4.41;v+=2.2){if(hole&&u>hole[0]-.6&&u<hole[1]+.6&&v>hole[2]-.4&&v<hole[3]+.4)continue;if(h2&&u>h2[0]-.6&&u<h2[1]+.6&&v>h2[2]-.4&&v<h2[3]+.4)continue;pts.push([u,v]);}ceil(y,pts);
         for(const [u,v] of pts)glowSprite(S.X(u),y-.25,S.Z(v),3.2,'#eef6ff',.22);};
-      grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25],[-3.5,-1.0,-1.25,1.25]);grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
-      for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,0],[4.6,-4]])pl(u,v,H-1.2,22,18);for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,-3.6],[3,.8]])pl(u,v,T-1.2,22,18);pl(3,-1,R2-1.2,18,16);
+      grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25],[-3.5,-1.0,-1.25,1.25]);if(!TWO)grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
+      for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,0],[4.6,-4]])pl(u,v,H-1.2,22,18);if(!TWO)for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,-3.6],[3,.8]])pl(u,v,T-1.2,22,18);pl(3,-1,R2-1.2,18,16);
       /* the stairs stand out: a red nosing on every step with a cool LED strip glowing under it, and a lit strip up each side */
       const red=mat('#d3302a'),led=new THREE.MeshBasicMaterial({color:'#bff3ff'}),SO={solid:false,edges:false,shadow:false};
       const trim=(uS,dir,v0,v1,y0,n,rise,run)=>{for(let i=0;i<n;i++){const a=uS+dir*run*i,top=y0+rise*(i+1);
           S.box(Math.min(a,a+dir*.12),Math.max(a,a+dir*.12),v0,v1,top-.06,top+.015,null,Object.assign({mat:red},SO));
           S.box(Math.min(a-dir*.02,a),Math.max(a-dir*.02,a),v0+.08,v1-.08,top-.2,top-.12,null,Object.assign({mat:led},SO));
           for(const vv of [v0+.03,v1-.03])S.box(Math.min(a,a+dir*run),Math.max(a,a+dir*run),vv-.03,vv+.03,top+.015,top+.05,null,Object.assign({mat:led},SO));}};
-      trim(1.3,1,-5.3,-2.4,0,NS,F/NS,RUN);trim(1,1,2.4,5.3,F,NS,(L-F)/NS,RUN);}
+      trim(1.3,1,-5.3,-2.4,0,NS,F/NS,RUN);if(!TWO)trim(1,1,2.4,5.3,F,NS,(L-F)/NS,RUN);}
     /* wall-washers: a little fitting on the slab band and a soft beam fanning up the wall above it */
     if(!WASHT)WASHT=canvasTex(64,128,(g,w,h)=>{for(let y=0;y<h;y++){const t=y/h,a=Math.pow(t,1.6)*.9,hw=w*(.18+.32*(1-t));const gr=g.createLinearGradient(w/2-hw,0,w/2+hw,0);
       gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,`rgba(255,255,255,${a})`);gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,y,w,1);}});
-    const wm=new THREE.MeshBasicMaterial({map:WASHT,color:C,transparent:true,opacity:HOME?.75:.6,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),wg=new THREE.PlaneGeometry(2.4,T-F),fm=mat(HOME?'#2c3036':'#c9ced6');
-    const wash=(ax,at,c,out)=>{const m=new THREE.Mesh(wg,wm),o=at+out*.2;if(ax==='u'){m.rotation.y=Math.PI/2;m.position.set(S.X(o),(F+T)/2,S.Z(c));}else m.position.set(S.X(c),(F+T)/2,S.Z(o));m.userData.dyn=1;M.group.add(m);
+    const wm=new THREE.MeshBasicMaterial({map:WASHT,color:C,transparent:true,opacity:HOME?.75:.6,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}),WY0=F,WY1=TWO?F+LH:T,wg=new THREE.PlaneGeometry(2.4,WY1-WY0),fm=mat(HOME?'#2c3036':'#c9ced6');
+    const wash=(ax,at,c,out)=>{const m=new THREE.Mesh(wg,wm),o=at+out*.2;if(ax==='u'){m.rotation.y=Math.PI/2;m.position.set(S.X(o),(WY0+WY1)/2,S.Z(c));}else m.position.set(S.X(c),(WY0+WY1)/2,S.Z(o));m.userData.dyn=1;M.group.add(m);
       const b=new THREE.Mesh(B.boxGeo(.3,.12,.3),fm);b.position.set(ax==='u'?S.X(at+out*.25):S.X(c),F+.06,ax==='u'?S.Z(c):S.Z(at+out*.25));b.userData.dyn=1;M.group.add(b);const t=new THREE.Mesh(B.boxGeo(.22,.02,.22),fx);t.position.copy(b.position);t.position.y+=.07;t.userData.dyn=1;M.group.add(t);};
-    for(const c of [-5.1,-2.2,2.2,5.1])wash('u',-6,c,-1);for(const c of [-3.5,3.5])wash('u',6,c,1);for(const sv of [-1,1])for(const c of [-4.8,.35,5.0])wash('v',sv*5.5,c,sv);
+    if(!TWO)for(const c of [-5.1,-2.2,2.2,5.1])wash('u',-6,c,-1);for(const c of [-3.5,3.5])wash('u',6,c,1);for(const sv of [-1,1])for(const c of (TWO?[1.2,4.7]:[-4.8,.35,5.0]))wash('v',sv*5.5,c,sv);
     /* porch soffit downlights and corner garden spots */
     const pc=(pu-6.15)/2;ceil(H,[[pc,-2.6],[pc,0],[pc,2.6]]);for(const v of [-2.6,0,2.6])glowSprite(S.X(pc),H-.25,S.Z(v),1.4,C,.7);pl(pc,0,H-.8,7,10);
     for(const [u,v] of [[-6.8,-6.3],[-6.8,6.3],[6.8,-6.3],[6.8,6.3]]){glowSprite(S.X(u),.35,S.Z(v),1.8,C,.65);glowSprite(S.X(u),1.4,S.Z(v),2.6,C,.25);}}
@@ -6020,13 +6025,13 @@ const MAPS={
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
  lagoon:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Lagoon',desc:'One big deck on stilts over a turquoise lagoon: high boardwalks at each end, bridges over to the thatched shop canopy in the middle, a tiki bar either side, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
- street:{modes:['duel'],name:'Street Life',desc:'Suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
-  /* 120 x 90 m (Biggest size): just two buildings, the red-roofed hospital and the green-roofed home, each with twice the floor area of the old big houses,
-     either side of the road near the middle (a little off-centre, one towards each end) */
-  const X=60,Z=45;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+ street:{modes:['duel'],name:'Street Life',desc:'A hospital and a home across a suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
+  /* 70 x 50 m (Big size): just two buildings, the red-roofed hospital and the green-roofed home, two storeys each,
+     either side of the road near the middle (a little off-centre, one towards each end); the four smaller side buildings are gone */
+  const X=35,Z=25;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   floor(-130,130,-140,140,'#ffffff','lawn',-.02,8);
-  floor(-6,6,-Z,Z,'#4a4d55','asphalt',0,1);
-  floor(-9,-6,-Z,Z,'#d5d6da','tile',.05,2);floor(6,9,-Z,Z,'#d5d6da','tile',.05,2);
+  floor(-5.5,5.5,-Z,Z,'#4a4d55','asphalt',0,1);
+  floor(-8,-5.5,-Z,Z,'#d5d6da','tile',.05,2);floor(5.5,8,-Z,Z,'#d5d6da','tile',.05,2);
   for(let z=-Z+2;z<Z;z+=6)floor(-.15,.15,z,z+3,'#ffffff',null,.02);
   const cols=['#f6d7a7','#bfe0f2','#f3b8b0','#cfe8c3','#e5d4f0','#f9eec2','#d6dbe2','#ffd8a8'],roofs=['#8a3b2a','#3a4a63','#5b4a3a','#7a2e3a'];
   const trims=['#ffffff','#f3efe6','#e9eaee','#fff6e0'];
@@ -6034,42 +6039,40 @@ const MAPS={
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f6fd6',null,null,'#c8322b','#c9ced6','#2f63c8'];
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
-  const L=[[-1,2.5,'C','#3b4048',2,'home'],[1,-2.5,'C',RC[5],3,'hospital'],
-    /* a smaller flat-roofed house with an open roof deck either side of each big building, halfway between it and the end fence, in the big one's colours */
-    [-1,31,'B','#c9ced6',4,'homeB'],[-1,-28.5,'B','#c9ced6',5,'homeB'],[1,28.5,'B','#f4f5f7',6,'hospB'],[1,-31,'B','#f4f5f7',7,'hospB']];/* the two big ones face each other across the road, a few metres off true */
-  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2.25:1.1,cx=side*33.5,hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
+  const L=[[-1,2.5,'C','#3b4048',2,'home'],[1,-2.5,'C',RC[5],3,'hospital']];/* (the four smaller side buildings are gone) *//* the two big ones face each other across the road, a few metres off true */
+  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?1.7:1.1,cx=side*22,/* scaled to fit the Big plot: a front yard before the pavement, a strip of lawn behind */hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
     if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc,th==='homeB'?(z>0?'studio':'den'):th==='hospB'?(z>0?'pharmacy':'cafe'):null);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);
     /* a mailbox beside the path, not on it */
-    box(side*17.4,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*17.4,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
+    box(side*8.7,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*8.7,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   /* the boundary is a white picket fence (white-washed vertical slats with gaps you can see through, two rails) on an invisible wall */
   {const iv={mat:INVIS,shadow:false};for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a',null,iv);}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a',null,iv);fence(-X,Z,X,Z,2.8,'#b07a4a',null,iv);picketFence([[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]]);}
   /* the Tripo trees all stand outside the fence, spread round the plot (their tops show over the fence); the lawns inside are clear */
-  for(const [x,z,id,h,ry,tw] of [[70,-33,'oak',8,.4],[73,-6,'pine',9,2.2],[74,40,'tall',9.5,5.2],
-    [-71,-39,'blossom',6.5,.1],[-74,-12,'oak',8,2],[-70,12,'pine',9,5.3],[-74,36,'bonsai',7.5,4.4],
-    [-39,58,'block',7.5,3.5,1.2],[-10,61,'oak',8.5,1.1],[18,56,'pine',9,.7],[47,60,'blossom',6.5,3.1],
-    [-49,-58,'pine',8.5,2.6],[13,-61,'oak',8,5.6],[42,-56,'tall',9,1.9],[67,58,'bonsai',7.5,.9],[-67,-60,'oak',7.5,3.3]])glbTree(id,x,z,h,ry,tw);
+  for(const [x,z,id,h,ry,tw] of [[45,-18.3,'oak',8,.4],[48,-3.3,'pine',9,2.2],[49,22.2,'tall',9.5,5.2],
+    [-46,-21.7,'blossom',6.5,.1],[-49,-6.7,'oak',8,2],[-45,6.7,'pine',9,5.3],[-49,20,'bonsai',7.5,4.4],
+    [-22.8,38,'block',7.5,3.5,1.2],[-5.8,41,'oak',8.5,1.1],[10.5,36,'pine',9,.7],[27.4,40,'blossom',6.5,3.1],
+    [-28.6,-38,'pine',8.5,2.6],[7.6,-41,'oak',8,5.6],[24.5,-36,'tall',9,1.9],[42,32.2,'bonsai',7.5,.9],[-42,-33.3,'oak',7.5,3.3]])glbTree(id,x,z,h,ry,tw);
   /* (no play area: the climbing frame and the swing set are both gone). The towers (and the swings' A-frame) are invisible
      blocks that take fire like a prop (the slides and swings are open to walk round); once they've taken enough (or a blast goes off close by) the whole frame crashes over and sinks away, back next round */
   
   /* outside the fence (scenery only): a windmill with its sails turning, our own street lamps along the fence and a hot-air balloon drifting round the sky */
-  windmill(86,-18,-Math.PI/2);/* (the red barn is gone) */
+  windmill(61,-10,-Math.PI/2);/* (the red barn is gone) */
   /* the lamps are lit: a warm glow round each lantern */
-  for(const x of [-52,-34,-16,-7.5,7.5,16,34,52])for(const z of [-Z-1.6,Z+1.6])streetLamp(x,z);/* white lantern posts just outside the fence; one shot smashes the glass *//* our own lamps, arms reaching over the fence, smashable heads */
-  for(const z of [-30,0,30])for(const x of [-X-1.6,X+1.6])streetLamp(x,z);
+  for(const x of [-30,-18,-7.5,7.5,18,30])for(const z of [-Z-1.6,Z+1.6])streetLamp(x,z);/* white lantern posts just outside the fence; one shot smashes the glass *//* our own lamps, arms reaching over the fence, smashable heads */
+  for(const z of [-13,13])for(const x of [-X-1.6,X+1.6])streetLamp(x,z);
   {const g=scenery('balloon',0,-100,0,22);M.life.push(t=>{const a=t*.03;g.position.set(Math.sin(a)*100,21+Math.sin(t*.21)*2.5,-Math.cos(a)*100);g.rotation.y=t*.05;});}
   /* a wrecked van stays a burnt-out shell until the next round */
   /* just two vans on the road: the white one and a light grey one (the same model, tinted) */
   const cars=[car(-3.4,-10,false,'','truck'),car(3.4,13,false,'#c3c7cd','truck')];
-  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:38});
+  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:16});
   /* everything loose or solid inside can be moved and broken: furniture, people and bins slide when shot or blasted (back in place next round),
      and the loose bits (chairs, plants, drips, cups, the wheelchair...) smash once they've taken enough */
   for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;
   for(const K of M.knocks)if(!K.pop)K.brk=K.bhp=Math.round(clamp(30+K.w*K.h*K.d*60,30,160));
   // the shop goes beside the road near the middle, clear of the cars
   M.shopOK=(x,z)=>Math.abs(x)>10;
-  for(const z of [-42,42])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[13,33],[-13,-33],[52,39],[-52,-39],[56,-27],[-56,27],[10,18],[-10,-18],[31,20],[-31,-20]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  for(const z of [-22,22])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
+  M.spawns=[[9,18],[-9,-18],[28,19],[-28,-19],[29,-19],[-29,19],[-2,14],[2,-14],[20,13],[-20,-13]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Small freight yard split by a live line, with a footbridge over it',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A sleek, upmarket beach: a lit Tiki Bar, a hut at each end, lookout stairs and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture: glass partitions, colour-coded rooms and low walls to hop',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
@@ -8603,7 +8606,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[2,'70 × 50 m'],street:[3,'120 × 90 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[2,'70 × 50 m'],house:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[2,'70 × 50 m'],street:[2,'70 × 50 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[2,'70 × 50 m'],house:[1,'40 × 30 m'],yard:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',one:false,fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[3,5,10].includes(+store.get('duel:dmlen',5))?+store.get('duel:dmlen',5):5,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),

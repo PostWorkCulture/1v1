@@ -36,7 +36,7 @@ Last updated: 2026-11-24
 - Spawns: on land (never in the sea), different each round, never the same spot twice in a row; in 1v1 nobody starts facing their opponent.
 - Menu map pictures are HQ renders that always match the real map; map names in cinematic type; the map name shows as the match loads, before the countdown.
 - New maps need creative navigation, platforms and height, not flat layouts.
-- **Street Life** (Biggest): 2 big buildings (red hospital with all-white floors/walls; home with homely moveable/destructible furniture) facing each other across the road, slightly off-centre; 4 smaller open-roof buildings with their own interiors; white picket fence; Tripo trees outside the fence only; white van + light grey van only; white Victorian lantern street lights with smashable bulbs; no rooftop boxes/brown walls; small buildings' rooftop walls have glass middles.
+- **Street Life** (Big, 70 × 50 m, downsized 24 Nov): only the 2 big buildings (red hospital with all-white floors/walls; home with homely moveable/destructible furniture) facing each other across the road, slightly off-centre; each has 2 floors only (glass ground floor, then the loft room + open terrace straight on top); white picket fence; Tripo trees outside the fence only; white van + light grey van only; white Victorian lantern street lights with smashable bulbs; no rooftop boxes/brown walls; small buildings' rooftop walls have glass middles.
 - **Railed**: small and bare-bones: one live line with the Tripo train out of a lit tunnel (blinking front lights), two sheds, footbridge, walk-through shipping containers (glass inward side). Half-glass roofs you can fall through; chain-link + barbed wire fence; trees well outside the fence; illuminated signs. Goods Shed: one straight stair to the top, high tool shelves, glass front. Engine Shed: train waiting room (benches, departure boards, newspaper), glass front. Train head-on = blown to pieces.
 - **Beach Please** (Big, 70 × 50 m, downsized 24 Nov): simple, modern, expensive. No grey blocks, logs, boats, picnic benches or boxes. Big classy Tiki Bar (glass, smashable bottles, roof reachable by ladder, shop inside in a corner); small hut at each end; colourful lookout stairs; no walkway or jetties (the sand runs straight into the sea); halved deck chairs/parasols along the shore; waves.
 - **Arena**: floodlit night stadium with crowd; max 6 spread-out pillars; wide double-height ramps on 2 sides; no red/blue on floor or pillars; breakable glass along walkways; shootable lamps/poles; 2 straight-edged portals in the pillars.
@@ -105,6 +105,7 @@ Last updated: 2026-11-24
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
+- Street Life: the 4 smaller side buildings and the big buildings' middle floor (removed 24 Nov).
 - Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
 
 ---
@@ -112,6 +113,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Street Life downsized to Big (70 × 50 m): the 4 side buildings removed, and the hospital and home cut to 2 floors (middle floor removed; the loft room and terrace sit on the ground floor); buildings scaled to fit, narrower road, trees, lamps and spawns moved in.
 - One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, lethals on the row under them, no tabs. Swarm and Flamethrower now stand in for your gun.
 - Beach Please downsized to Big (70 × 50 m) and its walkway removed (both jetties, the glass promenade, its lamps, ladders and promenade waves); huts, loungers, palms, sandcastles and spawns moved in to fit.
 - Gun list cut to 12: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90 and Sting removed completely, and the Kar98 swapped for the Vanguard.

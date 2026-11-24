@@ -10,6 +10,7 @@ One-off setup: `cd tools/models && npm install`. `render.mjs` also needs Playwri
 | `bake.mjs` | Cleans, simplifies and normalises a model, and shrinks its textures. `--kind char` also splits it into the six rig parts. |
 | `split.mjs` | The character splitter, used by `bake.mjs`. Cuts are auto-detected; override them with `--neck`, `--hip` and `--armx` (metres on the 3.03 m model). |
 | `render.mjs` | Makes preview PNGs, a colour-coded parts check (`--parts`) and the menu cards `_p`, `_x` and `_c` `.webp` (`--cards`). |
+| `cards_hd.mjs` | The menu pictures at high res with transparent backgrounds: `_k` 512 px picker tile, `_c` 360 px face, `_x` 960 × 1216 full body, `_p` the same on light grey. Use it for every character's menu pictures. |
 
 ## Kinds and where they go
 

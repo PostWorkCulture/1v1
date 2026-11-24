@@ -1666,6 +1666,32 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #duel-hud .d-items .it.thr:not(.dim) svg{filter:grayscale(1) brightness(1.6) drop-shadow(0 0 3px color-mix(in srgb,var(--ac) 70%,transparent))}
 #duel-hud .d-items .it.thr:not(.dim) b{color:var(--ac)}
 #duel-hud .d-items .it.thr:not(.dim) kbd{border-color:var(--ac);color:var(--ac)}
+/* mode & map: the mode options run across the top in one row (wrapping if narrow), the map picker fills the width below.
+   Phones on their side (520 px tall or less) keep options on the left and maps on the right, as there's no height to spare */
+@media (min-height:521px){
+#menu .mfull.duels[data-step="setup"] #duel-panel{display:flex!important;flex-direction:column;gap:14px}
+#menu .mfull.duels[data-step="setup"] .mopts{flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:10px 18px}
+#menu .mfull.duels[data-step="setup"] .mopts .mgrp{display:flex;flex-direction:column;gap:8px;min-width:0}
+#menu .mfull.duels[data-step="setup"] .mopts .mgrp .seg{display:flex;width:auto}
+#menu .mfull.duels[data-step="setup"] .mopts .mgrp .seg button{flex:none;padding-left:16px;padding-right:16px;white-space:nowrap;min-width:64px;width:auto}
+#menu .mfull.duels[data-step="setup"] .mopts #d-ffanrow:not([hidden]){display:contents}
+#menu .mfull.duels[data-step="setup"] .mopts #mode{width:auto;align-self:auto}#menu .mfull.duels[data-step="setup"] .mopts #mode button{padding-left:16px;padding-right:16px;min-width:84px}
+#menu .mfull.duels[data-step="setup"] .mmaps,#menu .mfull.duels[data-step="setup"] .mmaps .d-maps,#menu .mfull.duels[data-step="setup"] .mpick{width:100%;align-self:stretch}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{height:clamp(250px,calc(100vh - 325px),640px)}
+/* free for all adds two more option groups: if the row wraps, the map picker gives up that height */
+#menu .mfull.duels[data-step="setup"]:has(#d-ffanrow:not([hidden])) .mpick .mcar-stage{height:clamp(220px,calc(100vh - 395px),600px)}}
+/* Quick start sits at the right-hand end of the mode options row (same button, same job: random map, character and weapons, straight in) */
+#menu .mqgrp{display:none}
+@media (min-height:521px){
+#menu .mfull.duels[data-step="setup"] .mopts .mqgrp{display:flex;order:-1;margin-right:8px}
+#menu .mfull.duels[data-step="setup"] .mquick2{height:38px;padding:0 20px;font-size:15px;border-color:#ff2e97;box-shadow:0 0 16px rgba(255,46,151,.35)}
+#menu .mfull.duels[data-step="setup"] #m-quick:not(.mquick2){display:none}}
+/* hovering (or tabbing to) Quick start shows what it sets */
+#menu .mq-tip{position:absolute;left:0;top:calc(100% + 8px);z-index:20;display:none;flex-direction:column;gap:4px;min-width:220px;padding:12px 14px;border-radius:10px;background:#172951;border:1px solid #ff2e97;box-shadow:0 10px 30px rgba(3,7,18,.55),0 0 18px rgba(255,46,151,.25);font:500 13px/1.3 Arial,sans-serif;color:#f5f5f5;pointer-events:none;white-space:nowrap}
+#menu .mq-tip b{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ff5aa8;margin-bottom:2px}
+#menu .mq-tip span::before{content:"\2022";color:#ff5aa8;margin-right:8px}
+#menu .mq-tip small{color:#8a8a8a;font-size:11.5px;margin-top:4px;white-space:normal}
+#menu .mqgrp:hover .mq-tip,#menu .mqgrp:focus-within .mq-tip{display:flex}
 </style>
 
 </head>
@@ -1715,7 +1741,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
       <header class="mhead">
         <h1 class="logo">imok<br><span>1v1</span></h1>
         <div class="xpbar" id="mxp"><b id="mx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="mx-bar"></i></span><span id="mx-txt" class="xpn">0/100 XP</span></div>
-        <button class="mquick" id="m-quick" type="button" title="Quick start: random map, character and weapons, straight into a match"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Quick start</button>
+        <button class="mquick" id="m-quick" type="button" title="Quick start: Free for all, 4 players, 5 minutes, random map and weapons, straight into a match"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Quick start</button>
         <div class="micons">
           <button class="micon" id="m-net-btn" aria-haspopup="true" aria-expanded="false" aria-controls="m-net-pop" title="Play a friend" aria-label="Play a friend"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.6 5.5 5.8"/></svg></button>
           <button class="micon" id="m-opt-btn" title="Options" aria-label="Options"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -1730,38 +1756,40 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
           <h3 class="mstep"><i>1</i>Mode &amp; map</h3>
           <div id="duel-panel" class="mpanel">
             <div class="mopts">
-            <div class="msub">Mode</div>
+            <div class="mgrp mqgrp" style="position:relative"><div class="msub">Feeling lucky?</div><button class="mquick mquick2" id="m-quick2" type="button" title="Quick start: Free for all, 4 players, 5 minutes, random map and weapons, straight into a match"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Quick start</button><span class="mq-tip" role="tooltip"><b>Quick start</b><span>Free for all</span><span>4 players</span><span>5 minutes</span><span>Random map</span><span>Random guns &amp; lethal</span><small>Your character and bot level stay as they are</small></span></div>
+            <div class="mgrp"><div class="msub">Mode</div>
             <div class="seg mode" role="radiogroup" aria-label="Game mode" id="mode">
               <button role="radio" data-mode="duels" aria-checked="true">Duels</button>
               <button role="radio" data-mode="rumble" aria-checked="false">Rumble</button>
               
-            </div>
+            </div></div>
             <p class="tag" hidden>First to five rounds against a bot.</p>
-            <div class="msub" id="d-teamlbl">Players</div>
+            <div class="mgrp"><div class="msub" id="d-teamlbl">Players</div>
             <div class="seg" role="radiogroup" aria-label="Players" id="d-team">
               <button role="radio" data-team="1v1" aria-checked="true">1v1</button>
               <button role="radio" data-team="2v2" aria-checked="false">2v2</button>
               <button role="radio" data-team="ffa" aria-checked="false">Free for all</button>
-            </div>
-            <div id="d-ffanrow" hidden><div class="msub">Free for all size</div>
+            </div></div>
+            <div id="d-ffanrow" hidden><div class="mgrp"><div class="msub">Free for all size</div>
             <div class="seg" role="radiogroup" aria-label="Number of players in free for all" id="d-ffan">
               <button role="radio" data-n="2" aria-checked="false">2</button>
               <button role="radio" data-n="4" aria-checked="true">4</button>
               <button role="radio" data-n="6" aria-checked="false">6</button>
               <button role="radio" data-n="8" aria-checked="false">8</button>
-            </div>
-            <div class="msub">Match length</div>
+            </div></div>
+            <div class="mgrp"><div class="msub">Match length</div>
             <div class="seg" role="radiogroup" aria-label="Free for all match length" id="d-dmlen">
               <button role="radio" data-len="3" aria-checked="false">3 min</button>
               <button role="radio" data-len="5" aria-checked="true">5 min</button>
               <button role="radio" data-len="10" aria-checked="false">10 min</button>
-            </div></div>
-            <div class="msub">Bots</div>
+            </div></div></div>
+            <div class="mgrp"><div class="msub">Bots</div>
             <div class="seg" role="radiogroup" aria-label="Bot difficulty" id="d-diff">
               <button role="radio" data-diff="easy" aria-checked="false">Easy</button>
               <button role="radio" data-diff="normal" aria-checked="true">Normal</button>
               <button role="radio" data-diff="hard" aria-checked="false">Hard</button>
-            </div>
+            </div></div>
+            
             </div>
             <div class="mmaps"><div class="msub">Map</div>
             <div class="d-maps" id="d-maps"></div></div>
@@ -12733,7 +12761,11 @@ $('d-next0').addEventListener('click',()=>{if(!S.map&&!S.randMap){flagNeed(['a m
     else if(t.classList.contains('mstart'))p('uifwd');else p('uiselect');},true);
   const last=new WeakMap();document.addEventListener('input',e=>{const t=e.target;if(!e.isTrusted||t.type!=='range'||!t.closest(UI)||t.matches(VOLS))return;
     if(last.get(t)!==t.value){last.set(t,t.value);const k=(+t.value-(+t.min||0))/((+t.max||1)-(+t.min||0));p('uitick',{rate:.94+k*.12});}},true);})();
-$('m-quick').addEventListener('click',()=>{S.randMap=S.randChar=S.randGun=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();})/* Quick start: random everything, keeps the chosen mode, players and bots */;
+/* Quick start: Free for all, 4 players, 5 minutes, random map and random guns/lethal; your character and bot level stay as they are */
+$('m-quick').addEventListener('click',()=>{const c=q=>{const b=document.querySelector(q);if(b&&b.getAttribute('aria-checked')!=='true')b.click();};
+  c('#mode [data-mode="duels"]');c('#d-team [data-team="ffa"]');c('#d-ffan [data-n="4"]');c('#d-dmlen [data-len="5"]');
+  S.randMap=S.randGun=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();});
+$('m-quick2').addEventListener('click',e=>{e.preventDefault();$('m-quick').click();});
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',gun:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}if(S.qr==='load'){if(S.qrRand){rollMap();S.randPre=S.map;}else if(S.randMap&&S.map)S.randPre=S.map;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}

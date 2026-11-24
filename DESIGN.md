@@ -92,7 +92,7 @@ Last updated: 2026-11-24
 ### Menus and HUD
 - Navy and white everywhere (navy instead of black since 24 Nov), menus and in-game HUD alike, layout copied from the Unity version. The menus' accent colour (main buttons, logo, Rematch, Defeat, highlights) is neon pink, not red; red stays only for in-game danger/enemy cues (HUD enemy score, damage, Man Down, countdown). tools/navy-theme.py and tools/pink-menus.py convert anything new.
 - Fits a laptop screen without scrolling. Back and forward buttons the same size side by side, centred.
-- Map and character pickers: one box of small pictures plus Random; selection shown by a white edge; Random spins only when you move on. Quick start beside the Level bar.
+- Map and character pickers: one box of small pictures plus Random; selection shown by a white edge; Random spins only when you move on. Mode & map screen: options in one row across the top (Quick start first), map picker full width below. Quick start = Free for all, 4 players, 5 min, random map and weapons; hover shows what it includes.
 - Sliders: sensitivities 0–10 whole steps; volumes in 10% steps. Countdown small and red, the 1 dissolves.
 - Minimap is a plain circle. No permanent in-game Home icon. Clips only at game end as one video icon. Pete's phone HUD layout is the default mobile layout.
 

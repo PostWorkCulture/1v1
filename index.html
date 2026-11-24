@@ -4456,7 +4456,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){M.onReset=[];if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.zips=null;M.navWarps=null;M.spotBias=null;M.stepSurf=null;M.batchZone=null;M.byPlayers=null;M.floorName=null;M.floorAt=null;M.noDrums=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.edgeDrop=null;M.edgeN=null;M.thumb=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.zips=null;M.navWarps=null;M.spotBias=null;M.stepSurf=null;M.batchZone=null;M.byPlayers=null;M.floorName=null;M.floorAt=null;M.noDrums=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.livePan=null;M.edgeDrop=null;M.edgeN=null;M.thumb=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -5496,11 +5496,11 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
     box(x,2.6,z,s+.08,.5,s+.08,'#ffffff',{solid:false,extra:{roughness:.35}});};
   arenaCross(4);/* the full Arena's ramps are twice as tall (4 m deck) */
   
-    /* six pillars spread round the floor in a staggered layout, each mirrored through the centre so both ends play the same */
-    for(const sg of [1,-1]){pillar(sg*14.5,sg*8,3.2);pillar(-sg*13.5,sg*15,3);pillar(sg*6,sg*18,2.8);}
+    /* four pillars, evenly spaced: one in the middle of each quarter of the floor (between the walkways), all the same size (cut from six, 24 Nov) */
+    for(const sx of [1,-1])for(const sz of [1,-1])pillar(sx*10,sz*17.5,3.2);
     /* two portals set into the faces of the big mirrored pillars (each facing the middle): walk into one and you step straight out of the other,
        on the far side of the arena, facing out of it with your speed carried through. Orange one end, blue the other; a short cooldown stops you bouncing straight back */
-    {const PO=[{x:14.5,z:8-1.6,nz:-1,col:'#ff8a2a'},{x:-14.5,z:-8+1.6,nz:1,col:'#3aa8ff'}];
+    {const PO=[{x:10,z:17.5-1.6,nz:-1,col:'#ff8a2a'},{x:-10,z:-17.5+1.6,nz:1,col:'#3aa8ff'}];
      for(const P of PO){const g=new THREE.Group();g.position.set(P.x,0,P.z+P.nz*.012);g.rotation.y=P.nz>0?0:Math.PI;M.group.add(g);
        /* the portal is a slim dark block standing out from the pillar as far as its base (so neither the base nor the white band cuts into it); the swirl fills its face exactly and the frame hugs its edges */
        const PW=1.9,PH=2.9,PD=.28,FT=.08;const rec=new THREE.Mesh(new THREE.BoxGeometry(PW,PH,PD),new THREE.MeshBasicMaterial({color:'#05060a'}));rec.position.set(0,FT+PH/2,PD/2);g.add(rec);
@@ -5546,6 +5546,24 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
         const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(RL,0);sh.lineTo(0,H-.2);sh.closePath();const eg=new THREE.ExtrudeGeometry(sh,{depth:W-.02,bevelEnabled:false});eg.translate(0,0,-W/2+.01);
         const wd=new THREE.Mesh(eg,conc(dk));wd.castShadow=wd.receiveShadow=true;g.add(wd);
         for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});
+  /* LIVE FLOOR (24 Nov): six 6 x 6 m panels with hazard-striped edges set into the floor, mirrored through the centre. Every 7 s two opposite
+     panels blink amber for 2 s (the warning), then crackle electric blue for 3 s and shock anyone standing on them (6 damage every 0.4 s), so
+     nobody can camp one spot: step off or jump. The pair rotates through all six; bots step off a panel as soon as it starts blinking */
+  {const PAN=[[0,16],[0,-16],[9.5,-7.5],[-9.5,7.5],[16,-24.5],[-16,24.5]],S2=6;
+    const ht=canvasTex(256,32,(c,w,h)=>{for(let i=0;i<16;i++){c.fillStyle=i%2?'#1c1d22':'#f4c22b';c.beginPath();c.moveTo(i*16,0);c.lineTo(i*16+16,0);c.lineTo(i*16,h);c.lineTo(i*16-16,h);c.fill();}}),hm=new THREE.MeshStandardMaterial({map:ht,roughness:.6});
+    const pans=PAN.map(([x,z])=>{const m=new THREE.MeshStandardMaterial({color:'#20232b',emissive:'#ffffff',emissiveIntensity:0,roughness:.4,metalness:.5});
+      const g=new THREE.PlaneGeometry(S2,S2);g.rotateX(-Math.PI/2);const p=new THREE.Mesh(g,m);p.position.set(x,.01,z);p.receiveShadow=true;p.userData.dyn=1;M.group.add(p);
+      for(const [dx,dz,ry] of [[0,S2/2,0],[0,-S2/2,0],[S2/2,0,1],[-S2/2,0,1]]){const e=new THREE.Mesh(new THREE.PlaneGeometry(S2+.4,.35),hm);e.rotation.x=-Math.PI/2;e.rotation.z=ry*Math.PI/2;e.position.set(x+dx,.013,z+dz);M.group.add(e);}
+      return {x,z,h:S2/2,m,st:0,t:0,zt:0};});
+    M.livePan=pans;let next=4,k=0;
+    const off=()=>{next=4;k=0;for(const P of pans){P.st=0;P.t=0;P.zt=0;P.m.emissiveIntensity=0;}};M.onReset.push(off);
+    M.life.push((t,dt)=>{if(S.state!=='fight'){return;}next-=dt;if(next<=0){next=7;const a=pans[k%6],b=pans[(k+3)%6];k++;for(const P of [a,b]){P.st=1;P.t=0;P.zt=0;}}
+      for(const P of pans){if(!P.st)continue;P.t+=dt;
+        if(P.st===1){P.m.emissive.set('#ffb030');P.m.emissiveIntensity=(Math.sin(P.t*14)>0?1.4:.3);if(P.t>2){P.st=2;P.t=0;sfx('volt',{x:P.x,y:.5,z:P.z},{vol:.6,range:30});}}
+        else{P.m.emissive.set('#5fd3ff');P.m.emissiveIntensity=1.6+Math.random()*1.4;if(Math.random()<dt*14)emit(P.x+(Math.random()-.5)*S2,.2,P.z+(Math.random()-.5)*S2,{n:3,speed:3,up:3,size:.08,life:.25,grav:4,colors:['#ffffff','#5fd3ff']});
+          if((P.zt+=dt)>.4){P.zt=0;for(const f of FS){if(!f.alive||f.downed||f.pos.y>.35||Math.abs(f.pos.x-P.x)>P.h||Math.abs(f.pos.z-P.z)>P.h)continue;
+            emit(f.pos.x,.25,f.pos.z,{n:8,speed:4,up:3,size:.1,life:.3,grav:6,colors:['#ffffff','#5fd3ff']});damage(f,6,null,false,'rail');if(f===ME)vig(.25);}}
+          if(P.t>3){P.st=0;P.m.emissiveIntensity=0;}}}});}
   arenaStadium(X,Z);
   /* the shop stands against the middle of the south end wall, facing into the arena (it used to sit on top of the cross ramp in the middle) */
   M.shopAt=[{x:0,z:-Z+.95,y:0,q:0}];
@@ -9013,6 +9031,9 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       if(damage(foe,total,f,hr.h,id))killed=true;if(f===ME){S.stats.dmg+=Math.min(shown,100);dmgNumber(foe,shown,hr.h);}}if(f)(f).hi=((f).hi||0)+1;if(f===ME){S.stats.hits++;if(head)S.stats.heads++;hitMarker(head||killed);}}
   f.sh=(f.sh||0)+1;if(f===ME){S.stats.shots++;ME.pitch=clamp(ME.pitch+g.kick*(ME.ads?.6:1),-1.3,1.3);ME.yaw+=(GR()-.5)*g.kick*.4;}
   f.bloom=Math.min(f.bloom+g.bloom,3);}
+/* Arena live floor: a bot on (or right next to) a panel that is blinking or live heads straight out of its nearest side */
+function livePanStep(f){if(!M.livePan||f.pos.y>.45)return null;for(const P of M.livePan){if(!P.st)continue;const dx=f.pos.x-P.x,dz=f.pos.z-P.z,m=P.h+.8;if(Math.abs(dx)>m||Math.abs(dz)>m)continue;
+  return (P.h-Math.abs(dx)<P.h-Math.abs(dz))?[Math.sign(dx)||1,0]:[0,Math.sign(dz)||1];}return null;}
 function damage(f,dmg,src,head,gun){
   return damage0(f,dmg,src,head,gun);}
 function damage0(f,dmg,src,head,gun){if(NET.role==='client'&&!NET.replay)return false;if(f.edgeFall||!f.alive||S.state!=='fight'||f.finishing)return false;if(f===ME&&src&&src.bot&&isFoe(src,ME)){const k=botDif(src).dmg;if(k)dmg*=k;}/* Easy bots hit you softer */if(f===ME&&src&&src!==ME&&src.pos&&dmg>0)hitDir(src);dmg=Math.max(1,Math.round(dmg));if(src&&src!==f&&src.alive!==undefined&&isFoe(src,f))src.dmgM=(src.dmgM||0)+Math.min(dmg,Math.max(0,f.hp));f.lastHurt=S.t;hitMark(f,dmg,src,gun,head);if(f===ME&&(gun==='grenade'||gun==='rocket'))ME.blastT=1.1;if(src&&src!==f){f.lastBy=src;if(isFoe(src,f))(f.hitBy||(f.hitBy=new Map())).set(src,S.t);}
@@ -9516,6 +9537,7 @@ function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);co
     if(a.sideT>0&&(wx||wz)){a.sideT-=dt;const c=Math.cos(1.25*a.sideD),sn=Math.sin(1.25*a.sideD),x=wx*c-wz*sn,z=wx*sn+wz*c;wx=x;wz=z;}
     a.stuckT=(Math.hypot(f.vel.x,f.vel.z)<.8&&(wx||wz))?a.stuckT+dt:0;if(a.stuckT>.7){jump=true;a.goalT=0;a.stuckT=0;a.sideT=.5;a.sideD=(a.sideD||1)*-1;a.roam=null;}
     if(a.railHop){a.railHop=0;jump=true;wx+=(Math.sign(f.pos.x)||1)*.85;}else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
+    {const q=livePanStep(f);if(q){wx=q[0];wz=q[1];}}
     f.ads=false;updCrouch(f,false,dt);const sp=Math.hypot(wx,wz);if(sp>.1){const wy=Math.atan2(wx,wz);let dyaw=((wy-f.yaw+Math.PI)%TAU+TAU)%TAU-Math.PI;f.yaw+=clamp(dyaw,-6*dt,6*dt);}f.pitch=damp(f.pitch,0,4,dt);
     return{wx,wz,jump,jumpPress:false};}
   const P=a.P||STYLES.duelist,dist=Math.hypot(T.pos.x-f.pos.x,T.pos.z-f.pos.z),id=gunOf(f),pr=prefRange(id)*(CLOSE(id)?1:P.range);
@@ -9646,6 +9668,8 @@ function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);co
   // Railyard: bots jump over hot rails most of the time (or hop clear after a shock), so they only rarely get zapped or clipped by a train
   if(a.railHop){a.railHop=0;jump=true;const sd=Math.sign(f.pos.x)||1;wx+=sd*.85;}
   else if(M.railGlow&&f.grounded&&f.pos.y<.45&&(wx||wz)){for(const G of M.railGlow)if(G.hot&&Math.abs(f.pos.x+wx*.65-G.x)<1.35&&Math.random()<.88){jump=true;break;}}
+  /* Arena live floor: walk straight off a panel that is blinking or live (out the nearest side), and don't walk onto one */
+  {const q=livePanStep(f);if(q){wx=q[0];wz=q[1];}}
   // explosives: blow up a drum next to the target (or the building they're hiding in) instead of shooting them, without hesitating
   let bmDone=false;if(!CLOSE(id)&&!(f.blindT>0)&&T.alive&&!T.downed){a.bmT=(a.bmT||0)-dt;const bOk=a.boom&&a.boom.b.alive!==false&&M.boxes.includes(a.boom.b)&&Math.hypot(a.boom.p.x-T.pos.x,a.boom.p.z-T.pos.z)<4.5;if(!bOk&&a.bmT<=0){a.bmT=.45;const p={easy:.3,normal:.65,hard:.9}[S.diff]??.65;a.boom=Math.random()<p?boomNear(f,T,eye,id,see):null;}else if(!bOk)a.boom=null;
     const bm=a.boom;if(bm&&bm.b.alive!==false&&M.boxes.includes(bm.b)){const aim=bm.p.clone().add(new V3(rnd(-1,1),rnd(-.5,.5),rnd(-1,1)).multiplyScalar(.12+dif.err*.01));

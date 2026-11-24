@@ -1701,6 +1701,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap{padding:8px 22px 12px}#menu .mfull.duels[data-step="setup"] .mpick .mcar-cap .t{font-size:clamp(26px,2.6vw,38px)}}
 #map-peek{position:fixed;z-index:60;width:var(--pw,360px);aspect-ratio:1/1;border-radius:12px;overflow:hidden;pointer-events:none;opacity:0;transform:scale(.96);transition:opacity .14s ease,transform .14s ease;background:#16264b center/cover no-repeat;box-shadow:0 0 0 2px #fff,0 18px 50px rgba(3,7,18,.7)}
 #map-peek.on{opacity:1;transform:none}
+#map-peek.gun{background-color:#0e1a3a;background-size:contain}
 #map-peek b{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 11px;font:800 17px/1.1 Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(transparent,rgba(5,10,30,.85))}
 @media (hover:none),(max-height:520px){#map-peek{display:none}}
 </style>
@@ -12523,16 +12524,23 @@ $('m-quick').addEventListener('click',()=>{const c=q=>{const b=document.querySel
   c('#mode [data-mode="duels"]');c('#d-team [data-team="ffa"]');c('#d-ffan [data-n="4"]');c('#d-dmlen [data-len="5"]');
   S.randMap=S.randGun=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();});
 $('m-quick2').addEventListener('click',e=>{e.preventDefault();$('m-quick').click();});
-/* map peek: hover a map in the picker and a bigger picture of it appears beside the tile: on whichever side has room (right, left, else above/below),
-   kept fully on screen, never under the pointer (so it can't block the next tile you move to) */
+/* hover peek: hover a map in the picker, or a gun / lethal on the Loadout screen (shown over the showcase panel there), and a bigger picture of it appears beside the tile: on whichever
+   side has room (right, left, else above/below), kept fully on screen, never under the pointer (so it can't block the next tile you move to) */
 (()=>{const pk=document.createElement('div');pk.id='map-peek';pk.innerHTML='<b></b>';document.body.appendChild(pk);let cur=null;
+  const SEL='#d-maps .mrg-t[data-map], #col3 .gun-opt:not(.rand):not(.off)';
   const hide=()=>{cur=null;pk.classList.remove('on');};
-  document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest&&e.target.closest('#d-maps .mrg-t[data-map]');
-    if(!t){if(cur&&!(e.target.closest&&e.target.closest('#d-maps')))hide();return;}if(t===cur)return;const img=t.querySelector('img');if(!img||!img.src){hide();return;}
-    cur=t;const r=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,m=12,W=Math.round(Math.max(200,Math.min(420,vh*.5,vw*.34)));pk.style.setProperty('--pw',W+'px');
-    pk.style.backgroundImage=`url(${img.src})`;pk.querySelector('b').textContent=(MAPS[t.dataset.map]||{}).name||'';
-    let x,y;if(r.right+m+W<=vw-m)x=r.right+m;else if(r.left-m-W>=m)x=r.left-m-W;else{x=Math.min(vw-m-W,Math.max(m,r.left+r.width/2-W/2));}
-    if(x===r.right+m||x===r.left-m-W)y=Math.min(vh-m-W,Math.max(m,r.top+r.height/2-W/2));else y=r.top-m-W>=m?r.top-m-W:Math.min(vh-m-W,r.bottom+m);
+  const nameOf=t=>t.dataset.map?((MAPS[t.dataset.map]||{}).name||''):t.dataset.gun?((GUNS[t.dataset.gun]||{}).name||''):t.dataset.cons?((CONS[t.dataset.cons]||{}).name||(CONS[t.dataset.cons]||{}).short||''):((t.querySelector('.t')||{}).firstChild||{}).textContent||'';
+  document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest&&e.target.closest(SEL);
+    if(!t){if(cur&&!(e.target.closest&&e.target.closest('#d-maps,#col3')))hide();return;}if(t===cur)return;const img=t.querySelector('img');if(!img||!img.getAttribute('src')){hide();return;}
+    cur=t;const r=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,m=12,ar=img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1,
+      big=Math.max(200,Math.min(ar>1.2?480:420,vh*.5*Math.max(1,ar),vw*(ar>1.2?.38:.34))),W=Math.round(big),H=Math.round(big/ar);
+    pk.style.setProperty('--pw',W+'px');pk.style.aspectRatio=ar.toFixed(3);pk.classList.toggle('gun',!t.dataset.map);
+    pk.style.backgroundImage=`url(${img.src})`;pk.querySelector('b').textContent=nameOf(t);
+    /* guns and lethals: the bigger picture sits over the showcase panel on the left of the Loadout screen, so it never covers the other tiles */
+    const ws=!t.dataset.map&&$('d-wshow');if(ws&&ws.offsetParent){const q=ws.getBoundingClientRect(),w2=Math.round(Math.min(q.width-24,(q.height-24)*ar,560)),h2=Math.round(w2/ar);
+      pk.style.setProperty('--pw',w2+'px');pk.style.left=Math.round(q.left+(q.width-w2)/2)+'px';pk.style.top=Math.round(q.top+(q.height-h2)/2)+'px';pk.classList.add('on');return;}
+    let x,y,side=false;if(r.right+m+W<=vw-m){x=r.right+m;side=true;}else if(r.left-m-W>=m){x=r.left-m-W;side=true;}else x=Math.min(vw-m-W,Math.max(m,r.left+r.width/2-W/2));
+    if(side)y=Math.min(vh-m-H,Math.max(m,r.top+r.height/2-H/2));else y=r.top-m-H>=m?r.top-m-H:Math.min(vh-m-H,r.bottom+m);
     pk.style.left=x+'px';pk.style.top=y+'px';pk.classList.add('on');},{passive:true});
   document.addEventListener('pointerdown',hide,{passive:true,capture:true});addEventListener('scroll',hide,{passive:true,capture:true});addEventListener('blur',hide);
   document.addEventListener('pointerleave',hide);new MutationObserver(()=>{if(cur&&!document.body.contains(cur))hide();}).observe($('menu'),{childList:true,subtree:true});})();

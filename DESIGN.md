@@ -83,6 +83,7 @@ Last updated: 2026-11-24
 ### Characters
 - Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair; Glitch's trim is neon orange, not cyan; Raven keeps black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
 - Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat still adds 20%.
+- Strafing (Pete, 24 Nov): the hips turn up to about 60° towards where you're going and the legs run that way, while the upper body twists back to keep the aim (going back and to the side, they turn the other way and backpedal); legs never side-step across each other. Shoes stay level and on top of the floor (the bottom of each shin bends at the ankle; a stretched leg lifts its foot), never dipping through it.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
@@ -120,6 +121,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Smoother strafing: hips turn towards the way you're going and the legs run that way with the chest still on aim, so legs no longer cross and wobble; shoes stay level on the floor instead of dipping through it (forward running too).
 - Ziplines: 1 s on the pad to grab (was 1.5 s), with a small "Zipline in 0.6s" countdown pop-up while you wait.
 - Character menu pictures re-rendered for all 10 at high res (picker tile 512 px, full body 960 x 1216, face 360 px) with transparent backgrounds: no black squares behind the characters on the dark blue tiles or scoreboard avatars.
 - Glitch's cyan trim (zip, socks, trainers) changed to neon orange, menu colour too; Raven keeps her black hair (blonde tried, Pete chose to keep black).

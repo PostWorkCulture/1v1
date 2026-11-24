@@ -10260,7 +10260,31 @@ function rigUp(ch,M,id){const hip=(M.piv.legL||[0,1.4,0])[1],py=hip-.05,up=new T
     for(const e of [a,b]){const l=new THREE.Mesh(geo,lm);l.position.set(e[0]*k,(e[1]+sz[1]/2)*k+(k-1)*2.01,z*k);l.scale.y=.001;l.visible=false;ch.headG.add(l);ch.lids.push(l);}}}
 function moOf(f){return f.mo||(f.mo={dx:0,dz:1,w:0,air:0,sq:0,sqv:0,wasG:true,vy:0,pvx:0,pvz:0,ax:0,az:0,ux:0,t:Math.random()*9,blink:1+Math.random()*4,
   fx:0,fxv:0,fy:0,fyv:0,fz:0,fzv:0,hx:0,hxv:0,px:0,pxv:0,pz:0,pzv:0});}
-const MOv={a:new THREE.Vector3(),b:new THREE.Vector3(),c:new THREE.Vector3(),pl:new THREE.Vector3(),m:new THREE.Matrix4(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),e:new THREE.Euler(),s:new THREE.Vector3()};
+const MOv={ra:new THREE.Vector3(),rb:new THREE.Vector3(),hm:new THREE.Matrix4(),km:new THREE.Matrix4(),a:new THREE.Vector3(),b:new THREE.Vector3(),c:new THREE.Vector3(),pl:new THREE.Vector3(),m:new THREE.Matrix4(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),e:new THREE.Euler(),s:new THREE.Vector3()};
+/* The shoe is part of the shin, so a tilted shin used to dip its toe or heel (or, side-stepping, its edge) through the floor. The bottom of each
+   shin (its own copy) is bent at the ankle every frame so the shoe stays level on the ground, blending smoothly into the leg above it; in the
+   air and kneeling the shoe follows the shin more. amt 0 puts it back as built. */
+const FLv={q:new THREE.Quaternion(),q2:new THREE.Quaternion(),r:new THREE.Matrix4(),m:new THREE.Matrix4(),u:new THREE.Vector3(),y:new THREE.Vector3(0,1,0),p:new THREE.Vector3(),n:new THREE.Vector3(),e:new THREE.Euler()};
+function footLevel(ch,L,amt){/* returns the lowest point of the shoe (root space), 9 if unknown */let o=L.fm;if(o===undefined||(o&&!o.parent)){o=null;let big=0;L.k.traverseVisible(c=>{if(c.isMesh&&c.geometry.attributes.position&&c.geometry.attributes.position.count>big){big=c.geometry.attributes.position.count;o=c;}});L.fm=o;
+    if(o){const g=o.geometry.clone();o.geometry=g;const P=g.attributes.position,N=g.attributes.normal,n=P.count,w=new Float32Array(n);let mn=9;for(let i=0;i<n;i++)mn=Math.min(mn,P.getY(i));
+      /* (in the mesh's own space: the shin runs down its y axis) */let sx=0,sz=0,c=0;for(let i=0;i<n;i++)if(P.getY(i)<mn+.06){sx+=P.getX(i);sz+=P.getZ(i);c++;}
+      const ay=mn+.2,top=mn+.3,bot=mn+.15;for(let i=0;i<n;i++){const y=P.getY(i);w[i]=y>=top?0:y<=bot?1:(v=>v*v*(3-2*v))((top-y)/(top-bot));}
+      o.userData.fl={p0:Float32Array.from(P.array),n0:N?Float32Array.from(N.array):null,w,piv:[sx/c,ay,sz/c],a:0};}}
+  if(!o)return 9;const F=o.userData.fl;if(amt<.01&&F.a<.01)return 9;F.a=amt;const P=o.geometry.attributes.position,N=o.geometry.attributes.normal,A=P.array,B=N&&N.array,p0=F.p0,n0=F.n0,w=F.w,[px,py,pz]=F.piv,V=FLv;
+  /* the mesh's rotation in the root's space; the turn that would stand its y axis upright, seen from inside the mesh */
+  ch.flip.updateMatrix();ch.body.updateMatrix();L.p.updateMatrix();L.k.updateMatrix();o.updateMatrix();
+  V.m.multiplyMatrices(ch.flip.matrix,ch.body.matrix).multiply(L.p.matrix).multiply(L.k.matrix).multiply(o.matrix);V.r.extractRotation(V.m);
+  V.u.set(0,1,0).applyMatrix4(V.r).normalize();V.q.setFromUnitVectors(V.u,V.y);/* world-ish fix */V.q2.setFromRotationMatrix(V.r);
+  const qi=V.q2.clone().invert(),ql=qi.multiply(V.q).multiply(V.q2);/* the same turn in the mesh's space */
+  if(amt<1)ql.slerp(V.q.identity(),1-amt);V.m.makeRotationFromQuaternion(ql);const e=V.m.elements;
+  for(let i=0,j=0;i<w.length;i++,j+=3){const k=w[i];if(!k){if(A[j]!==p0[j]||A[j+1]!==p0[j+1]||A[j+2]!==p0[j+2]){A[j]=p0[j];A[j+1]=p0[j+1];A[j+2]=p0[j+2];if(B){B[j]=n0[j];B[j+1]=n0[j+1];B[j+2]=n0[j+2];}}continue;}
+    const x=p0[j]-px,y=p0[j+1]-py,z=p0[j+2]-pz,rx=e[0]*x+e[4]*y+e[8]*z+px,ry=e[1]*x+e[5]*y+e[9]*z+py,rz=e[2]*x+e[6]*y+e[10]*z+pz;
+    A[j]=p0[j]+(rx-p0[j])*k;A[j+1]=p0[j+1]+(ry-p0[j+1])*k;A[j+2]=p0[j+2]+(rz-p0[j+2])*k;
+    if(B){const a=n0[j],b=n0[j+1],c=n0[j+2],nx=a+(e[0]*a+e[4]*b+e[8]*c-a)*k,ny=b+(e[1]*a+e[5]*b+e[9]*c-b)*k,nz=c+(e[2]*a+e[6]*b+e[10]*c-c)*k,l=Math.hypot(nx,ny,nz)||1;B[j]=nx/l;B[j+1]=ny/l;B[j+2]=nz/l;}}
+  P.needsUpdate=true;if(N)N.needsUpdate=true;
+  /* how low the shoe now reaches, in the root's space (ground = 0) */
+  V.m.multiplyMatrices(ch.flip.matrix,ch.body.matrix).multiply(L.p.matrix).multiply(L.k.matrix).multiply(o.matrix);const f2=V.m.elements;let lo=9;
+  for(let i=0,j=0;i<w.length;i++,j+=3)if(w[i]>.99){const y=f2[1]*A[j]+f2[5]*A[j+1]+f2[9]*A[j+2]+f2[13];if(y<lo)lo=y;}return lo;}
 /* two-bone leg IK: hip L.p, knee L.k; T is the sole target and pole the way the knee points, both in the hips' parent space */
 function legIK(L,T,pole,soft){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
   V.d.subVectors(T,S);let D=V.d.length();V.n.copy(V.d).divideScalar(D||1);if(soft){const mx=a+b-.002,sf=.07*(a+b),s0=mx-sf;if(D>s0)D=s0+sf*(1-Math.exp(-(D-s0)/sf));}D=clamp(D,Math.abs(a-b)+.02,a+b-.002);
@@ -10274,7 +10298,7 @@ function legIK(L,T,pole,soft){const V=IKv,S=L.p.position,a=L.up,b=L.lo;
 const STRIDE={};
 function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded||menu),sc=ch.root.scale.x||1,L=ch.lL,R=ch.lR;m.t+=dt;
   const special=!CFX.legs||f.downed||!f.alive||f.finishing||f.pose||f.onLadder||f.ladK>.01||f.dangle||f.tumble||f.carriedBy||f.skySlam||CR.run;
-  if(special){m.w=0;m.air=0;m.sq=0;m.sqv=0;m.wasG=g;m.ax=m.az=0;m.mv=false;if(m.ft){m.ft[0].cx=m.ft[1].cx=undefined;}const lean=KN.lean*cv;
+  if(special){footLevel(ch,L,0);footLevel(ch,R,0);m.w=0;m.air=0;m.hy=0;m.sq=0;m.sqv=0;m.wasG=g;m.ax=m.az=0;m.mv=false;if(m.ft){m.ft[0].cx=m.ft[1].cx=undefined;}const lean=KN.lean*cv;
     ch.body.rotation.set(lean,0,0);ch.body.position.set(0,-1.25-KN.drop*cv+KN.hip*(1-Math.cos(lean)),-KN.hip*Math.sin(lean)-KN.back*cv);
     if(f.downed&&!f.finishing&&CFX.legs){/* downed: prone, legs trailing with a small alternate kick as you crawl */
       const a=Math.sin(f.phase||0)*clamp(sp/2,0,1);
@@ -10298,7 +10322,11 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
   if(mv&&!m.mv)f.phase=Math.PI*beta;/* setting off: the left foot is mid-stance, right where it stands */m.mv=mv;
   const ph=f.phase||0,c=((ph/(2*Math.PI))%1+1)%1;
   const bob=-(.012+.05*k)*m.w*st*Math.cos(4*Math.PI*(c-beta/2)),drop=(.03+.15*Math.min(k,1)*m.w)*st,idle=(1-m.w)*st*(g?1:0),lean=KN.lean*cv+leanX;
-  ch.body.rotation.set(lean,g?.1*Math.cos(ph)*kk*dz:0,leanZ);
+  /* strafing: the hips turn towards where you're going (up to about 63 degrees) and the legs run that way, while the chest turns back to keep the aim
+     (the spine undoes the hips' turn), so the legs never side-step across each other. Going back and to the side, the hips turn the other way and backpedal */
+  {const sd=Math.abs(dx)>.15&&m.w>.05;if(dz<-.45)m.hb=1;else if(dz>-.2)m.hb=0;const tgt=sd&&g?clamp(m.hb?Math.atan2(-dx,-dz):Math.atan2(dx,Math.max(dz,0)),-1.1,1.1)*clamp(spA/3,0,1)*st:0;m.hy=damp(m.hy||0,tgt,g?10:4,dt);}
+  const hy=m.hy,chy=Math.cos(hy),shy=Math.sin(hy);
+  ch.body.rotation.set(lean,hy+(g?.1*Math.cos(ph)*kk*(dx*shy+dz*chy):0),leanZ);
   ch.body.position.set(.014*Math.sin(m.t*.7)*idle+m.px,-1.25-KN.drop*cv+KN.hip*(1-Math.cos(lean))-drop+bob+m.sq+.006*Math.sin(m.t*1.9)*idle,-KN.hip*Math.sin(lean)-KN.back*cv+m.pz-Math.sin(m.ux)*(EYE_TARGET-ch.hipY)*.8*st);/* hips go the other way to the chest, so the head stays over its hitbox */
   /* foot targets in the root's space (ground = 0). Each foot is either planted (held at a point in the world, so it stays put through turns,
      stops and changes of speed) or stepping. Running: the stride's stance half plants it, the swing half carries it from where it left the
@@ -10307,17 +10335,17 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
   const up=clamp(.5+f.vel.y/16,0,1),V=MOv,P=f.pos,yw=ch.root.rotation.y,cyw=Math.cos(yw),syw=Math.sin(yw),FT=m.ft||(m.ft=[{t:-1},{t:-1}]);
   const toW=(x,z,o)=>{o.wx=P.x+(x*cyw+z*syw)*sc;o.wz=P.z+(-x*syw+z*cyw)*sc;},toR=(o,out)=>{const X=(o.wx-P.x)/sc,Z=(o.wz-P.z)/sc;out.x=X*cyw-Z*syw;out.z=X*syw+Z*cyw;};
   const dc=(()=>{const d=((c-(m.pc??c))%1+1)%1;m.pc=c;return d>.5?0:d;})(),Dsw=2*Ls*(1-beta)*.62;/* how far the body travels during a swing (most of it is taken out of the foot's path, so it leaves and lands close to ground speed) */
-  const foot=(i,o,side,cc,out)=>{const F=FT[i],bx=o.p.position.x*1.1,rz=(side<0?.1:-.08)*st;if(F.cx===undefined){F.cx=bx;F.cy=0;F.cz=rz;F.t=-1;F.lock=0;F.sw=0;F.need=0;}
+  const foot=(i,o,side,cc,out)=>{const F=FT[i],b0=o.p.position.x*1.1,r0=(side<0?.1:-.08)*st,bx=b0*chy+r0*shy,rz=-b0*shy+r0*chy,bz=-b0*shy;/* home spot under the hip, turned with the hips */if(F.cx===undefined){F.cx=bx;F.cy=0;F.cz=rz;F.t=-1;F.lock=0;F.sw=0;F.need=0;}
     const qx=F.cx-lx*dt,qz=F.cz-lz*dt;/* where it was a step ago, seen from where the body is now */
     if(!g){F.lock=0;F.t=-1;F.sw=0;const ay=side<0?lerp(.16,.6,up):lerp(.24,.1,up),az2=side<0?lerp(.16,.36,up):lerp(-.14,-.38,up);out.set(damp(F.cx,bx,13,dt),damp(F.cy,ay,13,dt),damp(F.cz,az2,13,dt));}
     else if(mv){F.t=-1;
       if(F.sw){/* a swing, once begun, runs its course at the stride's pace (the stance share changes with speed, and must not cut it short) */
         F.v+=dc/(1-beta)*F.k;if(F.v>=1){F.sw=0;F.need=1;}
-        else{const v=F.v,e=v*v*(3-2*v),dr=Dsw/F.k*(e-v);out.set(lerp(F.sx,bx+dx*Sd*.5,e)+dx*dr,F.sy*(1-v)*(1-v)+H*(1-Math.cos(2*Math.PI*Math.pow(v,.85)))*.5,lerp(F.sz,dz*Sd*.5,e)+dz*dr);}}
+        else{const v=F.v,e=v*v*(3-2*v),dr=Dsw/F.k*(e-v);out.set(lerp(F.sx,bx+dx*Sd*.5,e)+dx*dr,F.sy*(1-v)*(1-v)+H*(1-Math.cos(2*Math.PI*Math.pow(v,.85)))*.5,lerp(F.sz,bz+dz*Sd*.5,e)+dz*dr);}}
       if(!F.sw){if(cc<beta)F.need=0;
         if(cc>=beta&&!F.need){/* lift off */if(F.lock){toR(F,out);F.sx=out.x;F.sz=out.z;}else{F.sx=qx;F.sz=qz;}F.lock=0;F.sw=1;F.sy=F.cy;F.v=0;F.k=1/Math.max(.2,1-(cc-beta)/(1-beta));out.set(F.sx,F.sy,F.sz);}
         else{if(!F.lock){toW(qx,qz,F);F.lock=1;}toR(F,out);
-          const ex=out.x-bx,ez=out.z,d2=Math.hypot(ex,ez);if(d2>RL){/* left behind (a sharp turn, a shove): let it slide back within reach */const k2=1-(1-RL/d2)*Math.min(1,dt*12);out.x=bx+ex*k2;out.z=ez*k2;toW(out.x,out.z,F);}
+          const ex=out.x-bx,ez=out.z-bz,d2=Math.hypot(ex,ez);if(d2>RL){/* left behind (a sharp turn, a shove): let it slide back within reach */const k2=1-(1-RL/d2)*Math.min(1,dt*12);out.x=bx+ex*k2;out.z=bz+ez*k2;toW(out.x,out.z,F);}
           out.y=damp(F.cy,0,30,dt);}}}
     else{F.sw=0;
       if(F.t>=0){F.t+=dt/.2;const v=Math.min(F.t,1),e=v*v*v*(v*(v*6-15)+10);out.set(lerp(F.sx,bx,e),F.sy*(1-e)+.11*(1-Math.cos(2*Math.PI*v))*.5,lerp(F.sz,rz,e));if(F.t>=1){F.t=-1;toW(bx,rz,F);F.lock=1;}}
@@ -10326,11 +10354,14 @@ function legsMo(f,ch,dt,sp,s,cv,menu){const KN=ch.knee,m=moOf(f),g=!!(f.grounded
         const dev=Math.hypot(out.x-bx,out.z-rz);if((dev>.22&&FT[1-i].t<0&&out.y<.03)||dev>.75){F.t=0;F.sx=out.x;F.sy=out.y;F.sz=out.z;F.lock=0;}}}
     F.cx=out.x;F.cy=out.y;F.cz=out.z;};
   foot(0,L,-1,c,V.a);foot(1,R,1,(c+.5)%1,V.b);
-  ch.flip.updateMatrix();ch.body.updateMatrix();V.m.multiplyMatrices(ch.flip.matrix,ch.body.matrix).invert();V.a.applyMatrix4(V.m);V.b.applyMatrix4(V.m);
+  ch.flip.updateMatrix();ch.body.updateMatrix();V.m.multiplyMatrices(ch.flip.matrix,ch.body.matrix).invert();V.ra.copy(V.a);V.rb.copy(V.b);V.a.applyMatrix4(V.m);V.b.applyMatrix4(V.m);
   legIK(L,V.a,V.pl.set(-.1,0,1),1);legIK(R,V.b,V.pl.set(.1,0,1),1);
   if(cv>.001){/* blend into the ready kneel */const e=cv*cv*(3-2*cv),sw=g?s*.35:0;
     V.q.setFromEuler(V.e.set(sw+KN.fT-lean,0,0));L.p.quaternion.slerp(V.q,e);L.k.rotation.x=lerp(L.k.rotation.x,KN.fK,e);
     V.q.setFromEuler(V.e.set(-sw+KN.rT-lean,0,0));R.p.quaternion.slerp(V.q,e);R.k.rotation.x=lerp(R.k.rotation.x,KN.rK,e);}
+  {const lv=(1-cv)*(1-.6*m.air);for(const [Lg,T,R0,pl] of [[L,V.a,V.ra,-.1],[R,V.b,V.rb,.1]]){const am=lv*clamp(1-R0.y/.5,.4,1);let lo=footLevel(ch,Lg,am);
+    /* still through the floor (a stretched, tilted leg): lift the foot that much and solve again */
+    if(lo<-.01&&lo>-1&&cv<.05){R0.y-=lo;T.copy(R0).applyMatrix4(V.m);legIK(Lg,T,V.pl.set(pl,0,1),1);lo=footLevel(ch,Lg,am);if(lo<-.01&&lo>-1){R0.y-=lo;T.copy(R0).applyMatrix4(V.m);legIK(Lg,T,V.pl.set(pl,0,1),1);footLevel(ch,Lg,am);}}}}
   return lean;}
 /* chest: shares the aim pitch, breathes, flinches. Returns the part of its pitch that the arms, head and gun counter to stay on aim. */
 function spineMo(f,ch,dt,menu){const m=moOf(f),up=ch.up;

@@ -77,7 +77,7 @@ Last updated: 2026-11-24
 - Music: dark, bass-led trap on menus/between rounds/end of game. The menu song rotates between 3 tracks (Dark Trap, Dark Trap 2, Dark - Dark Beat), a different one each time the game opens.
 
 ### Characters
-- Current roster (12): Wednesday, Anti Hero, Lil Pink, Starscreen, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
+- Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
 - Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat still adds 20%.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
@@ -102,7 +102,7 @@ Last updated: 2026-11-24
 ## Part 2 – Never add back
 
 - Maps: Sky High helipad and rescue chopper (removed 24 Nov 2026). Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena, Club Night (removed 24 Nov 2026, with its deep house music), Backyard (removed 24 Nov 2026). (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
-- Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden, Gorillaz, Jet, Murda Medic, Spacebot, Crusty, Dracz (the last six removed 24 Nov). Character abilities.
+- Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden, Gorillaz, Jet, Murda Medic, Spacebot, Crusty, Dracz, Starscreen, Anti Hero (the last eight removed 24 Nov). Character abilities.
 - Weapons/items: the Flash Bang (removed 24 Nov), FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: all finishing moves (removed 24 Nov: Pancake, Heartbreaker, Roast, Combat, the F key and the Finish button), Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
@@ -122,7 +122,7 @@ Last updated: 2026-11-24
 - Stun stars half the size (and a little lower). Watching someone after you're out no longer judders/looks fuzzy (the camera now moves with their smoothed position).
 - Mansion: the side hedges (out of bounds) raised to the full height of the house (11 m), and the roof's side parapets to 2.6 m, so both are obvious.
 - Street Life: the home all yellow (black frame kept); the arcade's outside frames black like the home's, and loud dark clashing colours inside (red floor, electric-blue wall, deep purple ceiling/upstairs floor, loft lined blue/purple/teal/magenta).
-- 8 new characters added (North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic), and Crusty and Dracz removed completely; roster is now 12.
+- 8 new characters added (North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic), and Crusty, Dracz, Starscreen and Anti Hero removed completely; roster is now 10 (Wednesday, Lil Pink and the 8).
 - Bat now takes 3 hits to down (34 a hit, was 50), Rumble included.
 - Swarm pickup cut to 2 shots (one mag, two bursts of 4) and switched to hold Fire to aim, release to fire.
 - Gorillaz, Jet, Murda Medic and Spacebot removed completely (characters, skins, models, menu pictures, glows, faces, Jet's jetpack flames); the roster is Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty and Dracz.

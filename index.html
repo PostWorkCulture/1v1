@@ -1692,11 +1692,16 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #menu .mq-tip span::before{content:"\2022";color:#ff5aa8;margin-right:8px}
 #menu .mq-tip small{color:#8a8a8a;font-size:11.5px;margin-top:4px;white-space:normal}
 #menu .mqgrp:hover .mq-tip,#menu .mqgrp:focus-within .mq-tip{display:flex}
-/* map picker tiles are square (same width as before, taller), so more of each map shows; the box grows to fit and the column scrolls if it must */
+/* map picker tiles: square and sized so both rows always fit on screen (no scrolling); hovering a map shows a bigger picture of it (see mapPeek) */
 @media (min-height:521px){
 #menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{height:auto!important}
-#menu .mfull.duels[data-step="setup"] .mpick .mrg{flex:none;grid-template-rows:none!important;grid-auto-rows:auto}
-#menu .mfull.duels[data-step="setup"] .mpick .mrg-t{aspect-ratio:1/1;height:auto}}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg{--ts:min(calc((100vw - 140px - 4*10px)/var(--cols,5)),max(60px,calc((100vh - 482px)/2)),270px);flex:none;grid-template-columns:repeat(var(--cols,5),var(--ts));grid-template-rows:none!important;grid-auto-rows:var(--ts);justify-content:center}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg-t{aspect-ratio:auto;height:auto;width:auto}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap{padding:8px 22px 12px}#menu .mfull.duels[data-step="setup"] .mpick .mcar-cap .t{font-size:clamp(26px,2.6vw,38px)}}
+#map-peek{position:fixed;z-index:60;width:var(--pw,360px);aspect-ratio:1/1;border-radius:12px;overflow:hidden;pointer-events:none;opacity:0;transform:scale(.96);transition:opacity .14s ease,transform .14s ease;background:#16264b center/cover no-repeat;box-shadow:0 0 0 2px #fff,0 18px 50px rgba(3,7,18,.7)}
+#map-peek.on{opacity:1;transform:none}
+#map-peek b{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 11px;font:800 17px/1.1 Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(transparent,rgba(5,10,30,.85))}
+@media (hover:none),(max-height:520px){#map-peek{display:none}}
 </style>
 
 </head>
@@ -2084,7 +2089,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
         <button class="btn primary" id="dd-again">Rematch</button>
         <button class="btn" id="dd-map">Change map</button>
         <button class="btn" id="dd-load">Change loadout</button>
-        <button class="btn" id="dd-home">Home</button>
+        <button class="btn" id="dd-home">Menu</button>
         <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
       </div>
         <div class="dd-rp" id="dd-rp" hidden></div>
@@ -10491,7 +10496,7 @@ function startRound(){resetShoes();resetSwarm();S.elimT0=null;S.manDown=null;{co
 /* while the intro card covers the screen, compile every shader the map and the effects will need, so the first glass smash, blast or shot doesn't stall a frame */
 function warmShaders(){try{if(!GLS.geo){glassShatter({y0:-500},0,-500,0,.1,.1,.1,new V3(1,0,0));}const tmp=[];scene.traverse(o=>{if(o.isInstancedMesh&&o.material===GLS.mat)tmp.push(o);});
   renderer.compile(scene,camera);for(const o of tmp){o.visible=false;}}catch(e){console.warn('warm',e);}}
-function showIntro(){setTimeout(warmShaders,60);const el=$('d-intro'),pic=thumbs[S.map];$('in-pic').style.backgroundImage=pic?`url(${pic})`:'';$('in-chip').textContent=mapChip();$('in-t').textContent=MAPS[S.map].name;$('in-b').textContent=MAP_TAG[S.map]||MAPS[S.map].desc||'';
+function showIntro(){setTimeout(warmShaders,60);const el=$('d-intro'),pic=thumbs[S.map];$('in-pic').style.backgroundImage=pic?`url(${pic})`:'';{const id=S.map;setTimeout(()=>{if(S.map!==id||M.id!==id)return;const u=introShot();if(u&&S.map===id)$('in-pic').style.backgroundImage=`url(${u})`;},20);}$('in-chip').textContent=mapChip();$('in-t').textContent=MAPS[S.map].name;$('in-b').textContent=MAP_TAG[S.map]||MAPS[S.map].desc||'';
   el.classList.remove('out');el.hidden=false;for(const n of el.querySelectorAll('*')){n.style.animation='none';void n.offsetWidth;n.style.animation='';}}
 function hideIntro(now){const el=$('d-intro');if(!el||el.hidden)return;if(now){el.hidden=true;return;}if(!el.classList.contains('out')){el.classList.add('out');setTimeout(()=>{if(el.classList.contains('out'))el.hidden=true;},420);}}
 /* the mode shown under the map's name on the title card: 1v1, 2v2, Free for all or Rumble */
@@ -10738,7 +10743,7 @@ function endRound(winner,head){if(NET.role==='client'&&!NET.replay)return;if(S.s
 // time up: the side with the most health left (summed over its standing fighters) takes the round
 function timeUp(){if(NET.role==='client'&&!NET.replay)return;if(isDM()){const w=FS.slice().sort((a,b)=>(b.k||0)-(a.k||0)||(a.d||0)-(b.d||0))[0];dmWin(w);return;}const h=f=>f.alive&&!f.downed?(f.hp+(f.armor||0))/f.hpMax:0;const tot={};for(const f of FS)tot[f.team]=(tot[f.team]||0)+h(f);let best=-1,bv=-1,tie=false;
   for(const k in tot){if(tot[k]>bv+1e-6){bv=tot[k];best=+k;tie=false;}else if(Math.abs(tot[k]-bv)<=1e-6)tie=true;}endRound(tie||bv<=0?-1:best);}
-function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.hidden=!RP.clips.length;b.setAttribute('aria-expanded','false');$('dd-clipn').textContent=RP.clips.length;}if(document.pointerLockElement)document.exitPointerLock();const won=isDM()?S.lastWin===ME.team:S.score[ME.team]>=5;
+function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$('d-rend').hidden=true;$('dd-rp').innerHTML=RP.clips.length?rpButtons(RP.clips):'';$('dd-rp').hidden=true;{const b=$('dd-clips');b.hidden=!RP.clips.length||!!(isDM()?S.lastWin===ME.team:S.score[ME.team]>=5);b.setAttribute('aria-expanded','false');$('dd-clipn').textContent=RP.clips.length;}if(document.pointerLockElement)document.exitPointerLock();const won=isDM()?S.lastWin===ME.team:S.score[ME.team]>=5;
   const rk=S.players==='1v1'?S.diff:S.diff+':'+S.players;const r=S.record[rk]||[0,0];r[won?0:1]++;S.record[rk]=r;store.set('duel:record',S.record);
   const wt=isDM()?S.lastWin:S.score.findIndex(v=>v>=5),ld=f=>`${CHARS[f.char].name} (${GUNS[f.primary].name})`,al=FS.filter(f=>f!==ME&&!isFoe(ME,f)),en=FS.filter(f=>isFoe(ME,f));
   $('dd-title').textContent=won?'Victory':'Defeat';document.querySelector('#duel-done .dz').classList.toggle('lost',!won);$('dd-score').textContent=scoreLine();
@@ -10758,6 +10763,7 @@ function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$(
    const aw=[['Most kills',best(f=>f.k||0),v=>v],['Most assists',best(f=>f.as||0),v=>v],['Best accuracy',best(accOf),v=>Math.round(v*100)+'%']];
    $('dd-awards').innerHTML=rows.length>1?aw.map(([l,r,fmtv])=>`<div>${r?av(r[0]):'<span class="dzb-av"></span>'}<span><span class="lbl">${l}</span><b>${r?esc(nm(r[0]))+' · '+fmtv(r[1]):'–'}</b></span></div>`).join(''):'';}
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
+  /* after a win the choice is just Rematch or Menu (back to the main menu) */for(const id of ['dd-map','dd-load','dd-clips'])if($(id))$(id).hidden=!!won;
   $('duel-hud').hidden=true;$('duel-done').hidden=false;{const m=document.querySelector('#duel-done .dzb-main');if(m)m.scrollTop=0;}$('dd-again').focus({preventScroll:true});renderRecord();renderDuelMenu();startAutoHome(won);}
 // no choice on the end-of-match bar within 10 s (20 s after a win): back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
 const AUTO_HOME=10;let autoHomeT=null;
@@ -10942,21 +10948,23 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
 const HERO_CAM={mansion:[-.5,.55,.55,36],arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
-function shootThumb(id,keep){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
+function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */
-  const OW=1200,OH=1200,SS=2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
+  const OW=o?o.w:1200,OH=o?o.h:1200,SS=o?1:2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
   try{renderer.setPixelRatio(1);renderer.setSize(OW*SS,OH*SS,false);}catch(e){}
   scene.traverse(o=>{if(o.isDirectionalLight&&o.castShadow){saveSh.push([o,o.shadow.mapSize.x]);o.shadow.mapSize.set(2048,2048);/* 4096 was a big memory spike on every map picture */if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}});
-  camera.aspect=OW/OH;camera.fov=2*Math.atan(Math.tan(hc[3]*Math.PI/360)*16/9)*180/Math.PI;camera.position.set(c.x+r*hc[0],r*hc[1],c.z+r*hc[2]);camera.lookAt(c.x+r*.04,0,c.z-r*.06);camera.updateProjectionMatrix();sky.position.copy(camera.position);
-  placeSun({x:c.x,y:0,z:c.z});ME.ch.root.visible=false;BOT.ch.root.visible=false;if(M.thumb)M.thumb(true);renderer.render(scene,camera);if(M.thumb)M.thumb(false);
+  camera.aspect=OW/OH;camera.fov=2*Math.atan(Math.tan(hc[3]*Math.PI/360)*16/9/Math.max(1,OW/OH))*180/Math.PI;camera.position.set(c.x+r*hc[0],r*hc[1],c.z+r*hc[2]);camera.lookAt(c.x+r*.04,0,c.z-r*.06);camera.updateProjectionMatrix();sky.position.copy(camera.position);
+  placeSun({x:c.x,y:0,z:c.z});const hid=[];for(const f of [ME,BOT,...(typeof FS!=='undefined'?FS:[])])if(f&&f.ch&&f.ch.root.visible){f.ch.root.visible=false;hid.push(f);}if(M.thumb)M.thumb(true);renderer.render(scene,camera);if(M.thumb)M.thumb(false);
   const cv=document.createElement('canvas');cv.width=OW;cv.height=OH;const g=cv.getContext('2d');g.imageSmoothingQuality='high';const W=renderer.domElement.width,H=renderer.domElement.height;
   g.drawImage(renderer.domElement,0,0,W,H,0,0,OW,OH);
   const vg=g.createRadialGradient(OW/2,OH/2,OH*.35,OW/2,OH/2,OH*.95);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');g.fillStyle=vg;g.fillRect(0,0,OW,OH);
-  try{thumbs[id]=cv.toDataURL('image/jpeg',.88);}catch(e){}
-  if(mapPending().length)thumbsPartial.add(id);else thumbsPartial.delete(id);
+  if(o){try{o.url=cv.toDataURL('image/jpeg',.92);}catch(e){}}else{try{thumbs[id]=cv.toDataURL('image/jpeg',.88);}catch(e){}
+  if(mapPending().length)thumbsPartial.add(id);else thumbsPartial.delete(id);}
   for(const [o,sz] of saveSh){o.shadow.mapSize.set(sz,sz);if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}
   try{renderer.setPixelRatio(savePR);renderer.setSize(saveSz.x,saveSz.y,false);}catch(e){}
-  camera.aspect=saveA;camera.fov=saveF;camera.updateProjectionMatrix();ME.ch.root.visible=true;BOT.ch.root.visible=true;if(keep&&keep!==id)buildMap(keep);}
+  camera.aspect=saveA;camera.fov=saveF;camera.updateProjectionMatrix();for(const f of hid)f.ch.root.visible=true;if(!o&&keep&&keep!==id)buildMap(keep);}
+/* the map's loading picture: shot fresh at the screen's own size (up to 2560 px wide) from the same hero camera, so it's sharp instead of a blown-up menu picture */
+function introShot(){try{const dpr=Math.min(2,devicePixelRatio||1),w=Math.min(2560,Math.round(innerWidth*dpr)),h=Math.round(w*innerHeight/innerWidth),o={w,h};shootThumb(M.id,null,o);return o.url;}catch(e){console.warn('intro shot',e);return null;}}
 /* ================= weapon hero models (menu previews only) ================= */
 const HERO={
   sniper:{bg:['#0b0c0f','#24272e','#8a909c']},
@@ -12570,6 +12578,20 @@ $('m-quick').addEventListener('click',()=>{const c=q=>{const b=document.querySel
   c('#mode [data-mode="duels"]');c('#d-team [data-team="ffa"]');c('#d-ffan [data-n="4"]');c('#d-dmlen [data-len="5"]');
   S.randMap=S.randGun=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();});
 $('m-quick2').addEventListener('click',e=>{e.preventDefault();$('m-quick').click();});
+/* map peek: hover a map in the picker and a bigger picture of it appears beside the tile: on whichever side has room (right, left, else above/below),
+   kept fully on screen, never under the pointer (so it can't block the next tile you move to) */
+(()=>{const pk=document.createElement('div');pk.id='map-peek';pk.innerHTML='<b></b>';document.body.appendChild(pk);let cur=null;
+  const hide=()=>{cur=null;pk.classList.remove('on');};
+  document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest&&e.target.closest('#d-maps .mrg-t[data-map]');
+    if(!t){if(cur&&!(e.target.closest&&e.target.closest('#d-maps')))hide();return;}if(t===cur)return;const img=t.querySelector('img');if(!img||!img.src){hide();return;}
+    cur=t;const r=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,m=12,W=Math.round(Math.max(200,Math.min(420,vh*.5,vw*.34)));pk.style.setProperty('--pw',W+'px');
+    pk.style.backgroundImage=`url(${img.src})`;pk.querySelector('b').textContent=(MAPS[t.dataset.map]||{}).name||'';
+    let x,y;if(r.right+m+W<=vw-m)x=r.right+m;else if(r.left-m-W>=m)x=r.left-m-W;else{x=Math.min(vw-m-W,Math.max(m,r.left+r.width/2-W/2));}
+    if(x===r.right+m||x===r.left-m-W)y=Math.min(vh-m-W,Math.max(m,r.top+r.height/2-W/2));else y=r.top-m-W>=m?r.top-m-W:Math.min(vh-m-W,r.bottom+m);
+    pk.style.left=x+'px';pk.style.top=y+'px';pk.classList.add('on');},{passive:true});
+  document.addEventListener('pointerdown',hide,{passive:true,capture:true});addEventListener('scroll',hide,{passive:true,capture:true});addEventListener('blur',hide);
+  document.addEventListener('pointerleave',hide);new MutationObserver(()=>{if(cur&&!document.body.contains(cur))hide();}).observe($('menu'),{childList:true,subtree:true});})();
+
 $('d-start').addEventListener('click',()=>{const need=readyNeeds();if(need.length&&lobbyNeeds().length)menuStep(S.map?'char':'setup');if(need.length){const cols={map:'col1',character:'col2',gun:'col3',lethal:'col3'};for(const n of need){const el=$(cols[n.split(' ')[1]]);el.classList.add('need');setTimeout(()=>el.classList.remove('need'),1200);}return;}if(S.qr==='load'){if(S.qrRand){rollMap();S.randPre=S.map;}else if(S.randMap&&S.map)S.randPre=S.map;}startMatch();});
 $('mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode);});
 function showPV(v){document.querySelectorAll('#duel-pause .pv').forEach(p=>p.hidden=p.dataset.pv!==v);}

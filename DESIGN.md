@@ -119,13 +119,14 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Ziplines: 3 s cooldown after any ride (players and bots). Riders can be shot; a downing hit on the zipline kills outright and the body tumbles off, falls all the way and explodes where it lands.
 - Fixed invisible walls under staircases (Street Life's house and hospital, The Mansion, The House): stairs keep their solid blocks for walking, but shots, throws and sight now only meet the visible steps, so you can shoot under and between them.
 - Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.
 - Ziplines: stand on the pad at either end for 1.5 s to grab the handle (no jump); after a ride you step off the pad before it can take you back.
 - Rocket Launcher re-skinned as "Hellfire" (black-and-red horns) with matching rockets; lethals re-skinned as "Neon Arcade". Picked from four concepts each.
 - Vanguard re-finished in shiny mirror chrome (was gold, which clashed with the gold M4).
 - Stun stars removed completely (no stars, halo ring or sparks over a stunned or dazed player's head).
-- Street Life: a zipline from roof top to roof top (small deck on each ridge; stand on the pad for 1.5 s to grab (step off before you can ride back), about 1.7 s across, jump to let go; bots use it both ways); quiet original trap loop playing inside the arcade.
+- Street Life: a zipline from roof top to roof top (small deck on each ridge; stand on the pad for 1.5 s to grab (step off before you can ride back; 3 s cooldown after any ride, players and bots), can be shot while riding (killed outright: the body tumbles off along the cable, falls all the way and explodes where it lands), about 1.7 s across, jump to let go; bots use it both ways); quiet original trap loop playing inside the arcade.
 - Street Life: the arcade's two corner blade signs removed; the ARCADE board scrolls slowly left; arcade carpet, starry ceiling, memphis blue wall, posters, a HIGH SCORES board and a GAME ON sign inside; the two lorries restyled (SCOOPS ice-cream truck, GAME TRUCK).
 - Gold Bat made the obvious special one: brighter polished gold with glitter, a glow, twinkling stars, a gold swing arc and gold sparks on hits; gold name on the HUD.
 - Street Life arcade: the star on the ridge removed and the roof made black.

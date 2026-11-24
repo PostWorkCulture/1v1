@@ -6075,14 +6075,14 @@ const MAPS={
   M.spawns=[[9,18],[-9,-18],[28,19],[-28,-19],[29,-19],[-29,19],[-2,14],[2,-14],[20,13],[-20,-13]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Small freight yard split by a live line, with a footbridge over it',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A sleek, upmarket beach: a lit Tiki Bar, a hut at each end, lookout stairs and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
- house:{modes:['rumble'],name:'The House',desc:'Room-to-room fights round the furniture: glass partitions, colour-coded rooms and low walls to hop',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
+ house:{modes:['rumble'],name:'The House',desc:'Fast room-to-room fights: colour-coded rooms joined by wide doorways and open archways, with straight runs right through the house',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=5.8,T=.4,DH=3,GH=3,HOP=2.6;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const LS=layoutSnap();let TUB=null;/* laid out at 30 x 48 m, fitted to 30 x 40 m (Small size) at the end */
   floor(-70,70,-90,90,'#86a85a','meadow',-.02,7);
   /* walls: solid runs with openings. Every doorway is 3.2 m wide (two people side by side), glass runs are floor-to-3 m panes that a single
      bullet smashes, and hop runs are a low 2.6 m wall you can only clear by jumping off the furniture standing beside it.
      Each solid piece is recorded so the rooms can be painted on their own side */
   const SEG=[],GO={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false},FRM=mat('#2c3036',null,{metalness:.5,roughness:.4});
-  const Dr=(c,w=3.2)=>({a:c-w/2,b:c+w/2,k:'d'}),Gl=(a,b)=>({a,b,k:'g'}),Hp=(a,b)=>({a,b,k:'h'}),Wn=(c,w=2.4,y0=1,y1=2.7)=>({a:c-w/2,b:c+w/2,k:'w',y0,y1}),WINS=[];
+  const Dr=(c,w=4.4)=>({a:c-w/2,b:c+w/2,k:'d'}),Ar=(a,b)=>({a,b,k:'d'})/* an open archway: a gap with the wall carried over it at door height */,Gl=(a,b)=>({a,b,k:'g'}),Hp=(a,b)=>({a,b,k:'h'}),Wn=(c,w=2.4,y0=1,y1=2.7)=>({a:c-w/2,b:c+w/2,k:'w',y0,y1}),WINS=[];
   const W=(x0,z0,x1,z1,col,tx,fs)=>{const ax=Math.abs(x1-x0)>Math.abs(z1-z0),at=ax?z0:x0,a0=ax?Math.min(x0,x1):Math.min(z0,z1),a1=ax?Math.max(x0,x1):Math.max(z0,z1);
     const seg=(a,b,y0,y1)=>{if(b-a<.05||y1-y0<.05)return;const c=(a+b)/2,l=b-a;box(ax?c:at,y0,ax?at:c,ax?l:T,y1-y0,ax?T:l,col,{tx});SEG.push({ax,at,a,b,y0,y1});};
     const bar=(c,y0,y1)=>deco(new THREE.BoxGeometry(ax?.08:T+.04,y1-y0,ax?T+.04:.08),FRM,ax?c:at,(y0+y1)/2,ax?at:c).castShadow=false;
@@ -6112,14 +6112,16 @@ const MAPS={
   W(-X,-Z,-X,Z,ext,'redbrick',[Wn(-16.5,2,1.2),Wn(-9,2,1.25),Wn(0),Wn(17)]);W(X,-Z,X,Z,ext,'redbrick',[Wn(-18),Wn(-7.6,1.6),Wn(8.2,2),Wn(17)]);
   /* interior walls (plaster on top and in the door reveals) */
   const IN='#ece7de',PL='plaster';
-  W(-X,10,X,10,IN,PL,[Dr(-7.5),Gl(-5.5,-1.5),Hp(1.4,4.2),Dr(7.5)]);
-  W(0,10,0,Z,IN,PL,[Gl(11.4,14.6),Dr(17)]);
-  W(-X,-6,X,-6,IN,PL,[Hp(-14.8,-12.1),Dr(-9),Gl(-6,-2.5),Dr(2.5),Dr(10)]);
-  W(5,-6,5,10,IN,PL,[Dr(2),Gl(5.4,9.4)]);
-  W(-X,-12,X,-12,IN,PL,[Dr(-10.5),Dr(-3),Hp(1.6,4.6),Dr(7.5),Gl(9.6,12.6)]);
+  /* open flow (24 Nov): built for moving fast room to room. Every doorway is 4.4 m wide, and the old glass partitions and low hop walls are
+     open archways the same width or wider (wall carried over at door height), with short piers left at the wall junctions */
+  W(-X,10,X,10,IN,PL,[Dr(-8),Ar(-5.4,-1.5),Ar(.6,4.4),Dr(7.5)]);
+  W(0,10,0,Z,IN,PL,[Ar(10.6,14.2),Dr(17.2)]);
+  W(-X,-6,X,-6,IN,PL,[Ar(-14.6,-11.6),Dr(-9),Ar(-6.4,-2.5),Dr(2.5),Dr(10)]);
+  W(5,-6,5,10,IN,PL,[Dr(2),Ar(4.6,9.4)]);
+  W(-X,-12,X,-12,IN,PL,[Dr(-10.5),Dr(-3),Ar(.6,4.8),Dr(7.5),Ar(10.1,13.4)]);
   W(0,-12,0,-6,IN,PL,[Dr(-9)]);
-  W(-6,-Z,-6,-12,IN,PL,[Dr(-18),Hp(-15.4,-12.8)]);
-  W(0,-Z,0,-12,IN,PL,[Gl(-23.2,-20.2),Dr(-18)]);
+  W(-6,-Z,-6,-12,IN,PL,[Dr(-18),Ar(-15.3,-12.6)]);
+  W(0,-Z,0,-12,IN,PL,[Ar(-23.6,-20.6),Dr(-18)]);
   /* paint each room's side of its walls: textured upper wall, a darker dado below a rail at 1 m, and a skirting board */
   const skin=(r)=>{const [x0,x1,z0,z1,cu,tu,cl,tl]=r,mu=mat(cu,tu),ml=mat(cl,tl),rail=mat('#f4f1ea'),sk=mat('#3a3a40');
     for(const g of SEG){let fz,lo,hi,sgn;if(g.ax){if(Math.abs(g.at-z0)<.01)sgn=1;else if(Math.abs(g.at-z1)<.01)sgn=-1;else continue;lo=Math.max(g.a,x0+T/2);hi=Math.min(g.b,x1-T/2);}
@@ -6190,14 +6192,10 @@ const MAPS={
   /* (the car is added after the fit to size, below) */unit(box(-13.6,0,22,2,2.2,3.2,'#c8322a'),'+x',{drawers:5,col:'#c8322a'});box(-2,0,22.6,3.2,1,1.4,'#d0a060',{prop:'crate'});
   /* kid bedroom: bed, wardrobe in the corner, desk, and a toy chest against the low wall to hop into the living room */
   {const hb=FB(box(10,0,23.4,4,1.5,.4,'#f7c6d4',{tx:'stud'}));bed(FB(box(10,0,20.5,4,.7,6,'#f4f1ea',{tx:'panel'}),[hb]),'+z','#ff8fab');}unit(box(14.2,0,21.5,1.2,2.6,3.6,'#8ecae6'),'-x',{tall:1,n:2,col:'#8ecae6'});unit(FB(box(13,0,13.2,2.6,1.1,1.2,'#ffd166')),'-z',{drawers:3,n:1,col:'#ffd166',top:mat('#f4f1ea')});
-  unit(box(2.8,0,10.75,2.6,1.05,.7,'#4f7ad6'),'+z',{n:2,col:'#4f7ad6',top:mat('#ffd166')});
-  /* living room: sofa, coffee table, telly, plant, and a sideboard by each low wall */
-  {const bk=FB(box(-9,.9,0,7,.8,.6,'#a05ad6',{tx:'carpet'})),st=FB(box(-9,0,1,7,.9,2.2,'#a05ad6',{tx:'carpet'}));sofa(st,bk,'#a05ad6','#ffd166');
-   const ch=FB(box(-12.8,0,4,2.2,.9,4.6,'#a05ad6',{tx:'carpet'}));const fab=mat(shade('#a05ad6',1.08),'carpet');for(const zz of [3,5.1])kidM(ch,B.roundedBox(1.7,.18,2,.06),fab,-12.65,1.0,zz);kidM(ch,B.roundedBox(.34,.7,4.4,.1),mat(shade('#a05ad6',.92),'carpet'),-13.72,1.25,4);}
-  FB(box(-6.5,0,4.3,3.2,.5,1.8,'#7a4c2a',{tx:'wood'}));unit(FB(box(-12.3,0,8.9,4.6,1.1,1.1,'#3a3d45')),'-z',{n:4,col:'#3a3d45',top:mat('#b9895a','wood')});{const tv=FB(box(-12.3,1.1,9.2,3.4,1.9,.2,'#16171c',{extra:{roughness:.2,metalness:.5}}));
-   kidM(tv,new THREE.PlaneGeometry(3.2,1.72),new THREE.MeshBasicMaterial({map:liveTV(256,138,'show',3),toneMapped:false}),-12.3,2.05,9.08,Math.PI);}
-  box(-1.5,0,7.5,1.4,1.3,1.4,'#3bb54a',{prop:'bush'});
-  unit(box(2.8,0,9.3,2.6,1.05,.8,'#2f6f73'),'-z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});unit(box(-13.35,0,-5.35,2.4,1.05,.8,'#2f6f73'),'+z',{n:3,col:'#2f6f73',top:mat('#b9895a','wood')});
+    /* living room: sofa, coffee table, telly, plant, and a sideboard by each low wall */
+  {const bk=FB(box(-9,.9,0,7,.8,.6,'#a05ad6',{tx:'carpet'})),st=FB(box(-9,0,1,7,.9,2.2,'#a05ad6',{tx:'carpet'}));sofa(st,bk,'#a05ad6','#ffd166');}/* (no armchair: the west side of the living room is a clear run from the garage doorway to the kitchen archway) */
+  FB(box(-6.5,0,4.3,3.2,.5,1.8,'#7a4c2a',{tx:'wood'}));unit(FB(box(-12.75,0,8.9,3.9,1.1,1.1,'#3a3d45')),'-z',{n:4,col:'#3a3d45',top:mat('#b9895a','wood')});{const tv=FB(box(-12.75,1.1,9.2,3.2,1.9,.2,'#16171c',{extra:{roughness:.2,metalness:.5}}));
+   kidM(tv,new THREE.PlaneGeometry(3.0,1.62),new THREE.MeshBasicMaterial({map:liveTV(256,138,'show',3),toneMapped:false}),-12.75,2.05,9.08,Math.PI);}
   /* hallway / study (the shop stands against the living-room side of this wall) */
   /* (no desk in the study: it blocked the way between the dining-room and living-room doors) */unit(FB(box(13.9,0,-1,1,2.6,5,'#8a5a34')),'-x',{books:1,col:'#8a5a34'});/* a telly on a stand in the study's corner (by the living-room wall, under the landing), showing the imok1 channel; breakable like the others */
    {unit(FB(box(6.5,0,-5.35,2.4,.7,.75,'#2b2c31')),'+z',{n:2,col:'#2b2c31',top:mat('#b9895a','wood')});const tv2=FB(box(6.5,.7,-5.5,2.1,1.25,.14,'#16171c',{extra:{roughness:.2,metalness:.5}}));
@@ -6208,27 +6206,26 @@ const MAPS={
    {const px=6.1,pz=-4.9,y=3.4;box(px,y,pz,.55,.5,.55,'#e9e6df',{edges:false});deco(gC(.24,.2,.06,12),mat('#5a3a22'),px,y+.52,pz).castShadow=false;
     const lf=mat('#3f9a48',null,{roughness:.6}),lf2=mat('#5cbf5a',null,{roughness:.6});for(let i=0;i<9;i++){const a=i/9*Math.PI*2,r=i%3?.18:.05,l=deco(new THREE.SphereGeometry(.17+(i%3)*.03,10,8),i%2?lf:lf2,px+Math.cos(a)*r,y+.68+(i%3)*.16,pz+Math.sin(a)*r);l.scale.set(1,1.3,1);}}S.stairs(6.2,-1,11.2,14.8,0,10,.34,.42,'#8a5a34',true);
    S.box(5.25,11.2,1.85,2.0,3.4,4.4,'#ffffff');S.box(5.25,5.45,-5.8,2.0,3.4,4.4,'#ffffff');}
-  /* kitchen: the worktop runs up to the low wall, so you can hop from it into the living room */
-  {const wt=mat('#2b2d33',null,{roughness:.35,metalness:.2});const ct=box(-14.2,0,-8.6,1.2,1.1,4.4,'#ffffff');unit(ct,'+x',{n:5,col:'#ffffff',top:wt});kidM(ct,new THREE.BoxGeometry(.6,.03,.9),chrome,-14.2,1.14,-7.6);kidM(ct,gC(.03,.03,.4,8),chrome,-14.6,1.33,-7.6);
-   unit(box(-5.5,0,-9,4,1.1,1.6,'#e8463a'),'+z',{n:4,col:'#e8463a',top:mat('#f4f2ee','tile')});unit(box(-11.35,0,-6.85,1.4,2.6,1.3,'#d6dbe2'),'-z',{tall:1,n:2,col:'#d6dbe2'});
+  /* kitchen: a short worktop under the window, the fridge in the corner and the cooker against the bathroom wall */
+  {const wt=mat('#2b2d33',null,{roughness:.35,metalness:.2});const ct=box(-14.2,0,-9.25,1.2,1.1,2.5,'#ffffff');unit(ct,'+x',{n:3,col:'#ffffff',top:wt});kidM(ct,new THREE.BoxGeometry(.6,.03,.9),chrome,-14.2,1.14,-9);kidM(ct,gC(.03,.03,.4,8),chrome,-14.6,1.33,-9);
+   /* (no island: the kitchen is a crossroads of six openings, kept clear for running through) */unit(box(-14.15,0,-11.2,1.3,2.6,1.4,'#d6dbe2'),'+x',{tall:1,n:2,col:'#d6dbe2'});
    const ck=box(-6.2,0,-11.2,1.2,1.1,1.2,'#3a3d45');unit(ck,'+z',{n:1,col:'#3a3d45',top:wt});for(const [dx,dz] of [[-.28,-.25],[.28,-.25],[-.28,.25],[.28,.25]])kidM(ck,new THREE.TorusGeometry(.13,.025,6,16),mat('#16171c'),-6.2+dx,1.17,-11.2+dz).rotation.x=Math.PI/2;}
   /* dining: table and chairs, a tall cabinet, and a sideboard under the low wall to the bedroom */
-  FB(box(6.8,0,-9,4.2,1.05,1.4,'#7a4c2a',{tx:'wood'}));for(const sx of [-1.4,0,1.4])box(6.8+sx,0,-8,.8,1.6,.5,'#c99a5b');/* chairs on the north side only, so the way to the bedroom door stays clear */unit(box(13.8,0,-10.45,1.2,2.4,2.5,'#3a3d45'),'-x',{tall:1,n:2,col:'#3a3d45'});
-  unit(box(3.1,0,-11.35,2.8,1.05,.8,'#6e3b2a',{tx:'panel'}),'+z',{n:3,col:'#6e3b2a',top:mat('#3a2414','wood')});
+  /* (no dining table or chairs: the room is a crossroads of seven openings, kept clear for running through) */unit(box(13.8,0,-10.45,1.2,2.4,2.5,'#3a3d45'),'-x',{tall:1,n:2,col:'#3a3d45'});
   /* bathroom + laundry: a vanity unit and a laundry cupboard either side of the low wall between them */
   {/* the bath is a real tub: a 1 m rim round a low floor, filled with water you can jump into and splash about in (jump to get out) */
    const RT=.2,bx0=-14.5,bx1=-9.5,bz0=-23,bz1=-20.6,tw=mat('#fbfbfb',null,{roughness:.25});TUB=box((bx0+bx1)/2,0,(bz0+bz1)/2,bx1-bx0-2*RT,.2,bz1-bz0-2*RT,'#eef6f8',{tx:'wtile'});
    for(const [x,z,w,d] of [[(bx0+bx1)/2,bz0+RT/2,bx1-bx0,RT],[(bx0+bx1)/2,bz1-RT/2,bx1-bx0,RT],[bx0+RT/2,(bz0+bz1)/2,RT,bz1-bz0-2*RT],[bx1-RT/2,(bz0+bz1)/2,RT,bz1-bz0-2*RT]])box(x,0,z,w,1,d,'#ffffff',{mat:tw});
    deco(gC(.04,.04,.35,8),chrome,-14.4,1.17,-21.8);deco(new THREE.BoxGeometry(.3,.05,.06),chrome,-14.3,1.33,-21.8);
-   const vn=box(-6.75,0,-14.1,.9,1.05,2.2,'#ffffff');unit(vn,'-x',{n:2,col:'#ffffff',top:mat('#d9d4c8','slab')});kidM(vn,gC(.3,.22,.12,16),mat('#fbfbfb'),-6.75,1.12,-14.1);
-   for(const x of [-3,-1.4]){const wm=box(x,0,-22.6,1.6,1.4,1.4,'#e9eaee');kidM(wm,new THREE.TorusGeometry(.42,.06,8,24),chrome,x,.68,-21.88);kidM(wm,new THREE.CircleGeometry(.4,24),mat('#2b3a4a',null,{roughness:.1,metalness:.4}),x,.68,-21.89);kidM(wm,new THREE.BoxGeometry(1.4,.18,.02),mat('#c9cdd2'),x,1.25,-21.89);}
-   unit(box(-5.25,0,-14.1,.9,1.05,2.2,'#9b8ad0'),'+x',{n:2,col:'#9b8ad0',top:mat('#f4f1ea')});}
+   const vn=box(-14.35,0,-14.1,.9,1.05,2.2,'#ffffff');unit(vn,'+x',{n:2,col:'#ffffff',top:mat('#d9d4c8','slab')});kidM(vn,gC(.3,.22,.12,16),mat('#fbfbfb'),-14.35,1.12,-14.1);
+   for(const x of [-4.6,-3]){const wm=box(x,0,-22.6,1.6,1.4,1.4,'#e9eaee');kidM(wm,new THREE.TorusGeometry(.42,.06,8,24),chrome,x,.68,-21.88);kidM(wm,new THREE.CircleGeometry(.4,24),mat('#2b3a4a',null,{roughness:.1,metalness:.4}),x,.68,-21.89);kidM(wm,new THREE.BoxGeometry(1.4,.18,.02),mat('#c9cdd2'),x,1.25,-21.89);}}
   /* master bedroom: bed, wardrobe, and a blanket chest under the low wall to the dining room */
-  {const hb=FB(box(7.5,0,-23.4,5,1.6,.4,'#3d4f7a',{tx:'stud'}));bed(FB(box(7.5,0,-20.5,5,.8,5.5,'#6b4a33',{tx:'panel'}),[hb]),'-z','#2f7fe0');}unit(box(13.6,0,-14,1.6,2.8,3.2,'#8a5a34',{tx:'panel'}),'-x',{tall:1,n:3,col:'#8a5a34'});unit(box(3.1,0,-12.65,2.8,1.05,.8,'#8c4a63'),'-z',{n:2,col:'#8c4a63',top:mat('#f4f1ea')});
+  {const hb=FB(box(7.5,0,-23.4,5,1.6,.4,'#3d4f7a',{tx:'stud'}));bed(FB(box(7.5,0,-20.5,5,.8,5.5,'#6b4a33',{tx:'panel'}),[hb]),'-z','#2f7fe0');}unit(box(13.6,0,-22.2,1.6,2.8,3.2,'#8a5a34',{tx:'panel'}),'-x',{tall:1,n:3,col:'#8a5a34'});
   M.shopAt=[{x:4.1,z:-1.7,q:3}];M.spawns=[[7.5,15],[-9,-17],[-10,5],[8,5],[-3,-9],[9,-15],[-10,21],[3,19]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));
   layoutRemap(LS,x=>[x,1],z=>Math.abs(z)<=24?[z*20/24,20/24]:[z-4*Math.sign(z),1]);M.bounds={x0:-15,x1:15,z0:-20,z1:20};
   /* no explosive drums in or beside a doorway, at the foot or top of the stairs, or by the low hop walls */
-  M.noDrums=[[-7.5,10],[7.5,10],[-9,-6],[2.5,-6],[10,-6],[-10.5,-12],[-3,-12],[7.5,-12],[0,17],[5,2],[0,-9],[-6,-18],[0,-18],[13,7.4],[13,1.2],[2.8,10],[-13.4,-6],[3.1,-12],[-6,-14.1]].map(([x,z])=>({x,z:z*20/24,r:3}));
+  /* no explosive drums in or beside any doorway or archway, at the foot or top of the stairs */
+  M.noDrums=[[-8,10],[-3.5,10],[2.5,10],[7.5,10],[0,12.4],[0,17.2],[-13.1,-6],[-9,-6],[-4.5,-6],[2.5,-6],[10,-6],[5,2],[5,7],[-10.5,-12],[-3,-12],[2.7,-12],[7.5,-12],[11.8,-12],[0,-9],[-6,-18],[-6,-14],[0,-22.1],[0,-18],[13,7.4],[13,1.2]].map(([x,z])=>({x,z:z*20/24,r:3.2}));
   /* the bath water: wade and splash in the tub (its floor is low enough to count as standing in water) */
   {const WY=.72,b=TUB,wm=new THREE.MeshStandardMaterial({color:'#7fd3ec',map:TX.ripple,transparent:true,opacity:.6,roughness:.06,metalness:.1,emissive:'#2b8fb5',emissiveIntensity:.18,depthWrite:false});
    const wg=new THREE.PlaneGeometry(b.x1-b.x0,b.z1-b.z0);wg.rotateX(-Math.PI/2);const wa=new THREE.Mesh(wg,wm);wa.position.set((b.x0+b.x1)/2,WY,(b.z0+b.z1)/2);wa.renderOrder=3;wa.userData.dyn=1;M.group.add(wa);

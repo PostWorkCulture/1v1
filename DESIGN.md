@@ -114,14 +114,11 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
-<<<<<<< Updated upstream
 - Street Life home: plain floors downstairs (flat stone-beige living room, plain pale stone kitchen/dining; the patterned carpet, rugs and chequered tiles are gone).
 - Street Life's vans made static: they stay parked (still damageable, burn out, back next round).
-=======
 - Sights: ARs (AKM, M4) both get the twin steel-blade sight; MP5, Vector, UMP and Dual Pistols get the round ring sight (UMP micro dot and Vector holo removed).
 - Aim button removed: holding Fire aims down sights; snipers hold Fire to scope, release to fire, on desktop too. Touch Aim button, right-click aim and the Aim-when-firing setting removed.
 - Simple rules (Normal/Simple row for 1v1 and 2v2) removed.
->>>>>>> Stashed changes
 - Hospital lighting thinned out (it was too much): ceiling panels about a third as many with softer glows, fewer and dimmer real lights.
 - Street Life downsized to Big (70 × 50 m): the 4 side buildings removed, and the hospital and home cut to 2 floors (middle floor removed; the loft room and terrace sit on the ground floor); buildings scaled to fit, narrower road, trees, lamps and spawns moved in.
 - One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, a clear gap, then the lethals, no tabs. Swarm and Flamethrower now stand in for your gun.

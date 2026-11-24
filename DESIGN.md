@@ -65,7 +65,7 @@ Last updated: 2026-11-24
 - The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
-- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers hold Fire to scope and fire on release, right click only cancels a held scope. No touch Aim button, no right-click aim, no "Aim when firing" setting.
+- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers and the Rocket Launcher hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
@@ -115,6 +115,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Rocket Launcher joins the snipers on hold Fire to aim, release to fire (desktop and phone).
 - Player speed cut by 25% for everyone, players and bots (running about 9.5 m/s, was 12.7).
 - SMG sights (MP5, Vector, UMP) get a blue dot.
 - Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.

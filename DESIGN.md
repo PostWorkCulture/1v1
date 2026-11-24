@@ -62,7 +62,7 @@ Last updated: 2026-11-24
 - The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
 - The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 40% faster with the bat out (not in Rumble) and it swings twice as quick (every 0.275 s); ADS with the bat does nothing; it downs in 3 hits (34 a hit, Rumble too). No fists anywhere.
-- Bat colours: every spawn you get one of six bats at random, same shape: classic white and red, Gold, Toxic (neon green and purple), Candy (pink, yellow, cyan), Galaxy (starry purple) and Lava (black with glowing cracks). The Gold Bat is the lucky one: 50 a hit, downs in 2. Your bat's colour shows on the HUD.
+- Bat colours: every spawn you get one of six bats at random, same shape: classic white and red, Gold, Toxic (neon green and purple), Candy (pink, yellow, cyan), Galaxy (starry purple) and Lava (black with glowing cracks). The Gold Bat is the lucky one and must look it: bright polished gold with glitter flecks, a warm glow, little stars twinkling all over it, a gold swing arc with glitter and a shower of gold on every hit; its name glows gold on the HUD. 50 a hit, downs in 2. Your bat's colour shows on the HUD.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
@@ -115,6 +115,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Gold Bat made the obvious special one: brighter polished gold with glitter, a glow, twinkling stars, a gold swing arc and gold sparks on hits; gold name on the HUD.
 - Street Life arcade: the star on the ridge removed and the roof made black.
 - Bat: 40% speed boost while held (was 20%) and swings twice as quick. Six bat colours at random each spawn; the Gold Bat downs in 2, the rest in 3.
 - Throwables smash through any glass without bouncing or going off; thrown grenades set off barrels and mines anywhere in their blast; Gold Grenade blast twice as big with a slight screen shake; Flamethrower more powerful (6 a tick, 16 m, wider jet, 3 s fuel, harder burn).

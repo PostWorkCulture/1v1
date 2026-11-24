@@ -104,6 +104,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Mines after you die (24 Nov 2026)** – in modes where you respawn, any mines you laid before you died quietly disappear 3 seconds after you come back; mines you lay after respawning stay as normal.
+
 **Sights (24 Nov 2026)** – two sights only: the ARs (AKM, M4) wear the twin steel-blade sight and the SMGs (MP5, Vector, UMP, with a blue dot) and the Dual Pistols (red dot) the round ring sight, on the gun in the world, in the menu previews and when aiming. The UMP's old micro red dot and the Vector's holo box were removed; the Dual Pistols keep their twin aim view.
 
 **No aim button (24 Nov 2026)** – there's no separate aim control any more: holding Fire (left click, or the touch Fire button) aims down sights while it shoots, and snipers, the Rocket Launcher and the Swarm hold Fire to aim in and fire on release (the ✕ under the crosshair, or right click, cancels without firing). The touch Aim button, right-click aim and the "Aim when firing" setting are gone; right click only cancels a held sniper scope.

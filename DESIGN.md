@@ -121,6 +121,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Mines laid before you die disappear 3 s after you respawn (mines laid after respawning stay).
 - Smoother strafing: hips turn towards the way you're going and the legs run that way with the chest still on aim, so legs no longer cross and wobble; shoes stay level on the floor instead of dipping through it (forward running too).
 - Ziplines: 1 s on the pad to grab (was 1.5 s), with a small "Zipline in 0.6s" countdown pop-up while you wait.
 - Character menu pictures re-rendered for all 10 at high res (picker tile 512 px, full body 960 x 1216, face 360 px) with transparent backgrounds: no black squares behind the characters on the dark blue tiles or scoreboard avatars.

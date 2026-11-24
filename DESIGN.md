@@ -13,7 +13,7 @@ How to use it:
 
 Updating: a scheduled task adds the day's entry to Part 3 (and adjusts Parts 1–2) at the end of each day, from that day's commits. Chats that make a design decision can also update it in the same commit. Pushing only this file does not redeploy the game.
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 ---
 
@@ -48,13 +48,13 @@ Last updated: 2026-11-23
 - **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
 
 ### Modes
-- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only, Collection.
+- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only.
 - Simple = fixed M4, knife (replaced the sword), grenades; no loadout screen.
 - Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
 - Rumble: fists only, no armour; bat and Speed Shoes pickups appear 10 s into each round.
 - Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + fists/melee + throwables; Sentry stays.
 - Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
-- Collection (The Mansion only, 8 players): start outside with fists; find SMGs/pistols (20 bullets, no reload) and bats; collect 10 stars and cash in at the shop on the front lawn, first to cash in wins; each star taken is replaced at once by one 12+ m away; going down costs 2 stars, dying loses them all; leaderboard shows stars; anyone on 8+ stars is outlined through walls and marked on every minimap; bots only go for stars/weapons they've seen and otherwise search room to room.
+- Collection is not part of this game: it was taken out on 24 Nov 2026 to be rebuilt as its own project in a separate folder and GitHub repo. Its last version here is tagged `collection-v1` (rules then: The Mansion, 8 players, start with fists, find SMGs/pistols/bats, 10 stars to win, cash in at the shop, going down costs 2 stars, dying loses all, 8+ stars outlined through walls and marked on minimaps). Don't add it back to imok 1v1.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
 
 ### Weapons
@@ -107,6 +107,9 @@ Last updated: 2026-11-23
 ---
 
 ## Part 3 – Daily log (newest first)
+
+### 2026-11-24
+- Collection mode removed from imok 1v1 (menu, code, README) to be rebuilt as a separate project; last version tagged `collection-v1`.
 
 ### 2026-11-23
 - Gold Armour lethal removed from the game (shop armour, plates and Gold Grenade unchanged).

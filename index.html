@@ -3337,7 +3337,9 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
   document.addEventListener('DOMContentLoaded',sync);sync();
   window.SFX={play,stop,bed,setVol,setWVol,setSVol,get wvol(){return wvol;},get svol(){return svol;},get vol(){return vol;},get ready(){return !!ctx;}};
   /* background music: dark trap tracks from Pixabay (Pixabay Content Licence) on the menu, between rounds and at match end */
-  const TRACKS={menu:'music/menu.mp3',rounds:'music/rounds.mp3',matchend:'music/matchend.mp3'};
+  /* the menu song rotates each time the game opens: Dark Trap, Dark Trap 2 (APALONBeats), Dark - Dark Beat (vaitsez) - never the same one twice in a row */
+  const MENUS=['music/menu1.mp3','music/menu2.mp3','music/menu3.mp3'];let mi=0;try{const p=parseInt(localStorage.getItem('blockrush:menuSong'),10);mi=isNaN(p)?(Math.random()*MENUS.length|0):(p+1)%MENUS.length;localStorage.setItem('blockrush:menuSong',String(mi));}catch(e){mi=Math.random()*MENUS.length|0;}
+  const TRACKS={menu:MENUS[mi],rounds:'music/rounds.mp3',matchend:'music/matchend.mp3'};
   let mvol=.5,cur=null,blocked=false;const el={};
   try{const v=JSON.parse(localStorage.getItem('blockrush:musvol')||'null');if(typeof v==='number')mvol=Math.max(0,Math.min(1,v));}catch(e){}
   function audio(k){if(!el[k]){const a=new Audio(TRACKS[k]);a.loop=true;a.preload='auto';a.volume=0;a._g=0;el[k]=a;}return el[k];}

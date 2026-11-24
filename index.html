@@ -3701,7 +3701,7 @@ function townLife(cars,o){const R=Math.random;
   for(const c of cars)c.restore=()=>{burnCar(c,false);move(c,c.home-c.z);for(const b of c.boxes){b.mover=true;if(!M.boxes.includes(b))M.boxes.push(b);if(!M.movers.includes(b))M.movers.push(b);dirtyGrid(b,.05);}for(const m of c.parts)m.visible=true;c.alive=true;c.hp=null;c.hits=0;c.state='park';c.wait=6+R()*10;c.v=0;c.blur.opacity=0;MM.layer=null;};
   M.life.push((t,dt)=>{for(const c of cars){
     if(!c.alive)continue;
-    if(c.state==='park'){c.wait-=dt;if(c.wait<=0){let tz;for(let k=0;k<6;k++){tz=(R()*2-1)*o.zLim;if(Math.abs(tz-c.z)>10)break;}c.target=tz;c.vmax=4+R()*9;c.state='drive';}continue;}
+    if(c.state==='park'){if(o.still)continue;/* parked for good (Street Life's vans don't drive, 24 Nov) */c.wait-=dt;if(c.wait<=0){let tz;for(let k=0;k<6;k++){tz=(R()*2-1)*o.zLim;if(Math.abs(tz-c.z)>10)break;}c.target=tz;c.vmax=4+R()*9;c.state='drive';}continue;}
     const dir=Math.sign(c.target-c.z),left=Math.abs(c.target-c.z);
     const want=Math.min(c.vmax,Math.sqrt(2*5*left));c.v+= (want>c.v?7:-12)*dt;c.v=clamp(c.v,0,c.vmax);
     let dz=dir*c.v*dt;if(Math.abs(dz)>left)dz=dir*left;
@@ -4011,8 +4011,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       for(let r=1;r<4;r++){const yy=y+r*h/4;kid(b,gB(w+.02,.04,d+.02),'#5b3a1e',u,v,yy);
         for(let i=0;i<6;i++){const t=((i+.5)/6-.5)*(len-.3),bw=.12+pr()*.1,bh=.22+pr()*.12;kid(b,gB(alongU?bw:dep*.8,bh,alongU?dep*.8:bw),bc[(i+r)%7],u+(alongU?u2(t):0),v+(alongU?0:u2(t)),yy+.02+bh/2);}}return b;};
     /* ---- ground floor: carpet through the living room, a big rug under the sofa set, the telly on the half-wall ---- */
-    S.floor(-5.85,-.13,-5.35,5.35,.025,'#c9b79c','carpet');
-    rug(-2.1,3.3,.035,8.2,7.4,rugTex('#8a8580','#d8d2c8','#b5aea3'));rug(-3.2,-3.1,.035,6.0,5.0,rugTex('#6f7378','#cfcac2','#a9a49c'));
+    S.floor(-5.85,-.13,-5.35,5.35,.025,'#cdc5b8',null);/* (24 Nov: plain, no carpet pattern or rugs downstairs) */
     /* everything stands back against the walls so the middle of each room is open floor */
     sofa(-5.35,3.6,3.0,'u+','#5a6b8c','#6f82a6');cushion(-5.55,3.0,.5,'#f4c22b');cushion(-5.55,4.2,.5,'#e8463a');sofa(-1.9,5.0,2.4,'v-','#5a6b8c','#6f82a6');cushion(-1.6,5.2,.5,'#e9c46a');
     armchair(-4.3,5.0,'v-','#b5523b','#c96a50');
@@ -4042,7 +4041,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
       for(const [du,dv] of [[-.4,-.6],[-.4,.6],[.3,-.6],[.3,.6]])N(TU+u2(du),TV+u2(dv),.77,.24,.02,.24,'#ffffff',{cyl:1,seg:14});N(TU,TV,.77,.1,.26,.1,'#8ecae6',{cyl:1,top:.6});N(TU+.05,TV+.2,.77,.12,.2,.12,'#e9c46a',{cyl:1,parts:[[new THREE.IcosahedronGeometry(.09,0),'#ff8fab',0,.15,0]]});}
     {const il=fur(2.4,3.7,0,3.0,.95,1.0,'#f3efe6',130);kid(il,gB(3.1,.05,1.1),'#3a3d45',2.4,3.7,.97);N(2.0,3.7,.97,.3,.12,.3,'#c4693d',{cyl:1});N(2.9,3.75,.97,.16,.28,.16,'#f4f5f7',{cyl:1,top:.6});
       for(const du of [-.9,0,.9])N(2.4+u2(du),3.7-u2(.85),0,.36,.72,.36,'#2b2d33',{cyl:1,top:1.1,parts:[[gC(.2,.2,.06,12),'#b5523b',0,.36,0]]});}
-    rug(4.6,-1.45,.035,3.6,5.2,rugTex('#9a948b','#e4dfd6','#c2bbb0'));
+    /* (no dining rug: plain floors downstairs) */
     plant(5.45,-4.9,0,1.0);
     if(!TWO){/* (two storeys: no first floor) */
     /* ---- upstairs: carpet, a double bedroom on one side and a kid's room on the other (both clear of the walk-out windows) ---- */
@@ -4062,7 +4061,7 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     /* ---- the loft: a den with beanbags, a rug and a bookshelf ---- */
     /* modern floors: chequered tiles through the kitchen and dining room, grey-washed oak boards across the upstairs landing, and the terrace
        (the centrepiece) in patterned blue-and-terracotta encaustic tiles inside a terracotta border, with a plant in each corner */
-    S.floor(-.13,5.85,-5.35,5.35,.026,'#ffffff','chequer');S.floor(.6,5.85,-2.25,5.35,F+.026,'#ffffff','greyoak');S.floor(4.85,5.85,-5.35,-2.25,F+.026,'#ffffff','greyoak');
+    S.floor(-.13,5.85,-5.35,5.35,.026,'#e2ded6',null);/* plain pale stone downstairs (was chequered) */S.floor(.6,5.85,-2.25,5.35,F+.026,'#ffffff','greyoak');S.floor(4.85,5.85,-5.35,-2.25,F+.026,'#ffffff','greyoak');
     {const y=DIM.L+.026,bw=.32;if(TWO){const u0=-5.85+bw,u1=-.15-bw,v0=-5.35+bw,v1=5.35-bw,g0=-3.56,g1=-.94,h0=-1.31,h1=1.31;/* round the glass square */
         S.floor(u0,u1,v0,h0,y,'#ffffff','encaustic');S.floor(u0,u1,h1,v1,y,'#ffffff','encaustic');S.floor(u0,g0,h0,h1,y,'#ffffff','encaustic');S.floor(g1,u1,h0,h1,y,'#ffffff','encaustic');}
       else S.floor(-5.85+bw,-.15-bw,-5.35+bw,5.35-bw,y,'#ffffff','encaustic');
@@ -6063,9 +6062,9 @@ const MAPS={
   for(const z of [-13,13])for(const x of [-X-1.6,X+1.6])streetLamp(x,z);
   {const g=scenery('balloon',0,-100,0,22);M.life.push(t=>{const a=t*.03;g.position.set(Math.sin(a)*100,21+Math.sin(t*.21)*2.5,-Math.cos(a)*100);g.rotation.y=t*.05;});}
   /* a wrecked van stays a burnt-out shell until the next round */
-  /* just two vans on the road: the white one and a light grey one (the same model, tinted) */
+  /* just two vans parked on the road (they never move): the white one and a light grey one (the same model, tinted) */
   const cars=[car(-3.4,-10,false,'','truck'),car(3.4,13,false,'#c3c7cd','truck')];
-  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:16});
+  townLife(cars,{x0:-X,x1:X,z0:-Z,z1:Z,zLim:16,still:1});/* the vans stay parked: they still take damage, burn out and come back next round */
   /* everything loose or solid inside can be moved and broken: furniture, people and bins slide when shot or blasted (back in place next round),
      and the loose bits (chairs, plants, drips, cups, the wheelchair...) smash once they've taken enough */
   for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;

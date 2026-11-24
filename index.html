@@ -7671,14 +7671,21 @@ function updFlames(dt){FLAME.upd(dt,camera,renderer.domElement.height);let best=
 /* ================= characters ================= */
 const CHARS={
   ghost:{skin:'shroud',fx:['Freeze','Tornado'],name:'Starscreen',hp:100,look:{shirt:'#dfe9f2',shirtSolid:'#9fb3c8',hair:'#9fd3f0'},color:'#9fd3f0'},
-  crusty:{skin:'crusty_clown',fx:['Balloon','Firework'],name:'Crusty',hp:100,look:{shirt:'#2fae4a',shirtSolid:'#1f7a33',hair:'#8a2be2'},color:'#e8322a'},
   wednesday:{skin:'wed_goth',fx:['Black hole','Disco'],name:'Wednesday',hp:100,look:{shirt:'#18181c',shirtSolid:'#0e0e10',hair:'#1a1012'},color:'#d0202a'},
   antihero:{skin:'anti_hero',fx:['Tornado','Firework'],name:'Anti Hero',hp:100,look:{shirt:'#2f7a3a',shirtSolid:'#8a1a12',hair:'#b59a4a'},color:'#2f9a46'},
-  dracula:{skin:'dracula_vamp',fx:['Black hole','Spirit'],name:'Dracz',hp:100,look:{shirt:'#3a2350',shirtSolid:'#2a1838',hair:'#1a1420'},color:'#c4122e'},
   lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'},
+  /* the Nov 24 cast: Tripo models in Lil Pink's and Wednesday's blocky style, on the same six-part rig */
+  neonrave:{skin:'neonrave_m',fx:['Lightning','Disco'],name:'North West',hp:100,look:{shirt:'#16161a',shirtSolid:'#16161a',hair:'#2e7bff'},color:'#2e8bff'},
+  spike:{skin:'spike_m',fx:['Firework','Brick burst'],name:'Johnny Rotten',hp:100,look:{shirt:'#141416',shirtSolid:'#141416',hair:'#141416'},color:'#e0202a'},
+  bun:{skin:'bun_m',fx:['Balloon','Rainbow beam'],name:'Emo Bunny',hp:100,look:{shirt:'#b79cff',shirtSolid:'#b79cff',hair:'#f2f2f2'},color:'#b79cff'},
+  glitch:{skin:'glitch_m',fx:['Black hole','Lightning'],name:'Glitch',hp:100,look:{shirt:'#141416',shirtSolid:'#141416',hair:'#eeeeee'},color:'#1fd6ff'},
+  kitty:{skin:'kitty_m',fx:['Spirit','Disco'],name:'Kitty',hp:100,look:{shirt:'#141416',shirtSolid:'#141416',hair:'#c6a6ff'},color:'#a77bff'},
+  puffer:{skin:'puffer_m',fx:['Gold statue','Firework'],name:'Puffa',hp:100,look:{shirt:'#ffd21a',shirtSolid:'#ffd21a',hair:'#141416'},color:'#ffd21a'},
+  raven:{skin:'raven_m',fx:['Spirit','Black hole'],name:'Raven',hp:100,look:{shirt:'#141416',shirtSolid:'#141416',hair:'#0e0e10'},color:'#d0202a'},
+  toxic:{skin:'toxic_m',fx:['Freeze','Tornado'],name:'Toxic',hp:100,look:{shirt:'#141416',shirtSolid:'#141416',hair:'#2fb52f'},color:'#5dff3a'},
   roboid:{dev:true/* Test Arena only (?test): not in the menu, Random or the bots */,skin:'black_roboid',fx:['Lightning','Black hole'],name:'Shadow',hp:100,look:{shirt:'#16161a',shirtSolid:'#0c0c0e',hair:'#0c0c0e'},color:'#e0202a'}};
 const ABIL_KILL={crush:'crushed',fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain'};
-const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))].filter(k=>!CHARS[k].dev); // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
+const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','neonrave','spike','bun','glitch','kitty','puffer','raven','toxic'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))].filter(k=>!CHARS[k].dev); // menu order: Wednesday, Anti Hero, Lil Pink, Starscreen, then the Nov 24 cast (North West to Toxic)
 function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
 /* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or
    mouths a skin used to stick on top are removed, so features never double up. mode 'smirk' is the crowning close-up. */
@@ -7805,11 +7812,11 @@ function glbTree(id,x,z,h,ry=0,tw=.7){const th=Math.min(3,h*.35),b=box(x,0,z,tw,
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
    their next setLook. */
-const MODELS={},MODEL_LOAD={},MODEL_IDS=['ghost','crusty','wednesday','antihero','dracula','lilpink','roboid'];
+const MODELS={},MODEL_LOAD={},MODEL_IDS=['ghost','wednesday','antihero','lilpink','neonrave','spike','bun','glitch','kitty','puffer','raven','toxic','roboid'];
 /* Height levelling: every model was baked to the same overall height including hats, horns and hair, so characters with tall headgear
    (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero) tall. MODEL_EYE is each model's measured eye level;
    on load the model is scaled about the feet so every character's eyes sit at the same height (looks only: hitboxes don't change). */
-const MODEL_EYE={ghost:2.34,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,lilpink:2.48,roboid:2.48},EYE_TARGET=2.4;
+const MODEL_EYE={ghost:2.34,wednesday:2.43,antihero:2.57,lilpink:2.48,neonrave:2.53,spike:2.38,bun:2.56,glitch:2.53,kitty:2.47,puffer:2.58,raven:2.53,toxic:2.49,roboid:2.48},EYE_TARGET=2.4;
 function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
   for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
   for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
@@ -8016,9 +8023,7 @@ setTimeout(()=>{const ids=Object.keys(HOLD);let i=0;const next=()=>{if(i>=ids.le
    Positions are in the model's own part space (head: from the neck pivot; torso: from the feet), before height levelling. */
 const CGLOW_SYM=(o)=>[{...o,at:[-o.at[0],o.at[1],o.at[2]],rot:-(o.rot||0)},{...o}];
 const CHAR_GLOW={
-  dracula:CGLOW_SYM({p:'head',t:'halo',at:[.14,.52,.5],s:.22,c:'#ff1020'}),
   ghost:[...CGLOW_SYM({p:'head',t:'halo',at:[.1,.34,.32],s:.2,c:'#ff2030'}),...CGLOW_SYM({p:'head',t:'flame',at:[.6,.98,0],s:[.24,.56],rot:-.2,c:'#3fe8ff'})],
-  crusty:[{p:'head',t:'halo',at:[.02,.16,.54],s:.36,c:'#ff2018'}],
   lilpink:[{p:'torso',t:'halo',at:[0,1.72,.47],s:.42,c:'#ff5ab0'}],
   /* roboid (Shadow): no glow sprites; his visor and bracer stripes glow from his own emissive map (the sprites smeared into red blurs round his head) */
 };
@@ -8145,9 +8150,15 @@ function suit(ch,o){const b=ch.body;hideBase(ch,{head:false});if(o.noHair!==fals
   for(const l of [ch.lL,ch.lR]){if(o.legs)piece(l.p,RBX(.5,1,.52,.08),o.legs,0,-.5,0);if(o.shoes)piece(l.p,RBX(.54,.24,.62,.08),o.shoes,0,-.9,.04);}}
 const skinTone=()=>mat('#f4f5f7',null,{roughness:.6});
 Object.assign(SKINS,{
- crusty_clown(ch){{const M=modelFor('crusty');if(M)return modelSkin(ch,M,'crusty');}const b=mat('#2fae4a',null,{roughness:.5});suit(ch,{torso:b,arms:b,legs:b,shoes:mat('#e8322a'),hands:mat('#f4f1ea')});},
- dracula_vamp(ch){{const M=modelFor('dracula');if(M)return modelSkin(ch,M,'dracula');}const k=mat('#3a2350',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#1c1820'),shoes:mat('#111114'),hands:mat('#e6e6ea')});},
  lil_pink(ch){{const M=modelFor('lilpink');if(M)return modelSkin(ch,M,'lilpink');}const k=mat('#16161a',null,{roughness:.6});suit(ch,{torso:k,arms:mat('#f4a6c8'),legs:k,shoes:mat('#f4a6c8'),hands:mat('#e9e6e2')});},
+ neonrave_m(ch){{const M=modelFor('neonrave');if(M)return modelSkin(ch,M,'neonrave');}const k=mat('#16161a',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#2e7bff'),shoes:k,hands:mat('#e9e6e2')});},
+ spike_m(ch){{const M=modelFor('spike');if(M)return modelSkin(ch,M,'spike');}const k=mat('#141416',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#c41a22'),shoes:k,hands:mat('#e9e6e2')});},
+ bun_m(ch){{const M=modelFor('bun');if(M)return modelSkin(ch,M,'bun');}const k=mat('#b79cff',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
+ glitch_m(ch){{const M=modelFor('glitch');if(M)return modelSkin(ch,M,'glitch');}const k=mat('#141416',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
+ kitty_m(ch){{const M=modelFor('kitty');if(M)return modelSkin(ch,M,'kitty');}const k=mat('#141416',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
+ puffer_m(ch){{const M=modelFor('puffer');if(M)return modelSkin(ch,M,'puffer');}const k=mat('#ffd21a',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
+ raven_m(ch){{const M=modelFor('raven');if(M)return modelSkin(ch,M,'raven');}const k=mat('#141416',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
+ toxic_m(ch){{const M=modelFor('toxic');if(M)return modelSkin(ch,M,'toxic');}const k=mat('#141416',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#141416'),shoes:k,hands:mat('#e9e6e2')});},
  black_roboid(ch){{const M=modelFor('roboid');if(M)return modelSkin(ch,M,'roboid');}const k=mat('#16161a',null,{roughness:.45});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#0c0c0e',null,{roughness:.25}),hands:k});},
  wed_goth(ch){{const M=modelFor('wednesday');if(M)return modelSkin(ch,M,'wednesday');}const k=mat('#18181c',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#c0202a'),hands:mat('#e9e6e2')});},
  anti_hero(ch){{const M=modelFor('antihero');if(M)return modelSkin(ch,M,'antihero');}suit(ch,{torso:mat('#2f7a3a'),arms:mat('#e8c49a'),legs:mat('#2a5aa8'),shoes:mat('#24467e'),hands:mat('#2a5aa8')});},
@@ -10896,7 +10907,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just bats. '+who:who+(P==='1v1'?' Use the houses for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='749ad36b46e5';
+const MODEL_STAMP='85ffa34d6d8f';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */
@@ -12393,7 +12404,7 @@ function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep
 const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');return n;};
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a gun');if(!S.cons)n.push('a lethal');}return n;};
 /* ===== lobby character stage: cut-out portrait under coloured stage lights, embers and a floor ring ===== */
-const STAGE_CC={antihero:'#ff3b3b',crusty:'#ffcc33',ghost:'#3fd4ff',wednesday:'#ff2a4a',dracula:'#ff1a3a',lilpink:'#ff6fae',roboid:'#ff2a1a'};
+const STAGE_CC={antihero:'#ff3b3b',ghost:'#3fd4ff',wednesday:'#ff2a4a',lilpink:'#ff6fae',neonrave:'#2e8bff',spike:'#ff2a2a',bun:'#b79cff',glitch:'#1fd6ff',kitty:'#a77bff',puffer:'#ffd21a',raven:'#ff2a4a',toxic:'#5dff3a',roboid:'#ff2a1a'};
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';

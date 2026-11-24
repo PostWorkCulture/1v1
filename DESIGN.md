@@ -66,6 +66,7 @@ Last updated: 2026-11-24
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
+- Sniper scopes zoom in hard (Pete, 24 Nov): HDR 12° field of view, Vanguard 27° (about 1.6x closer than before); look speed through a scope scales with the zoom. Letting go of Fire always drops the scope; nothing can leave you stuck aiming.
 - Gun colours: HDR black with silver barrel; Vanguard shiny mirror chrome (the M4 is the gold gun); Vector black.
 - Rocket Launcher is "Hellfire" (Pete picked it, 24 Nov): black chrome tube with glowing molten cracks, bone rings and spikes, a demon skull round the muzzle (burning eyes, fangs, fire in its throat) with black-and-red ram horns; its rockets match (cracked body, bone fins, red-hot nose).
 - Lethals are "Neon Arcade" (Pete picked it, 24 Nov): gloss black bodies with glowing neon in each lethal's colour (Grenade lime, Cluster orange, Mine red with a glowing hex top, Stun cyan with a lightning bolt). The Gold Grenade still turns fully gold.
@@ -117,6 +118,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.
 - Rocket Launcher re-skinned as "Hellfire" (black-and-red horns) with matching rockets; lethals re-skinned as "Neon Arcade". Picked from four concepts each.
 - Vanguard re-finished in shiny mirror chrome (was gold, which clashed with the gold M4).
 - Stun stars removed completely (no stars, halo ring or sparks over a stunned or dazed player's head).

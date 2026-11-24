@@ -78,6 +78,7 @@ Last updated: 2026-11-24
 
 ### Characters
 - Current roster (10): Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty, Dracz, then Gorillaz, Jet, Murda Medic, Spacebot. Shadow is dev-only (Test Arena) for now.
+- Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat still adds 20%.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Crusty: purple hair, green top and trousers. Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
@@ -114,6 +115,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Player speed cut by 25% for everyone, players and bots (running about 9.5 m/s, was 12.7).
 - SMG sights (MP5, Vector, UMP) get a blue dot.
 - Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.
 - Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.

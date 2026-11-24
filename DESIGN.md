@@ -48,19 +48,20 @@ Last updated: 2026-11-24
 - **The Mansion** (Biggest, 2-floor maze): only front and back lawns accessible (sides closed); ladders to the roof; one-shot glass roof skylights; nothing covers windows or glass ceilings; jump-through windows; disco lights stay inside the disco room; garage with black textured walls, flickering lights, 2 dirt bikes on wall racks; built for fast flow: no inside glass walls (open archways instead), inside doorways 4.4 m wide, nothing solid within ~2 m of a doorway; hall of mirrors has its mirrors flat on the walls, floor clear; hot tubs with white stone surround, jets only, no ducks; must run smoothly with 8 players.
 
 ### Modes
-- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only.
+- Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble.
 - Simple = fixed M4, knife (replaced the sword), grenades; no loadout screen.
 - Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
 - Rumble: bats only, no armour; Speed Shoes pickup appears 10 s into each round.
-- Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + bat + throwables; Sentry stays.
-- Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
+- Free for all: straight kills, no downed state (1v1/2v2 keep downs, revives and finishers).
+- Every gun is allowed on every map (no small-map weapon limits). The four extra snipers (Reaper, Titan .50, Vanguard, Phantom) stay in the code but aren't offered anywhere until Pete picks which, if any, to bring in.
 - Collection is not part of this game: it was taken out on 24 Nov 2026 to be rebuilt as its own project in a separate folder and GitHub repo. Its last version here is tagged `collection-v1` (rules then: The Mansion, 8 players, start with fists, find SMGs/pistols/bats, 10 stars to win, cash in at the shop, going down costs 2 stars, dying loses all, 8+ stars outlined through walls and marked on minimaps). Don't add it back to imok 1v1.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
 
 ### Weapons
 - Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
 - M4 is first in the primary list; snipers sit at the end; Random is the default for primary, secondary and lethal and sits at the end of each category, jiggling slightly.
-- The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up).
+- The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
+- Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
 - The barbed-wire bat is always the 3rd slot (20% faster with the bat or knife out); wheel up = next weapon, wheel down = bat; ADS with the bat does nothing. Bat/knife down in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - SMGs: iron sights only (real sight pictures; the Sting aims straight). Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
@@ -100,7 +101,7 @@ Last updated: 2026-11-24
 
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena. (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
-- Weapons/items: fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Weapons/items: Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
@@ -110,6 +111,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Simpler still: reloads capped at 1.5 s (only the Rocket Launcher and Swarm were longer), hip fire halved on ARs/SMGs, instant swaps; shop grenades moved onto E, wall building and the Sentry removed, stamina removed (free double jump); free for all is straight kills; small-map weapon limits and Snipers only mode removed (the four extra snipers kept in code, unused).
 - The Mansion opened up for fast movement: every inside glass wall replaced by an open archway, inside doorways widened to 4.4 m, furniture and wall decor cleared from every doorway (master bed, guest room and dressing room re-laid out), hall of mirrors' mirrors moved from the floor onto the walls.
 - Back to hard and fast: all guns get the quickest SMG's ADS speed; reload button (R key, phone button, key binding) removed, guns reload only when empty; fists removed completely and replaced by the barbed-wire bat as the permanent 3rd slot (Rumble is bats only; the bat pickup is gone).
 - Collection mode removed from imok 1v1 (menu, code, README) to be rebuilt as a separate project; last version tagged `collection-v1`.

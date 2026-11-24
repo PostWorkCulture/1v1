@@ -1828,7 +1828,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
             <div class="wdet" id="d-cdet"></div>
           </div>
           </div>
-          <div class="rumble-info" id="d-rinfo" hidden><b>Bats only</b><span>Just your barbed-wire bat in Rumble: no guns, lethals or shop. 50 damage a swing (2 to down), big knockback. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
+          <div class="rumble-info" id="d-rinfo" hidden><b>Bats only</b><span>Just your barbed-wire bat in Rumble: no guns, lethals or shop. 34 damage a swing (3 to down), big knockback. Hit someone while you're falling for 20 damage, knock you both back and stun them for a second.</span></div>
           <div class="mfoot">
             <div class="mneed" id="d-need"></div>
             <div class="seg qr-seg" role="radiogroup" aria-label="Map for the next match" hidden><button type="button" role="radio" data-qr="same" aria-checked="true">Play same map</button><button type="button" role="radio" data-qr="rand" aria-checked="false">Play random map</button></div>
@@ -7554,7 +7554,7 @@ const GUNS={
   shotgun:{name:'SPAS-12',dmg:13,head:1.3,rate:.8,mag:6,reload:2,spread:2.4,adsSpread:1.8,ads:ADS_T,pellets:9,fall:[9,26],zoom:50,auto:false,kick:.05,bloom:0,color:'#e85d22',note:'Heavy pump: one shot downs point-blank, otherwise up to 75% of their health'},
   flamer:{name:'Flamethrower',type:'flame',dmg:3.5,head:1,rate:.05,mag:40,reload:0,noReload:true,range:13,spread:0,adsSpread:0,ads:ADS_T,pellets:1,zoom:58,auto:true,kick:0,bloom:0,color:'#ff6a1a',note:'Shop only: a 13 m jet of fire that sets people alight; about 2 s of fuel'},
   rocket:{name:'Rocket Launcher',type:'proj',dmg:68,direct:125,radius:4.5,head:1,rate:1,mag:1,reload:3,spread:.35,adsSpread:0,speed:30,maxSpeed:58,accel:90,grav:0,zoom:26,auto:false,kick:.07,bloom:0,ads:ADS_T,color:'#3bb54a',note:'Direct hit 125, splash up to 68'},
-  bat:{name:'Bat',type:'melee',dmg:50,head:1,rate:.55,mag:Infinity,reload:0,reach:3.0,arc:1.05,lunge:5,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#d81e28',note:'Barbed-wire bat: always your 2nd slot. 50 a hit (2 hits), big knockback, speed boost while held'},
+  bat:{name:'Bat',type:'melee',dmg:34,head:1,rate:.55,mag:Infinity,reload:0,reach:3.0,arc:1.05,lunge:5,spread:0,adsSpread:0,zoom:62,auto:true,kick:0,bloom:0,color:'#d81e28',note:'Barbed-wire bat: always your 2nd slot. 34 a hit (3 hits to down), big knockback, speed boost while held'},
   duals:{name:'Dual Pistols',base:'pistol',dmg:30,head:1.8,rate:.16,mag:24,reload:2,spread:1.6,adsSpread:.9,ads:ADS_T,pellets:1,fall:[10,28],zoom:70,auto:true,kick:.015,bloom:.18,color:'#e9edf5',note:'Two hard-hitting pistols, alternate fire, 24 rounds'},
   crossbow:{name:'Crossbow',type:'proj',dmg:83,head:2,rate:.9,mag:1,reload:1.8,spread:.6,adsSpread:0,ads:ADS_T,speed:200,grav:1.5,zoom:40,auto:false,kick:.03,bloom:0,color:'#1fd655',note:'Silent high-velocity bolt: 2× headshot'},
   stun:{name:'Stun Grenade',type:'proj',dmg:0,radius:6.5,rate:1,mag:2,reload:0,noReload:true,speed:30,grav:18,fuse:.6,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#3a7bff',note:'Stuns everyone caught in the flash'},
@@ -8262,7 +8262,7 @@ const TEAMC=['#2f7fe0','#e8463a','#3bb54a','#f0a020','#a05ad6','#1fb5b0','#ff6fa
 const NET={role:null,peer:null,conn:null,R:null,live:false,cmd:null,acts:[],shots:[],ev:[],replay:false,fromRemote:false,code:'',load:null,tick:0,lastRx:0,snapN:0};
 window.__net=NET;
 const isFoe=(a,b)=>a!==b&&a.team!==b.team;
-const SNQ={hold:false,prevR:false,fire:false,rel:false};const isSnipe=()=>{const g=gunOf(ME);return (isSn(g)||g==='rocket')&&S.mode!=='rumble';}; /* hold Fire to aim, let go to fire: the snipers and the Rocket Launcher */
+const SNQ={hold:false,prevR:false,fire:false,rel:false};const isSnipe=()=>{const g=gunOf(ME);return (isSn(g)||g==='rocket'||g==='swarm')&&S.mode!=='rumble';}; /* hold Fire to aim, let go to fire: the snipers, the Rocket Launcher and the Swarm */
 function snipeDown(){if(!isSnipe()||!ME.alive||ME.downed)return false;SNQ.hold=true;SNQ.prevR=mouseR;mouseR=true;$('d-sx').hidden=false;return true;}
 function snipeUp(fire){if(!SNQ.hold)return;SNQ.hold=false;$('d-sx').hidden=true;if(fire){SNQ.fire=true;SNQ.at=S.t;}else mouseR=SNQ.prevR;}
 const foesOf=f=>FS.filter(o=>o.alive&&isFoe(f,o));
@@ -8449,7 +8449,7 @@ function spreadDir(d,deg){if(deg<=0)return d.clone();const a=deg*Math.PI/180*Mat
 function curSpread(f){const g=GUNS[gunOf(f)];let s=f.ads?g.adsSpread:g.spread;if(f===ME&&f.ads&&VM_GUNS.includes(gunOf(f)))s=lerp(g.spread,g.adsSpread,VM.aim??VM.raise);if(f.ads&&f.scopeKit&&OPTIC_GUNS.includes(gunOf(f)))s*=.6;const sp=Math.hypot(f.vel.x,f.vel.z),sgn=g.pellets>1;if(sp>2)s*=sgn?1.15:1.45;if(!f.grounded)s*=sgn?1.35:2.2;if(f.ads&&gunOf(f)==='sniper'&&sp>2)s+=1.2;if(f.crouching)s*=.65;const aimed=f.ads&&(f!==ME||!VM_GUNS.includes(gunOf(f))||VM.raise>.9);return s+f.bloom*(aimed?.3:1);}
 const hasAmmo=(f,id)=>(GUNS[id]&&GUNS[id].mag===Infinity)||f.ammo[id]>0; /* the bat never runs out, even if no ammo entry was made for them */
 function canFire(f){return !f.onLadder&&!f.edgeFall&&f.alive&&f.fireT<=0&&f.reloadT<=0&&f.switchT<=0&&hasAmmo(f,gunOf(f))&&S.state==='fight';}
-function startReload(f){const id=gunOf(f);if(f.reloadT>0||(f.ammo[id]||0)>0||f.ammo[id]>=GUNS[id].mag|| /* reloads only when the mag is empty: no reload button, no topping up (bots included) */!isFinite(GUNS[id].mag)||GUNS[id].noReload)return;if(id==='swarm'&&f.swarmPrev!=null&&--f.swarmMags<=0){swarmOut(f);return;} /* picked-up Swarm: two mags, then it's gone */f.reloadT=GUNS[id].reload>0?GUNS[id].reload:1;f.reloadMax=f.reloadT;{const L=3.4,r=clamp(L/f.reloadT,.95,1.2);f.relSnd=sfx('reload',f,{rate:r,jitter:0,offset:Math.max(0,L-f.reloadT*r),vol:f===ME?1:.8,range:8});}}
+function startReload(f){const id=gunOf(f);if(f.reloadT>0||(f.ammo[id]||0)>0||f.ammo[id]>=GUNS[id].mag|| /* reloads only when the mag is empty: no reload button, no topping up (bots included) */!isFinite(GUNS[id].mag)||GUNS[id].noReload)return;if(id==='swarm'&&f.swarmPrev!=null&&--f.swarmMags<=0){swarmOut(f);return;} /* picked-up Swarm: one mag (2 shots), then it's gone */f.reloadT=GUNS[id].reload>0?GUNS[id].reload:1;f.reloadMax=f.reloadT;{const L=3.4,r=clamp(L/f.reloadT,.95,1.2);f.relSnd=sfx('reload',f,{rate:r,jitter:0,offset:Math.max(0,L-f.reloadT*r),vol:f===ME?1:.8,range:8});}}
 const projs=[];
 // black rocket with thin yellow bands, fins and a flickering exhaust flame (built along +z, nose forward)
 const swarmMesh=()=>{const g=new THREE.Group(),Z=q=>q.rotateX(Math.PI/2);g.add(new THREE.Mesh(Z(new THREE.CylinderGeometry(.032,.032,.26,10)),mat('#f2f4f7',null,{roughness:.4})));
@@ -8711,7 +8711,7 @@ function updShoes(dt){SHOE.t+=dt;
     f.shoeT=SHOE_T;SHOE.vis=false;SHOE.grp.visible=false;SHOE.back=SHOE_BACK;emit(SHOE.x,SHOE.y+.6,SHOE.z,{n:30,speed:5,up:2,size:.14,life:.5,grav:0,colors:[SHOE_CY,'#ffffff','#8ff4ff']});sfx('bing',f,{range:12});
     feedMsg(f===ME?'<span class="y">You</span><em>grabbed the Neon Runners</em>':`${tg(f)}<em>grabbed the Neon Runners</em>`);break;}}}
 /* ===== Swarm pickup: the Swarm launcher is no longer a loadout choice. A crate-less floating launcher turns up at a random spot 10 s into each round
-   (every map, every mode); grab it to swap it in for your gun for two magazines (16 micro-missiles), then your own gun comes back. A new one
+   (every map, every mode); grab it to swap it in for your gun for 2 shots (one mag: two bursts of 4 micro-missiles), then your own gun comes back. A new one
    appears somewhere else 35 s after it's taken. ===== */
 const SWM={grp:null,spin:null,ring:null,x:0,y:0,z:0,vis:false,back:0},SWM_BACK=35,SWM_C='#ff7a1f';
 function swmGroup(){const grp=new THREE.Group(),spin=new THREE.Group(),m=heroModel('swarm',B.roundedBox);m.scale.setScalar(.9);m.position.y=.15;spin.add(m);spin.rotation.z=.15;grp.add(spin);
@@ -8725,7 +8725,7 @@ function resetSwarm(){for(const f of FS){if(f.primary==='swarm'&&f.swarmPrev!=nu
 function updSwarm(dt){if(!SWM.grp)return;if(!SWM.vis){if(S.state==='fight'){SWM.back-=dt;if(SWM.back<=0)placeSwarm();}return;}
   SWM.spin.rotation.y+=dt*1.6;SWM.spin.position.y=Math.sin(S.t*2.2)*.1;SWM.ring.material.opacity=.55+Math.sin(S.t*4)*.2;if(S.state!=='fight')return;
   for(const f of FS){if(!f.alive||f.downed||f.finishing||f.primary==='swarm'||f.primary==='flamer')continue;if(Math.hypot(f.pos.x-SWM.x,f.pos.z-SWM.z)<1.2&&Math.abs(f.pos.y-SWM.y)<1.6){
-    f.swarmPrev=f.primary;f.primary='swarm';f.ammo.swarm=GUNS.swarm.mag;f.swarmMags=2;f.slot=-1;equip(f,0);SWM.vis=false;SWM.grp.visible=false;SWM.back=SWM_BACK;
+    f.swarmPrev=f.primary;f.primary='swarm';f.ammo.swarm=GUNS.swarm.mag;f.swarmMags=1;f.slot=-1;equip(f,0);SWM.vis=false;SWM.grp.visible=false;SWM.back=SWM_BACK;
     emit(SWM.x,SWM.y+.9,SWM.z,{n:28,speed:5,up:2,size:.15,life:.5,grav:0,colors:[SWM_C,'#ffffff','#ffd0a0']});sfx('bing',f,{range:12});
     if(f===ME)feedMsg('<span class="y">You</span><em>picked up the Swarm</em>');else feedMsg(`${tg(f)}<em>picked up the Swarm</em>`);break;}}}
 function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P.back<=0){if(P.move){P.move=0;movePlate(P);}P.grp.visible=true;}continue;}P.plate.rotation.y+=dt*2;P.grp.position.y=P.y+.9+Math.sin(S.t*2.5)*.12;

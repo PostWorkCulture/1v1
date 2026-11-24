@@ -57,15 +57,15 @@ Last updated: 2026-11-24
 
 ### Weapons
 - Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
-- One gun and the bat (Pete, 24 Nov): you carry a single gun, picked from one list of 11, plus the bat. There is no secondary slot. The list, in order: M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher, HDR (long-range sniper), Vanguard (semi-auto marksman sniper, replaced the Kar98). The Swarm stays a pickup and the shop Flamethrower is still sold; each one temporarily replaces your gun, then gives it back.
+- One gun and the bat (Pete, 24 Nov): you carry a single gun, picked from one list of 11, plus the bat. There is no secondary slot. The list, in order: M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher, HDR (long-range sniper), Vanguard (semi-auto marksman sniper, replaced the Kar98). The Swarm stays a pickup (2 shots, each a burst of 4 micro-missiles, then your gun comes back) and the shop Flamethrower is still sold; each one temporarily replaces your gun, then gives it back.
 - M4 is first in the gun list; snipers sit at the end; Random is the default for gun and lethal and sits at the end of each row, jiggling slightly.
 - Loadout is one page, no tabs: the showcase (whatever you last picked, big, with its stats) on the left; the gun grid on the right, then a clear empty row's worth of space, then the lethals.
 - The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
-- The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 2 hits. No fists anywhere.
+- The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 3 hits (34 a hit, Rumble too). No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
-- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers and the Rocket Launcher hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
+- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
@@ -115,6 +115,8 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Bat now takes 3 hits to down (34 a hit, was 50), Rumble included.
+- Swarm pickup cut to 2 shots (one mag, two bursts of 4) and switched to hold Fire to aim, release to fire.
 - Gorillaz, Jet, Murda Medic and Spacebot removed completely (characters, skins, models, menu pictures, glows, faces, Jet's jetpack flames); the roster is Wednesday, Anti Hero, Lil Pink, Starscreen, Crusty and Dracz.
 - Rocket Launcher joins the snipers on hold Fire to aim, release to fire (desktop and phone).
 - Player speed cut by 25% for everyone, players and bots (running about 9.5 m/s, was 12.7).

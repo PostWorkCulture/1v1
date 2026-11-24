@@ -7578,7 +7578,7 @@ function rayFighter(o,d,f){if(!f.alive)return null;const c=Math.cos(f.yaw),s=Mat
   if(th>=0&&(tb<0||th<=tb+.05))return{t:th,part:'head'};if(tb>=0)return{t:tb,part:'body'};return null;}
 
 /* ================= weapons ================= */
-const OPTIC_GUNS=['ar','gar','shotgun'];/* SMGs never get a red dot or holo: iron sights only */const holoOn=f=>f===ME&&f.ads&&f.alive&&(!!f.scopeKit||!!D.S.optic)&&OPTIC_GUNS.includes(gunOf(f));
+const OPTIC_GUNS=['ar','gar','shotgun'];/* the shop Scope kit's holo view is for the ARs and shotgun only; SMGs and pistols keep their round sight */const holoOn=f=>f===ME&&f.ads&&f.alive&&(!!f.scopeKit||!!D.S.optic)&&OPTIC_GUNS.includes(gunOf(f));
 const XHAIR={reaper:'#d6b07a',titan:'#ff6a5a',vanguard:'#ffd76a',phantom:'#b9a6ff',ump:'#5b8cff',swarm:'#ff9a3d',duals:'#f4f6ff',sniper:'#ffffff',ar:'#4d8dff',gar:'#ffd23f',shotgun:'#ff6a2f',revolver:'#ff2a55',crossbow:'#3bff7a',smg:'#c062ff',flamer:'#ff6a1a',vector:'#7ff0ff',rocket:'#22e0cc'};
 /* every gun aims down sights as fast as the quickest SMG: hard, fast and simple */
 const ADS_T=.07;
@@ -11453,7 +11453,9 @@ const HERO={
 /* red dot sights (open reflex style): low housing on the top rail, thin window frame, tinted glass, glowing dot.
    Fitted per gun: AKM classic posts, M4 T2-style tube, FAMAS dome. ('round' is built but unassigned.)
    o={st: style, y: rail top, z: sight centre, acc: gun colour, riser: extra mount height}. First person draws the sight 2.7x so the window frames the target. */
-const RD_FIT={ar:{st:'classic',real:1,bw:.08,y:.168,z:-.05,acc:'#2f6bff',riser:.03},gar:{st:'arch',real:1,bw:.098,y:.178,z:.02,acc:'#ffd23f'}};
+const RD_FIT={ar:{st:'classic',real:1,bw:.08,y:.168,z:-.05,acc:'#2f6bff',riser:.03},gar:{st:'classic',real:1,bw:.08,y:.212,z:.02,acc:'#ffd23f',riser:.03},
+  /* Pete 24 Nov: ARs use the twin-blade sight, SMGs and pistols the round-ring sight */
+  smg:{st:'round',bw:.064,y:.122,z:.02,acc:'#ff2a2a'},vector:{st:'round',bw:.056,y:.17,z:.06,acc:'#ff2a2a'},ump:{st:'round',bw:.056,y:.18,z:.06,acc:'#ff2a2a'},duals:{st:'round',bw:.096,y:.12,z:.08,acc:'#ff2a2a'}};
 /* realistic machined optics (AKM twin steel blades, M4 Aimpoint T2-style open tube): chamfered edges, anodised aluminium, polished steel, studio-lit in first person */
 /* every red-dot/holo sight: the mount is exactly the gun's top width, the window about 1.2x it (85-115 mm game units), same size in first person and the world */
 function fitOptic(g,G,BG,o,vm,cy,rear){G.userData.optic=1;const T=THREE,bb=new T.Box3(),tb=new T.Box3();G.updateMatrixWorld(true);
@@ -11938,8 +11940,7 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
     extH([[-.26,.14],[-.7,.14],[-.72,.12],[-.72,-.12],[-.69,-.14],[-.6,-.14],[-.5,.03],[-.26,.05]],[[[-.67,-.08],[-.67,.1],[-.33,.1],[-.33,.085],[-.52,.07],[-.62,-.08]]],.05,fur,.008);
     box(.056,.018,.2,0,.148,-.47,rub,.006);buttpad(-.722,.0,.27,.056);for(const s of [-1,1])qd(s*.027,.095,-.62);
     for(const s of [-1,1]){tor(.014,.004,s*(hw+.004),.02,-.21,phos,0);}
-    if(!vm){box(.05,.03,.08,0,.2,.04,dkm,.006);for(const z of [.015,.065])cylX(.006,.064,0,.2,z,bolt,8);cyl(.032,.1,0,.245,.04,dkm,null,22);cyl(.035,.012,0,.245,.085,small,null,22);cyl(.027,.004,0,.245,.092,RAW('#3a1612',{metalness:.9,roughness:.05}),null,18);cyl(.027,.004,0,.245,-.011,lensM,null,18);
-      cylY(.013,.02,0,.285,.03,small,12);cylX(.013,.02,-.04,.245,.03,small,12);buis(-.16,1,.188);buis(.36,-1,.188);}
+    if(!vm){buis(-.16,1,.188);buis(.36,-1,.188);} /* its micro red dot was replaced by the shared round sight (RD_FIT) */
     decal(['UMP'],.1,.04,hw,.05,-.1,-1,MK,.92);decal(['Kal. 9mm x 19'],.09,.014,hw,.022,.14,-1,MK);decal(['UMP'],.1,.04,hw,.05,-.1,1,MK,.92);decal(['No 161-009214'],.09,.014,hw,.022,.14,1,MK);
     if(vm)vmS({kind:'buis',y:.214,rz:-.16,fz:.37,base:.186,muz:.7,my:.08,hands:{r:[0,-.2,-.09],l:[.04,-.075,.33]}});
   }
@@ -11954,8 +11955,7 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
     cyl(.02,.3,0,BY,.6,phos,null,18);cyl(.033,.16,0,BY,.51,dkm,null,20);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;rb(.005,.012,.09,Math.cos(a)*.032,BY+Math.sin(a)*.032,.52,hole,0,0,a,.002);}birdcage(.665,.026,.095);
     box(.05,.014,.12,0,.03,.5,phos,.004);for(let i=0;i<4;i++)box(.056,.012,.014,0,.018,.455+i*.028,phos,.002);
     extH([[-.3,.135],[-.77,.135],[-.79,.115],[-.79,-.1],[-.76,-.12],[-.68,-.12],[-.6,.04],[-.3,.06]],[[[-.745,-.07],[-.745,.095],[-.38,.095],[-.38,.085],[-.6,.075],[-.7,-.07]]],.04,fur,.008);buttpad(-.792,.01,.24,.05);cylY(.012,.09,-.012,.1,-.31,phos,10);
-    if(!vm){box(.07,.03,.12,0,.185,.04,dkm,.006);extH([[-.02,.2],[.1,.2],[.1,.275],[.0,.275],[-.02,.25]],[],.075,dkm,.008);box(.004,.05,.06,.0,.24,.085,hole,.001);
-      add(new THREE.PlaneGeometry(.055,.048),RAW('#9fe8ff',{transparent:true,opacity:.2,roughness:.05,metalness:.6,side:THREE.DoubleSide,depthWrite:false}),0,.238,.102);buis(-.22,1,.168);buis(.36,-1,.168);}
+    if(!vm){buis(-.22,1,.168);buis(.36,-1,.168);} /* its holo box was replaced by the shared round sight (RD_FIT) */
     decal(['VECTOR  .45 ACP'],.14,.02,hw,.02,-.12,-1,MK);decal(['KRV  No 45-0917'],.14,.02,hw,.02,-.15,1,MK);
     if(vm)vmS({kind:'buis',y:.196,rz:-.22,fz:.37,base:.166,muz:.76,my:.09,hands:{r:[0,-.2,-.06],l:[.04,-.26,.2]}});
   }
@@ -12170,7 +12170,7 @@ function heroModelV2(id,RB,vm){
       box(.1,.035,.1,0,-.355,-.15,gd,.01);box(.094,.004,.36,0,-.02,.14,hole,.001);for(const s of [-1,1])cylX(.008,.1,0,-.01,s>0?.3:.0,chrome,8);
       if(!vm){box(.04,.025,.03,0,.135,-.16,frame,.004);box(.012,.025,.02,0,.135,.37,frame,.003);add(new THREE.CircleGeometry(.006,10),glow('#36f3ff',3),0,.14,.381);}
       return g.children.slice(st);};
-    const a=pistol();const two=new THREE.Group();for(const c of a)two.add(c.clone());
+    const a=pistol();{const og=addOptic(g,RB,null,RD_FIT.duals,vm);if(og)a.push(og);} /* round sight on both pistols; the twin aim view below keeps its own sight line */const two=new THREE.Group();for(const c of a)two.add(c.clone());
     if(vm){two.position.set(.62,0,0);g.userData.heat=DH;g.userData.sightY=.38;g.userData.rearZ=-.1;g.userData.muzZ=.48;g.userData.dx=.31;g.userData.muzY=.06;g.userData.hands={r:[0,-.2,-.13],l:[.62,-.2,-.13],twin:1};}
     else{two.position.set(-.05,-.32,-.28);two.rotation.set(.18,0,0);}g.add(two);
   }
@@ -12249,7 +12249,7 @@ function heroModelV2(id,RB,vm){
   sling(.125,.04,-.1,steel);sling(.125,.04,.44,steel);pins([[.0,.0],[.0,.3]],chrome,.046);
   if(vm)vmS({y:.45,rz:.0,rr:.045,fz:.3,fr:.034,base:.415,m:dk,dot:X.swarm,muz:.56,my:.155,hands:{r:[0,-.14,.05],l:[0,-.13,.37]}});
   }
-  if(RD_FIT[id]&&(vm||!RD_FIT[id].vmOnly))addOptic(g,RB,null,RD_FIT[id],vm);
+  if(id!=='duals'&&RD_FIT[id]&&(vm||!RD_FIT[id].vmOnly))addOptic(g,RB,null,RD_FIT[id],vm);
   return g;}
 /* ================= detailed lethal models (menu previews + the thrown / laid objects in game) =================
    Same design language as the guns: real-world shapes (M67 frag, MK3 concussion, M84 flash bang, auto-injector,

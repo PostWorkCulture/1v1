@@ -64,7 +64,8 @@ Last updated: 2026-11-24
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
 - The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
-- SMGs: iron sights only (real sight pictures). Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
+- Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
+- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers hold Fire to scope and fire on release, right click only cancels a held scope. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Flash/stun last 1 s. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
@@ -106,15 +107,21 @@ Last updated: 2026-11-24
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
 - Street Life: the 4 smaller side buildings and the big buildings' middle floor (removed 24 Nov).
-- Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
+- Other: the separate aim control (touch Aim button, right-click aim, Aim-when-firing setting), the UMP's micro red dot and the Vector's holo box, throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
 
 ---
 
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+<<<<<<< Updated upstream
 - Street Life home: plain floors downstairs (flat stone-beige living room, plain pale stone kitchen/dining; the patterned carpet, rugs and chequered tiles are gone).
 - Street Life's vans made static: they stay parked (still damageable, burn out, back next round).
+=======
+- Sights: ARs (AKM, M4) both get the twin steel-blade sight; MP5, Vector, UMP and Dual Pistols get the round ring sight (UMP micro dot and Vector holo removed).
+- Aim button removed: holding Fire aims down sights; snipers hold Fire to scope, release to fire, on desktop too. Touch Aim button, right-click aim and the Aim-when-firing setting removed.
+- Simple rules (Normal/Simple row for 1v1 and 2v2) removed.
+>>>>>>> Stashed changes
 - Hospital lighting thinned out (it was too much): ceiling panels about a third as many with softer glows, fewer and dimmer real lights.
 - Street Life downsized to Big (70 × 50 m): the 4 side buildings removed, and the hospital and home cut to 2 floors (middle floor removed; the loft room and terrace sit on the ground floor); buildings scaled to fit, narrower road, trees, lamps and spawns moved in.
 - One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, a clear gap, then the lethals, no tabs. Swarm and Flamethrower now stand in for your gun.

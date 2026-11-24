@@ -115,6 +115,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Stun stars half the size (and a little lower). Watching someone after you're out no longer judders/looks fuzzy (the camera now moves with their smoothed position).
 - Mansion: the side hedges (out of bounds) raised to the full height of the house (11 m), and the roof's side parapets to 2.6 m, so both are obvious.
 - Street Life: the home all yellow (black frame kept); the arcade's outside frames black like the home's, and loud dark clashing colours inside (red floor, electric-blue wall, deep purple ceiling/upstairs floor, loft lined blue/purple/teal/magenta).
 - Bat now takes 3 hits to down (34 a hit, was 50), Rumble included.

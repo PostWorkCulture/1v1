@@ -9149,7 +9149,7 @@ function stunStars(x){const on=(x.stunT>0||x.dazeT>0)&&x.alive&&!x.finishing&&x.
     const ring=new THREE.Mesh(STAR.ring,STAR.rm);ring.rotation.x=Math.PI/2;spin.add(ring);
     for(let i=0;i<5;i++){const k=new THREE.Mesh(STAR.sg,STAR.sm);R.add(k);R.userData.sparks.push(k);}
     x.ch.root.add(R);x._stars=R;}
-  R.visible=true;const h=x.ch.headG.getWorldPosition(stunV);x.ch.root.worldToLocal(h);const ks=1/(x.ch.root.scale.x||1);R.position.set(h.x,h.y+.95*ks,h.z);R.scale.setScalar(ks*1.2);
+  R.visible=true;const h=x.ch.headG.getWorldPosition(stunV);x.ch.root.worldToLocal(h);const ks=1/(x.ch.root.scale.x||1);R.position.set(h.x,h.y+.75*ks,h.z);R.scale.setScalar(ks*.6);/* Pete 24 Nov: half the size they were (was 1.2), sitting a little lower */
   const t=S.t;R.userData.stars.forEach((g,i)=>{const a=t*4.2+i/4*Math.PI*2;g.position.set(Math.cos(a)*.55,Math.sin(a*2)*.05,Math.sin(a)*.55);g.rotation.set(0,-a+Math.PI/2,t*5+i);});
   R.userData.sparks.forEach((k,i)=>{const ph=(t*2.3+i*.37)%1,a=i*1.9+Math.floor(t*2.3+i*.37)*2.4;k.position.set(Math.cos(a)*(.2+ph*.25),-.35+ph*.3,Math.sin(a)*(.2+ph*.25));k.scale.setScalar(1-ph);});}
 const stunV=new V3();
@@ -10238,7 +10238,7 @@ function drawLerp(on){if(!on){for(let i=0;i<DL.n;i++){const o=DL.o[i],r=o.f.ch.r
   DL.n=0;const k=1-clamp(simAcc/SIM,0,1);if(!CFX.lerp||k<.01||S.state==='menu'||CR.run||S.paused){if(CFX.onDraw)CFX.onDraw();return;}
   for(const f of FS){const p=f.pp;if(!p||f.rd||!f.ch||f.finishing)continue;const x=(p.x-f.pos.x)*k,z=(p.z-f.pos.z)*k,y=((f.pvy??f.pos.y)-(f.visY??f.pos.y))*k,d=x*x+y*y+z*z;if(d>.6||d<1e-10)continue;
     const o=DL.o[DL.n]||(DL.o[DL.n]={});DL.n++;o.f=f;o.x=x;o.y=y;o.z=z;const r=f.ch.root.position;r.x+=x;r.y+=y;r.z+=z;o.b=f.blob&&f.blob.visible?f.blob:null;if(o.b){o.b.position.x+=x;o.b.position.z+=z;}
-    o.cam=f===ME&&S.camFollow?1:0;if(o.cam){camera.position.x+=x;camera.position.y+=y;camera.position.z+=z;}}
+    o.cam=(f===ME&&S.camFollow)||f===S.specCam?1:0;/* when you're out and watching someone, the camera moves with their smoothed position so they don't judder (it looked fuzzy) */if(o.cam){camera.position.x+=x;camera.position.y+=y;camera.position.z+=z;}}
   if(CFX.onDraw)CFX.onDraw();}
 /* a hit: which way it travelled (for the flinch and for the ragdoll if it kills) */
 let BLAST=null;
@@ -10422,8 +10422,8 @@ function updCamera(dt){S.camFollow=0;
   const fov=holo?GUNS[id].zoom*.85:scoped?GUNS[id].zoom:f.ads?GUNS[id].zoom:OPT.fov;camera.fov=damp(camera.fov,fov,scoped?30:f.ads?3.2/ADS_T:14,dt);camera.updateProjectionMatrix();
   const yaw=f.yaw,pitch=f.pitch,dir=dirOf(yaw,pitch,new V3()),right=new V3(-Math.cos(yaw),0,Math.sin(yaw));
   const head=new V3(f.pos.x,(f.visY??f.pos.y)+2.25*SC*(1-.27*(f.cv||0)),f.pos.z);
-  if(!f.alive){const k=specOf()||f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);const bs=S.players==='1v1'?f:k;camera.position.lerp(new V3(bs.pos.x,bs.pos.y+7,bs.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);return;}
-  S.camFollow=1;if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
+  if(!f.alive){const k=specOf()||f;const t=new V3(k.pos.x,k.pos.y+1.5,k.pos.z);const bs=S.players==='1v1'?f:k;camera.position.lerp(new V3(bs.pos.x,bs.pos.y+7,bs.pos.z).addScaledVector(dir,-6),1-Math.exp(-3*dt));camera.lookAt(t);S.camFollow=0;S.specCam=k!==f?k:null;return;}
+  S.camFollow=1;S.specCam=null;if(scoped){camera.position.copy(head).add(new V3(0,.12,0)).addScaledVector(dir,.3);f.ch.root.visible=false;}
   else{// indoors (ceiling overhead) the camera tucks in closer and lower and widens its view
     const up=rayBoxes(head,new V3(0,1,0),3.2);S.indoor=damp(S.indoor||0,up?1:0,6,dt);const ind=S.indoor;
     let sh=lerp(f.ads?1.0:1.45,f.ads?.7:.9,ind);const rs=rayBoxes(head,right,sh+.4);if(rs)sh=Math.max(0,rs.t-.4);

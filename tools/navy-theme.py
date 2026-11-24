@@ -14,6 +14,7 @@ def fix_css(css):
     def repl_decl(m):
         prop=m.group(1).strip().lower();val=m.group(2)
         if prop in('color','caret-color','-webkit-text-fill-color','fill','stroke'):return m.group(0)
+        # keep everything before the value exactly as it was (a selector like `.a :is(` must keep its space)
         def hx(mm):
             t=mm.group(1)
             if len(t)==3:t=''.join(c*2 for c in t)
@@ -28,7 +29,7 @@ def fix_css(css):
             if not c:return mm.group(0)
             cnt[0]+=1;return f'{mm.group(1)}({c[0]},{c[1]},{c[2]}'
         val=re.sub(r'(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)',rg,val)
-        return m.group(1)+':'+val
+        return m.group(0)[:m.start(2)-m.start(0)]+val
     return re.sub(r'([-a-zA-Z]+)\s*:([^;{}]+)',repl_decl,css)
 parts=re.split(r'(<style[^>]*>.*?</style>)',s,flags=re.S)
 for k in range(len(parts)):

@@ -66,7 +66,7 @@ Last updated: 2026-11-24
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
-- Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
+- Gun colours: HDR black with silver barrel; Vanguard shiny mirror chrome (the M4 is the gold gun); Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina. Gold Grenade: double damage, an explosion twice the size of a normal one, and a slight shake of your screen wherever you are. Flamethrower: 16 m wide jet, 6 a tick (downs someone up close in about a second), 3 s of fuel, harder burn.
 
@@ -115,6 +115,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Vanguard re-finished in shiny mirror chrome (was gold, which clashed with the gold M4).
 - Stun stars removed completely (no stars, halo ring or sparks over a stunned or dazed player's head).
 - Street Life: a zipline from roof top to roof top (small deck on each ridge; jump on the pad to grab, about 1.7 s across, jump to let go; bots use it both ways); quiet original trap loop playing inside the arcade.
 - Street Life: the arcade's two corner blade signs removed; the ARCADE board scrolls slowly left; arcade carpet, starry ceiling, memphis blue wall, posters, a HIGH SCORES board and a GAME ON sign inside; the two lorries restyled (SCOOPS ice-cream truck, GAME TRUCK).

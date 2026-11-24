@@ -81,7 +81,7 @@ Last updated: 2026-11-24
 - Music: dark, bass-led trap on menus/between rounds/end of game. The menu song rotates between 3 tracks (Dark Trap, Dark Trap 2, Dark - Dark Beat), a different one each time the game opens.
 
 ### Characters
-- Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
+- Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair; Glitch's trim is neon orange, not cyan; Raven keeps black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
 - Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat still adds 20%.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
@@ -120,6 +120,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Glitch's cyan trim (zip, socks, trainers) changed to neon orange, menu colour too; Raven keeps her black hair (blonde tried, Pete chose to keep black).
 - Bot navigation checked on every map: bots now use the Arena portals, double-jump onto container tops and the Street Life ledge, hop counters, railings and low walls, get into both Street Life under-stair nooks and up the arcade stairs, find the Mansion roof from anywhere inside (route planned on a coarse map when it's far), and shoot away breakable cover a player hides behind. Sky High cabana doorways widened to fit a body; one Street Life arcade machine by the stairs removed (it blocked the way).
 - Ziplines: 3 s cooldown after any ride (players and bots). Riders can be shot; a downing hit on the zipline kills outright and the body tumbles off, falls all the way and explodes where it lands.
 - Fixed invisible walls under staircases (Street Life's house and hospital, The Mansion, The House): stairs keep their solid blocks for walking, but shots, throws and sight now only meet the visible steps, so you can shoot under and between them.

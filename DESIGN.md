@@ -51,8 +51,8 @@ Last updated: 2026-11-24
 - Duels (1v1 Normal/Simple, 2v2 Normal/Simple, Free for all), Rumble, Snipers only.
 - Simple = fixed M4, knife (replaced the sword), grenades; no loadout screen.
 - Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
-- Rumble: fists only, no armour; bat and Speed Shoes pickups appear 10 s into each round.
-- Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + fists/melee + throwables; Sentry stays.
+- Rumble: bats only, no armour; Speed Shoes pickup appears 10 s into each round.
+- Snipers only: one sniper (all 6 to choose; the 4 new ones appear nowhere else) + bat + throwables; Sentry stays.
 - Small maps: primaries limited to shotguns + crossbow, secondaries to SMGs, pistols and melee; available weapons listed first, others greyed out; Random only picks available ones.
 - Collection is not part of this game: it was taken out on 24 Nov 2026 to be rebuilt as its own project in a separate folder and GitHub repo. Its last version here is tagged `collection-v1` (rules then: The Mansion, 8 players, start with fists, find SMGs/pistols/bats, 10 stars to win, cash in at the shop, going down costs 2 stars, dying loses all, 8+ stars outlined through walls and marked on minimaps). Don't add it back to imok 1v1.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
@@ -60,9 +60,10 @@ Last updated: 2026-11-24
 ### Weapons
 - Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
 - M4 is first in the primary list; snipers sit at the end; Random is the default for primary, secondary and lethal and sits at the end of each category, jiggling slightly.
-- Fists are always the 3rd slot (20% faster with any melee out); wheel up = next weapon, wheel down = fists; ADS with fists does nothing. Fists down in 3 punches; bat/knife in 2. Boxing gloves in the character's colours replace bare fists only.
+- The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up).
+- The barbed-wire bat is always the 3rd slot (20% faster with the bat or knife out); wheel up = next weapon, wheel down = bat; ADS with the bat does nothing. Bat/knife down in 2 hits. No fists anywhere.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
-- SMGs: iron sights only, fastest ADS. Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
+- SMGs: iron sights only (real sight pictures; the Sting aims straight). Snipers fire from the hip on left click, right click scopes; shiny triggers and mirror scopes. Small aiming dots, no glow ring round red dots.
 - Gun colours: Kar98 white with black frame; HDR black with silver barrel; Shotty Horror and FAMAS shiny silver; Vector black; P90 black/silver.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Flash/stun last 1 s. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
@@ -99,7 +100,7 @@ Last updated: 2026-11-24
 
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena. (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
-- Weapons/items: .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Weapons/items: fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Other: throne-room crown scene, laser/flashlight on the M4, sprinting, bells in finishers, the red barn on Street Life.
@@ -109,6 +110,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Back to hard and fast: all guns get the quickest SMG's ADS speed; reload button (R key, phone button, key binding) removed, guns reload only when empty; fists removed completely and replaced by the barbed-wire bat as the permanent 3rd slot (Rumble is bats only; the bat pickup is gone).
 - Collection mode removed from imok 1v1 (menu, code, README) to be rebuilt as a separate project; last version tagged `collection-v1`.
 
 ### 2026-11-23

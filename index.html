@@ -1693,12 +1693,20 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #menu .mq-tip span::before{content:"\2022";color:#ff5aa8;margin-right:8px}
 #menu .mq-tip small{color:#8a8a8a;font-size:11.5px;margin-top:4px;white-space:normal}
 #menu .mqgrp:hover .mq-tip,#menu .mqgrp:focus-within .mq-tip{display:flex}
-/* map picker tiles: square and sized so both rows always fit on screen (no scrolling); hovering a map shows a bigger picture of it (see mapPeek) */
+/* map picker: small square pictures on the left, a big preview of the picked (or hovered) map on the right with its name and description under it */
+#menu .mbig{display:none}
 @media (min-height:521px){
-#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{height:auto!important}
-#menu .mfull.duels[data-step="setup"] .mpick .mrg{--ts:min(calc((100vw - 140px - 4*10px)/var(--cols,5)),max(60px,calc((100vh - 482px)/2)),270px);flex:none;grid-template-columns:repeat(var(--cols,5),var(--ts));grid-template-rows:none!important;grid-auto-rows:var(--ts);justify-content:center}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0 20px;height:clamp(240px,calc(100vh - 352px),760px)!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg{--ts:clamp(56px,calc((100vh - 400px)/3),150px);grid-column:1;grid-row:1;flex:none;grid-template-columns:repeat(4,var(--ts))!important;grid-template-rows:none!important;grid-auto-rows:var(--ts);align-content:start;justify-content:start;margin:12px 0 12px 12px!important}
 #menu .mfull.duels[data-step="setup"] .mpick .mrg-t{aspect-ratio:auto;height:auto;width:auto}
-#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap{padding:8px 22px 12px}#menu .mfull.duels[data-step="setup"] .mpick .mcar-cap .t{font-size:clamp(26px,2.6vw,38px)}}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg-t span{font-size:10px}
+#menu .mfull.duels[data-step="setup"] .mbig{display:grid;place-items:center;grid-column:2;grid-row:1;margin:12px 0;min-height:0;height:calc(100% - 24px);aspect-ratio:1/1;justify-self:start;border-radius:10px;overflow:hidden;background:#16264b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+#menu .mfull.duels[data-step="setup"] .mbig img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;display:block}
+#menu .mfull.duels[data-step="setup"] .mbig b{font:800 72px/1 Arial,sans-serif;color:#8a96b8}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap{grid-column:3;grid-row:1;align-self:start;display:flex!important;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 16px 12px 0!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap .b{align-self:flex-start!important;text-align:left!important;justify-self:auto!important;max-width:100%!important;-webkit-line-clamp:5!important;margin:4px 0 0!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap .t{white-space:normal!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-cap .t{font-size:clamp(26px,2.6vw,38px)}}
 #map-peek{position:fixed;z-index:60;width:var(--pw,360px);aspect-ratio:1/1;border-radius:12px;overflow:hidden;pointer-events:none;opacity:0;transform:scale(.96);transition:opacity .14s ease,transform .14s ease;background:#16264b center/cover no-repeat;box-shadow:0 0 0 2px #fff,0 18px 50px rgba(3,7,18,.7)}
 #map-peek.on{opacity:1;transform:none}
 #map-peek.gun{background-color:#0e1a3a;background-size:contain}
@@ -12548,6 +12556,7 @@ function renderDuelMenu(){
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
     /* the map picker: every map as a small picture (plus Random); the picked one has a red edge and a soft glow drifts between them */
     if(!S.picking)setHTML('d-maps',`<div class="mcar rand mpick"><div class="mcar-stage"><div class="mrg" style="--cols:${Math.ceil((L.length+1)/2)}">${L.map(([k,mm])=>`<button class="mrg-t${!S.randMap&&k===S.map?' sel':''}" data-rk="${k}" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}" title="${(mm.desc||mm.name)+(MAP_SIZE[k]?' ('+MAP_SIZE[k][1]+')':'')}">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}<span>${mm.name}</span></button>`).join('')}<button class="mrg-t rnd${S.randMap?' sel':''}" data-map="random" aria-pressed="${!!S.randMap}" title="Random: let it pick a map for you"><b aria-hidden="true">?</b><span>Random</span></button></div>
+      <div class="mbig" id="d-mapbig">${cur&&thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:'<b aria-hidden="true">?</b>'}</div>
       <div class="mcar-cap"><span class="chip">${mapChip()}${cur&&MAP_SIZE[cur[0]]?' · '+MAP_SIZE[cur[0]][1]:''}</span><span class="t">${cur?m.name:'Random'}</span><i class="rule"></i><span class="b">${cur?(MAP_TAG[cur[0]]||m.desc):MAP_TAG.random}</span></div></div></div>`);}
   const mapNow=S.randMap?null:S.map;if(!S.randGun&&!priOK(S.gun,mapNow))S.randGun=true;
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;const ok=priOK(k,mapNow);return `<button class="opt gun-opt${ok?'':' off'}" ${attr}="${k}" aria-pressed="${ok&&k===sel}"${ok?'':` disabled aria-disabled="true" title="Not available"`}><img class="gp${HERO[k]?' spot':''}" src="${PREV['g_'+k]||''}" alt="">${GCAT[k]?`<span class="gc">${GCAT[k]}</span>`:''}<span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
@@ -12577,7 +12586,10 @@ $('d-maps').addEventListener('click',e=>{if(S.picking)return;const b=e.target.cl
   if(b.dataset.map==='random'){S.randMap=true;renderDuelMenu();return;}
   S.randMap=false;S.map=b.dataset.map;renderDuelMenu();mapLater();});
 
-function mapCap(k){const cap=document.querySelector('#d-maps .mcar-cap');if(cap&&MAPS[k]){const tt=cap.querySelector('.t'),bb=cap.querySelector('.b');if(tt)tt.textContent=MAPS[k].name;if(bb)bb.textContent=MAP_TAG[k]||MAPS[k].desc||'';}}
+/* caption + big preview for one map (k null/'random' = Random); used for the pick, while a tile is hovered, and as Random's spin lands */
+function mapCap(k){const cap=document.querySelector('#d-maps .mcar-cap');if(!cap)return;const m=MAPS[k],tt=cap.querySelector('.t'),bb=cap.querySelector('.b'),ch=cap.querySelector('.chip');
+  if(tt)tt.textContent=m?m.name:'Random';if(bb)bb.textContent=m?(MAP_TAG[k]||m.desc||''):MAP_TAG.random;if(ch)ch.textContent=mapChip()+(m&&MAP_SIZE[k]?' · '+MAP_SIZE[k][1]:'');
+  const big=$('d-mapbig');if(big){const u=m&&thumbs[k];if(big.dataset.k!==String(k)){big.dataset.k=String(k);big.innerHTML=u?`<img src="${u}" alt="">`:'<b aria-hidden="true">?</b>';}}}
 // random map: rolled fresh at the start of every match (rematches too), never the same one twice in a row when there's a choice
 /* Random loadout picks (the default): a fresh gun and lethal every match, never the same one twice in a row */
 function rollLoad(){const pk=(l,last)=>{const p=l.length>1?l.filter(k=>k!==last):l;return p[(Math.random()*p.length)|0];};if(S.randGun||!priOK(S.gun))S.gun=pk(priList().filter(k=>priOK(k)),S.gun);if(S.randCons)S.cons=pk(CONS_IDS,S.cons);}
@@ -12637,13 +12649,15 @@ $('m-quick2').addEventListener('click',e=>{e.preventDefault();$('m-quick').click
 /* hover peek: hover a map in the picker and a bigger picture of it appears beside the tile (a gun you hover on the Loadout screen shows in that screen's own showcase panel instead; lethals have no hover): on whichever
    side has room (right, left, else above/below), kept fully on screen, never under the pointer (so it can't block the next tile you move to) */
 (()=>{const pk=document.createElement('div');pk.id='map-peek';pk.innerHTML='<b></b>';document.body.appendChild(pk);let cur=null;
-  const SEL='#d-maps .mrg-t[data-map], #d-guns .gun-opt[data-gun]:not(.rand):not(.off)';
-  let wsHov=false;const hide=()=>{cur=null;pk.classList.remove('on');if(wsHov){wsHov=false;if(S.state==='menu'&&!$('d-wshow').hidden){const [tb,kk]=wsPick();wsPaint(tb,kk,false);}}};
+  const SEL='#d-maps .mrg-t[data-map], #d-guns .gun-opt[data-gun]:not(.rand):not(.off)';let mapHov=false;
+  let wsHov=false;const hide=()=>{cur=null;pk.classList.remove('on');if(mapHov){mapHov=false;if(!S.picking)mapCap(S.randMap?null:S.map);}if(wsHov){wsHov=false;if(S.state==='menu'&&!$('d-wshow').hidden){const [tb,kk]=wsPick();wsPaint(tb,kk,false);}}};
   const nameOf=t=>t.dataset.map?((MAPS[t.dataset.map]||{}).name||''):t.dataset.gun?((GUNS[t.dataset.gun]||{}).name||''):t.dataset.cons?((CONS[t.dataset.cons]||{}).name||(CONS[t.dataset.cons]||{}).short||''):((t.querySelector('.t')||{}).firstChild||{}).textContent||'';
   document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest&&e.target.closest(SEL);
     if(!t){if(cur&&!(e.target.closest&&e.target.closest(SEL)))hide();return;}if(t===cur)return;if(cur)hide();const img=t.querySelector('img');if(t.dataset.map&&(!img||!img.getAttribute('src'))){hide();return;}
     /* guns: shown in the Loadout screen's own showcase panel (picture, name, stats) while you hover; your pick comes back when you move off */
     if(t.dataset.gun){if(pk.classList.contains('on'))pk.classList.remove('on');cur=t;wsHov=true;wsPaint('pri',t.dataset.gun,false);return;}
+    /* maps (big layout): the hovered map shows in the big preview on the right; the pick comes back when you move off */
+    if(t.dataset.map&&$('d-mapbig')&&$('d-mapbig').offsetParent){if(S.picking)return;cur=t;mapHov=true;mapCap(t.dataset.map==='random'?null:t.dataset.map);return;}
     cur=t;const r=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,m=12,ar=img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1,
       big=Math.max(200,Math.min(ar>1.2?480:420,vh*.5*Math.max(1,ar),vw*(ar>1.2?.38:.34))),W=Math.round(big),H=Math.round(big/ar);
     pk.style.setProperty('--pw',W+'px');pk.style.aspectRatio=ar.toFixed(3);pk.classList.toggle('gun',!t.dataset.map);

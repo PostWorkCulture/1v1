@@ -3841,7 +3841,7 @@ function hitCar(c,dmg,at){if(!c.alive)return;const now=S.t;if(now-(c.hitT??-9)>.
 /* Street Life's second building: once a hospital, now the yellow ARCADE (24 Nov). Its code still calls it 'hospital' (th) */
 const SL_FUN='arcade';
 /* the home's cladding colour (was brown cedar until 24 Nov) */
-const HOME_CLAD='#ffffff',HOME_BRIGHT=['#ff4fd8','#3de0ff','#ffe14d','#3bb54a','#ff7a1a'];/* bright boards, a different colour on each wall: pink back, cyan and yellow sides, green front, orange inside downstairs */
+const HOME_CLAD='#ffffff',HOME_BRIGHT=Array(5).fill('#ffcc1a');/* yellow boards on every wall, with the black frame (24 Nov) */
 /* storey heights for houseA: Street Life's home and hospital have two storeys (24 Nov: the middle floor is gone): a tall ground floor (4.9 m)
    and the loft room with its open terrace (4.2 m) straight on top of it, so the first-floor top T and the loft floor L both sit at F */
 function houseDims(th){return th==='home'||th==='hospital'?{H:4.9,F:5.2,T:5.2,L:5.2,LH:4.2,NS:11,RUN:.32,two:1}:{H:4.1,F:4.4,T:8,L:8.3,LH:3.6,NS:9,RUN:.39};}
@@ -3918,11 +3918,11 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
   if(th==='hospital'&&SL_FUN){
     /* Street Life's second building is the ARCADE (24 Nov; it was a hospital): yellow trim and roof, ARCADE on a big board under the porch, glowing star signs on the
        front corners, the side walls and the loft wall, a big glowing star on the ridge, and game machines all round the walls on both floors (the middle of each room stays open) */
-    const L=DIM.L,T=DIM.T,YL='#f4c22b',D={solid:false,edges:false},TH={name:'ARCADE',bg:'#1b1035',fg:'#ffe14d',ac:'#ff4fd8',ac2:'#3de0ff'};
+    const L=DIM.L,T=DIM.T,YL='#2c3036'/* frames outside: the home's black */,D={solid:false,edges:false},TH={name:'ARCADE',bg:'#1b1035',fg:'#ffe14d',ac:'#ff4fd8',ac2:'#3de0ff'};
     const sb=(u0,u1,v0,v1,y0,y1,c,o)=>S.box(Math.min(u0,u1),Math.max(u0,u1),Math.min(v0,v1),Math.max(v0,v1),y0,y1,c,o||D);
     const star=(g,cx,cy,r,fill,line)=>{g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;g.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);}g.closePath();g.fillStyle=fill;g.fill();if(line){g.lineWidth=r*.12;g.strokeStyle=line;g.stroke();}};
     const drawIcon=(g,w,h)=>star(g,w/2,h*.53,w*.42,'#ffe14d','#ff4fd8');
-    const iconTex=bg=>canvasTex(256,256,(g,w,h)=>{if(bg){g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle=YL;g.lineWidth=14;g.strokeRect(7,7,w-14,h-14);}else g.clearRect(0,0,w,h);drawIcon(g,w,h);});
+    const iconTex=bg=>canvasTex(256,256,(g,w,h)=>{if(bg){g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle='#ffe14d';g.lineWidth=14;g.strokeRect(7,7,w-14,h-14);}else g.clearRect(0,0,w,h);drawIcon(g,w,h);});
     const signM=new THREE.MeshBasicMaterial({map:iconTex(TH.bg)}),plaqueM=new THREE.MeshBasicMaterial({map:iconTex(null),transparent:true,alphaTest:.1});
     const plaque=(u,v,y,s,ax,m,t=.06)=>ax==='u'?sb(u-u2(t/2),u+u2(t/2),v-u2(s/2),v+u2(s/2),y-s/2,y+s/2,null,Object.assign({mat:m},D)):sb(u-u2(s/2),u+u2(s/2),v-u2(t/2),v+u2(t/2),y-s/2,y+s/2,null,Object.assign({mat:m},D));
     // the big board under the porch roof
@@ -4127,8 +4127,8 @@ function wLadder(x,z,y0,y1,nx,nz,len=1.1){const lm=mat('#eef0f3',null,{metalness
 // two-storey house; balcony over the porch, optional attic loft that opens onto a rooftop terrace
 function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip,k),{H,F,T,L,LH,NS,RUN,two:TWO}=houseDims(th),inner='#f3efe6',WH=th==='hospital';
   /* the hospital is white all through: floors, walls, the partition, the upper floors and the stairs */
-  const SL=WH?['#f7f8fa','tile']:th==='home'?['#ffffff','greyoak']:['#b9895a','wood'],SC=WH?'#e3e7ec':th==='home'?'#c9c2b6':'#8a5a34';/* the home: grey-washed oak upstairs and pale stairs */
-  const FL={garage:['#9a9da3',null],hospital:['#f7f8fa','tile'],store:['#ece5d6','tile']}[th]||['#c99a5b','wood'];S.floor(-5.85,5.85,-5.35,5.35,.02,FL[0],FL[1]);
+  const SL=WH?[SL_FUN?'#3a0f6e':'#f7f8fa','tile']:th==='home'?['#ffffff','greyoak']:['#b9895a','wood'],SC=WH?(SL_FUN?'#1b1035':'#e3e7ec'):th==='home'?'#c9c2b6':'#8a5a34';/* the home: grey-washed oak upstairs and pale stairs */
+  const FL={garage:['#9a9da3',null],hospital:[SL_FUN?'#c8102e':'#f7f8fa','tile'],store:['#ece5d6','tile']}[th]||['#c99a5b','wood'];S.floor(-5.85,5.85,-5.35,5.35,.02,FL[0],FL[1]);
   // ground floor
   const GW=th==='home'||th==='hospital',HOME=th==='home',GO={mat:HOUSE_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false};
   if(!GW){S.wall('u',-6,-5.5,5.5,0,H,[DOOR(0),WIN(-3.6),WIN(3.6)],wall);S.wall('u',6,-5.5,5.5,0,H,[DOOR(1.6,4.2),WIN(-3.6)],wall);
@@ -4151,12 +4151,12 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
     const pl=(id,u,v)=>{const D={plant:[1.39,.99],redplant:[1.58,1.63]}[id],x=S.X(u),z=S.Z(v),K=knock(x,0,z,D[0],FURN_CFG[id].h,D[1],'#3f8f3a',{mat:INVIS});furnInto(id,K.m,x,0,z,(u*3+v)%6.28);};
     pl('plant',-6.8,6.3);pl('plant',6.8,-6.3);}
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
-  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?'#f4f5f7':th==='home'?HOME_BRIGHT[4]:'#d9b48a',.25,WH?{chip:false}:th==='home'?{tx:'boards',wood:true,chip:false}:{tx:'wood',wood:true,chip:false});
+  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?(SL_FUN?'#1f3fff':'#f4f5f7'):th==='home'?HOME_BRIGHT[4]:'#d9b48a',.25,WH?{chip:false}:th==='home'?{tx:'boards',wood:true,chip:false}:{tx:'wood',wood:true,chip:false});
   S.wall('u',-6,-5.65,5.65,H,F,[],trim);S.wall('u',6,-5.65,5.65,H,F,[],trim);
   if(th==='home'||th==='hospital'){/* Street Life: a square of thick glass set into the ceiling of the front room, so you can look up from downstairs and see who's on the floor above
      (it's walked on like the rest of the floor and doesn't break); slim frame round its edge on top */
     const g0=-3.5,g1=-1.0,h0=-1.25,h1=1.25;S.slab(0,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);S.slab(-5.85,0,-5.35,5.35,H,F,SL[0],{u0:g0,u1:g1,v0:h0,v1:h1},SL[1]);
-    S.box(g0,g1,h0,h1,H,F,'#bfe6ff',{mat:HOUSE_GLASS,shadow:false,edges:false});const fr=th==='home'?'#2c3036':SL_FUN?'#f4c22b':'#c8322b',FO={solid:false,edges:false};
+    S.box(g0,g1,h0,h1,H,F,'#bfe6ff',{mat:HOUSE_GLASS,shadow:false,edges:false});const fr=th==='home'||SL_FUN?'#2c3036':'#c8322b',FO={solid:false,edges:false};
     S.box(g0-.06,g1+.06,h0-.06,h0,F,F+.04,fr,FO);S.box(g0-.06,g1+.06,h1,h1+.06,F,F+.04,fr,FO);S.box(g0-.06,g0,h0,h1,F,F+.04,fr,FO);S.box(g1,g1+.06,h0,h1,F,F+.04,fr,FO);}
   else S.slab(-5.85,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);
   // stairs end on a landing in front of the back wall (not against it); the rail only guards the deep end of the stairwell, so the whole top of the flight opens onto the floor
@@ -4183,7 +4183,10 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   /* the home's loft is clad in vertical boards in a bright colour */
   const LW=HOME?HOME_CLAD:wall,LWO=HOME?{tx:'boards'}:undefined;
   const R2=L+LH,LC=i=>HOME?HOME_BRIGHT[i]:LW;S.wall('u',6,-5.5,5.5,L,R2,[BW(-2,2.6,L,R2)],LC(0),.3,LWO);for(const [i,v] of [[1,-5.5],[2,5.5]])S.wall('v',v,0,5.85,L,R2,[BW(3,2.4,L,R2)],LC(i),.3,LWO);
-  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],LC(3),.3,LWO);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
+  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],LC(3),.3,LWO);
+    if(WH&&SL_FUN){/* the arcade's loft room is lined inside in loud dark colours: electric blue at the back, deep purple and dark teal down the sides, hot magenta at the front */const LO={solid:false,edges:false,chip:false,shadow:false};
+      S.wall('u',5.84,-5.35,5.35,L,R2,[BW(-2,2.6,L,R2)],'#1f3fff',.02,LO);S.wall('v',-5.34,.15,5.85,L,R2,[BW(3,2.4,L,R2)],'#3a0f6e',.02,LO);S.wall('v',5.34,.15,5.85,L,R2,[BW(3,2.4,L,R2)],'#0b5d5a',.02,LO);
+      S.wall('u',.16,-5.35,5.35,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],'#c2127f',.02,LO);}S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
   /* no overhang on the terrace end, so the ladder up the loft wall reaches the roof edge without going through the eaves */
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true,null,null,flip>0?[0,.4]:[.4,0]);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
@@ -5998,7 +6001,7 @@ const MAPS={
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
   const L=[[-1,3,'C','#3b4048',2,'home'],[1,-3,'C',SL_FUN?'#f4c22b':RC[5],3,'hospital']];/* (the four smaller side buildings are gone) *//* the two big ones face each other across the road, a few metres off true */
   for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2:1.1,cx=side*21.5,/* turned sideways (24 Nov): fronts face along the street (the home south, the other one north), so they can be bigger and fill their side */hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
-    rotBuild(cx,z,1,()=>{if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc,th==='homeB'?(z>0?'studio':'den'):th==='hospB'?(z>0?'pharmacy':'cafe'):null);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?(SL_FUN?'#f4c22b':'#c8322b'):th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);});
+    rotBuild(cx,z,1,()=>{if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc,th==='homeB'?(z>0?'studio':'den'):th==='hospB'?(z>0?'pharmacy':'cafe'):null);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?(SL_FUN?'#2c3036':'#c8322b'):th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);});
     /* a mailbox beside the path, not on it */
     box(side*9.6,0,z+side*15.5,.4,1.1,.4,'#3a3d45');box(side*9.6,1.1,z+side*15.5,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   /* the boundary is a white picket fence (white-washed vertical slats with gaps you can see through, two rails) on an invisible wall */
@@ -6272,9 +6275,10 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   floor(-3,3,MZ,Z,'#d9d2c4','slab',.01,2);/* the path out of the back door */
   /* the side lawns are out of bounds (too much going on out there): tall hedges run from each corner of the house out to the boundary hedge,
      so outside you can only fight on the front and back lawns */
-  {const hm=mat('#3e7a32','grass',{roughness:.95});for(const sx of [-1,1])for(const sz of [-1,1]){const x0=sx*(MX+.2),x1=sx*X,zc=sz*(MZ+.45);
-     box((x0+x1)/2,0,zc,Math.abs(x1-x0),3,.9,'#3e7a32',{mat:hm,tx:'grass',shadow:true});
-     for(let x=Math.min(x0,x1)+.6;x<Math.max(x0,x1);x+=1.2){const o=deco(new THREE.IcosahedronGeometry(.42,0),hm,x,3+Math.random()*.1,zc+(Math.random()-.5)*.3);o.castShadow=false;}}
+  /* (24 Nov: as tall as the house, 11 m, so it's plain you can't get past them) */
+  {const hm=mat('#3e7a32','grass',{roughness:.95}),SH=H2;for(const sx of [-1,1])for(const sz of [-1,1]){const x0=sx*(MX+.2),x1=sx*X,zc=sz*(MZ+.45);
+     box((x0+x1)/2,0,zc,Math.abs(x1-x0),SH,1.2,'#3e7a32',{mat:hm,tx:'grass',shadow:true});
+     for(let x=Math.min(x0,x1)+.6;x<Math.max(x0,x1);x+=1.2){const o=deco(new THREE.IcosahedronGeometry(.55,0),hm,x,SH+Math.random()*.1,zc+(Math.random()-.5)*.3);o.castShadow=false;}}
    /* the hedges alone could be double-jumped (bots got onto them and stuck in the side strips), so invisible walls close the sides for good:
       one along each corner hedge line and one hugging each side wall, both up past the roof edge (no dropping off the roof's sides either) */
    const iw={mat:INVIS,shadow:false,edges:false},TOPW=H2+3.5;for(const sx of [-1,1]){const wx=sx*(MX+T/2+.2);box(wx,0,0,.4,TOPW,2*MZ+1.7,'#3e7a32',iw).see=true;
@@ -6337,14 +6341,14 @@ function mansion(){const X=60,Z=45,MX=40,MZ=27,H1=5.5,UF=5.8,H2=11,T=.4,DH=3.3;M
   /* ladders up the outside walls onto the roof: two at the front, one at the back (and one up from the roof terrace, below) */
   {const o=MZ+T/2+.12,ox=MX+T/2+.12,top=H2+.35;wLadder(-24,-o,0,top,0,1);wLadder(24,-o,0,top,0,1);wLadder(-30,o,0,top,0,-1);
    wLadder(24+T/2+.12,14,UF,top,-1,0);/* up from the roof terrace onto the roof */}
-  /* the roof: a cream stone parapet all round (1.1 m: crouch behind it), with piers and a coping, gaps where the ladders come up;
+  /* the roof: a cream stone parapet all round (1.1 m: crouch behind it; 2.6 m on the two sides, where you can't drop off, so that's plain), with piers and a coping, gaps where the ladders come up;
      four brick chimney stacks to hide behind */
-  {const RY=H2+.35,PH=1.1,stone='#e9e4da',cap=pm('marble:#f4f1ea'),pier=mat('#d9d4c8','slab'),n0=M.group.children.length;
-   const run=(x0,z0,x1,z1,gaps)=>{const ax=z0===z1,at=ax?z0:x0,a0=Math.min(ax?x0:z0,ax?x1:z1),a1=Math.max(ax?x0:z0,ax?x1:z1);let cur=a0;
+  {const RY=H2+.35,stone='#e9e4da',cap=pm('marble:#f4f1ea'),pier=mat('#d9d4c8','slab'),n0=M.group.children.length;
+   const run=(x0,z0,x1,z1,gaps,PH=1.1)=>{const ax=z0===z1,at=ax?z0:x0,a0=Math.min(ax?x0:z0,ax?x1:z1),a1=Math.max(ax?x0:z0,ax?x1:z1);let cur=a0;
      const seg=(a,b)=>{if(b-a<.1)return;const c=(a+b)/2,L=b-a;box(ax?c:at,RY,ax?at:c,ax?L:T,PH,ax?T:L,stone,{tx:'slab'});const o=deco(B.boxGeo(ax?L+.04:T+.16,.1,ax?T+.16:L+.04),cap,ax?c:at,RY+PH+.05,ax?at:c);o.castShadow=false;
        for(let q=a+.35;q<=b-.3;q+=Math.max(2,(b-a-.7)/Math.max(1,Math.round((b-a-.7)/6)))){const o2=deco(B.boxGeo(ax?.5:T+.12,PH+.12,ax?T+.12:.5),pier,ax?q:at,RY+(PH+.12)/2,ax?at:q);o2.castShadow=false;}};
      for(const g of (gaps||[]).slice().sort((p,q)=>p-q)){seg(cur,g-.9);cur=g+.9;}seg(cur,a1);};
-   run(-MX,-MZ,MX,-MZ,[-24,24]);run(-MX,MZ,24,MZ,[-30]);run(-MX,-MZ,-MX,MZ);run(MX,-MZ,MX,9);run(24,9,24,MZ,[14]);run(24,9,MX,9);
+   run(-MX,-MZ,MX,-MZ,[-24,24]);run(-MX,MZ,24,MZ,[-30]);run(-MX,-MZ,-MX,MZ,[],2.6);run(MX,-MZ,MX,9,[],2.6);run(24,9,24,MZ,[14]);run(24,9,MX,9);
    const brick=mat('#ffffff','redbrick'),pot=pm('clay:#b0583a');
    for(const [x,z] of [[-24,-15],[8,3],[-8,21],[24,-21]]){box(x,RY,z,1.7,2.5,1.7,'#ffffff',{tx:'redbrick'});const c=deco(B.boxGeo(2,.18,2),cap,x,RY+2.59,z);c.castShadow=false;
      for(const dx of [-.4,.4]){const pp=deco(gC(.17,.21,.5,10),pot,x+dx,RY+2.93,z);pp.castShadow=false;}}

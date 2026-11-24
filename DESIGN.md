@@ -22,7 +22,7 @@ Last updated: 2026-11-24
 ### General look and feel
 - Premium, realistic, not cartoony or toy-like. No confetti, no over-the-top sparks, no coloured particle squares/blocks on anything (hits, punches, respawns, double jumps, breaks).
 - Breakables are everywhere: all upright glass (windows, glass walls, railings) breaks with one bullet, punch or blade hit and shatters into lots of tiny shards that fall and lie on the surface. Floor/roof glass (e.g. Railed roofs) stays tougher so one stray shot doesn't drop people through. Glass is thin (3 cm), very see-through, no tint, no outline.
-- Explosive barrels go off from a single hit; cars blow up on the 3rd shot; shooting a mine sets it off for real. Every weapon (melee and crossbow included) breaks glass, barrels, mines and props.
+- Explosive barrels go off from a single hit; cars blow up on the 3rd shot; shooting a mine sets it off for real. Every weapon (melee and crossbow included) breaks glass, barrels, mines and props. Throwables smash any glass they hit and carry straight on through it (no bounce, no blast). A thrown grenade sets off every barrel and mine inside its whole blast.
 - Damaged buildings never show black zig-zag crack lines and never smoke.
 - Stairs on every map: clear to go up and down, nothing near the top or bottom, small low guardrails, room at the foot.
 - Climbing aids are white ladders (no stacked crates/boxes as hop-ups). Exception: Lagoon uses creative hop-ups, no ladders.
@@ -62,13 +62,14 @@ Last updated: 2026-11-24
 - Loadout is one page, no tabs: the showcase (whatever you last picked, big, with its stats) on the left; the gun grid on the right, then a clear empty row's worth of space, then the lethals.
 - The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); no wall building and no Sentry.
-- The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 20% faster with the bat out; ADS with the bat does nothing; it downs in 3 hits (34 a hit, Rumble too). No fists anywhere.
+- The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 40% faster with the bat out (not in Rumble) and it swings twice as quick (every 0.275 s); ADS with the bat does nothing; it downs in 3 hits (34 a hit, Rumble too). No fists anywhere.
+- Bat colours: every spawn you get one of six bats at random, same shape: classic white and red, Gold, Toxic (neon green and purple), Candy (pink, yellow, cyan), Galaxy (starry purple) and Lava (black with glowing cracks). The Gold Bat is the lucky one: 50 a hit, downs in 2. Your bat's colour shows on the HUD.
 - No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
-- Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
+- Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina. Gold Grenade: double damage, an explosion twice the size of a normal one, and a slight shake of your screen wherever you are. Flamethrower: 16 m wide jet, 6 a tick (downs someone up close in about a second), 3 s of fuel, harder burn.
 
 ### Sound
 - Top quality, never cheesy or harsh; preview new sounds before publishing. Sources: CC0 Freesound/Pixabay/Kenney etc. (ElevenLabs is unreliable).
@@ -115,6 +116,8 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Bat: 40% speed boost while held (was 20%) and swings twice as quick. Six bat colours at random each spawn; the Gold Bat downs in 2, the rest in 3.
+- Throwables smash through any glass without bouncing or going off; thrown grenades set off barrels and mines anywhere in their blast; Gold Grenade blast twice as big with a slight screen shake; Flamethrower more powerful (6 a tick, 16 m, wider jet, 3 s fuel, harder burn).
 - Stun stars half the size (and a little lower). Watching someone after you're out no longer judders/looks fuzzy (the camera now moves with their smoothed position).
 - Mansion: the side hedges (out of bounds) raised to the full height of the house (11 m), and the roof's side parapets to 2.6 m, so both are obvious.
 - Street Life: the home all yellow (black frame kept); the arcade's outside frames black like the home's, and loud dark clashing colours inside (red floor, electric-blue wall, deep purple ceiling/upstairs floor, loft lined blue/purple/teal/magenta).

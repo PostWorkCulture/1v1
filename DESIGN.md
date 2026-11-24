@@ -89,7 +89,7 @@ Last updated: 2026-11-24
 - A bot you kill hunts you until its next kill but doesn't ignore others; slight pull towards whoever's winning. Bots shoot through glass, can fall off things, go for nearby explosives.
 
 ### Menus and HUD
-- Monochrome (black/white, occasional colour highlight) everywhere, menus and in-game HUD alike, copied from the Unity version.
+- Navy and white everywhere (navy instead of black since 24 Nov), menus and in-game HUD alike, layout copied from the Unity version. The menus' accent colour (main buttons, logo, Rematch, Defeat, highlights) is neon pink, not red; red stays only for in-game danger/enemy cues (HUD enemy score, damage, Man Down, countdown). tools/navy-theme.py and tools/pink-menus.py convert anything new.
 - Fits a laptop screen without scrolling. Back and forward buttons the same size side by side, centred.
 - Map and character pickers: one box of small pictures plus Random; selection shown by a white edge; Random spins only when you move on. Quick start beside the Level bar.
 - Sliders: sensitivities 0–10 whole steps; volumes in 10% steps. Countdown small and red, the 1 dissolves.

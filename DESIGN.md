@@ -50,7 +50,7 @@ Last updated: 2026-11-24
 - Duels (1v1, 2v2, Free for all), Rumble. 1v1 and 2v2 always use your own loadout (the Simple rules were removed on 24 Nov).
 - Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
 - Rumble: bats only, no armour; Speed Shoes pickup appears 10 s into each round.
-- Free for all: straight kills, no downed state (1v1/2v2 keep downs, revives and finishers).
+- Free for all: straight kills, no downed state (1v1/2v2 keep downs and revives).
 - Every gun is allowed on every map (no small-map weapon limits). The Reaper, Titan .50 and Phantom snipers stay in the code but aren't offered anywhere until Pete picks which, if any, to bring in.
 - Collection is not part of this game: it was taken out on 24 Nov 2026 to be rebuilt as its own project in a separate folder and GitHub repo. Its last version here is tagged `collection-v1` (rules then: The Mansion, 8 players, start with fists, find SMGs/pistols/bats, 10 stars to win, cash in at the shop, going down costs 2 stars, dying loses all, 8+ stars outlined through walls and marked on minimaps). Don't add it back to imok 1v1.
 - Planned: Basic 1v1 (guns only, no shop/lethals, same fixed loadout both sides); online play is peer-to-peer (host + 1 friend, rest bots).
@@ -83,7 +83,7 @@ Last updated: 2026-11-24
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
 
 ### Finishers
-- Only 4: Pancake, Heartbreaker, Roast (Inferno fire), Combat; always random, 25% each, never per-character. Can't be interrupted. "Eliminated" shows at the top as soon as one starts. No bells, no white flash/sparks, no rubble squares.
+- Removed completely (24 Nov): no finishing moves. A downed player is eliminated by being shot out or bleeding out; bots shoot downed players instead of walking up to them.
 
 ### Bots
 - Levels Easy, Normal, Hard (Easy is much gentler, no revenge). 10 hidden random play styles. Bot teammates no better than enemies.
@@ -103,7 +103,7 @@ Last updated: 2026-11-24
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena, Club Night (removed 24 Nov 2026, with its deep house music). (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
 - Weapons/items: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
-- Finishers: Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
+- Finishers: all finishing moves (removed 24 Nov: Pancake, Heartbreaker, Roast, Combat, the F key and the Finish button), Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
 - Street Life: the 4 smaller side buildings and the big buildings' middle floor (removed 24 Nov).
@@ -114,6 +114,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.
 - Street Life home: plain floors downstairs (flat stone-beige living room, plain pale stone kitchen/dining; the patterned carpet, rugs and chequered tiles are gone).
 - Street Life's vans made static: they stay parked (still damageable, burn out, back next round).
 - Sights: ARs (AKM, M4) both get the twin steel-blade sight; MP5, Vector, UMP and Dual Pistols get the round ring sight (UMP micro dot and Vector holo removed).

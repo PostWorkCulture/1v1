@@ -67,7 +67,7 @@ Last updated: 2026-11-24
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
 - No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers hold Fire to scope and fire on release, right click only cancels a held scope. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Gun colours: HDR black with silver barrel; Vanguard gold; Vector black.
-- Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Flash/stun last 1 s. Mines always sit on a surface.
+- Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface.
 - Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina.
 
 ### Sound
@@ -102,7 +102,7 @@ Last updated: 2026-11-24
 
 - Maps: Sky Islands (never mention), Toy Town/Playtime, Small Arena, Baseplate Arena, Club Night (removed 24 Nov 2026, with its deep house music). (Old names Maple Street, Wreck Cove and Rail Yard are now Street Life, Beach Please and Railed.)
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden. Character abilities.
-- Weapons/items: FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
+- Weapons/items: the Flash Bang (removed 24 Nov), FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: all finishing moves (removed 24 Nov: Pancake, Heartbreaker, Roast, Combat, the F key and the Finish button), Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
 - Effects: floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
@@ -114,6 +114,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.
 - Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.
 - Street Life home: plain floors downstairs (flat stone-beige living room, plain pale stone kitchen/dining; the patterned carpet, rugs and chequered tiles are gone).
 - Street Life's vans made static: they stay parked (still damageable, burn out, back next round).

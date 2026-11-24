@@ -7589,7 +7589,6 @@ const GUNS={
   duals:{name:'Dual Pistols',base:'pistol',dmg:30,head:1.8,rate:.16,mag:24,reload:2,spread:1.6,adsSpread:.9,ads:ADS_T,pellets:1,fall:[10,28],zoom:70,auto:true,kick:.015,bloom:.18,color:'#e9edf5',note:'Two hard-hitting pistols, alternate fire, 24 rounds'},
   crossbow:{name:'Crossbow',type:'proj',dmg:83,head:2,rate:.9,mag:1,reload:1.8,spread:.6,adsSpread:0,ads:ADS_T,speed:200,grav:1.5,zoom:40,auto:false,kick:.03,bloom:0,color:'#1fd655',note:'Silent high-velocity bolt: 2× headshot'},
   stun:{name:'Stun Grenade',type:'proj',dmg:0,radius:6.5,rate:1,mag:2,reload:0,noReload:true,speed:30,grav:18,fuse:.6,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#3a7bff',note:'Stuns everyone caught in the flash'},
-  flash:{name:'Flash Bang',type:'proj',dmg:0,radius:13,rate:1,mag:2,reload:0,noReload:true,speed:30,grav:18,fuse:.6,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#ffffff',note:'Whites out everyone who sees it'},
   cluster:{name:'Cluster Grenade',type:'proj',dmg:18,radius:2.6,rate:1,mag:2,reload:0,noReload:true,speed:30,grav:18,fuse:2,landFuse:1,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#ff8a1f',note:'Splits into five bomblets'},
   bomblet:{name:'Bomblet',type:'proj',dmg:24,radius:2.6,rate:1,mag:1,reload:0,noReload:true,speed:8,grav:18,fuse:.9,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#ff8a1f'},
   mine:{name:'Proximity Mine',type:'proj',dmg:60,radius:3.4,rate:1,mag:2,reload:0,noReload:true,speed:0,grav:0,spread:0,adsSpread:0,zoom:55,auto:false,kick:0,bloom:0,color:'#e8463a'},
@@ -8645,7 +8644,6 @@ const fireMesh=()=>{const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.Sph
 /* thrown lethals in game: the detailed menu models (lite), built once and cloned */
 const LETH_PROTO={};const lethMesh=(id,sc)=>{let p=LETH_PROTO[id];if(!p){p=lethalModel(id,B.roundedBox,true);p.scale.setScalar(sc);LETH_PROTO[id]=p;}return p.clone();};
 const grenMesh=()=>lethMesh('c_grenade',.62);
-const flashMesh=()=>lethMesh('c_flash',.68);
 const clusterMesh=()=>lethMesh('c_cluster',.62);
 const bombletMesh=()=>lethMesh('bomblet',1);
 const stunMesh=()=>lethMesh('c_stun',.68);
@@ -8668,7 +8666,7 @@ function updStuck(dt){for(let i=STUCK.length-1;i>=0;i--){const st=STUCK[i];st.t-
     if(b&&(b.alive===false||(b.chip&&st.m.parent===scene&&st.m.position.y>b.y1+.05))){dropStuck(i);continue;}
     if(st.t<=0){dropStuck(i);continue;}if(st.t<.3)st.m.scale.setScalar(Math.max(.01,st.t/.3));}}
 function clearStuck(){while(STUCK.length)dropStuck(STUCK.length-1);}
-function spawnProj(f,id,from,dir){const g=GUNS[id];const mesh=id==='swarm'?swarmMesh():id==='rocket'?rocketMesh():id==='crossbow'?boltMesh():id==='grenade'?grenMesh():id==='stun'?stunMesh():id==='flash'?flashMesh():id==='cluster'?clusterMesh():id==='bomblet'?bombletMesh():starMesh();mesh.position.copy(from);scene.add(mesh);
+function spawnProj(f,id,from,dir){const g=GUNS[id];const mesh=id==='swarm'?swarmMesh():id==='rocket'?rocketMesh():id==='crossbow'?boltMesh():id==='grenade'?grenMesh():id==='stun'?stunMesh():id==='cluster'?clusterMesh():id==='bomblet'?bombletMesh():starMesh();mesh.position.copy(from);scene.add(mesh);
   projs.push({f,id,pos:from.clone(),vel:dir.clone().multiplyScalar(g.speed),life:g.landFuse?8:(g.fuse||4),armed:!g.landFuse,mesh});}
 function clearProjs(){for(const p of projs)scene.remove(p.mesh);projs.length=0;clearMines();clearStuck();}
 function wetBoom(at){if(M.splash&&M.waterY(at.x,at.z)!=null&&at.y<1.2){M.splash(at.x,at.z,2.6);sfx('splash',at,{range:24,rate:.8});for(let i=0;i<3;i++)emit(at.x,.4,at.z,{n:10,speed:3,up:9-i*2,size:.2,life:1,grav:16,colors:['#ffffff','#d8f6f8','#9fe3ea']});}}
@@ -8690,7 +8688,6 @@ function updProjs(dt){for(let i=projs.length-1;i>=0;i--){const p=projs[i],g=GUNS
     else if(p.id==='grenade')explode(p.f,at.add(new V3(0,.2,0)),null,p.gold?{dmg:g.dmg*2,radius:g.radius*1.25,wall:360,gun:'grenade',colors:['#ffd23f','#ffc61a','#fff3b0','#ffffff']}:{dmg:g.dmg,radius:g.radius,wall:180,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#ffffff']});
     else if(p.id==='swarm'){wetBoom(at);explode(p.f,at,hit&&hit.b?hit.b.n:null,{dmg:g.dmg,radius:g.radius,wall:70,gun:'swarm',colors:['#ffd23f','#ff7a1f','#ff3b1f','#3a3d45','#ffffff']},hit&&hit.b?hit.b.box:null);}
     else if(p.id==='stun')stunBlast(p.f,at.add(new V3(0,.3,0)));
-    else if(p.id==='flash')flashBang(p.f,at.add(new V3(0,.3,0)));
     else if(p.id==='cluster'){at.add(new V3(0,.2,0));explode(p.f,at.clone(),null,{dmg:g.dmg,radius:g.radius,wall:80,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#ffffff']});
       for(let k=0;k<5;k++){const a=k/5*TAU+rnd(-.3,.3),sp=rnd(4,7);spawnProj(p.f,'bomblet',at.clone().add(new V3(0,.25,0)),new V3(Math.cos(a)*sp/8,rnd(.7,1.1)*7/8,Math.sin(a)*sp/8));projs[projs.length-1].life=rnd(.7,1.2);}}
     else if(p.id==='bomblet')explode(p.f,at.add(new V3(0,.15,0)),null,{dmg:g.dmg,radius:g.radius,wall:60,gun:'grenade',small:true,colors:['#ffd23f','#ff7a1f','#3a3d45','#ffffff']});
@@ -9351,10 +9348,9 @@ const CONS={
   grenade:{name:'Grenade',short:'Grenade',desc:'The simple, powerful frag: one big blast for 60 damage',uses:2,meta:'2 per round'},
   stun:{name:'Stun Grenade',short:'Stun',desc:'Stunned 1s',uses:2,meta:'2 per round'},
   sense:{name:'HeartBeat',short:'HeartBeat',desc:'Locate 6s',cd:25,dur:6,meta:'25s cooldown'},
-  flash:{name:'Flash Bang',short:'Flash',desc:'Blinded 1s',uses:2,meta:'2 per round'},
   mine:{name:'Proximity Mine',short:'Mine',desc:'Proximity',uses:2,meta:'2 per round'},
   cluster:{name:'Cluster Grenade',short:'Cluster',desc:'Multi BOOM!!!',uses:2,meta:'2 per round'}};
-const THROWN=new Set(['grenade','stun','flash','cluster','bomblet']),AIMED=new Set(['grenade','stun','flash','cluster']);
+const THROWN=new Set(['grenade','stun','cluster','bomblet']),AIMED=new Set(['grenade','stun','cluster']);
 const CONS_FIRST=['grenade','cluster','mine'],CONS_IDS=[...CONS_FIRST,...Object.keys(CONS).filter(k=>!CONS_FIRST.includes(k)&&k!=='sense')]; /* loadout order: Grenade, Cluster, Mine first */
 let flashA=0;
 function resetCons(f){f.aimThrow=false;f.aimNade=false;const c=CONS[f.cons];f.consN=c&&c.uses||0;f.consT=0;f.senseT=0;f.blindT=0;}
@@ -9395,7 +9391,7 @@ function previewThrow(){let id=null,from,dir;
 }
   if(!id){TP.dots.count=0;TP.ring.visible=false;TP.dot.visible=false;return;}
   const r0=simThrow(id,from,dir,true);const r={end:r0.end,n:r0.n,r:r0.r,pts:[]};{const P=r0.pts,step=.55;let acc=0;r.pts.push(P[0].clone());for(let i=1;i<P.length;i++){let a=P[i-1].clone();const b=P[i];let L=a.distanceTo(b);while(acc+L>=step){const t=(step-acc)/L;a=a.lerp(b,t);r.pts.push(a.clone());L=a.distanceTo(b);acc=0;}acc+=L;}}
-  const col=id==='stun'?'#4fb0ff':id==='flash'?'#ffffff':id==='cluster'?'#ff8a1f':id==='grenade'?'#ffcc1f':'#39c6ff';TP.dots.material.color.set(col);TP.dots.material.opacity=THROW_OUT?.35:1;TP.dot.material.opacity=THROW_OUT?.4:1;TP.ring.material.color.set(col);TP.core.material.color.set(col);
+  const col=id==='stun'?'#4fb0ff':id==='cluster'?'#ff8a1f':id==='grenade'?'#ffcc1f':'#39c6ff';TP.dots.material.color.set(col);TP.dots.material.opacity=THROW_OUT?.35:1;TP.dot.material.opacity=THROW_OUT?.4:1;TP.ring.material.color.set(col);TP.core.material.color.set(col);
   const m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3();const n=Math.min(TP.n,r.pts.length);
   for(let i=0;i<n;i++){const k=i/(n-1||1);const s=i<2?0:.85-.3*k;sc.set(s,s,s);m.compose(r.pts[i],q,sc);TP.dots.setMatrixAt(i,m);}TP.dots.count=n;TP.dots.instanceMatrix.needsUpdate=true;
   TP.ring.visible=false;TP.ring.position.copy(r.end).addScaledVector(r.n,.05);TP.ring.lookAt(r.end.clone().add(r.n));TP.ring.scale.setScalar(r.r);
@@ -9408,11 +9404,6 @@ function useCons(f,dir){if(!f.alive||f.downed||f.finishing||f.stunT>0||S.state!=
   else if(id==='sense'){sfx('sense',f,{range:6});f.senseT=c.dur;f.consT=c.cd;const o=f.pos;for(let i=0;i<36;i++){const a=i/36*TAU;emit(o.x+Math.cos(a)*1.2,o.y+1.2,o.z+Math.sin(a)*1.2,{n:1,speed:.4,vx:Math.cos(a)*9,vz:Math.sin(a)*9,size:.16,life:.5,grav:0,colors:['#36f3ff','#ffffff']});}}
   return true;}
 /* flash bang: anyone facing the blast is whited out for 1 second in total (0.6 if looking away); bots lose track of you for that long */
-function flashBang(src,at){sfx('stun',at,{range:24,rate:1.25,wpn:1});emit(at.x,at.y,at.z,{n:70,speed:13,size:.26,life:.4,grav:0,colors:['#ffffff','#fffbe0']});
-  const Rr=GUNS.flash.radius;let hitAny=false;for(const f of FS){if(!f.alive||f.finishing||(f!==src&&!isFoe(src,f)))continue;const c=eyeOf(f,new V3()),d=c.distanceTo(at);if(d>Rr||!los(at,c))continue;
-    const fw=dirOf(f.yaw,f===ME?f.pitch:0,new V3()),to=at.clone().sub(c).normalize(),facing=fw.dot(to)>-.2||d<3;const t=facing?1:.6;if(f!==src)hitAny=true;
-    f.blindT=Math.max(f.blindT||0,t);if(f.ads)f.ads=false;if(f===ME){S.flashHold=Math.max(S.flashHold||0,t-.6);if(flashA<.3)FXG.after=true;flashA=1;}}
-  if(src===ME&&hitAny)hitMarker(false);}
 // proximity mines: laid on the floor in front of you, armed after a second, go off when an enemy steps near
 const mines=[];
 function layMine(f){const fw=dirOf(f.yaw,0,new V3());let x=f.pos.x+fw.x*1.1,z=f.pos.z+fw.z*1.1;let y=mineFloor(x,z,f.pos.y+.25);if(Math.abs(y-f.pos.y)>.6){x=f.pos.x;z=f.pos.z;y=mineFloor(x,z,f.pos.y);}
@@ -9573,7 +9564,7 @@ function rangeFit(f,id,d,style){const g=GUNS[id];if(!g)return -9;let s;
   if(style==='breacher'&&CLOSE(id))s+=.25;if(style==='sniper'&&isSn(id))s+=.25;
   if(id!==gunOf(f)&&(f.ammo[id]??1)<=0)s-=.35+(GUNS[id].reload||1.5)*.12;return s;}
 const BOT_SWAP={easy:{t:[2.5,4.5],p:.35,m:.5},normal:{t:[1.2,2],p:.7,m:.3},hard:{t:[.6,1],p:.9,m:.2}};
-const NO_RANGE_SWAP=new Set(['grenade','stun','flash','cluster','bomblet','mine','bat']);
+const NO_RANGE_SWAP=new Set(['grenade','stun','cluster','bomblet','mine','bat']);
 function botGunPick(f,a,dist,see){/* one gun and the bat: bots pull the bat when someone is right on top of them and their gun is a poor fit up close */
   if(!see||f.switchT>0||f.burstN>0||NO_RANGE_SWAP.has(f.primary)||CLOSE(f.primary)||S.t<(a.gpT||0))return;
   const c=BOT_SWAP[S.diff]||BOT_SWAP.normal;a.gpT=S.t+rnd(c.t[0],c.t[1]);if(Math.random()>c.p)return;
@@ -9710,7 +9701,7 @@ function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);co
   botGunPick(f,a,dist,see);
   if(f.cons&&consReady(f)){const cid=f.cons;
     if(cid==='mine'&&!a.mineAt&&(!see&&a.lostT>6||see&&dist<9)&&Math.random()<dt*.35)useCons(f);
-    else if(AIMED.has(cid)){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate*(cid==='flash'||cid==='stun'?(a.mode==='rush'?1.5:.6):1)){const {dx,dz,hd,ang}=lob(f,na.p);f.yaw=Math.atan2(dx,dz);useCons(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}}
+    else if(AIMED.has(cid)){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate*(cid==='stun'?(a.mode==='rush'?1.5:.6):1)){const {dx,dz,hd,ang}=lob(f,na.p);f.yaw=Math.atan2(dx,dz);useCons(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}}
     else if(cid==='sense'&&a.lostT>3&&Math.random()<dt*.4)useCons(f);}
   if((f.nades>0||f.goldNade>0)&&f.nadeT<=0){const na=nadeAim(f,a,T,see,dist);if(na&&Math.random()<dt*na.rate){const {dx,dz,hd,ang}=lob(f,na.p);
     f.yaw=Math.atan2(dx,dz);throwNade(f,new V3(dx/hd*Math.cos(ang),Math.sin(ang),dz/hd*Math.cos(ang)));}}
@@ -10184,7 +10175,7 @@ applyHud();applyHudPos();
 const ICON={
   grenade:'<svg viewBox="0 0 24 24"><circle cx="11" cy="14" r="7" fill="#4f7a3a" stroke="#14161c" stroke-width="1.6"/><rect x="9" y="4" width="5" height="4" rx="1" fill="#2b2d33" stroke="#14161c" stroke-width="1.4"/><path d="M14 6h4l2 3" fill="none" stroke="#14161c" stroke-width="1.6"/></svg>',
   stun:'<svg viewBox="0 0 24 24"><circle cx="11" cy="14" r="7" fill="#3a7bff" stroke="#14161c" stroke-width="1.6"/><path d="M11 10v8M7 14h8" stroke="#fff" stroke-width="2"/><rect x="9" y="4" width="5" height="4" rx="1" fill="#2b2d33" stroke="#14161c" stroke-width="1.4"/></svg>',
-  flash:'<svg viewBox="0 0 24 24"><path d="M12 1v3M4 5l2 2M20 5l-2 2M1 13h3M23 13h-3" stroke="#ffc61a" stroke-width="2" stroke-linecap="round"/><rect x="8" y="8" width="8" height="13" rx="2" fill="#fff" stroke="#14161c" stroke-width="1.6"/><path d="M8 11h8M8 18h8" stroke="#ffc61a" stroke-width="2"/></svg>',
+  
   mine:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="16" rx="9" ry="4" fill="#3a3d45" stroke="#14161c" stroke-width="1.6"/><path d="M6 15c0-3 2.7-5 6-5s6 2 6 5" fill="#55585f" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="9" r="2" fill="#ff2a2a" stroke="#14161c" stroke-width="1.2"/></svg>',
   cluster:'<svg viewBox="0 0 24 24"><circle cx="11" cy="14" r="6" fill="#ff8a1f" stroke="#14161c" stroke-width="1.6"/><circle cx="4" cy="8" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="20" cy="9" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><circle cx="19" cy="20" r="2" fill="#ff8a1f" stroke="#14161c" stroke-width="1.2"/><rect x="9" y="4" width="5" height="4" rx="1" fill="#2b2d33" stroke="#14161c" stroke-width="1.4"/></svg>',
   sense:'<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="#fff" stroke="#14161c" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="#36c3ff" stroke="#14161c" stroke-width="1.4"/></svg>',
@@ -10192,7 +10183,7 @@ const ICON={
   
   boots:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="#f08a24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 /* throwables in yellow when you have one ready (grey again while it recharges or when you're out) */
-const THR_AC={grenade:'#ffd400',stun:'#ffd400',flash:'#ffd400',mine:'#ffd400',cluster:'#ffd400'};/* one colour for every throwable: yellow = ready */
+const THR_AC={grenade:'#ffd400',stun:'#ffd400',mine:'#ffd400',cluster:'#ffd400'};/* one colour for every throwable: yellow = ready */
 function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
   const ru=S.mode==='rumble';
   const merge=ME.cons==='grenade';if(cc){const rd=consReady(ME);L.push([ICON[ME.cons]?ME.cons:'grenade',keyOf('leth'),cc.uses?String(ME.consN+(merge?ME.nades||0:0)):(ME.consT>0?Math.ceil(ME.consT)+'s':''),!rd]);}
@@ -11147,7 +11138,6 @@ const HERO={
   c_grenade:{bg:['#0d1208','#27341a','#6f9a3a']},
   c_stun:{bg:['#060b17','#13254a','#4f8dff']},
   c_sense:{bg:['#05121a','#0b3446','#22c7f0']},
-  c_flash:{bg:['#14140a','#3a3a20','#f0e27a']},
   c_mine:{bg:['#170808','#3d1414','#e8463a']},
   c_cluster:{bg:['#170c04','#40230b','#ff8a1f']},
   shotgun:{bg:['#1a0a05','#421b0d','#e85d22']},
@@ -11965,7 +11955,7 @@ const LETH_TEX={};
 function lethTex(key,w,h,draw){if(LETH_TEX[key])return LETH_TEX[key];const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);
   const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return LETH_TEX[key]=t;}
 function lethalModel(id,RB,lite){
-  const IDS=['c_grenade','c_stun','c_sense','c_flash','c_mine','c_cluster','bomblet'];
+  const IDS=['c_grenade','c_stun','c_sense','c_mine','c_cluster','bomblet'];
   if(!IDS.includes(id))return null;
   const g=new THREE.Group();
   const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.42,metalness:0},o||{}));
@@ -12066,19 +12056,6 @@ function lethalModel(id,RB,lite){
     tor(.159,.007,0,.055,0,glow('#7fc4ff',1.6),Math.PI*2,64).rotation.x=Math.PI/2;tor(.159,.007,0,-.115,0,glow('#7fc4ff',1.6),Math.PI*2,64).rotation.x=Math.PI/2;
     fuze(.25,[[.17,.13],[.175,.06],[.175,-.04],[.172,-.12]]);
   }
-  else if(id==='c_flash'){ // M84 flash bang: perforated steel body, yellow end plates, glowing charge behind the ports
-    const st=M('#d6dbe3',{metalness:.85,roughness:.24}),yl=M('#ffd84a',{roughness:.38,metalness:.2}),dk=M('#121418',{roughness:.7});
-    lathe([[0,-.24],[.14,-.24],[.14,.19],[0,.19]],st,48);
-    lathe([[0,-.275],[.13,-.275],[.15,-.26],[.152,-.225],[.13,-.215],[0,-.215]],yl,48); // bottom plate
-    lathe([[0,.175],[.152,.175],[.152,.21],[.13,.225],[.09,.24],[.075,.25],[0,.25]],yl,48); // top plate
-    add(new THREE.CylinderGeometry(.12,.12,.36,32),glow('#fff3c4',1.4),0,-.025,0); // the charge, seen through the ports
-    const ports=lite?2:3,per=lite?6:8;
-    for(let r=0;r<ports;r++)for(let i=0;i<per;i++){const a=i/per*Math.PI*2+(r%2?Math.PI/per:0),y=(lite?[-.1,.06]:[-.14,-.025,.09])[r];
-      const hole=add(new THREE.CylinderGeometry(.034,.034,.03,18),dk,Math.cos(a)*.13,y,Math.sin(a)*.13);hole.rotation.set(0,-a,Math.PI/2);hole.scale.set(1,1,1.35);
-      if(!lite){const rim=add(new THREE.TorusGeometry(.036,.006,6,18),chrome,Math.cos(a)*.142,y,Math.sin(a)*.142);rim.rotation.y=Math.PI/2-a;rim.scale.set(1,1.35,1);}}
-    fuze(.25,[[.17,.13],[.17,.05],[.17,-.05],[.167,-.13]]);
-  }
-
   else if(id==='c_sense'){ // HeartBeat sensor: handheld scanner, radar screen facing +z, pistol grip, antenna
     const sh=M('#232a33',{roughness:.4,metalness:.45}),cy=glow('#36f3ff',2),dk=M('#11151a',{roughness:.6}),acc=M('#22c7f0',{roughness:.35,metalness:.2});
     const scr=lethTex('hb',512,340,(c,w,h)=>{c.fillStyle='#03161b';c.fillRect(0,0,w,h);const cx=w/2,cy0=h*.94;

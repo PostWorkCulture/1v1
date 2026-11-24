@@ -7750,25 +7750,19 @@ function updFlames(dt){FLAME.upd(dt,camera,renderer.domElement.height);let best=
 
 /* ================= characters ================= */
 const CHARS={
-  brute:{skin:'brute_smash',fx:['Brick burst','Lightning'],name:'Gorillaz',hp:100,look:{shirt:'#2b2d33',shirtSolid:'#1b1d23',hair:'#1b1d23'},color:'#ff7a2a'},
-  jet:{skin:'jet_pilot',fx:['Balloon','Rainbow beam'],name:'Jet',hp:100,look:{shirt:'#2f7fe0',shirtSolid:'#1d4f9a',hair:'#f4c22b'},color:'#2f7fe0'},
   ghost:{skin:'shroud',fx:['Freeze','Tornado'],name:'Starscreen',hp:100,look:{shirt:'#dfe9f2',shirtSolid:'#9fb3c8',hair:'#9fd3f0'},color:'#9fd3f0'},
-  patch:{skin:'patch_medic',fx:['Balloon','Spirit'],name:'Murda Medic',hp:100,look:{shirt:'#2fa59a',shirtSolid:'#1d7068',hair:'#3a2a1a'},color:'#3bb54a'},
   crusty:{skin:'crusty_clown',fx:['Balloon','Firework'],name:'Crusty',hp:100,look:{shirt:'#2fae4a',shirtSolid:'#1f7a33',hair:'#8a2be2'},color:'#e8322a'},
   wednesday:{skin:'wed_goth',fx:['Black hole','Disco'],name:'Wednesday',hp:100,look:{shirt:'#18181c',shirtSolid:'#0e0e10',hair:'#1a1012'},color:'#d0202a'},
   antihero:{skin:'anti_hero',fx:['Tornado','Firework'],name:'Anti Hero',hp:100,look:{shirt:'#2f7a3a',shirtSolid:'#8a1a12',hair:'#b59a4a'},color:'#2f9a46'},
   dracula:{skin:'dracula_vamp',fx:['Black hole','Spirit'],name:'Dracz',hp:100,look:{shirt:'#3a2350',shirtSolid:'#2a1838',hair:'#1a1420'},color:'#c4122e'},
-  astronaut:{skin:'space_suit',fx:['Rainbow beam','Firework'],name:'Spacebot',hp:100,look:{shirt:'#eceff3',shirtSolid:'#d3d8de',hair:'#2d6fd8'},color:'#ff7a1f'},
   lilpink:{skin:'lil_pink',fx:['Balloon','Disco'],name:'Lil Pink',hp:100,look:{shirt:'#16161a',shirtSolid:'#0e0e10',hair:'#f4a6c8'},color:'#ff6fae'},
   roboid:{dev:true/* Test Arena only (?test): not in the menu, Random or the bots */,skin:'black_roboid',fx:['Lightning','Black hole'],name:'Shadow',hp:100,look:{shirt:'#16161a',shirtSolid:'#0c0c0e',hair:'#0c0c0e'},color:'#e0202a'}};
 const ABIL_KILL={crush:'crushed by the chopper',fall:'fell to their doom',rail:'electrocuted',train:'hit by a train',barrel:'Fuel drum',collapse:'building collapse',smash:'Ground smash',frost:'Frost nova',thorns:'Thorns',zap:'Zap',honk:'Honk',drain:'Life drain'};
-const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula','jet','astronaut'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))].filter(k=>!CHARS[k].dev); // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
+const CHAR_FIRST=['wednesday','antihero','lilpink','ghost','crusty','dracula'],CHAR_IDS=[...CHAR_FIRST.filter(k=>CHARS[k]),...Object.keys(CHARS).filter(k=>!CHAR_FIRST.includes(k))].filter(k=>!CHARS[k].dev); // menu order: Wednesday, Crusty, Angel, Anti Hero, Jet; second row Starscreen then the new Dracz, Spacebot, Lil Pink; then the rest
 function accessory(ch,id){accessory0(ch,id);applyFace(ch,id);}
 /* faces: every character gets its own drawn face (brows, eyes, mouth and extras in one texture), and any little 3D brows or
    mouths a skin used to stick on top are removed, so features never double up. mode 'smirk' is the crowning close-up. */
-const FACES={
-  jet:{brow:'#5a3a1e',bw:9,browA:.12,mouth:'half',extra:'freckles'},
-  patch:{brow:'#4a3a2a',bw:8,browA:-.15,arch:1,mouth:'open',extra:'blush'}};
+const FACES={};
 function drawFace(g,F,mode,bg){const W=256,sm=mode==='smirk';g.fillStyle=bg||'#f4f5f7';g.fillRect(0,0,W,W);
   const gr=g.createLinearGradient(0,150,0,256);gr.addColorStop(0,'rgba(40,50,70,0)');gr.addColorStop(1,'rgba(40,50,70,.12)');g.fillStyle=gr;g.fillRect(0,0,W,W);
   const ink='#121318';g.lineCap='round';g.lineJoin='round';
@@ -7812,10 +7806,6 @@ function setFace(hd,F,mode){const at=hd.userData.atlas;if(at&&at.cell[4]&&!Array
 function faceTexFor(F,mode){const cv=document.createElement('canvas');cv.width=cv.height=256;drawFace(cv.getContext('2d'),F,mode);const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;}
 function accessory0(ch,id){const add=(m,x,y,z,p)=>{m.position.set(x,y,z);m.castShadow=true;(p||ch.torso).add(m);return m;};
   {const sk=ch.forceSkin||CHARS[id].skin;if(sk&&SKINS[sk]){SKINS[sk](ch);return;}}
-  if(id==='jet'){const g=new THREE.Group();const m=mat('#c9ced8',null,{metalness:.6,roughness:.3});for(const sx of [-.2,.2]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.7,12),m);c.position.set(sx,0,0);g.add(c);
-      const n=new THREE.Mesh(new THREE.ConeGeometry(.12,.18,12).rotateX(Math.PI),mat('#3a3d45'));n.position.set(sx,-.44,0);g.add(n);}
-    const fl=new THREE.Mesh(new THREE.ConeGeometry(.12,.5,10).rotateX(Math.PI),new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,toneMapped:false}));fl.position.set(0,-.78,0);fl.visible=false;g.add(fl);
-    const fl2=fl.clone();fl.position.x=-.2;fl2.position.x=.2;g.add(fl2);g.userData.flames=[fl,fl2];add(g,0,0,-.42);ch.jet=g;}
   const sk=ch.forceSkin||CHARS[id].skin;if(sk&&SKINS[sk]){SKINS[sk](ch);return;}
   if(id==='ghost'){const s=new THREE.Mesh(new THREE.BoxGeometry(1.06,.12,.56),mat('#9fd3f0'));add(s,0,.3,0);}}
 /* ================= character skins ================= */
@@ -7895,11 +7885,11 @@ function glbTree(id,x,z,h,ry=0,tw=.7){const th=Math.min(3,h*.35),b=box(x,0,z,tw,
    A model is fetched the first time its character is built (and all of them quietly in the background after start-up); until it arrives the
    built-in look is used. When it lands, fighters showing that character in the menu or the countdown are rebuilt; anyone else picks it up at
    their next setLook. */
-const MODELS={},MODEL_LOAD={},MODEL_IDS=['brute','ghost','jet','patch','crusty','wednesday','antihero','dracula','astronaut','lilpink','roboid'];
+const MODELS={},MODEL_LOAD={},MODEL_IDS=['ghost','crusty','wednesday','antihero','dracula','lilpink','roboid'];
 /* Height levelling: every model was baked to the same overall height including hats, horns and hair, so characters with tall headgear
-   (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero, Murda Medic) tall. MODEL_EYE is each model's measured eye level;
+   (Pyro, Thor, Blink) came out short and bare-headed ones (Anti Hero) tall. MODEL_EYE is each model's measured eye level;
    on load the model is scaled about the feet so every character's eyes sit at the same height (looks only: hitboxes don't change). */
-const MODEL_EYE={brute:2.54,jet:2.47,ghost:2.34,patch:2.57,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,astronaut:2.53,lilpink:2.48,roboid:2.48},EYE_TARGET=2.4;
+const MODEL_EYE={ghost:2.34,crusty:2.29,wednesday:2.43,antihero:2.57,dracula:2.57,lilpink:2.48,roboid:2.48},EYE_TARGET=2.4;
 function levelModel(m,id){const k=EYE_TARGET/(MODEL_EYE[id]||EYE_TARGET);if(Math.abs(k-1)<.005)return m;
   for(const n in m.parts){m.parts[n].scale(k,k,k);if(n==='head')m.parts[n].translate(0,(k-1)*2.01,0);m.parts[n].boundingBox=null;m.parts[n].computeBoundingSphere();}
   for(const n in m.piv)if(m.piv[n])m.piv[n]=m.piv[n].map(v=>v*k);return m;}
@@ -8009,11 +7999,6 @@ function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=ne
   armElbows(ch,M,add);legKnees(ch,M,add);
   for(const [k,o] of [['armL',ch.aL.p],['armR',ch.aR.p],['legL',ch.lL.p],['legR',ch.lR.p]])if(M.piv[k])o.position.fromArray(M.piv[k]);
   if(!P.armR.boundingBox)P.armR.computeBoundingBox();ch.handY=Math.min(-.7,P.armR.boundingBox.min.y+.14);
-  if(id==='jet'){const g=new THREE.Group(),fm=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,toneMapped:false}),fl=[];
-    for(const x of [-.465,0,.465]){const c=new THREE.Mesh(new THREE.ConeGeometry(.11,.5,10).rotateX(Math.PI),fm);c.position.set(x,1.02,-.43);c.visible=false;g.add(c);fl.push(c);}
-    g.userData.flames=fl;ch.body.add(g);ch.jet=g;}
-  // Jet's helmet is an open shell: fill the back of his head and neck so you don't see into it from above
-  if(id==='jet'){const f=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),new THREE.MeshStandardMaterial({color:'#22348a',roughness:.6}));f.scale.set(.3,.24,.26);f.position.set(0,.38,-.02);f.castShadow=true;ch.headG.add(f);}
   ch.anim=(dt,t)=>{M.mat.emissiveIntensity=.95+Math.sin(t*5)*.12;};glowFX(ch,id);rigUp(ch,M,id);if(M.sk)try{skinOn(ch,M,id);}catch(e){console.warn('skinOn',id,e);}}
 /* Knees: each model leg is cut in two at the knee (thigh stays on the hip, shin hangs from a knee joint) so crouching can kneel properly
    instead of sitting with stiff legs. The cut is made once per model and shared; a small cap, coloured from the leg's own texture at the
@@ -8106,19 +8091,17 @@ setTimeout(()=>{const ids=Object.keys(HOLD);let i=0;const next=()=>{if(i>=ids.le
    halo  : a pulsing additive glow (eyes, visors, noses, chest lights)
    flame : a flickering flame that rises from a point (Xero's eye flames, Blaze's hair, Starscreen's horns)
    glint : a thin flare streak (visors, head lamp)
-   blink : a small light that blinks on and off (Spacebot's chest panel)
+   blink : a small light that blinks on and off
    ring  : a floating golden halo (Angel)
    Positions are in the model's own part space (head: from the neck pivot; torso: from the feet), before height levelling. */
 const CGLOW_SYM=(o)=>[{...o,at:[-o.at[0],o.at[1],o.at[2]],rot:-(o.rot||0)},{...o}];
 const CHAR_GLOW={
   dracula:CGLOW_SYM({p:'head',t:'halo',at:[.14,.52,.5],s:.22,c:'#ff1020'}),
-  brute:CGLOW_SYM({p:'head',t:'halo',at:[.26,.54,.79],s:.26,c:'#ff2a1a'}),
   ghost:[...CGLOW_SYM({p:'head',t:'halo',at:[.1,.34,.32],s:.2,c:'#ff2030'}),...CGLOW_SYM({p:'head',t:'flame',at:[.6,.98,0],s:[.24,.56],rot:-.2,c:'#3fe8ff'})],
   crusty:[{p:'head',t:'halo',at:[.02,.16,.54],s:.36,c:'#ff2018'}],
   lilpink:[{p:'torso',t:'halo',at:[0,1.72,.47],s:.42,c:'#ff5ab0'}],
   /* roboid (Shadow): no glow sprites; his visor and bracer stripes glow from his own emissive map (the sprites smeared into red blurs round his head) */
-  patch:[{p:'head',t:'halo',at:[0,.83,.42],s:.3,c:'#5dff8a'},{p:'head',t:'glint',at:[0,.83,.44],s:[.7,.12],c:'#c8ffd8'}],
-  astronaut:[{p:'head',t:'glint',at:[-.2,.47,.69],s:[.55,.1],rot:.6,c:'#ffffff'},{p:'torso',t:'blink',at:[-.22,1.66,.71],s:.16,c:'#3dff6a'},{p:'torso',t:'blink',at:[.2,1.66,.71],s:.16,c:'#ff3030',ph:1.4}]};
+};
 const CGLOWTEX={};
 function glowTex(k){if(CGLOWTEX[k])return CGLOWTEX[k];const c=document.createElement('canvas'),g=c.getContext('2d');
   if(k==='halo'){c.width=c.height=128;const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.14,'rgba(255,255,255,.95)');r.addColorStop(.38,'rgba(255,255,255,.4)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128);}
@@ -8240,132 +8223,10 @@ function suit(ch,o){const b=ch.body;hideBase(ch,{head:false});if(o.noHair!==fals
   for(const a of [ch.aL,ch.aR]){if(o.arms)piece(a.p,RBX(.54,o.sleeve||1,.54,.09),o.arms,0,-.42+(1-(o.sleeve||1))/2,0);
     if(o.forearm)piece(a.p,RBX(.52,.5,.52,.08),o.forearm,0,-.7,0);if(o.hands)piece(a.p,RBX(.5,.24,.5,.08),o.hands,0,-.86,0);}
   for(const l of [ch.lL,ch.lR]){if(o.legs)piece(l.p,RBX(.5,1,.52,.08),o.legs,0,-.5,0);if(o.shoes)piece(l.p,RBX(.54,.24,.62,.08),o.shoes,0,-.9,.04);}}
-function jetFlames(g,pts,y){const fm=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,toneMapped:false});const fl=[];
-  for(const [x,z] of pts){const f=new THREE.Mesh(new THREE.ConeGeometry(.12,.55,10).rotateX(Math.PI),fm);f.position.set(x,y,z);f.visible=false;g.add(f);fl.push(f);}g.userData.flames=fl;}
 const skinTone=()=>mat('#f4f5f7',null,{roughness:.6});
 Object.assign(SKINS,{
- /* ---------- JET (Option 2: Supersonic Jet Racer) ---------- */
- jet_pilot(ch){{const M=modelFor('jet');if(M)return modelSkin(ch,M,'jet');}const blue=mat('#1d4ed8',null,{roughness:.42,metalness:.15}),blueD=mat('#15389e',null,{roughness:.5}),white=mat('#f4f6fa',null,{roughness:.35}),red=mat('#dc2626',null,{roughness:.4}),
-   visor=new THREE.MeshStandardMaterial({color:'#f5b82e',metalness:.88,roughness:.1,emissive:'#9a6200',emissiveIntensity:.3}),flameGlow=GLOW('#ff9824'),flameCore=GLOW('#ffe866');
-  suit(ch,{torso:blue,arms:blue,legs:blue,shoes:blue,hands:blueD});hideBase(ch,{head:true,torso:true,arms:true,legs:true});const b=ch.body,h=ch.headG;
-  // aerodynamic racing stripes framing the torso + chest badge
-  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.12,1.04,.6),white,sx*.38,1.5,0,{outline:false});
-    piece(b,new THREE.BoxGeometry(.05,1.04,.61),red,sx*.31,1.5,0,{outline:false});
-    piece(b,RBX(.24,.28,.6,.05),white,sx*.44,1.9,0,{outline:false});}
-  piece(b,new THREE.BoxGeometry(.18,.06,.03),white,.18,1.76,.3,{outline:false});
-  // arms with red-and-white racing stripes
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1;
-    piece(a.p,new THREE.BoxGeometry(.09,.82,.56),white,sx*.24,-.38,0,{outline:false});
-    piece(a.p,new THREE.BoxGeometry(.04,.82,.57),red,sx*.19,-.38,0,{outline:false});
-    piece(a.p,new THREE.BoxGeometry(.56,.07,.56),blueD,0,-.76,0,{outline:false});}
-  // legs with racing stripes + red-white-blue flight sneakers
-  for(const l of [ch.lL,ch.lR]){const sx=l===ch.lL?-1:1;
-    piece(l.p,new THREE.BoxGeometry(.08,.82,.54),white,sx*.22,-.44,0,{outline:false});
-    piece(l.p,new THREE.BoxGeometry(.04,.82,.55),red,sx*.17,-.44,0,{outline:false});
-    piece(l.p,RBX(.54,.24,.64,.08),blue,0,-.9,.04);piece(l.p,RBX(.32,.18,.42,.05),red,0,-.88,.14,{outline:false});
-    for(let i=0;i<3;i++)piece(l.p,new THREE.BoxGeometry(.22,.025,.03),white,0,-.82-i*.04,.35,{outline:false});
-    piece(l.p,new THREE.BoxGeometry(.55,.05,.65),white,0,-1.0,.04,{outline:false});}
-  // full-face white-and-red aerodynamic helmet with reflective gold visor
-  piece(h,RBX(.84,.82,.8,.26),white,0,.38,-.02);
-  piece(h,new THREE.BoxGeometry(.24,.84,.82),red,0,.4,-.02,{outline:false});
-  piece(h,RBX(.64,.16,.24,.06),red,0,.06,.29,{outline:false});piece(h,RBX(.82,.1,.78,.04),blueD,0,-.01,-.02,{outline:false});
-  piece(h,RBX(.76,.34,.18,.08),visor,0,.4,.32);
-  // winged dual-rocket jetpack with red nosecones peeking over shoulders, wide delta wings & glowing afterburner plumes
-  const g=new THREE.Group();g.position.set(0,1.56,-.34);b.add(g);
-  piece(g,RBX(.68,.76,.26,.08),white,0,-.02,0);
-  for(const sx of [-1,1]){const x=sx*.36;
-    piece(g,new THREE.CylinderGeometry(.155,.155,.84,14),white,x,.14,0);
-    piece(g,new THREE.ConeGeometry(.155,.28,14),red,x,.68,0);
-    piece(g,new THREE.CylinderGeometry(.16,.16,.07,14),red,x,.44,0,{outline:false});
-    piece(g,new THREE.ConeGeometry(.13,.2,12).rotateX(Math.PI),mat('#262932'),x,-.36,0);
-    // glowing idle afterburner plume visible behind the hips
-    piece(g,new THREE.ConeGeometry(.11,.42,10).rotateX(Math.PI),flameGlow,x,-.64,0,{outline:false});
-    piece(g,new THREE.ConeGeometry(.07,.28,8).rotateX(Math.PI),flameCore,x,-.58,0,{outline:false});
-    // wide swept delta wing extending past the arms with blue trim & wingtip fin
-    piece(g,RBX(.92,.4,.08,.03),white,sx*.82,-.02,.04,{rot:[0,0,-sx*.34]});
-    piece(g,new THREE.BoxGeometry(.94,.09,.09),blue,sx*.84,-.16,.04,{outline:false,rot:[0,0,-sx*.34]});
-    piece(g,new THREE.BoxGeometry(.11,.42,.09),blue,sx*1.22,-.18,.04,{outline:false});}
-  jetFlames(g,[[-.36,0],[.36,0]],-.86);ch.jet=g;},
- jet_racer(ch){const blue=mat('#2f7fe0',null,{roughness:.45}),white=mat('#f4f6fa',null,{roughness:.4}),red=mat('#e8463a',null,{roughness:.4}),dark=mat('#1b1d23',null,{roughness:.5}),visor=new THREE.MeshStandardMaterial({color:'#ffcf5a',metalness:.6,roughness:.1,emissive:'#a86a00',emissiveIntensity:.25,transparent:true,opacity:.75});
-  suit(ch,{torso:blue,arms:blue,legs:blue,shoes:white,hands:white});const b=ch.body,h=ch.headG;
-  piece(b,new THREE.BoxGeometry(.24,1.06,.03),white,0,1.5,.3,{outline:false});piece(b,new THREE.BoxGeometry(.06,1.06,.03),red,-.15,1.5,.305,{outline:false});piece(b,new THREE.BoxGeometry(.06,1.06,.03),red,.15,1.5,.305,{outline:false});
-  for(const l of [ch.lL,ch.lR])piece(l.p,new THREE.BoxGeometry(.03,.9,.54),white,(l===ch.lL?-1:1)*.26,-.5,0,{outline:false});
-  piece(h,RBX(.86,.84,.8,.22),white,0,.38,-.18);piece(h,RBX(.78,.22,.14,.06),visor,0,.74,.22,{rot:[-.7,0,0]});
-  piece(h,new THREE.BoxGeometry(.1,.86,.82),red,0,.4,-.18,{outline:false});
-  const g=new THREE.Group();piece(g,RBX(.62,.9,.36,.14),white,0,0,0);piece(g,new THREE.BoxGeometry(.64,.12,.38),red,0,.18,0,{outline:false});piece(g,RBX(.36,.36,.3,.08),dark,0,-.58,0);
-  for(const sx of [-1,1])piece(g,RBX(.12,.5,.36,.04),red,sx*.38,-.15,0,{rot:[0,0,sx*-.25]});jetFlames(g,[[0,0]],-1.02);g.position.set(0,1.45,-.48);b.add(g);ch.jet=g;},
- jet_astro(ch){const suitM=mat('#eef0f3',null,{roughness:.7}),orange=mat('#f08a24',null,{roughness:.6}),grey=mat('#8a8f99',null,{roughness:.5}),glass=new THREE.MeshStandardMaterial({color:'#bfe6ff',transparent:true,opacity:.28,roughness:.05,metalness:.2,depthWrite:false});
-  suit(ch,{torso:suitM,arms:suitM,legs:suitM,shoes:grey,hands:orange,tw:1.16,td:.66});const b=ch.body,h=ch.headG;
-  piece(b,RBX(.5,.3,.06,.04),grey,0,1.62,.34,{outline:false});for(let i=0;i<3;i++)piece(b,new THREE.BoxGeometry(.08,.08,.03),[GLOW('#3bb54a'),GLOW('#ffd23f'),GLOW('#e8463a')][i],-.13+i*.13,1.62,.375,{outline:false});
-  piece(b,new THREE.CylinderGeometry(.13,.13,.03,16).rotateX(Math.PI/2),mat('#2f7fe0'),-.3,1.86,.32,{outline:false});
-  for(const a of [ch.aL,ch.aR])piece(a.p,RBX(.6,.14,.6,.05),orange,0,-.6,0,{outline:false});for(const l of [ch.lL,ch.lR])piece(l.p,RBX(.56,.14,.58,.05),orange,0,-.62,0,{outline:false});
-  piece(h,RBX(1.0,.98,.96,.3),glass,0,.33,0,{outline:false});piece(h,RBX(1.04,.16,1.0,.06),grey,0,-.12,0);
-  const g=new THREE.Group();piece(g,RBX(.96,1.0,.42,.12),suitM,0,0,0);piece(g,RBX(.8,.2,.44,.06),orange,0,.3,0,{outline:false});for(const sx of [-.28,.28])piece(g,new THREE.CylinderGeometry(.1,.14,.2,10),grey,sx,-.58,0);
-  jetFlames(g,[[-.28,0],[.28,0]],-.92);g.position.set(0,1.5,-.52);b.add(g);ch.jet=g;},
- /* ---------- BLAZE ---------- */
- brute_smash(ch){{const M=modelFor('brute');if(M)return modelSkin(ch,M,'brute');}const gun=mat('#5c6270',null,{roughness:.4,metalness:.55}),gunD=mat('#282c35',null,{roughness:.55,metalness:.4}),orange=mat('#e57c24',null,{roughness:.4,metalness:.25}),
-   steel=mat('#dfe5ef',null,{metalness:.88,roughness:.18}),redGlow=GLOW('#ff1e38'),ambGlow=GLOW('#ff7a1a');
-  hideBase(ch,{head:true});hideHair(ch);const b=ch.body,h=ch.headG;b.scale.setScalar(1.14);
-  // massive segmented gunmetal chest & abdomen with burnt-orange shoulder harness
-  piece(b,RBX(1.44,.68,.84,.16),gun,0,1.68,0);piece(b,RBX(1.18,.48,.76,.1),gunD,0,1.26,0);
-  for(const sx of [-1,1]){piece(b,RBX(.56,.3,.12,.06),gun,sx*.32,1.68,.4);
-    piece(b,RBX(.24,.64,.86,.06),orange,sx*.54,1.76,0);piece(b,new THREE.CylinderGeometry(.065,.065,.05,12).rotateX(Math.PI/2),steel,sx*.54,1.62,.44);}
-  for(const y of [1.38,1.22])for(const sx of [-1,1])piece(b,RBX(.32,.12,.8,.04),gun,sx*.19,y,.02);
-  piece(b,RBX(1.32,.24,.82,.08),gunD,0,.98,0);piece(b,RBX(.42,.3,.84,.06),gun,0,.94,.02);
-  // colossal cyber-gorilla smash arms with orange hazard plates, hydraulic cable & glowing seismic knuckles
-  for(const a of [ch.aL,ch.aR]){const sx=a===ch.aL?-1:1,o=sx*.22;
-    piece(a.p,RBX(.82,.56,.82,.18),gun,o,-.06,0);piece(a.p,new THREE.CylinderGeometry(.11,.11,.06,12).rotateX(Math.PI/2),steel,o+sx*.12,-.06,.4);
-    piece(a.p,RBX(.68,.38,.68,.12),gunD,o,-.42,0);
-    piece(a.p,RBX(.88,.64,.86,.16),gun,o,-.78,0);piece(a.p,RBX(.28,.5,.78,.06),orange,o+sx*.34,-.74,0);
-    piece(a.p,RBX(.86,.42,.86,.14),gunD,o,-1.18,0);
-    for(let i=0;i<4;i++){const kx=o-.27+i*.18;piece(a.p,RBX(.16,.24,.22,.04),gun,kx,-1.22,.36);piece(a.p,new THREE.BoxGeometry(.11,.14,.04),ambGlow,kx,-1.18,.48,{outline:false});}
-    a.chain=new THREE.Group();}
-  // thick ribbed hydraulic hose curving outside the left arm (viewer left)
-  for(let i=0;i<6;i++)piece(ch.aL.p,new THREE.CylinderGeometry(.065,.065,.16,10),gunD,-.66-Math.sin(i*.6)*.08,-.16-i*.11,0,{rot:[0,0,.22-i*.08]});
-  // heavy mecha legs with orange knee pads & toe guards
-  for(const l of [ch.lL,ch.lR]){piece(l.p,RBX(.62,.54,.64,.12),gun,0,-.28,0);piece(l.p,RBX(.58,.46,.62,.12),gun,0,-.74,0);
-    piece(l.p,RBX(.34,.24,.16,.05),orange,0,-.52,.32);piece(l.p,RBX(.64,.22,.76,.08),gunD,0,-.96,.06);piece(l.p,RBX(.38,.16,.28,.05),orange,0,-.96,.34);}
-  // cyber-gorilla head with orange dome, glowing crimson optic visor & fanged mechanical jaw
-  piece(h,RBX(.8,.68,.72,.14),gun,0,.35,0);piece(h,RBX(.54,.24,.58,.08),orange,0,.63,-.02);
-  for(const sx of [-1,1])piece(h,RBX(.14,.42,.56,.04),orange,sx*.38,.28,0);
-  piece(h,RBX(.62,.18,.1,.04),gunD,0,.45,.34);piece(h,RBX(.52,.1,.04,.02),redGlow,0,.45,.39,{outline:false});
-  piece(h,RBX(.6,.3,.3,.06),gun,0,.16,.28);piece(h,new THREE.BoxGeometry(.44,.16,.06),gunD,0,.17,.42,{outline:false});
-  for(const sx of [-1,1]){piece(h,new THREE.ConeGeometry(.05,.18,4),steel,sx*.17,.19,.44,{outline:false});
-    piece(h,new THREE.ConeGeometry(.04,.13,4),steel,sx*.14,.23,.44,{outline:false,rot:[Math.PI,0,0]});}
-  for(let i=0;i<4;i++)piece(h,new THREE.BoxGeometry(.045,.09,.03),steel,-.09+i*.06,.15,.44,{outline:false});},
-
- /* FROST — Option 2: Cryo-Tech Valkyrie (white & cyan cryo-armour, glowing liquid-nitrogen tubes, winged Valkyrie visor tiara & cold-vent shoulder pods) */
- patch_medic(ch){{const M=modelFor('patch');if(M)return modelSkin(ch,M,'patch');}const coat=mat('#f4f6fa',null,{roughness:.7}),scrub=mat('#2ca59a',null,{roughness:.8}),red=mat('#dc2e26',null,{roughness:.55}),white=mat('#ffffff',null,{roughness:.5}),
-   dark=mat('#383d48',null,{roughness:.45}),chrome=mat('#cfd5df',null,{metalness:.85,roughness:.2}),glove=new THREE.MeshStandardMaterial({color:'#1ff0ff',emissive:'#00d8f0',emissiveIntensity:.55,roughness:.25}),
-   greenGlow=GLOW('#42ff6b'),lensGlow=GLOW('#a8ffbe');
-  suit(ch,{torso:coat,arms:coat,legs:scrub,shoes:scrub,hands:glove});const b=ch.body,h=ch.headG;
-  // teal inner scrub shirt + red coat lapels & vertical trim + split lower coat skirt
-  piece(b,new THREE.BoxGeometry(.34,1.02,.03),scrub,0,1.5,.3,{outline:false});
-  for(const sx of [-1,1]){piece(b,new THREE.BoxGeometry(.065,1.02,.035),red,sx*.16,1.5,.305,{outline:false});
-    piece(b,new THREE.BoxGeometry(.14,.36,.04),red,sx*.22,1.8,.31,{outline:false,rot:[0,0,-sx*.38]});
-    piece(b,RBX(.48,.42,.62,.05),coat,sx*.31,.82,0);piece(b,new THREE.BoxGeometry(.065,.42,.035),red,sx*.11,.82,.315,{outline:false});}
-  // 3D stethoscope around the neck (chest diaphragm on right, ear loop on left)
-  for(const sx of [-1,1])piece(b,new THREE.CylinderGeometry(.026,.026,.46,8),dark,sx*.24,1.76,.32,{rot:[0,0,sx*-.15]});
-  piece(b,new THREE.CylinderGeometry(.095,.095,.04,16).rotateX(Math.PI/2),chrome,-.25,1.48,.33);
-  piece(b,new THREE.TorusGeometry(.09,.022,6,14),dark,.24,1.46,.33);
-  // red cuff stripes & white sneaker soles
-  for(const a of [ch.aL,ch.aR])piece(a.p,new THREE.BoxGeometry(.56,.08,.56),red,0,-.7,0,{outline:false});
-  for(const l of [ch.lL,ch.lR])piece(l.p,new THREE.BoxGeometry(.55,.06,.63),white,0,-1.0,.04,{outline:false});
-  // tall wide red-and-white med-kit backpack rising clearly behind the shoulders + top handle pipe
-  const bag=new THREE.Group();bag.position.set(0,1.78,-.36);b.add(bag);
-  piece(bag,RBX(1.34,.96,.38,.1),red,0,0,0);
-  for(const sx of [-1,1])piece(bag,RBX(.12,.84,.4,.04),white,sx*.52,0,0);
-  piece(bag,new THREE.BoxGeometry(.38,.11,.03),white,0,0,-.2,{outline:false});piece(bag,new THREE.BoxGeometry(.11,.38,.03),white,0,0,-.2,{outline:false});
-  piece(bag,RBX(.28,.18,.1,.04),mat('#6b3e26'),.22,.54,0);
-  // white surgeon cap with dark headband strap & circular glowing green-cross headlamp
-  piece(h,RBX(.74,.28,.7,.12),white,0,.66,-.01);piece(h,RBX(.76,.08,.72,.03),dark,0,.64,-.01,{outline:false});
-  piece(h,new THREE.CylinderGeometry(.15,.15,.07,18).rotateX(Math.PI/2),chrome,0,.66,.34);
-  piece(h,new THREE.CylinderGeometry(.115,.115,.076,18).rotateX(Math.PI/2),lensGlow,0,.66,.345,{outline:false});
-  piece(h,new THREE.BoxGeometry(.13,.042,.02),greenGlow,0,.66,.39,{outline:false});piece(h,new THREE.BoxGeometry(.042,.13,.02),greenGlow,0,.66,.39,{outline:false});},
-
  crusty_clown(ch){{const M=modelFor('crusty');if(M)return modelSkin(ch,M,'crusty');}const b=mat('#2fae4a',null,{roughness:.5});suit(ch,{torso:b,arms:b,legs:b,shoes:mat('#e8322a'),hands:mat('#f4f1ea')});},
  dracula_vamp(ch){{const M=modelFor('dracula');if(M)return modelSkin(ch,M,'dracula');}const k=mat('#3a2350',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:mat('#1c1820'),shoes:mat('#111114'),hands:mat('#e6e6ea')});},
- space_suit(ch){{const M=modelFor('astronaut');if(M)return modelSkin(ch,M,'astronaut');}const w=mat('#eceff3',null,{roughness:.5});suit(ch,{torso:w,arms:w,legs:w,shoes:mat('#9aa1ab'),hands:w});},
  lil_pink(ch){{const M=modelFor('lilpink');if(M)return modelSkin(ch,M,'lilpink');}const k=mat('#16161a',null,{roughness:.6});suit(ch,{torso:k,arms:mat('#f4a6c8'),legs:k,shoes:mat('#f4a6c8'),hands:mat('#e9e6e2')});},
  black_roboid(ch){{const M=modelFor('roboid');if(M)return modelSkin(ch,M,'roboid');}const k=mat('#16161a',null,{roughness:.45});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#0c0c0e',null,{roughness:.25}),hands:k});},
  wed_goth(ch){{const M=modelFor('wednesday');if(M)return modelSkin(ch,M,'wednesday');}const k=mat('#18181c',null,{roughness:.6});suit(ch,{torso:k,arms:k,legs:k,shoes:mat('#c0202a'),hands:mat('#e9e6e2')});},
@@ -8551,7 +8412,7 @@ function ladderStep(f,dt,wx,wz,jump){if(f.downed||!f.alive||f.finishing){f.onLad
     return true;}
   f.onLadder=null;return false;}
 function physics1(f,dt,wx,wz,jump,speed,jumpPress){if(f.bot&&f.onLadder&&f._ladDir){wx=f.onLadder.nx*f._ladDir;wz=f.onLadder.nz*f._ladDir;jump=false;}
-  if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.brute;speed*=(C.speed||1)*1.2;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}
+  if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.wednesday;speed*=(C.speed||1)*1.2;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}
   const acc=f.thrownT>0?0:f.stunT>0?8:f.grounded?70:28,tx=wx*speed,tz=wz*speed,dvx=tx-f.vel.x,dvz=tz-f.vel.z,dl=Math.hypot(dvx,dvz),st=acc*dt;
   if(dl<=st){f.vel.x=tx;f.vel.z=tz;}else{f.vel.x+=dvx/dl*st;f.vel.z+=dvz/dl*st;}
   const jv=JUMP*(C.jump||1)*(f.slowT>0?.7:1);
@@ -9514,7 +9375,6 @@ function updXray(){const foes=D.active&&S.state!=='menu'?FS.filter(f=>isFoe(ME,f
   for(const x of XR.list){x.m.visible=shownInWorld(x.o);if(x.m.visible){x.m.matrix.copy(x.o.matrixWorld);x.m.matrixWorld.copy(x.o.matrixWorld);}}}
 function tickStatus(f,dt){tickCons(f,dt);
   if(f.slowT>0){f.slowT-=dt;if(Math.random()<.5)emit(f.pos.x+rnd(-.5,.5),f.pos.y+rnd(.3,2.2),f.pos.z+rnd(-.5,.5),{n:1,speed:.4,up:-1,size:.18,life:.5,grav:1,colors:['#ffffff','#bfeaff']});}
-  if(f.ch.jet){f.jetOn=(f.jetOn||0)-dt;for(const fl of f.ch.jet.userData.flames)fl.visible=f.jetOn>0;}
   if(f.burnT>0&&f.alive){f.burnT-=dt;f.burnTick-=dt;if(Math.random()<.7)FLAME.lick(f.pos.x+rnd(-.35,.35),f.pos.y+rnd(.3,1.9),f.pos.z+rnd(-.35,.35),1.2);
     if(f.burnTick<=0){f.burnTick=.5;damage(f,f.burnGun==='flamer'?7:4,f.burnBy||f,false,f.burnGun||'fireball');}}
   // a teammate standing over you revives you twice as fast, and you glow green while they do
@@ -11113,7 +10973,7 @@ function setTag(){const m=store.get('mode','duels'),P=S.players,ru=m==='rumble';
   document.querySelector('.tag').textContent=m==='parkour'?'Twelve parkour courses over the void. Pick a course on the right.':ru?'No guns, just bats. '+who:who+(P==='1v1'?' Use the houses for cover and aim for the head.':'');}
 /* MODEL_STAMP: a fingerprint of every model and picture file in models/ and chars/, written by tools/check.js --stamp (the pre-commit hook runs it and the
    publish check refuses a stale one). It sits in this script, so swapping a model file changes imgVersion() and every saved menu picture is re-shot. */
-const MODEL_STAMP='2deddb0bc902';
+const MODEL_STAMP='cf4f0489160c';
 const thumbs={},thumbsPartial=new Set();
 /* every model the map build is still waiting for: furniture/toys/Lagoon props it asked for, plus cars, the train and the Landscape trees
    (a model whose download failed counts as done, so one missing file can't stop pictures ever being saved) */
@@ -12607,7 +12467,7 @@ function menuStep(st){const c=document.querySelector('.menu-card');if(st)S.mstep
 const lobbyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');return n;};
 const readyNeeds=()=>{const n=[];if(!S.map)n.push('a map');if(!S.char)n.push('a character');if(S.mode!=='rumble'){if(!S.gun)n.push('a gun');if(!S.cons)n.push('a lethal');}return n;};
 /* ===== lobby character stage: cut-out portrait under coloured stage lights, embers and a floor ring ===== */
-const STAGE_CC={antihero:'#ff3b3b',brute:'#ff5a2a',crusty:'#ffcc33',ghost:'#3fd4ff',jet:'#3d7dff',patch:'#2af0dc',wednesday:'#ff2a4a',dracula:'#ff1a3a',astronaut:'#ff8a2a',lilpink:'#ff6fae',roboid:'#ff2a1a'};
+const STAGE_CC={antihero:'#ff3b3b',crusty:'#ffcc33',ghost:'#3fd4ff',wednesday:'#ff2a4a',dracula:'#ff1a3a',lilpink:'#ff6fae',roboid:'#ff2a1a'};
 const stageCC=k=>STAGE_CC[k]||(CHARS[k]&&CHARS[k].look&&CHARS[k].look.shirt)||'#ff4a3d';
 let STG=null;
 function stageBuild(el){el.className='stage';

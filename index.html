@@ -9098,24 +9098,6 @@ function frostTex(){if(FXG.frost)return;FXG.frost=true;const W=480,H=300,c=docum
     const a=Math.min(1,Math.max(0,(e+f*.5-.98)*3)),i=(y*W+x)*4,l=215+f*40;im.data[i]=l;im.data[i+1]=Math.min(255,l+12);im.data[i+2]=255;im.data[i+3]=a*235;}
   g.putImageData(im,0,0);g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=1.2;for(let k=0;k<36;k++){let x,y;const side=k%4;x=side===0?0:side===1?W:Math.random()*W;y=side===2?0:side===3?H:Math.random()*H;g.beginPath();g.moveTo(x,y);let ang=Math.atan2(H/2-y,W/2-x)+(Math.random()-.5)*1.2;for(let s=0;s<4;s++){x+=Math.cos(ang)*10;y+=Math.sin(ang)*12;ang+=(Math.random()-.5)*.9;g.lineTo(x,y);}g.stroke();}
   $('d-frost').style.backgroundImage=`url(${c.toDataURL()})`;}
-/* stunned or dazed: four inked cartoon stars spin round above the head, with a faint halo ring and little blue sparks */
-const STAR={};
-function stunStars(x){const on=(x.stunT>0||x.dazeT>0)&&x.alive&&!x.finishing&&x.ch&&x.ch.headG;let R=x._stars;
-  if(!on){if(R&&R.visible)R.visible=false;return;}
-  if(!R){if(!STAR.geo){const sh=new THREE.Shape();for(let i=0;i<10;i++){const a=i/10*Math.PI*2-Math.PI/2,r=i%2?.075:.17;i?sh.lineTo(Math.cos(a)*r,-Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,-Math.sin(a)*r);}sh.closePath();
-      STAR.geo=new THREE.ExtrudeGeometry(sh,{depth:.05,bevelEnabled:true,bevelThickness:.02,bevelSize:.02,bevelSegments:1});STAR.geo.translate(0,0,-.025);
-      STAR.ym=new THREE.MeshStandardMaterial({color:'#ffd21f',emissive:'#ffb000',emissiveIntensity:.55,roughness:.35,metalness:.1});STAR.om=new THREE.MeshBasicMaterial({color:'#14161c',side:THREE.BackSide});
-      STAR.rm=new THREE.MeshBasicMaterial({color:'#fff6c0',transparent:true,opacity:.4,toneMapped:false,depthWrite:false});STAR.ring=new THREE.TorusGeometry(.55,.012,6,40);
-      STAR.sm=new THREE.MeshBasicMaterial({color:'#7fd8ff',transparent:true,opacity:.9,toneMapped:false,depthWrite:false,blending:THREE.AdditiveBlending});STAR.sg=new THREE.SphereGeometry(.035,6,4);}
-    R=new THREE.Group();R.userData.dyn=1;const spin=new THREE.Group();spin.rotation.set(.35,0,.18);R.add(spin);R.userData.spin=spin;R.userData.stars=[];R.userData.sparks=[];
-    for(let i=0;i<4;i++){const g=new THREE.Group(),a=new THREE.Mesh(STAR.geo,STAR.ym),o=new THREE.Mesh(STAR.geo,STAR.om);o.scale.setScalar(1.22);g.add(a,o);spin.add(g);R.userData.stars.push(g);}
-    const ring=new THREE.Mesh(STAR.ring,STAR.rm);ring.rotation.x=Math.PI/2;spin.add(ring);
-    for(let i=0;i<5;i++){const k=new THREE.Mesh(STAR.sg,STAR.sm);R.add(k);R.userData.sparks.push(k);}
-    x.ch.root.add(R);x._stars=R;}
-  R.visible=true;const h=x.ch.headG.getWorldPosition(stunV);x.ch.root.worldToLocal(h);const ks=1/(x.ch.root.scale.x||1);R.position.set(h.x,h.y+.75*ks,h.z);R.scale.setScalar(ks*.6);/* Pete 24 Nov: half the size they were (was 1.2), sitting a little lower */
-  const t=S.t;R.userData.stars.forEach((g,i)=>{const a=t*4.2+i/4*Math.PI*2;g.position.set(Math.cos(a)*.55,Math.sin(a*2)*.05,Math.sin(a)*.55);g.rotation.set(0,-a+Math.PI/2,t*5+i);});
-  R.userData.sparks.forEach((k,i)=>{const ph=(t*2.3+i*.37)%1,a=i*1.9+Math.floor(t*2.3+i*.37)*2.4;k.position.set(Math.cos(a)*(.2+ph*.25),-.35+ph*.3,Math.sin(a)*(.2+ph*.25));k.scale.setScalar(1-ph);});}
-const stunV=new V3();
 /* death effects only shake the screen when it's you */
 function updFinish(dt){for(const v of FS){if(!v.finishing)continue;const sh0=S.shake;finish1(v,dt);if(v!==ME)S.shake=Math.min(S.shake,sh0);}}
 function finish1(v,dt){for(const _ of [0]){const F=v.finishing;if(!F)continue;
@@ -10759,7 +10741,7 @@ function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).cop
       const head=eyeOf(f,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);const o=cam.addScaledVector(d,t0);fire(f,o,d);if(NET.role==='client')netSend({t:'shot',o:[o.x,o.y,o.z],d:[d.x,d.y,d.z]});}
     else if(live&&cmd.fire&&!hasAmmo(f,id)&&f.reloadT<=0){if(!f.triggerWas)sfx('dry',null,{wpn:1});startReload(f);}
     f.triggerWas=cmd.fire;if(SNQ.rel){SNQ.rel=false;mouseL=false;mouseR=SNQ.prevR;}}
-  for(const x of FS){if(x.dazeT>0){x.dazeT-=dt;if(!x.alive)x.dazeT=0;}if(x.stunT>0)x.stunT-=dt;if(x.thrownT>0)x.thrownT-=dt;/* a train knock-back takes your control for just over half a second, then it comes back */stunStars(x);if(S.state==='fight'||S.state==='roundEnd')tickStatus(x,dt);x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.triggerWas?1:3));if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}else if(!(x.reloadT<=0))x.reloadT=0;if(x.burstN>0){x.burstT-=dt;if(x.burstT<=0){const bid=gunOf(x),bg=GUNS[bid];if(!x.alive||x.downed||x.stunT>0||x.reloadT>0||x.switchT>0||x.ammo[bid]<=0||!bg.burst||S.state!=='fight'){x.burstN=0;}else{x.burstN--;x.burstT=bg.burstGap;if(x===ME){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const head=eyeOf(x,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(x,cam.addScaledVector(d,t0),d,true);}else{const e=eyeOf(x,new V3()),d=dirOf(x.yaw,x.pitch,new V3());fire(x,e,d,true);}if(x.ammo[bid]===0&&x.reloadT<=0){x.burstN=0;startReload(x);}}}}}
+  for(const x of FS){if(x.dazeT>0){x.dazeT-=dt;if(!x.alive)x.dazeT=0;}if(x.stunT>0)x.stunT-=dt;if(x.thrownT>0)x.thrownT-=dt;/* a train knock-back takes your control for just over half a second, then it comes back */if(S.state==='fight'||S.state==='roundEnd')tickStatus(x,dt);x.fireT-=dt;x.switchT-=dt;x.bloom=Math.max(0,x.bloom-dt*(x.triggerWas?1:3));if(x.reloadT>0){x.reloadT-=dt;if(x.reloadT<=0){x.reloadT=0;x.ammo[gunOf(x)]=GUNS[gunOf(x)].mag;}}else if(!(x.reloadT<=0))x.reloadT=0;if(x.burstN>0){x.burstT-=dt;if(x.burstT<=0){const bid=gunOf(x),bg=GUNS[bid];if(!x.alive||x.downed||x.stunT>0||x.reloadT>0||x.switchT>0||x.ammo[bid]<=0||!bg.burst||S.state!=='fight'){x.burstN=0;}else{x.burstN--;x.burstT=bg.burstGap;if(x===ME){const cam=camera.position.clone(),d=new V3();camera.getWorldDirection(d);const head=eyeOf(x,new V3());const t0=Math.max(0,head.clone().sub(cam).dot(d)-.2);fire(x,cam.addScaledVector(d,t0),d,true);}else{const e=eyeOf(x,new V3()),d=dirOf(x.yaw,x.pitch,new V3());fire(x,e,d,true);}if(x.ammo[bid]===0&&x.reloadT<=0){x.burstN=0;startReload(x);}}}}}
   /* death effects (falls, blasts) play out here */
   updFinish(dt);if(NET.role!=='client'){teamWipe();dmTick(dt);}
   for(const b of FS){if(b===ME)continue;if(NET.role==='client'){netFollow(b,dt);continue;}if(NET.R===b&&NET.live){netDrive(b,dt,live);continue;}
@@ -10846,7 +10828,7 @@ function rpWorker(){if(RP.w0!==undefined)return RP.w0;try{if(!window.OffscreenCa
       postMessage({t:d.t,bl:await c.convertToBlob({type:'image/jpeg',quality:d.q})});}catch(err){postMessage({t:d.t,bl:null});}};`;
     const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
     w.onmessage=e=>{RP.busy=Math.max(0,RP.busy-1);const {t,bl}=e.data;if(!bl)return;RP.ring.push({t,bl});RP.ring.sort((a,b)=>a.t-b.t);trimRing();};RP.w0=w;}catch(e){RP.w0=null;}return RP.w0;}
-D.__pick={swm:()=>SWM,batModel,moveSpeed,rollBat,throwNade,spawnProj,projs:()=>projs,mines:()=>mines,layMine,placeSwarm,swarmOut,flameOut,shop:()=>SHOP_ITEMS,acts:applyActs,menu:st=>{menuStep(st);renderDuelMenu();}};D.__down=(f,src)=>down(f,src);D.__kill=(f,src)=>kill(f,src);D.__view=(p,t)=>{S.camOv=p?{p,t}:null;};D.__RP=RP;D.__projs=()=>projs;D.__boom=(at,R)=>boomFX(at,R);D.__stars=x=>stunStars(x);D.__fx={FXG,fxGrab,frostTex,set:a=>{flashA=a;}};D.__debris=()=>debris;D.__RV=()=>RV;
+D.__pick={swm:()=>SWM,batModel,moveSpeed,rollBat,throwNade,spawnProj,projs:()=>projs,mines:()=>mines,layMine,placeSwarm,swarmOut,flameOut,shop:()=>SHOP_ITEMS,acts:applyActs,menu:st=>{menuStep(st);renderDuelMenu();}};D.__down=(f,src)=>down(f,src);D.__kill=(f,src)=>kill(f,src);D.__view=(p,t)=>{S.camOv=p?{p,t}:null;};D.__RP=RP;D.__projs=()=>projs;D.__boom=(at,R)=>boomFX(at,R);D.__fx={FXG,fxGrab,frostTex,set:a=>{flashA=a;}};D.__debris=()=>debris;D.__RV=()=>RV;
 const PLAY_SVG='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4a3d" stroke="#14161c" stroke-width="1.8"/><path d="M10 8l6 4-6 4z" fill="#fff"/></svg>';
 function rpButtons(list,keys){return list.map((c,i)=>`<button class="rp-b" data-rp="${RP.clips.indexOf(c)}">${keys&&i<9?`<kbd>${i+1}</kbd>`:''}${PLAY_SVG}${c.label}</button>`).join('');}
 // the round-end bar never releases the mouse (that used to leave mouse-look dead in the next round): use 1-9 for replays and H for home, or click if the cursor is free

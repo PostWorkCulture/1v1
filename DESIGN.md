@@ -113,6 +113,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Hospital lighting thinned out (it was too much): ceiling panels about a third as many with softer glows, fewer and dimmer real lights.
 - Street Life downsized to Big (70 × 50 m): the 4 side buildings removed, and the hospital and home cut to 2 floors (middle floor removed; the loft room and terrace sit on the ground floor); buildings scaled to fit, narrower road, trees, lamps and spawns moved in.
 - One gun and the bat: the secondary slot is gone. All 11 guns are in one list (the MP5, Vector, UMP, Dual Pistols and Rocket Launcher joined it), the Knife was removed completely, and the bat moved to key 2. The loadout is back on one page: guns on top, lethals on the row under them, no tabs. Swarm and Flamethrower now stand in for your gun.
 - Beach Please downsized to Big (70 × 50 m) and its walkway removed (both jetties, the glass promenade, its lamps, ladders and promenade waves); huts, loungers, palms, sandcastles and spawns moved in to fit.

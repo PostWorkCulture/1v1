@@ -6144,7 +6144,7 @@ const MAPS={
   for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;
   for(const K of M.knocks)if(!K.pop)K.brk=K.bhp=Math.round(clamp(30+K.w*K.h*K.d*60,30,160));
   /* the zipline from the top of the home's roof to the top of the arcade's (24 Nov): a small flat deck on each ridge (up the roof ladder, then the slope) with a steel
-     post, a ZIP sign and a hazard-striped pad; the cable sags across high over the road. Jump on the pad to ride across, very fast (see zipStep). Bots use it both ways */
+     post, a ZIP sign and a hazard-striped pad; the cable sags across high over the road. Stand on the pad for 1.5 s to ride across, very fast (see zipStep). Bots use it both ways */
   {const peak=(x,z)=>{let y=0;for(const b of M.boxes)if(b.x0<=x&&b.x1>=x&&b.z0<=z&&b.z1>=z&&b.y1>y)y=b.y1;return y;};
    const ZA={x:-21.5,z:4.4},ZB={x:21.5,z:-4.4},FY=Math.max(peak(ZA.x,ZA.z),peak(ZB.x,ZB.z))+.18,dx=ZB.x-ZA.x,dz=ZB.z-ZA.z,dl=Math.hypot(dx,dz),ux=dx/dl,uz=dz/dl,PO=1.0,TOP=FY+ZIP_HANG+.2;
    const A={x:ZA.x-ux*PO,y:TOP,z:ZA.z-uz*PO},B={x:ZB.x+ux*PO,y:TOP,z:ZB.z+uz*PO},len=Math.hypot(B.x-A.x,B.z-A.z),s0=PO/len;
@@ -8383,9 +8383,9 @@ function ladderStep(f,dt,wx,wz,jump){if(f.downed||!f.alive||f.finishing){f.onLad
     else if(f.pos.y>=L.y1){const k=L.lift?1.45:1.0;f.pos.y=L.y1+.02;f.pos.x+=L.nx*k;f.pos.z+=L.nz*k;f.onLadder=null;f.grounded=true;if(L.lift)f._liftCD=S.t+.6;}
     return true;}
   f.onLadder=null;return false;}
-/* ziplines (Street Life, from the top of one building's roof to the top of the other's): stand on the pad at either end under the cable and jump to grab the handle; you ride across hanging
+/* ziplines (Street Life, from the top of one building's roof to the top of the other's): stand on the pad at either end under the cable for 1.5 s and you grab the handle; you ride across hanging
    from it and step off on the far terrace; jump again on the way to let go. Bots take it as a path link (M.navWarps with zip set) and grab it the same way */
-const ZIP_V=26,ZIP_HANG=2.15;/* very fast: about 1.7 s roof to roof */
+const ZIP_V=26,ZIP_HANG=2.15,ZIP_WAIT=1.5;/* very fast: about 1.7 s roof to roof */
 function zipAt(L,s){return{x:L.A.x+(L.B.x-L.A.x)*s,y:L.A.y+(L.B.y-L.A.y)*s-L.sag*4*s*(1-s),z:L.A.z+(L.B.z-L.A.z)*s};}
 function zipStep(f,dt,jump,jumpPress){const Z=f.zip;
   if(Z){const L=Z.line;if(!f.alive||f.downed||f.finishing||!M.zips||!M.zips.includes(L)||(Z.last&&Math.hypot(f.pos.x-Z.last.x,f.pos.z-Z.last.z)>2)){f.zip=null;if(f._zt)f._zt.visible=false;return false;}
@@ -8400,9 +8400,12 @@ function zipStep(f,dt,jump,jumpPress){const Z=f.zip;
     if(Z.s>=1){const e=Z.dir>0?L.b:L.a;f.pos.set(e.x,e.y+.02,e.z);f.grounded=true;f.zip=null;f._zt.visible=false;f._zipCD=S.t+1.2;sfx('land',f,{vol:.5,range:10});}
     return true;}
   if(!M.zips||S.t<(f._zipCD||0)||f.downed||!f.alive||f.finishing)return false;
-  for(const L of M.zips)for(const [e,dir] of [[L.a,1],[L.b,-1]]){if(Math.abs(f.pos.y-e.y)>.6||Math.hypot(f.pos.x-e.x,f.pos.z-e.z)>1.2)continue;
-    let go;if(f.bot){const n=f.ai&&f.ai.path&&f.ai.path[0];go=!!(n&&n.lad&&n.lad.warp&&n.lad.warp.zip===L&&n.lad.warp.dir===dir);}else go=!!jumpPress;
-    if(!go)continue;f.zip={line:L,dir,s:0,t:0,last:null};sfx('zip',f,{range:16});return true;}
+  let near=false;
+  for(const L of M.zips)for(const [e,dir] of [[L.a,1],[L.b,-1]]){if(Math.abs(f.pos.y-e.y)>.6||Math.hypot(f.pos.x-e.x,f.pos.z-e.z)>1.2)continue;near=true;
+    /* Pete 24 Nov: players just stand on the pad for 1.5 s to grab the handle (no jump). After a ride you have to step off the pad first, so you don't ride straight back */
+    let go;if(f.bot){const n=f.ai&&f.ai.path&&f.ai.path[0];go=!!(n&&n.lad&&n.lad.warp&&n.lad.warp.zip===L&&n.lad.warp.dir===dir);}else{if(f._zipOff)continue;f._zipW=(f._zipW||0)+dt;go=f._zipW>=ZIP_WAIT;}
+    if(!go)continue;f.zip={line:L,dir,s:0,t:0,last:null};f._zipW=0;f._zipOff=true;sfx('zip',f,{range:16});return true;}
+  if(!near){f._zipW=0;f._zipOff=false;}
   return false;}
 function physics1(f,dt,wx,wz,jump,speed,jumpPress){if((M.zips||f.zip)&&zipStep(f,dt,jump,jumpPress))return;if(f.bot&&f.onLadder&&f._ladDir){wx=f.onLadder.nx*f._ladDir;wz=f.onLadder.nz*f._ladDir;jump=false;}
   if(M.ladders&&M.ladders.length&&(!f.bot||f.onLadder||S.t-(f._ladT||-9)<.3)&&ladderStep(f,dt,wx,wz,jump))return;depen(f);const C=CHARS[f.char]||CHARS.wednesday;speed*=(C.speed||1)*1.2;if(M.wade&&f.pos.y<.25&&M.wade(f.pos.x,f.pos.z)){speed*=.8;const v=Math.hypot(f.vel.x,f.vel.z);if(f.grounded&&!f._wg&&f._fallV<-4&&M.splash){M.splash(f.pos.x,f.pos.z,Math.min(1.6,.6-f._fallV*.06));sfx('splash',f,{vol:clamp(-f._fallV/14,.35,1),range:16});}if(f.grounded&&v>1.5&&M.splash){f._wd=(f._wd||0)+v*dt;if(f._wd>.85){f._wd=0;f._ws=-(f._ws||1);const sx=Math.cos(f.yaw)*.18*f._ws,sz=-Math.sin(f.yaw)*.18*f._ws;M.splash(f.pos.x+sx+f.vel.x*.06,f.pos.z+sz+f.vel.z*.06,.38+v*.03);sfx(f._ws>0?'wade1':'wade2',f,{vol:clamp(v/8,.4,1.1)*.25,range:12,jitter:.1});}}f._wg=f.grounded;f._fallV=f.vel.y;}else{f._wg=f.grounded;f._fallV=f.vel.y;}if(f.slowT>0)speed*=.45;if(f.downed){speed=2.5*(C.speed||1);jump=false;jumpPress=false;}else if(f.crouching){speed*=.5;jump=false;}

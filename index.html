@@ -1692,6 +1692,11 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #menu .mq-tip span::before{content:"\2022";color:#ff5aa8;margin-right:8px}
 #menu .mq-tip small{color:#8a8a8a;font-size:11.5px;margin-top:4px;white-space:normal}
 #menu .mqgrp:hover .mq-tip,#menu .mqgrp:focus-within .mq-tip{display:flex}
+/* map picker tiles are square (same width as before, taller), so more of each map shows; the box grows to fit and the column scrolls if it must */
+@media (min-height:521px){
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{height:auto!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg{flex:none;grid-template-rows:none!important;grid-auto-rows:auto}
+#menu .mfull.duels[data-step="setup"] .mpick .mrg-t{aspect-ratio:1/1;height:auto}}
 </style>
 
 </head>
@@ -10992,10 +10997,11 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
 const HERO_CAM={mansion:[-.5,.55,.55,36],arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
-  const OW=1600,OH=900,SS=2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
+  /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */
+  const OW=1200,OH=1200,SS=2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
   try{renderer.setPixelRatio(1);renderer.setSize(OW*SS,OH*SS,false);}catch(e){}
   scene.traverse(o=>{if(o.isDirectionalLight&&o.castShadow){saveSh.push([o,o.shadow.mapSize.x]);o.shadow.mapSize.set(2048,2048);/* 4096 was a big memory spike on every map picture */if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}});
-  camera.aspect=OW/OH;camera.fov=hc[3];camera.position.set(c.x+r*hc[0],r*hc[1],c.z+r*hc[2]);camera.lookAt(c.x+r*.04,0,c.z-r*.06);camera.updateProjectionMatrix();sky.position.copy(camera.position);
+  camera.aspect=OW/OH;camera.fov=2*Math.atan(Math.tan(hc[3]*Math.PI/360)*16/9)*180/Math.PI;camera.position.set(c.x+r*hc[0],r*hc[1],c.z+r*hc[2]);camera.lookAt(c.x+r*.04,0,c.z-r*.06);camera.updateProjectionMatrix();sky.position.copy(camera.position);
   placeSun({x:c.x,y:0,z:c.z});ME.ch.root.visible=false;BOT.ch.root.visible=false;if(M.thumb)M.thumb(true);renderer.render(scene,camera);if(M.thumb)M.thumb(false);
   const cv=document.createElement('canvas');cv.width=OW;cv.height=OH;const g=cv.getContext('2d');g.imageSmoothingQuality='high';const W=renderer.domElement.width,H=renderer.domElement.height;
   g.drawImage(renderer.domElement,0,0,W,H,0,0,OW,OH);

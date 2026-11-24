@@ -12459,6 +12459,19 @@ function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
   street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, toe to toe.',mansion:'Thirty rooms. Two floors. One way out.',random:'Roll the dice. Any map, any match.'};
 function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
+/* loadout showcase panel: paints one item (tab 'pri' = gun, 'let' = lethal; k null = Random). Used for your pick, and for a gun you hover */
+function wsPaint(tab,k,sk){const WC=GCAT;
+   const lab={pri:'Gun',let:'Lethal'};
+   $('d-wshow').hidden=sk;$('col3').classList.toggle('wsc',!sk);
+   let img,cls,name,body;
+   if(!k){img='<b aria-hidden="true">?</b>';cls=lab[tab];name='Random';body=`<p class="ws-note">A surprise ${lab[tab].toLowerCase()} every match, never the same one twice in a row</p>`;}
+   else if(tab==='let'){const c=CONS[k];img=`<img src="${PREV['g_c_'+k]||''}" alt="">`;cls='Lethal';name=c.name;body=`<p class="ws-note">${c.desc}</p><p class="ws-note">${c.meta||''}</p>`;}
+   else{const g=GUNS[k],dmg=g.dmg*(g.pellets||1)*(g.burst||1),rps=g.rate?1/g.rate:0,rng=g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k),rt=(v,mx,sq)=>Math.max(1,Math.min(10,Math.round((sq?Math.sqrt(Math.max(0,v)/mx):Math.max(0,v)/mx)*10))),bar=(l,r)=>`<div>${l}<i><u style="width:${r*10}%"></u></i><em>${r}<small>/10</small></em></div>`,MX=statMax();
+     img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=WC[k]||lab[tab];name=g.name;
+     const mob=g.type==='melee'?10:Math.max(1,Math.min(10,Math.round((weightMul(k)-.83)/(1.08-.83)*9+1)));
+     body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',rt(dmg,MX.dmg,1))}${bar('Fire rate',rt(rps,MX.rps,1))}${bar('Range',rt(rng,MX.rng))}${bar('Mobility',mob)}<div class="mg">Mag<em>${isFinite(g.mag)&&g.mag?g.mag+' rounds':'—'}</em></div></div>`;}
+   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
+function wsPick(){const tab=S.wtab==='let'?'let':'pri';return [tab,tab==='let'?(S.randCons?null:S.cons):(S.randGun?null:S.gun)];}
 function renderDuelMenu(){
   xpBar('mx');const ru=S.mode==='rumble',sk=ru;
   const c=S.char&&CHARS[S.char];
@@ -12479,17 +12492,7 @@ function renderDuelMenu(){
   const rdet=w=>`<b>Random</b> A surprise ${w} every match, never the same one twice in a row`;$('d-gdet').innerHTML=S.randGun?rdet('gun'):det(S.gun);
   setHTML('d-consl',CONS_IDS.map(k=>{const c=CONS[k],h=HERO['c_'+k];return `<button class="opt gun-opt" data-cons="${k}" aria-pressed="${!S.randCons&&k===S.cons}"><img class="gp${h?' spot':''}" src="${PREV['g_c_'+k]||''}" alt=""><span class="t">${c.short}</span></button>`;}).join('')+`<button class="opt gun-opt rand" data-cons="random" aria-pressed="${!!S.randCons}" title="Random: a surprise lethal every match"><span class="gp rq" aria-hidden="true">?</span><span class="t">Random</span></button>`);
   {const c=S.cons&&CONS[S.cons];$('d-cdet').innerHTML=S.randCons?rdet('lethal'):c?`<b>${c.name}</b> ${c.desc}<span>${c.meta}</span>`:'Pick one';}
-  {/* loadout showcase: shows whichever you last picked, your gun or your lethal; both rows are always on screen */const tab=S.wtab==='let'?'let':'pri',WC=GCAT;
-   const pick={pri:S.randGun?null:S.gun,let:S.randCons?null:S.cons},lab={pri:'Gun',let:'Lethal'};
-   $('d-wshow').hidden=sk;$('col3').classList.toggle('wsc',!sk);
-   const k=pick[tab];let img,cls,name,body;
-   if(!k){img='<b aria-hidden="true">?</b>';cls=lab[tab];name='Random';body=`<p class="ws-note">A surprise ${lab[tab].toLowerCase()} every match, never the same one twice in a row</p>`;}
-   else if(tab==='let'){const c=CONS[k];img=`<img src="${PREV['g_c_'+k]||''}" alt="">`;cls='Lethal';name=c.name;body=`<p class="ws-note">${c.desc}</p><p class="ws-note">${c.meta||''}</p>`;}
-   else{const g=GUNS[k],dmg=g.dmg*(g.pellets||1)*(g.burst||1),rps=g.rate?1/g.rate:0,rng=g.type==='melee'?(g.reach||2.5):g.fall?g.fall[1]:weaponReach(k),rt=(v,mx,sq)=>Math.max(1,Math.min(10,Math.round((sq?Math.sqrt(Math.max(0,v)/mx):Math.max(0,v)/mx)*10))),bar=(l,r)=>`<div>${l}<i><u style="width:${r*10}%"></u></i><em>${r}<small>/10</small></em></div>`,MX=statMax();
-     img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=WC[k]||lab[tab];name=g.name;
-     const mob=g.type==='melee'?10:Math.max(1,Math.min(10,Math.round((weightMul(k)-.83)/(1.08-.83)*9+1)));
-     body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',rt(dmg,MX.dmg,1))}${bar('Fire rate',rt(rps,MX.rps,1))}${bar('Range',rt(rng,MX.rng))}${bar('Mobility',mob)}<div class="mg">Mag<em>${isFinite(g.mag)&&g.mag?g.mag+' rounds':'—'}</em></div></div>`;}
-   const key=tab+':'+(k||'r');const ws=$('d-wshow');if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}ws3Show(sk||!k?null:tab==='let'?'c_'+k:k);}
+  {/* loadout showcase: shows whichever you last picked, your gun or your lethal (hovering a gun shows that gun instead until you move off) */const [tab,k]=wsPick();wsPaint(tab,k,sk);}
   document.querySelectorAll('#d-diff button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.diff===S.diff)));document.querySelectorAll('#d-team button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.team===S.players)));$('d-ffanrow').hidden=S.players!=='ffa';document.querySelectorAll('#d-ffan button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===ffaN())));document.querySelectorAll('#d-dmlen button').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.len===dmLen())));
   $('col1').classList.toggle('done',!!S.map);$('col2').classList.toggle('done',!!S.char);$('col3').classList.toggle('done',sk||(!!S.gun&&!!S.cons));menuStep();
   const need=readyNeeds();$('d-start').classList.toggle('ready',!need.length);$('d-start').textContent='Start';$('d-next0').textContent=S.qr==='map'?'Play':'Character';document.querySelectorAll('.qr-seg').forEach(g=>{g.hidden=S.qr!=='load';g.querySelectorAll('[data-qr]').forEach(b=>b.setAttribute('aria-checked',String((b.dataset.qr==='rand')===!!S.qrRand)));});
@@ -12565,21 +12568,20 @@ $('m-quick').addEventListener('click',()=>{const c=q=>{const b=document.querySel
   c('#mode [data-mode="duels"]');c('#d-team [data-team="ffa"]');c('#d-ffan [data-n="4"]');c('#d-dmlen [data-len="5"]');
   S.randMap=S.randGun=S.randCons=true;menuStep('setup');renderDuelMenu();startMatch();});
 $('m-quick2').addEventListener('click',e=>{e.preventDefault();$('m-quick').click();});
-/* hover peek: hover a map in the picker, or a gun / lethal on the Loadout screen (shown over the showcase panel there), and a bigger picture of it appears beside the tile: on whichever
+/* hover peek: hover a map in the picker and a bigger picture of it appears beside the tile (a gun you hover on the Loadout screen shows in that screen's own showcase panel instead; lethals have no hover): on whichever
    side has room (right, left, else above/below), kept fully on screen, never under the pointer (so it can't block the next tile you move to) */
 (()=>{const pk=document.createElement('div');pk.id='map-peek';pk.innerHTML='<b></b>';document.body.appendChild(pk);let cur=null;
-  const SEL='#d-maps .mrg-t[data-map], #col3 .gun-opt:not(.rand):not(.off)';
-  const hide=()=>{cur=null;pk.classList.remove('on');};
+  const SEL='#d-maps .mrg-t[data-map], #d-guns .gun-opt[data-gun]:not(.rand):not(.off)';
+  let wsHov=false;const hide=()=>{cur=null;pk.classList.remove('on');if(wsHov){wsHov=false;if(S.state==='menu'&&!$('d-wshow').hidden){const [tb,kk]=wsPick();wsPaint(tb,kk,false);}}};
   const nameOf=t=>t.dataset.map?((MAPS[t.dataset.map]||{}).name||''):t.dataset.gun?((GUNS[t.dataset.gun]||{}).name||''):t.dataset.cons?((CONS[t.dataset.cons]||{}).name||(CONS[t.dataset.cons]||{}).short||''):((t.querySelector('.t')||{}).firstChild||{}).textContent||'';
   document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const t=e.target.closest&&e.target.closest(SEL);
-    if(!t){if(cur&&!(e.target.closest&&e.target.closest('#d-maps,#col3')))hide();return;}if(t===cur)return;const img=t.querySelector('img');if(!img||!img.getAttribute('src')){hide();return;}
+    if(!t){if(cur&&!(e.target.closest&&e.target.closest(SEL)))hide();return;}if(t===cur)return;if(cur)hide();const img=t.querySelector('img');if(t.dataset.map&&(!img||!img.getAttribute('src'))){hide();return;}
+    /* guns: shown in the Loadout screen's own showcase panel (picture, name, stats) while you hover; your pick comes back when you move off */
+    if(t.dataset.gun){if(pk.classList.contains('on'))pk.classList.remove('on');cur=t;wsHov=true;wsPaint('pri',t.dataset.gun,false);return;}
     cur=t;const r=t.getBoundingClientRect(),vw=innerWidth,vh=innerHeight,m=12,ar=img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1,
       big=Math.max(200,Math.min(ar>1.2?480:420,vh*.5*Math.max(1,ar),vw*(ar>1.2?.38:.34))),W=Math.round(big),H=Math.round(big/ar);
     pk.style.setProperty('--pw',W+'px');pk.style.aspectRatio=ar.toFixed(3);pk.classList.toggle('gun',!t.dataset.map);
     pk.style.backgroundImage=`url(${img.src})`;pk.querySelector('b').textContent=nameOf(t);
-    /* guns and lethals: the bigger picture sits over the showcase panel on the left of the Loadout screen, so it never covers the other tiles */
-    const ws=!t.dataset.map&&$('d-wshow');if(ws&&ws.offsetParent){const q=ws.getBoundingClientRect(),w2=Math.round(Math.min(q.width-24,(q.height-24)*ar,560)),h2=Math.round(w2/ar);
-      pk.style.setProperty('--pw',w2+'px');pk.style.left=Math.round(q.left+(q.width-w2)/2)+'px';pk.style.top=Math.round(q.top+(q.height-h2)/2)+'px';pk.classList.add('on');return;}
     let x,y,side=false;if(r.right+m+W<=vw-m){x=r.right+m;side=true;}else if(r.left-m-W>=m){x=r.left-m-W;side=true;}else x=Math.min(vw-m-W,Math.max(m,r.left+r.width/2-W/2));
     if(side)y=Math.min(vh-m-H,Math.max(m,r.top+r.height/2-H/2));else y=r.top-m-H>=m?r.top-m-H:Math.min(vh-m-H,r.bottom+m);
     pk.style.left=x+'px';pk.style.top=y+'px';pk.classList.add('on');},{passive:true});

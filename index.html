@@ -5587,16 +5587,17 @@ function skyHigh(){const X=15,Z=20;/* 30 x 40 m (Small size): an infinity-pool r
       if(tree){const cx=(x0+x1)/2,cz=(z0+z1)/2;deco(gC(.1,.14,2.6,8),mat('#6b4a32'),cx,y0+h+1.3,cz);for(let k=0;k<5;k++)deco(new THREE.IcosahedronGeometry(.9-k*.08,1),k%2?leaf:leaf2,cx+Math.cos(k*1.3)*.5,y0+h+2.7+k*.25,cz+Math.sin(k*1.3)*.5);}};
     /* a sculpture on a solid black stone plinth (1.1 m: cover to crouch behind, and the piece itself stops shots up to about 2.7 m): a polished chrome knot,
        a split gold orb or a twisting white marble column */
-    const sculpt=(cx,cz,y0,kind,ry)=>{const P=1.6;box(cx,y0,cz,P,1.1,P,'#1d1f24',{mat:mat('#1d1f24','slab',{roughness:.35,metalness:.2}),...SO});deco(B.boxGeo(P+.08,.05,P+.08),steel,cx,y0+1.12,cz).castShadow=false;
-      const top=y0+1.15,g=new THREE.Group();g.position.set(cx,top,cz);g.rotation.y=ry||0;g.scale.setScalar(1.3);M.group.add(g);const env=lgSteel().envMap,shine=(c,r)=>new THREE.MeshStandardMaterial({color:c,metalness:env?1:.7,roughness:r,envMap:env,envMapIntensity:1.35});const add=(geo,m,x,y,z,rx,rz)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.rotation.set(rx||0,0,rz||0);o.castShadow=true;o.receiveShadow=true;g.add(o);return o;};
+    const sculpt=(cx,cz,y0,kind,ry,ph=1.1)=>{const P=1.6;box(cx,y0,cz,P,ph,P,'#1d1f24',{mat:mat('#1d1f24','slab',{roughness:.35,metalness:.2}),...SO});deco(B.boxGeo(P+.08,.05,P+.08),steel,cx,y0+ph+.02,cz).castShadow=false;
+      const top=y0+ph+.05,g=new THREE.Group();g.position.set(cx,top,cz);g.rotation.y=ry||0;g.scale.setScalar(1.3);M.group.add(g);const env=lgSteel().envMap,shine=(c,r)=>new THREE.MeshStandardMaterial({color:c,metalness:env?1:.7,roughness:r,envMap:env,envMapIntensity:1.35});const add=(geo,m,x,y,z,rx,rz)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.rotation.set(rx||0,0,rz||0);o.castShadow=true;o.receiveShadow=true;g.add(o);return o;};
       if(kind===0){add(new THREE.TorusKnotGeometry(.42,.13,140,18,2,3),shine('#f4f6f9',.08),0,.85,0);add(gC(.06,.06,.3,10),steel,0,.15,0);collider(cx-.75,cx+.75,top,top+1.9,cz-.75,cz+.75);}
       else if(kind===1){const gold=shine('#f2c24e',.16);for(const sd of [-1,1])add(new THREE.SphereGeometry(.62,32,16,sd>0?0:Math.PI,Math.PI),gold,sd*.12,.72,0,0,0).rotation.y=Math.PI/2;
         add(gC(.5,.6,.1,24),mat('#2a2c31',null,{metalness:.6,roughness:.3}),0,.05,0);collider(cx-.75,cx+.75,top,top+1.75,cz-.75,cz+.75);}
       else{const mb=mat('#f4f2ee','slab',{roughness:.25});for(let k=0;k<7;k++){const o=add(B.boxGeo(.62-k*.03,.24,.62-k*.03),mb,0,.12+k*.24,0);o.rotation.y=k*.22;}add(new THREE.SphereGeometry(.16,16,12),shine('#f2c24e',.16),0,1.86,0);collider(cx-.5,cx+.5,top,top+2.5,cz-.5,cz+.5);}};
     const st=St(0,0,1),stairs=(z0,dir,x0,x1,h,n)=>st.stairs(z0,dir,Math.min(x0,x1),Math.max(x0,x1),0,n,h/n,.44,'#cfc9bf',true);
     /* the pool: a shallow flush pool (mosaic floor, rippling water you wade through), open along its long sides, solid teak walls across its short ends */
-    const PX=3.6,PZ=7,PW=.13;floor(-PX,PX,-PZ+.15,PZ-.15,'#3aa3c8','mosaic',.012,1);
-    for(const s of [1,-1]){teakWall(-PX-.1,PX+.1,s*PZ-.15,s*PZ+.15,0,1.3);deco(B.boxGeo(.3,.03,2*PZ-.3),stone,s*(PX+.15),.015,0).castShadow=false;}
+    /* middle-of-the-map cover height: crouched (eye about 1.7 m) you're hidden, stood up (eye 2.35 m) you can shoot over */
+    const CH=1.8,PX=3.6,PZ=7,PW=.13;floor(-PX,PX,-PZ+.15,PZ-.15,'#3aa3c8','mosaic',.012,1);
+    for(const s of [1,-1]){teakWall(-PX-.1,PX+.1,s*PZ-.15,s*PZ+.15,0,CH);deco(B.boxGeo(.3,.03,2*PZ-.3),stone,s*(PX+.15),.015,0).castShadow=false;}
     {const wm=new THREE.MeshStandardMaterial({color:'#7fd3ec',map:TX.ripple,transparent:true,opacity:.62,roughness:.06,metalness:.1,emissive:'#2b8fb5',emissiveIntensity:.25,depthWrite:false});
       const g=new THREE.PlaneGeometry(2*PX,2*PZ-.3);g.rotateX(-Math.PI/2);const w=new THREE.Mesh(g,wm);w.position.set(0,PW,0);w.renderOrder=3;w.userData.dyn=1;M.group.add(w);
       
@@ -5619,8 +5620,8 @@ function skyHigh(){const X=15,Z=20;/* 30 x 40 m (Small size): an infinity-pool r
         const fz=s>0?c0:c1,ix=s>0?x1:x0;teakWall(x0+.3,x0+2.6,fz-.12,fz+.12,H,1.1);teakWall(x1-2.6,x1-.3,fz-.12,fz+.12,H,1.1);teakWall(ix-.12,ix+.12,c0+.3,c1-.3,H,1.1);
         for(const dx of [1.6,4.4])box(x0+dx,H,(c0+c1)/2,1.2,.45,.6,'#f4efe6',{mat:mat('#f4efe6','carpet'),...SO});}
       /* down the long sides of the roof (point-symmetric, so each side gets both): an L of teak cover walls and a sculpture (clear of the shop) */
-      teakWall(Math.min(s*-12.6,s*-9),Math.max(s*-12.6,s*-9),Math.min(Z(4.6),Z(5.1)),Math.max(Z(4.6),Z(5.1)),0,1.3);teakWall(Math.min(s*-9.5,s*-9),Math.max(s*-9.5,s*-9),Math.min(Z(1.2),Z(4.6)),Math.max(Z(1.2),Z(4.6)),0,1.3);
-      sculpt(s*-11.6,Z(-4.8),0,2,s*.3);
+      teakWall(Math.min(s*-12.6,s*-9),Math.max(s*-12.6,s*-9),Math.min(Z(4.6),Z(5.1)),Math.max(Z(4.6),Z(5.1)),0,CH);teakWall(Math.min(s*-9.5,s*-9),Math.max(s*-9.5,s*-9),Math.min(Z(1.2),Z(4.6)),Math.max(Z(1.2),Z(4.6)),0,CH);
+      sculpt(s*-11.6,Z(-4.8),0,2,s*.3,1.4);
       planter(Math.min(s*6.2,s*8.2),Math.max(s*6.2,s*8.2),Math.min(Z(9.4),Z(10.6)),Math.max(Z(9.4),Z(10.6)),0,.9);}}
   /* the shop stands against the glass halfway along the east side, facing in across the roof */
   M.shopAt=[{x:X-.95,z:0,y:0,q:3}];
@@ -9147,7 +9148,7 @@ const stunV=new V3();
 function updFinish(dt){for(const v of FS){if(!v.finishing)continue;const sh0=S.shake;finish1(v,dt);if(v!==ME)S.shake=Math.min(S.shake,sh0);}}
 function finish1(v,dt){for(const _ of [0]){const F=v.finishing;if(!F)continue;
   F.t+=dt;const t=F.t,r=v.ch.root;
-  if(F.fx==='Blast'){if(!F.done){F.done=1;shatter(v,{power:F.pw||16,up:5,from:F.from,max:320});}} /* hit head-on by the train or crushed by the chopper: blown to pieces on the spot */
+  if(F.fx==='Blast'){if(!F.done){F.done=1;shatter(v,{power:F.pw||16,up:5,from:F.from,max:320});}} /* hit head-on by the train: blown to pieces on the spot */
   else if(F.fx==='Firework'){if(t<1.1){r.rotation.y+=dt*(6+t*14);emit(v.pos.x,v.pos.y+.3,v.pos.z,{n:3,speed:1.5,up:11,size:.2,life:.55,grav:4,colors:['#ffb347','#ffd23f','#ffffff']});}
     else if(!F.done){F.done=1;shatter(v,{power:12,up:3});S.shake=.4;}}
   else if(F.fx==='Freeze'){const ice=F.obj[0];ice.scale.setScalar(Math.min(1,t*3));if(t>1.1&&!F.done){F.done=1;scene.remove(ice);burst(v,['#bfefff','#ffffff','#7fd3ff'],80);}}

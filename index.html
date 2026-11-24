@@ -3471,6 +3471,9 @@ tex('encaustic',256,256,(g,w,h)=>{for(let i=0;i<2;i++)for(let j=0;j<2;j++){const
     g.fillStyle='#cdc3b0';g.fillRect(0,0,128,2);g.fillRect(0,0,2,128);g.restore();}});
 tex('cedar',128,128,(g,w,h)=>{let a=99;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};const T=['#b9784a','#a86a40','#c4875a','#9e6239','#b47448'];
   for(let i=0;i<8;i++){g.fillStyle=T[Math.floor(R()*T.length)];g.fillRect(i*16,0,16,h);g.strokeStyle='rgba(70,40,20,.18)';for(let k=0;k<3;k++){g.beginPath();const xx=i*16+3+R()*10;g.moveTo(xx,0);g.lineTo(xx+R()*2-1,h);g.stroke();}g.fillStyle='rgba(30,20,10,.55)';g.fillRect(i*16,0,2,h);}});
+/* boards: vertical cladding boards in light greys, so a colour can tint them */
+tex('boards',128,128,(g,w,h)=>{let a=77;const R=()=>{a=(a*16807)%2147483647;return a/2147483647;};const T=['#ffffff','#f3f3f3','#fafafa','#ececec','#f7f7f7'];
+  for(let i=0;i<8;i++){g.fillStyle=T[Math.floor(R()*T.length)];g.fillRect(i*16,0,16,h);g.strokeStyle='rgba(0,0,0,.06)';for(let k=0;k<2;k++){g.beginPath();const xx=i*16+3+R()*10;g.moveTo(xx,0);g.lineTo(xx+R()*2-1,h);g.stroke();}g.fillStyle='rgba(0,0,0,.28)';g.fillRect(i*16,0,2,h);}});
 tex('carpet',128,128,(g,w,h)=>speck(g,w,h,'#ffffff',['rgba(0,0,0,.07)','rgba(255,255,255,.4)'],900,2));
 tex('siding',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let y=0;y<8;y++){g.fillStyle='rgba(30,40,60,.13)';g.fillRect(0,y*16+13,w,3);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(0,y*16,w,2);}});
 tex('brick',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='rgba(60,30,20,.22)';for(let y=0;y<8;y++){g.fillRect(0,y*16,w,3);for(let x=((y%2)*32);x<w;x+=64)g.fillRect(x,y*16,3,16);}});
@@ -3659,8 +3662,9 @@ function loadFurn(id){if(FURN_P[id])return FURN_P[id];return FURN_P[id]=fetch('m
   .then(parts=>{FURNM[id]={parts,w:(x1-x0)*sc,d:(z1-z0)*sc};for(const f of FURN_WAIT.splice(0))try{f();}catch(e){}});});}
 setTimeout(()=>{for(const k of Object.keys(FURN_CFG))if(!FURN_CFG[k].dir)loadFurn(k).catch(e=>console.warn(e));},1100);
 /* put a furniture model into an object (a prop box or a knock item) at world (x,y,z) turned ry; it shows up as soon as its model has loaded */
-function furnInto(id,host,x,y,z,ry,sc){FURN_USED.add(id);const grp=M.group;const go=()=>{if(M.group!==grp||!host)return;const F=FURNM[id];if(!F){FURN_WAIT.push(go);return;}/* another model's arrival woke us: wait for ours */const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
-    host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;if(sc)g.scale.setScalar(sc);host.add(g);};
+let FURN_LOCAL=false;
+function furnInto(id,host,x,y,z,ry,sc){FURN_USED.add(id);const grp=M.group;let pre=null;if(FURN_LOCAL&&host){host.updateMatrixWorld(true);pre={p:new V3(x,y,z).applyMatrix4(host.matrixWorld.clone().invert()),ry:ry-host.rotation.y};}const go=()=>{if(M.group!==grp||!host)return;const F=FURNM[id];if(!F){FURN_WAIT.push(go);return;}/* another model's arrival woke us: wait for ours */const g=new THREE.Group();for(const p of F.parts){const m=new THREE.Mesh(p.geo,p.mat);m.castShadow=true;m.receiveShadow=true;g.add(m);}
+    if(pre){g.position.copy(pre.p);g.rotation.y=pre.ry;}else{host.updateMatrixWorld(true);const inv=host.matrixWorld.clone().invert();g.position.set(x,y,z).applyMatrix4(inv);g.rotation.y=ry-host.rotation.y;}if(sc)g.scale.setScalar(sc);host.add(g);};
   if(FURNM[id])go();else{FURN_WAIT.push(go);loadFurn(id).catch(()=>{});}}
 /* a furniture model standing loose in the scene at (x,z) turned ry (raised y), inside its own group (returned, so it can be moved) */
 function scenery(id,x,z,ry,y=0){const g=new THREE.Group();g.position.set(x,y,z);g.userData.dyn=1;M.group.add(g);furnInto(id,g,x,y,z,ry);return g;}
@@ -3748,6 +3752,15 @@ function roofGable(x,z,w,d,y,color,alongX,tx,endC,ov){const o0=ov?ov[0]:.4,o1=ov
   const n=12,hw2=hw+.3,ext=(alongX?w:d)/2+.4;for(let i=0;i<n;i++){const r=hw2-i*hw2/n,top=y+(i+.5)*h/n+.17;
     if(alongX)collider(x-ext,x+ext,y,top,z-r,z+r);else collider(x-r,x+r,y,top,z-ext,z+ext);}}
 function collider(x0,x1,y0,y1,z0,z1){const b={x0,x1,y0,y1,z0,z1,mesh:null};M.boxes.push(b);return b;}
+/* build something with fn(), then turn everything it made a quarter turn (q=1: +90 degrees about y, so +x becomes -z) about (cx,cz).
+   Boxes stay axis-aligned, so colliders, ladders and loose items all turn with it (Street Life's buildings face along the street) */
+function rotBuild(cx,cz,q,fn){const g0=M.group.children.length,b0=M.boxes.length,l0=(M.ladders||[]).length,k0=(M.knocks||[]).length;FURN_LOCAL=true;try{fn();}finally{FURN_LOCAL=false;}
+  const a=q*Math.PI/2,c=Math.round(Math.cos(a)),sn=Math.round(Math.sin(a)),P=(x,z)=>[cx+(x-cx)*c+(z-cz)*sn,cz-(x-cx)*sn+(z-cz)*c],qy=new THREE.Quaternion().setFromAxisAngle(new V3(0,1,0),a);
+  for(let i=g0;i<M.group.children.length;i++){const o=M.group.children[i],[x,z]=P(o.position.x,o.position.z);o.position.x=x;o.position.z=z;o.quaternion.premultiply(qy);}
+  for(let i=b0;i<M.boxes.length;i++){const b=M.boxes[i],[xa,za]=P(b.x0,b.z0),[xb,zb]=P(b.x1,b.z1);b.x0=Math.min(xa,xb);b.x1=Math.max(xa,xb);b.z0=Math.min(za,zb);b.z1=Math.max(za,zb);}
+  const LD=M.ladders||[];for(let i=l0;i<LD.length;i++){const d=LD[i],ax=d.nx!==0,pt=ax?[d.rung,(d.z0+d.z1)/2]:[(d.x0+d.x1)/2,d.rung],[px,pz]=P(pt[0],pt[1]),[xa,za]=P(d.x0,d.z0),[xb,zb]=P(d.x1,d.z1);
+    d.x0=Math.min(xa,xb);d.x1=Math.max(xa,xb);d.z0=Math.min(za,zb);d.z1=Math.max(za,zb);const nx=d.nx*c+d.nz*sn,nz=-d.nx*sn+d.nz*c;d.nx=Math.round(nx);d.nz=Math.round(nz);d.rung=d.nx!==0?px:pz;}
+  const KN=M.knocks||[];for(let i=k0;i<KN.length;i++){const K=KN[i];K.hp=K.m.position.clone();K.hr=K.m.rotation.clone();if(q%2){const t=K.ex;K.ex=K.ez;K.ez=t;}}}
 // local frame: x=cx+flip*u, z=cz+flip*v (flip ±1 keeps boxes axis-aligned and lets maps stay point-symmetric)
 function St(cx,cz,flip,k=1){const X=u=>cx+flip*u*k,Z=v=>cz+flip*v*k;
   const S={
@@ -3821,6 +3834,10 @@ function parkVehicle(c){c.alive=true;c.home=c.z;c.state='park';for(const b of c.
 function hitCar(c,dmg,at){if(!c.alive)return;const now=S.t;if(now-(c.hitT??-9)>.03){c.hits=(c.hits||0)+1;c.hitT=now;}c.hp=c.hits>=3?0:c.hits>=2?100:300;emit(at.x,at.y,at.z,{n:4,speed:4,up:1.5,size:.08,life:.3,colors:['#ffd23f','#ffffff',c.color]});
   if(c.hp<180){const b=c.boxes[0];emit((b.x0+b.x1)/2,b.y1+.1,(b.z0+b.z1)/2,{n:2,speed:.6,up:2.5,size:.5,life:1.4,grav:-1.2,colors:['#3a3d45','#55585f','#6e665c']});}
   if(c.hp<=0)wreckCar(c,at);}
+/* Street Life's second building: once a hospital, now the yellow ARCADE (24 Nov). Its code still calls it 'hospital' (th) */
+const SL_FUN='arcade';
+/* the home's cladding colour (was brown cedar until 24 Nov) */
+const HOME_CLAD='#ffffff',HOME_BRIGHT=['#ff4fd8','#3de0ff','#ffe14d','#3bb54a','#ff7a1a'];/* bright boards, a different colour on each wall: pink back, cyan and yellow sides, green front, orange inside downstairs */
 /* storey heights for houseA: Street Life's home and hospital have two storeys (24 Nov: the middle floor is gone): a tall ground floor (4.9 m)
    and the loft room with its open terrace (4.2 m) straight on top of it, so the first-floor top T and the loft floor L both sit at F */
 function houseDims(th){return th==='home'||th==='hospital'?{H:4.9,F:5.2,T:5.2,L:5.2,LH:4.2,NS:11,RUN:.32,two:1}:{H:4.1,F:4.4,T:8,L:8.3,LH:3.6,NS:9,RUN:.39};}
@@ -3894,108 +3911,83 @@ function dressHouse(th,S,k,f,cx,cz,H,F,loft){const X=S.X,Z=S.Z,u2=m=>m/k,R=Math.
     Bx(4.65,5.05,F,.6,1.3,.6,'#9aa0a8',{chip:true,hp:150});panel(-1.0,5.33,F+1.9,.6,.8,canvasTex(64,96,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);g.fillStyle='#e8463a';g.fillRect(0,0,w,26);g.fillStyle='#ccc';for(let i=0;i<5;i++)for(let j=0;j<5;j++)g.fillRect(6+i*11,32+j*12,8,9);}),'v-');
     for(const [u,v,y] of [[-5.3,-5.0,F],[-4.75,-5.0,F],[-5.3,-5.0,F+.6]])Bx(u,v,y,.8,.6,.8,'#c99a5b',{tx:'wood',prop:'crate',hp:50});
   }
-  if(th==='hospital'){
-    const T=DIM.T,L=DIM.L;
-    /* the Tripo hospital models (models/home): none are placed any more (the rooms and the terrace are kept clear); hm is kept for re-use */
-    const HD={doctor:[1.99,0.68],nurse:[0.75,0.39],bed1:[1.52,3.36],bed2:[1.39,3.39],wheelchair:[1.12,1.52],alien:[1.16,0.74]};
-    const hm=(id,u,v,y,dir,hp)=>{const [w0,d0]=HD[id],ax=dir[0]==='u',w=ax?d0:w0,d=ax?w0:d0,h=FURN_CFG[id].h,ry=face[dir],o={mat:INVIS,edges:false,shadow:false};
-      if(id==='wheelchair'){const K=N(u,v,y,w,h,d,'#2b2d33',{mat:INVIS});furnInto(id,K.m,X(u),y,Z(v),ry);return K;}
-      const b=Bx(u,v,y,w,h,d,'#d9dde3',Object.assign({prop:'crate',hp:hp||120},o));if(b){b.mesh.userData.dyn=1;furnInto(id,b.mesh,X(u),y,Z(v),ry);}return b;};
-    /* signs and red trim: a big HOSPITAL board hung under the porch roof, the name again high on the front, glowing red crosses on the front corners
-       (sticking out so they read from up and down the street), on both side walls, on the loft wall and standing on the loft ridge, red belts round the storeys */
-    {const RD='#c8322b',redM=new THREE.MeshLambertMaterial({color:'#e3241a',emissive:'#6a0b06'}),D={solid:false,edges:false},Dm=Object.assign({mat:redM},D);
-      const sb=(u0,u1,v0,v1,y0,y1,c,o)=>S.box(Math.min(u0,u1),Math.max(u0,u1),Math.min(v0,v1),Math.max(v0,v1),y0,y1,c,o||D);
-      // a cross centred on (u,v,y), s metres across, flat on a wall facing along 'u' or 'v' (t metres thick)
-      const cross=(u,v,y,s,ax,t=.12)=>{const a=s*.34;if(ax==='u'){sb(u-u2(t/2),u+u2(t/2),v-u2(a/2),v+u2(a/2),y-s/2,y+s/2,null,Dm);sb(u-u2(t/2),u+u2(t/2),v-u2(s/2),v+u2(s/2),y-a/2,y+a/2,null,Dm);}
-        else{sb(u-u2(a/2),u+u2(a/2),v-u2(t/2),v+u2(t/2),y-s/2,y+s/2,null,Dm);sb(u-u2(s/2),u+u2(s/2),v-u2(t/2),v+u2(t/2),y-a/2,y+a/2,null,Dm);}};
-      const big=canvasTex(2048,176,(g,w,h)=>{g.fillStyle='#ffffff';g.fillRect(0,0,w,h);g.fillStyle=RD;g.fillRect(0,0,w,14);g.fillRect(0,h-14,w,14);
-        for(const cx of [110,w-110]){g.fillRect(cx-22,h/2-62,44,124);g.fillRect(cx-62,h/2-22,124,44);}
-        g.font='bold 132px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';if('letterSpacing' in g)g.letterSpacing='18px';g.fillText('HOSPITAL',w/2,h/2+6);});
-      const pu=-6-2.05/k,sy0=H-1.45;
-      // the board: red frame, white face, hung from the porch roof between the pillars on two red rods
-      sb(pu+u2(.02),pu+u2(.16),-3.45,3.45,sy0,H,RD,{solid:false});panel(pu+u2(.01),0,sy0+.725,6.9*k-.3,1.3,new THREE.MeshBasicMaterial({map:big}),'u-');
-      // the name again high on the front wall
-      if(!TWO)panel(-6.17,0,T-.25,3.4*k,.48,signTex('HOSPITAL','#ffffff',RD,{cross:RD,stripe:RD}),'u-');/* (two storeys: no front wall up there, the terrace is open) */
-      // blade crosses on the front corners: a white square with a glowing red cross on both faces, on a bracket off the wall
-      for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=TWO?H-1.3:F+2.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});
-        sb(uo-u2(.95),uo+u2(.95),v-u2(.06),v+u2(.06),y-.95,y+.95,'#ffffff',{solid:false});cross(uo,v,y,1.6,'v',.24);}
-      // a big cross on each side wall between the upstairs windows, and one on the loft wall over the terrace
-      for(const sv of [-1,1]){cross(TWO?.95:.35,sv*(5.65+u2(.06)),F+1.95,TWO?1.6:2.8,'v');}
-      cross(-.15-u2(.06),1.0,L+1.95,1.8,'u');/* one cross on the loft wall, between the door and the window, clear of the ladders */
-      // a tall glowing cross standing on the front end of the loft ridge
-      {const ry=L+DIM.LH+.3+2.6;sb(.35-u2(.06),.35+u2(.06),-u2(.07),u2(.07),ry-.2,ry+.35,'#9aa0a8');cross(.35,0,ry+1.75,2.8,'u',.3);}
-      // red belts round the building at each floor line, red corner posts, red caps on the porch rail; the porch roof keeps a white tiled floor
-      for(const sv of [-1,1]){sb(-6,6,sv*5.35,sv*5.67,H,F,RD);if(!TWO)sb(-6,6,sv*5.35,sv*5.67,T,L,RD);/* the belts stop just short of the side ladders */for(const su of [-1,1])sb(su*(6.15+u2(.06)),su*(6.15-u2(.3)),sv*(5.65+u2(.06)),sv*(5.65-u2(.3)),0,T,RD);}
-      sb(pu-u2(.02),pu+u2(.27),-4.02,4.02,F+1,F+1.1,RD);for(const v of [-4,4])sb(pu,-6.15,v-u2(.14),v+u2(.14),F+1,F+1.1,RD);S.floor(pu,-6.15,-4,4,F+.02,'#f7f8fa','tile');}
-    /* more hospital kit: operating theatre, crash carts, bedside monitors, drips, oxygen bottles, sharps bins, x-ray light boxes and syringes left lying about */
-    {const ecgM=new THREE.MeshBasicMaterial({map:ecg}),glass=new THREE.MeshLambertMaterial({color:'#bfe3ff',transparent:true,opacity:.7}),steel='#c9ced6';
-      const sBarrel=new THREE.CylinderGeometry(.02,.02,.16,6).rotateZ(Math.PI/2),sNeedle=new THREE.CylinderGeometry(.003,.003,.08,4).rotateZ(Math.PI/2),sPlunger=new THREE.CylinderGeometry(.008,.008,.08,4).rotateZ(Math.PI/2),
-        sCap=new THREE.CylinderGeometry(.024,.024,.012,8).rotateZ(Math.PI/2);
-      // a syringe lying on its side: clear barrel, orange plunger cap, needle
-      const syringe=(u,v,y,ry)=>N(u,v,y,.36,.04,.05,'#ffffff',{ry,geo:sBarrel,mat:glass,parts:[[sNeedle,'#e6eaef',.12,0,0],[sPlunger,'#ffffff',-.11,0,0],[sCap,'#ff7a1f',-.155,0,0],[new THREE.CylinderGeometry(.008,.008,.11,6).rotateZ(Math.PI/2),'#e8463a',.02,0,0]]});
-      const bedMon=(u,v,y,dir)=>N(u,v,y,.36,.3,.16,'#eef2f5',{ry:face[dir],geo:gB(.34,.24,.12,.03),parts:[[gB(.28,.18,.01),ecgM,0,.04,.065],[gB(.16,.04,.12),'#9aa0a8',0,-.1,0],[gC(.012,.012,.02,6),'#3dff7a',.13,-.02,.065]]});
-      const cab=(u,v,y)=>Bx(u,v,y,.5,.7,.5,'#f4f5f7',{chip:true,hp:90});
-      const o2=(u,v,y)=>N(u,v,y,.24,1.25,.24,'#3a9a5b',{cyl:1,top:.92,parts:[[gC(.105,.11,.25,10),'#ffffff',0,.5,0],[gC(.03,.03,.12,6),'#9aa0a8',0,.68,0]]});
-      const sharps=(u,v,y)=>N(u,v,y,.28,.32,.22,'#f4c22b',{parts:[[gB(.29,.06,.23),'#c8322b',0,.17,0]]});
-      const pills=(u,v,y)=>N(u,v,y,.06,.1,.06,'#ff9a3c',{cyl:1,parts:[[gC(.032,.032,.025),'#ffffff',0,.06,0]]});
-      const gloves=(u,v,y)=>N(u,v,y,.24,.1,.12,'#8ecae6',{parts:[[gB(.1,.01,.05),'#2f63c8',0,.051,0]]});
-      const tray=(u,v,y)=>{N(u,v,y,.5,.03,.34,steel);syringe(u,v-u2(.06),y+.03,.2);syringe(u+u2(.05),v+u2(.08),y+.03,-.3);};
-      // crash cart: red drawers, a defibrillator on top
-      const crash=(u,v,y)=>{const c=Bx(u,v,y,.6,.95,.5,'#c8322b',{chip:true,hp:110});for(const dy of [.25,.5,.75])kid(c,gB(.62,.02,.52),'#8f1f1a',u,v,y+dy);
-        N(u,v,y+.95,.36,.14,.28,'#f4c22b',{parts:[[gB(.2,.08,.01),ecgM,0,.02,.145],[gB(.06,.05,.06),'#1c1d22',.12,.09,-.06],[gB(.06,.05,.06),'#1c1d22',.12,.09,.06]]});syringe(u,v-u2(.12),y+.95,1.2);};
-      // operating table on a steel column, an overhead twin surgical light hung from the ceiling, and its kit round it
-      const lampM=new THREE.MeshBasicMaterial({color:'#fffbe8'}),ceil=(y)=>y<F?H:T;
-      const opTable=(u,v,y,dir)=>{const ax=dir[0]==='u',w=ax?2.0:.72,d=ax?.72:2.0,t=Bx(u,v,y,ax?.9:.36,.78,ax?.36:.9,'#9aa0a8',{chip:true,hp:160});
-        kid(t,gB(w+.04,.06,d+.04),'#c9ced6',u,v,y+.78);kid(t,gB(w,.1,d),'#2f9e96',u,v,y+.86);kid(t,gB(ax?.4:w*.8,.08,ax?d*.8:.4),'#2f9e96',ax?u+u2(dir==='u+'?.75:-.75):u,ax?v:v+u2(dir==='v+'?.75:-.75),y+.96);
-        kid(t,gB(ax?1.0:.7,.04,ax?.7:1.0),'#e9f6ff',u,v,y+.92);
-        const cy=ceil(y);for(const o of [-.45,.45]){const hu=ax?u+u2(o):u,hv=ax?v:v+u2(o);const pole=new THREE.Mesh(gC(.03,.03,cy-(y+2.35),6),mat('#d9dde3'));pole.position.set(X(hu),(cy+y+2.35)/2,Z(hv));M.group.add(pole);
-          const hd=new THREE.Mesh(gC(.42,.3,.16,16),mat('#eef2f5'));hd.position.set(X(hu),y+2.3,Z(hv));M.group.add(hd);const gl=new THREE.Mesh(gC(.34,.34,.02,16),lampM);gl.position.set(X(hu),y+2.21,Z(hv));M.group.add(gl);}};
-      // ground floor: a triage bay in reception with a trolley bed, a crash cart and a drip; monitors and cabinets by the ward beds; oxygen, sharps and x-rays in the back
-      ivStand(-2.75,-4.9);crash(-2.2,-5.0,0);syringe(-2.4,-3.6,0,.8);syringe(-3.3,-3.3,0,2.1);gloves(-3.0,3.7,1.1);syringe(-3.0,4.25,1.12,.4);
-      for(const [u,v] of [[1.3,5.12],[4.2,5.12]]){cab(u,v,0);bedMon(u,v,.7,'v-');}
-      for(const [u,v] of [[5.62,-1.4],[5.62,-1.15],[5.45,-1.28]])o2(u,v,0);sharps(5.55,-3.6,0);pills(5.6,-4.4,1.9);pills(5.6,-4.85,1.9);pills(5.6,-4.6,1.9);
-      for(const v of [2.4,3.8])panel(.15,v,2.3,1.0,.75,canvasTex(96,72,(g,w,h)=>{g.fillStyle='#cfe8ff';g.fillRect(0,0,w,h);g.fillStyle='#1d2a3a';g.fillRect(6,6,w-12,h-12);g.strokeStyle='#e6f2ff';g.lineWidth=3;
-        for(let i=0;i<5;i++){g.beginPath();g.ellipse(w/2,18+i*9,16-i,3,0,0,7);g.stroke();}g.beginPath();g.moveTo(w/2,12);g.lineTo(w/2,62);g.stroke();}),'u+');/* on the solid half-wall, now the outside walls are glass */
-      syringe(2.85,3.1,0,-.5);syringe(3.2,.6,0,1.9);syringe(1.0,-1.0,0,.3);syringe(4.9,3.3,0,2.6);
-      // upstairs: the operating theatre at the back (table, lights, anaesthetic monitor, drips, instrument trays) and a second smaller one at the front
-      /* the back theatre sits well back from the top of the stairs (towards the foot of the loft stairs), so you don't walk into it coming up */
-      /* both theatres stand against walls so the floors stay open for fighting: the back one by the back wall (clear of the stair landing), the front one against the side wall */
-      if(!TWO){      {const TU=5.05,TV=.9;opTable(TU,TV,F,'v+');heartMon(TU+u2(.6),TV+u2(.75),'u-',F);ivStand(TU-u2(.7),TV+u2(.6),F);ivStand(TU+u2(.6),TV-u2(.7),F);
-       Bx(TU-u2(.85),TV-u2(.35),F,.55,.85,.45,steel,{chip:true,hp:80});tray(TU-u2(.85),TV-u2(.35),F+.85);o2(5.7,TV+.75,F);sharps(5.7,TV-.85,F);gloves(TU-u2(.85),TV+u2(.05),F+.85);}
-      crash(5.45,3.3,F);
-      {const FV=-4.75;opTable(-2.6,FV,F,'v+');ivStand(-2.6+u2(.75),FV+u2(.45),F);bedMon(-2.6-u2(.75),FV,F+.7,'u+');cab(-2.6-u2(.75),FV,F);
-       Bx(-2.6+u2(.8),FV-u2(.25),F,.55,.85,.45,steel,{chip:true,hp:80});tray(-2.6+u2(.8),FV-u2(.25),F+.85);}
-      bedMon(-5.4,5.0,F+.7,'u+');cab(-5.4,5.0,F);
-      syringe(-1.6,-2.4,F,.6);syringe(1.7,-1.2,F,2.4);syringe(-3.6,1.6,F,1.1);syringe(.4,1.7,F,-.4);syringe(5.0,-.9,F,1.6);}}
-    // reception desk, waiting chairs, water cooler
-    /* (the desk sits back against the front glass, out of the way) */
-    const RU=-5.25,rd=Bx(RU,4.1,0,.95,1.1,3.7,'#f4f5f7',{chip:true,hp:160});kid(rd,gB(.97,.08,3.72),'#2f63c8',RU,4.1,1.12);kid(rd,gB(.02,.2,3.6),'#c8322b',RU-.3,4.1,.8);
-    monitor(RU+.1,4.6,1.1,'u+');N(RU+.1,3.5,1.1,.22,.1,.18,'#1c1d22');N(RU+.05,3.0,1.1,.3,.06,.24,'#f4c22b');N(RU+.05,3.05,1.16,.3,.06,.24,'#ffffff');
-    chair(RU+.75,4.6,0,'#2b2d33',face['u-']);
-    for(let i=0;i<8;i++)chair(-5.5,-5.0+i*.3,0,'#2f7fe0',face['u+']);
-    Bx(-4.5,-4.2,0,1.0,.45,.7,'#d9dde3',{chip:true});N(-4.5,-4.3,.45,.3,.03,.22,'#e8463a');N(-4.45,-4.0,.45,.3,.03,.22,'#2f7fe0');
-    N(-1.0,5.15,0,.36,1.3,.36,'#f4f5f7',{geo:gB(.34,.95,.34,-.17),parts:[[gC(.15,.15,.36,12),new THREE.MeshLambertMaterial({color:'#7fc4ff',transparent:true,opacity:.75}),0,.48,0]]});
-    plant(-5.4,2.55,0);
-    // wayfinding stripes on the floor from the door to the ward
-    decal(-3,0,6*k*.95,.18,'#2f7fe0',1,.035);decal(-3,.18,6*k*.95,.18,'#3bb54a',1,.035);
-    // ward: two beds with drips and a monitor, a privacy curtain, the medicine cabinet
-    const bed=(u,v)=>{const b=Bx(u,v,0,1.0,.72,2.1,'#d9dde3',{chip:true,hp:150});kid(b,gB(.96,.14,2.0),'#ffffff',u,v,.78);kid(b,gB(.94,.06,1.4),'#8ecae6',u,v-.2,.87);kid(b,gB(.6,.12,.35),'#ffffff',u,v+.75,.89);kid(b,gB(1.0,.5,.06),'#9aa0a8',u,v+u2(1.02),.97);};
-    ivStand(.6,5.1);ivStand(2.2,5.1);ivStand(3.5,5.1);ivStand(5.1,5.1);heartMon(.55,4.4,'v-');
-    const cm=new THREE.MeshLambertMaterial({color:'#9fd8c9',transparent:true,opacity:.85,side:THREE.DoubleSide});panel(2.85,4.6,1.3,2.2,2.0,cm,'u-');S.box(2.82,2.88,3.8,5.35,2.3,2.36,'#d9dde3',{solid:false,edges:false});
-    const mc=Bx(5.6,-4.6,0,.45,1.9,1.4,'#f4f5f7',{chip:true,hp:150});kid(mc,gB(.02,.4,.4),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g)=>{g.fillStyle='#fff';g.fillRect(0,0,64,64);g.fillStyle='#c8322b';g.fillRect(24,8,16,48);g.fillRect(8,24,48,16);})}),5.6-u2(.24),-4.6,1.5);
-    // upstairs: a recovery bed and supplies
-    if(!TWO){ivStand(-4.6,5.1,F);
-    for(const [u,v,y] of [[-5.3,-5.0,F],[-4.75,-5.0,F],[-5.3,-5.0,F+.6]])Bx(u,v,y,.8,.6,.8,'#e9e4d8',{prop:'crate',hp:50});
-    N(-5.2,-3.7,F,.5,.9,.4,'#f4f5f7',{parts:[[gB(.5,.03,.4),'#9aa0a8',0,0,0]]});}
-    // the loft terrace is a helipad
-    if(loft){const hp=canvasTex(256,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(128,128,112,0,7);g.stroke();g.fillStyle='#ffffff';g.fillRect(80,56,26,144);g.fillRect(150,56,26,144);g.fillRect(80,115,96,26);});
-      const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2),new THREE.MeshBasicMaterial({map:hp,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=face['u-'];m.position.set(X(-3),L+.02,Z(-1.2));M.group.add(m);}
+  if(th==='hospital'&&SL_FUN){
+    /* Street Life's second building is the ARCADE (24 Nov; it was a hospital): yellow trim and roof, ARCADE on a big board under the porch, glowing star signs on the
+       front corners, the side walls and the loft wall, a big glowing star on the ridge, and game machines all round the walls on both floors (the middle of each room stays open) */
+    const L=DIM.L,T=DIM.T,YL='#f4c22b',D={solid:false,edges:false},TH={name:'ARCADE',bg:'#1b1035',fg:'#ffe14d',ac:'#ff4fd8',ac2:'#3de0ff'};
+    const sb=(u0,u1,v0,v1,y0,y1,c,o)=>S.box(Math.min(u0,u1),Math.max(u0,u1),Math.min(v0,v1),Math.max(v0,v1),y0,y1,c,o||D);
+    const star=(g,cx,cy,r,fill,line)=>{g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;g.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);}g.closePath();g.fillStyle=fill;g.fill();if(line){g.lineWidth=r*.12;g.strokeStyle=line;g.stroke();}};
+    const drawIcon=(g,w,h)=>star(g,w/2,h*.53,w*.42,'#ffe14d','#ff4fd8');
+    const iconTex=bg=>canvasTex(256,256,(g,w,h)=>{if(bg){g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle=YL;g.lineWidth=14;g.strokeRect(7,7,w-14,h-14);}else g.clearRect(0,0,w,h);drawIcon(g,w,h);});
+    const signM=new THREE.MeshBasicMaterial({map:iconTex(TH.bg)}),plaqueM=new THREE.MeshBasicMaterial({map:iconTex(null),transparent:true,alphaTest:.1});
+    const plaque=(u,v,y,s,ax,m,t=.06)=>ax==='u'?sb(u-u2(t/2),u+u2(t/2),v-u2(s/2),v+u2(s/2),y-s/2,y+s/2,null,Object.assign({mat:m},D)):sb(u-u2(s/2),u+u2(s/2),v-u2(t/2),v+u2(t/2),y-s/2,y+s/2,null,Object.assign({mat:m},D));
+    // the big board under the porch roof
+    const big=canvasTex(2048,176,(g,w,h)=>{g.fillStyle=TH.bg;g.fillRect(0,0,w,h);g.fillStyle=TH.ac;g.fillRect(0,0,w,14);g.fillRect(0,h-14,w,14);
+      for(const cx of [120,w-120]){g.save();g.translate(cx-80,8);g.scale(160/256,160/256);drawIcon(g,256,256);g.restore();}
+      g.font='bold 132px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';if('letterSpacing' in g)g.letterSpacing='18px';g.shadowColor=TH.ac;g.shadowBlur=18;g.fillStyle=TH.fg;g.fillText(TH.name,w/2,h/2+6);});
+    const pu=-6-2.05/k,sy0=H-1.45;sb(pu+u2(.02),pu+u2(.16),-3.45,3.45,sy0,H,YL,{solid:false});panel(pu+u2(.01),0,sy0+.725,6.9*k-.3,1.3,new THREE.MeshBasicMaterial({map:big}),'u-');
+    for(const sv of [-1,1]){const v=sv*5.15,uo=-6.15-u2(1.25),y=H-1.3;sb(-6.15,uo-u2(.9),v-u2(.05),v+u2(.05),y+1.05,y+1.15,'#9aa0a8',{solid:false});plaque(uo,v,y,1.8,'v',signM,.12);}
+    for(const sv of [-1,1])plaque(.95,sv*(5.65+u2(.05)),F+1.95,1.7,'v',plaqueM,.04);plaque(-.15-u2(.05),1.0,L+1.95,1.8,'u',plaqueM,.04);
+    // yellow belt at the floor line, yellow corner posts, porch rail caps; the porch roof keeps a white tiled floor
+    for(const sv of [-1,1]){sb(-6,6,sv*5.35,sv*5.67,H,F,YL);for(const su of [-1,1])sb(su*(6.15+u2(.06)),su*(6.15-u2(.3)),sv*(5.65+u2(.06)),sv*(5.65-u2(.3)),0,T,YL);}
+    sb(pu-u2(.02),pu+u2(.27),-4.02,4.02,F+1,F+1.1,YL);for(const v of [-4,4])sb(pu,-6.15,v-u2(.14),v+u2(.14),F+1,F+1.1,YL);S.floor(pu,-6.15,-4,4,F+.02,'#f7f8fa','tile');
+    // a big glowing star standing on the front end of the ridge
+    {const ry=L+DIM.LH+.3+2.6,G3=new THREE.Group();G3.position.set(X(.35),ry+1.75,Z(0));G3.rotation.y=face['u-'];M.group.add(G3);sb(.35-u2(.06),.35+u2(.06),-u2(.07),u2(.07),ry-.2,ry+.35,'#9aa0a8');
+      const sh=new THREE.Shape();for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,r=i%2?.7:1.55;i?sh.lineTo(Math.cos(a)*r,Math.sin(a)*r):sh.moveTo(Math.cos(a)*r,Math.sin(a)*r);}
+      const g=new THREE.ExtrudeGeometry(sh,{depth:.35,bevelEnabled:true,bevelSize:.06,bevelThickness:.06,bevelSegments:1});g.translate(0,0,-.17);const o=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#ffe14d',emissive:'#ffe14d',emissiveIntensity:.45,roughness:.4}));o.castShadow=true;G3.add(o);
+      glowSprite(G3.position.x,G3.position.y,G3.position.z,5,'#ff4fd8',.35);}
+    /* ---- the game machines: all solid, they chip and break when shot (back next round); screens play, marquees glow ---- */
+    const neon=c=>new THREE.MeshBasicMaterial({color:c,toneMapped:false}),scr=seed=>new THREE.MeshBasicMaterial({map:liveTV(128,96,'show',seed),toneMapped:false});
+    const CC=['#2f63c8','#a05ad6','#e8463a','#3bb54a','#ff7a1a','#1b1035','#ff4fd8','#2f7fe0'],NC=['#ff4fd8','#3de0ff','#ffe14d','#3bb54a'];let nI=0;
+    // dir: which way the machine faces ('u-','u+','v-','v+'); fo(d) = local point d metres out in front; th(w,h,t) = a panel w wide, t thick across the facing
+    const fr=dir=>{const ax=dir[0],sg=dir[1]==='+'?1:-1;return{ax,sg,fo:(u,v,d)=>ax==='u'?[u+sg*u2(d),v]:[u,v+sg*u2(d)],pg:(w,h,t)=>ax==='u'?gB(t,h,w):gB(w,h,t)};};
+    // classic upright cabinet: screen, glowing marquee, joystick and buttons on the control deck
+    const cab=(u,v,dir,y=0)=>{const i=nI++,c=CC[i%CC.length],F2=fr(dir),b=Bx(u,v,y,.8,1.8,.8,c,{chip:true,hp:120});if(!b)return;
+      const [su,sv]=F2.fo(u,v,.41);kid(b,F2.pg(.62,.46,.02),scr(i+3),su,sv,y+1.3);kid(b,gB(.84,.2,.84),neon(NC[i%4]),u,v,y+1.9);
+      const [cu,cv]=F2.fo(u,v,.5);kid(b,F2.pg(.7,.06,.22),'#1c1d22',cu,cv,y+.95);const [ju,jv]=F2.fo(u,v,.52);kid(b,gC(.025,.025,.14,6),'#1c1d22',ju,jv,y+1.05);kid(b,new THREE.SphereGeometry(.05,8,6),'#e8463a',ju,jv,y+1.13);
+      for(const o of [.14,.24])kid(b,gC(.035,.035,.04,8),NC[(i+1)%4],F2.ax==='u'?cu:cu+u2(o),F2.ax==='u'?cv+u2(o):cv,y+1.0);};
+    // pinball: a long low table with a lit playfield under glass and a backbox standing at the far end
+    const pinball=(u,v,dir)=>{const F2=fr(dir),ax=F2.ax,b=Bx(u,v,0,ax==='u'?1.4:.7,1.0,ax==='u'?.7:1.4,'#1b1035',{chip:true,hp:110});if(!b)return;
+      const pf=canvasTex(64,128,(g,w,h)=>{g.fillStyle='#2a1a5e';g.fillRect(0,0,w,h);for(let i=0;i<9;i++){g.fillStyle=NC[i%4];g.beginPath();g.arc(8+((i*23)%48),12+i*12,5,0,7);g.fill();}g.fillStyle='#ffe14d';g.fillRect(14,h-14,14,4);g.fillRect(36,h-14,14,4);});
+      kid(b,ax==='u'?gB(1.3,.04,.6):gB(.6,.04,1.3),new THREE.MeshBasicMaterial({map:pf}),u,v,1.02);const [bu,bv]=F2.fo(u,v,-.62);const bb=kid(b,F2.pg(.7,.75,.12),'#1b1035',bu,bv,1.45);kid(b,F2.pg(.58,.5,.02),scr(nI++),...F2.fo(bu,bv,.07),1.48);kid(b,F2.pg(.74,.08,.16),neon('#ff4fd8'),bu,bv,1.86);};
+    // claw machine: glass box of prizes on a pink base, a gantry and claw over them, a glowing top
+    const claw=(u,v)=>{const b=Bx(u,v,0,1.1,2.0,1.1,'#ff4fd8',{chip:true,hp:140});if(!b)return;kid(b,gB(1.0,.85,1.0),new THREE.MeshLambertMaterial({color:'#dff4ff',transparent:true,opacity:.35}),u,v,1.45);
+      for(let j=0;j<8;j++)kid(b,new THREE.SphereGeometry(.12,10,8),['#ffe14d','#3de0ff','#7fd8ff','#3bb54a','#ff8fab','#a05ad6','#ff7a1a','#ffffff'][j],u+u2((j%3-1)*.27),v+u2((j>3?.22:-.22)),1.12);
+      kid(b,gB(.04,.4,.04),'#c9ced6',u,v,1.65);kid(b,gB(.18,.06,.18),'#c9ced6',u,v,1.45);kid(b,gB(1.12,.18,1.12),neon('#ffe14d'),u,v,2.0);};
+    // racing game: a bucket seat facing a big screen cabinet with a steering wheel
+    const racer=(u,v,dir)=>{const i=nI++,F2=fr(dir),[su,sv]=F2.fo(u,v,.85);const seat=Bx(su,sv,0,.7,.5,.7,'#e8463a',{chip:true,hp:80});if(seat)kid(seat,F2.pg(.66,.6,.12),'#1c1d22',...F2.fo(su,sv,.3),.85);/* the seat in front of the screen, its back to the room */
+      const b=Bx(u,v,0,.95,1.65,.95,'#1c1d22',{chip:true,hp:120});if(!b)return;kid(b,F2.pg(.82,.55,.02),scr(i+7),...F2.fo(u,v,.48),1.15);kid(b,F2.pg(.97,.14,.97),neon(NC[i%4]),u,v,1.72);
+      const wh=kid(b,new THREE.TorusGeometry(.17,.03,6,16),'#2b2d33',...F2.fo(u,v,.6),.95);if(wh)wh.rotation.y=F2.ax==='u'?Math.PI/2:0;};
+    // dance machine: a low lit stage with arrow pads (step up onto it) and a screen tower behind
+    const dance=(u,v,dir,y=0)=>{const F2=fr(dir),ax=F2.ax,ar=canvasTex(128,128,(g,w,h)=>{g.fillStyle='#1b1035';g.fillRect(0,0,w,h);const P=[[64,22,0],[106,64,1],[64,106,2],[22,64,3]];
+        P.forEach(([x,y,r],i)=>{g.save();g.translate(x,y);g.rotate(r*Math.PI/2);g.fillStyle=NC[i];g.beginPath();g.moveTo(0,-16);g.lineTo(14,4);g.lineTo(5,4);g.lineTo(5,16);g.lineTo(-5,16);g.lineTo(-5,4);g.lineTo(-14,4);g.closePath();g.fill();g.restore();});});
+      const st=Bx(u,v,y,1.7,.18,1.7,'#1b1035',{chip:false});if(st)kid(st,gB(1.66,.02,1.66),new THREE.MeshBasicMaterial({map:ar,toneMapped:false}),u,v,y+.19);
+      const [tu,tv]=F2.fo(u,v,-1.15);/* the screen tower behind the stage, facing the dancer */const b=Bx(tu,tv,y,ax==='u'?.5:1.4,2.1,ax==='u'?1.4:.5,'#1b1035',{chip:true,hp:120});if(b){kid(b,F2.pg(1.1,.7,.02),scr(nI++),...F2.fo(tu,tv,.26),y+1.5);kid(b,F2.pg(1.42,.12,.52),neon('#3de0ff'),tu,tv,y+2.12);}};
+    // basketball game: a ramped lane with balls, the net cage and a lit backboard at the far end
+    const hoop=(u,v,dir,y=0)=>{const F2=fr(dir),ax=F2.ax,b=Bx(u,v,y,ax==='u'?2.3:1.0,.85,ax==='u'?1.0:2.3,'#2f63c8',{chip:true,hp:120});if(!b)return;
+      for(let j=0;j<4;j++)N(...F2.fo(u,v,.6-j*.22).map((q,ii)=>ii===(ax==='u'?1:0)?q+u2(j%2?.16:-.16):q),y+.85,.22,.22,.22,'#ff7a1a',{geo:new THREE.SphereGeometry(.11,10,8),snd:'bounce1'});
+      const [bu,bv]=F2.fo(u,v,-1.1);kid(b,F2.pg(1.0,.7,.06),neon('#ffffff'),bu,bv,y+2.4);kid(b,F2.pg(.4,.3,.07),neon('#e8463a'),bu,bv,y+2.3);for(const s of [-1,1])kid(b,gB(.05,1.6,.05),'#c9ced6',...(ax==='u'?[bu,bv+u2(s*.45)]:[bu+u2(s*.45),bv]),y+1.65);
+      const rim=kid(b,new THREE.TorusGeometry(.2,.02,6,16),'#ff7a1a',...F2.fo(bu,bv,.25),y+2.05);if(rim)rim.rotation.x=Math.PI/2;};
+    // the front room: cabinets all down both side walls, two racers and a pinball by the front, a dance machine in the corner by the stairs side
+    for(const u of [-5.2,-4.2,-3.2,-2.2,-1.2])cab(u,5.0,'v-');for(const u of [-3.4,-2.4,-1.4])cab(u,-5.0,'v+');
+    racer(-5.3,-3.6,'u+');racer(-5.3,3.4,'u+');pinball(-5.0,-5.0+u2(.1),'v+');
+    // the back room: claw machines and air hockey along the walls, cabinets by the back door
+    claw(5.3,4.9);claw(4.1,4.9);
+    {const b=Bx(2.3,4.55,0,2.1,.8,1.1,'#1c1d22',{chip:true,hp:120});if(b){kid(b,gB(2.0,.04,1.0),neon('#3de0ff'),2.3,4.55,.82);for(const s of [-1,1])N(2.3+u2(s*.7),4.55,.84,.12,.05,.12,'#e8463a',{cyl:1});}}
+    for(const v of [-1.9,-1.0])cab(5.45,v,'u-');/* clear of the back door */
+    // upstairs in the loft room: basketball games against the back wall, cabinets down the side, a dance machine
+    hoop(4.7,.8,'u-',F);hoop(4.7,3.2,'u-',F);for(const u of [1.4,2.6])cab(u,5.0,'v-',F);dance(1.6,2.2,'v-',F);
+    // neon tubes along the tops of the walls inside, and coloured stripes leading in from the door
+    for(const [y0,u0,u1] of [[H-.5,-5.9,-.2],[F+DIM.LH-.6,.2,5.9]])for(const sv of [-1,1])sb(u0,u1,sv*5.3-u2(.03),sv*5.3+u2(.03),y0,y0+.06,null,Object.assign({mat:neon(sv>0?'#ff4fd8':'#3de0ff')},D));
+    for(const [v,c] of [[0,'#ff4fd8'],[.35,'#3de0ff']])decal(-3,v,6*k*.95,.16,c,1,.035);
+    // the terrace floor carries a big neon star, where the helipad was
+    {const m=new THREE.Mesh(new THREE.PlaneGeometry(4.2,4.2),new THREE.MeshBasicMaterial({map:iconTex(null),transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.rotation.z=face['u-'];m.position.set(X(-4.6),L+.02,Z(-3.2));M.group.add(m);}
   }
   if(th==='home'){
     /* chimney on the back wall with smoke curling out of it; a fire in the hearth */
     const top=loft?DIM.L+DIM.LH+3.6:DIM.T+4.4;S.box(6.15,6.95,4.2,5.3,0,top,'#3a3f46');S.box(6.05,7.05,4.1,5.4,top,top+.3,'#2c3036');
     for(const dv of [-.25,.25])S.box(6.4+.05,6.7,4.75+dv-.12,4.75+dv+.12,top+.3,top+.75,'#6b7078',{solid:false});
-    M.life.push((t,dt)=>{if(R()<dt*5)emit(X(6.55),top+.9,Z(4.75),{n:1,speed:.35,up:1.4,size:.7,life:3,grav:-.9,colors:['#e3e5ea','#c9ced6','#d8dbe2']});});
+    const smk=new THREE.Object3D();smk.position.set(X(6.55),top+.9,Z(4.75));M.group.add(smk);M.life.push((t,dt)=>{if(R()<dt*5)emit(smk.position.x,smk.position.y,smk.position.z,{n:1,speed:.35,up:1.4,size:.7,life:3,grav:-.9,colors:['#e3e5ea','#c9ced6','#d8dbe2']});});
     Bx(5.6,4.65,0,.8,1.15,2.2,'#9c4a3a',{tx:'brick'});S.box(5.58,5.85,4.1,5.2,1.15,H,'#9c4a3a',{tx:'brick'});
     S.box(5.2,5.65,4.0,5.3,1.15,1.25,'#7a4c2a',{solid:false});
     panel(5.6-u2(.41),4.65,.4,1.0,.7,new THREE.MeshBasicMaterial({color:'#1c1d22'}),'u-');
@@ -4142,7 +4134,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
     const MUL=HOME?'#2c3036':'#e9ecf0',MO={solid:false,edges:false};
     const gwall=(ax,at,a0,a1,doors)=>{const segs=[];let cur=a0;for(const d of doors){segs.push([cur,d.c-d.w/2,0,H]);segs.push([d.c-d.w/2,d.c+d.w/2,3.2,H]);cur=d.c+d.w/2;}segs.push([cur,a1,0,H]);
       const B=(p0,p1,y0,y1,c,o,t)=>ax==='u'?S.box(at-t,at+t,p0,p1,y0,y1,c,o):S.box(p0,p1,at-t,at+t,y0,y1,c,o);
-      for(const [s0,s1,y0,y1] of segs){const len=s1-s0;if(len<.05)continue;const n=Math.max(1,Math.round(len/1.6)),w=len/n;
+      for(const [s0,s1,y0,y1] of segs){const len=s1-s0;if(len<.05)continue;const n=Math.max(1,Math.round(len/3.2)),w=len/n;/* big panes (about 5 m): one shot and you can walk through */
         for(let i=0;i<n;i++)B(s0+i*w+.03,s0+(i+1)*w-.03,y0,y1,'#bfe6ff',GO,.05);for(let i=0;i<=n;i++)B(s0+i*w-.04,s0+i*w+.04,y0,y1,MUL,MO,.08);
         B(s0,s1,y0,y0+.08,MUL,MO,.08);B(s0,s1,y1-.08,y1,MUL,MO,.08);}};
     gwall('u',-6,-5.35,5.35,[DOOR(0)]);gwall('u',6,-5.35,5.35,[DOOR(1.6,4.2)]);for(const v of [-5.5,5.5])gwall('v',v,-5.8,5.8,[]);
@@ -4155,12 +4147,12 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
     const pl=(id,u,v)=>{const D={plant:[1.39,.99],redplant:[1.58,1.63]}[id],x=S.X(u),z=S.Z(v),K=knock(x,0,z,D[0],FURN_CFG[id].h,D[1],'#3f8f3a',{mat:INVIS});furnInto(id,K.m,x,0,z,(u*3+v)%6.28);};
     pl('plant',-6.8,6.3);pl('plant',6.8,-6.3);}
   // half-wall between front room and back room: a 6 m opening that leads straight to the foot of the stairs
-  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?'#f4f5f7':th==='home'?'#ffffff':'#d9b48a',.25,WH?{chip:false}:th==='home'?{tx:'cedar',wood:true,chip:false}:{tx:'wood',wood:true,chip:false});
+  S.wall('u',0,-5.35,5.35,0,H,[{c:-2.1,w:6.4,y0:0,y1:3.2}],WH?'#f4f5f7':th==='home'?HOME_BRIGHT[4]:'#d9b48a',.25,WH?{chip:false}:th==='home'?{tx:'boards',wood:true,chip:false}:{tx:'wood',wood:true,chip:false});
   S.wall('u',-6,-5.65,5.65,H,F,[],trim);S.wall('u',6,-5.65,5.65,H,F,[],trim);
   if(th==='home'||th==='hospital'){/* Street Life: a square of thick glass set into the ceiling of the front room, so you can look up from downstairs and see who's on the floor above
      (it's walked on like the rest of the floor and doesn't break); slim frame round its edge on top */
     const g0=-3.5,g1=-1.0,h0=-1.25,h1=1.25;S.slab(0,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);S.slab(-5.85,0,-5.35,5.35,H,F,SL[0],{u0:g0,u1:g1,v0:h0,v1:h1},SL[1]);
-    S.box(g0,g1,h0,h1,H,F,'#bfe6ff',{mat:HOUSE_GLASS,shadow:false,edges:false});const fr=th==='home'?'#2c3036':'#c8322b',FO={solid:false,edges:false};
+    S.box(g0,g1,h0,h1,H,F,'#bfe6ff',{mat:HOUSE_GLASS,shadow:false,edges:false});const fr=th==='home'?'#2c3036':SL_FUN?'#f4c22b':'#c8322b',FO={solid:false,edges:false};
     S.box(g0-.06,g1+.06,h0-.06,h0,F,F+.04,fr,FO);S.box(g0-.06,g1+.06,h1,h1+.06,F,F+.04,fr,FO);S.box(g0-.06,g0,h0,h1,F,F+.04,fr,FO);S.box(g1,g1+.06,h0,h1,F,F+.04,fr,FO);}
   else S.slab(-5.85,5.85,-5.35,5.35,H,F,SL[0],{u0:.75,u1:4.85,v0:-5.35,v1:-2.25},SL[1]);
   // stairs end on a landing in front of the back wall (not against it); the rail only guards the deep end of the stairwell, so the whole top of the flight opens onto the floor
@@ -4184,10 +4176,10 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
   if(!TWO){S.wall('u',-6,-5.65,5.65,T,L,[],trim);S.wall('u',6,-5.65,5.65,T,L,[],trim);
   S.slab(-5.85,5.85,-5.35,5.35,T,L,SL[0],{u0:-.15,u1:4.55,v0:2.25,v1:5.35},SL[1]);
   S.stairs(1,1,2.4,5.3,F,NS,(L-F)/NS,RUN,SC);S.box(-.15,3.2,2.1,2.25,L,L+1,'#ffffff');}/* two storeys: the ground-floor stairs come straight up into the loft room */
-  /* the home's loft is clad in vertical cedar boards */
-  const LW=HOME?'#ffffff':wall,LWO=HOME?{tx:'cedar'}:undefined;
-  const R2=L+LH;S.wall('u',6,-5.5,5.5,L,R2,[BW(-2,2.6,L,R2)],LW,.3,LWO);for(const v of [-5.5,5.5])S.wall('v',v,0,5.85,L,R2,[BW(3,2.4,L,R2)],LW,.3,LWO);
-  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],LW,.3,LWO);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
+  /* the home's loft is clad in vertical boards in a bright colour */
+  const LW=HOME?HOME_CLAD:wall,LWO=HOME?{tx:'boards'}:undefined;
+  const R2=L+LH,LC=i=>HOME?HOME_BRIGHT[i]:LW;S.wall('u',6,-5.5,5.5,L,R2,[BW(-2,2.6,L,R2)],LC(0),.3,LWO);for(const [i,v] of [[1,-5.5],[2,5.5]])S.wall('v',v,0,5.85,L,R2,[BW(3,2.4,L,R2)],LC(i),.3,LWO);
+  S.wall('u',0,-5.5,5.5,L,R2,[{c:-1.5,w:4,y0:L,y1:L+3.1},BW(2.6,2.2,L,R2)],LC(3),.3,LWO);S.slab(-.2,6.2,-5.7,5.7,R2,R2+.3,trim);
   /* no overhang on the terrace end, so the ladder up the loft wall reaches the roof edge without going through the eaves */
   roofGable(S.X(3),cz,6.4*k,11.4*k,R2+.3,roof,true,null,null,flip>0?[0,.4]:[.4,0]);
   const P=L+1.15;S.box(-6.15,-5.85,-5.65,5.65,L,P,trim);for(const v of [-5.5,5.5]){S.box(-3.6,-.15,v-.15,v+.15,L,P,trim);}
@@ -4208,7 +4200,7 @@ function houseA(cx,cz,flip,wall,roof,trim,loft,k=1,hop,th){const S=St(cx,cz,flip
       grid(H,-4.8,4.7,[.75,4.85,-5.35,-2.25],[-3.5,-1.0,-1.25,1.25]);if(!TWO)grid(T,-4.8,4.7,[-.15,4.55,2.25,5.35]);grid(R2,1.0,5.0);
       for(const [u,v] of [[-3.2,0],[2.6,0]])pl(u,v,H-1.2,13,18);if(!TWO)for(const [u,v] of [[-3.2,-2.6],[-3.2,2.6],[2.6,-3.6],[3,.8]])pl(u,v,T-1.2,22,18);pl(3,-1,R2-1.2,11,16);
       /* the stairs stand out: a red nosing on every step with a cool LED strip glowing under it, and a lit strip up each side */
-      const red=mat('#d3302a'),led=new THREE.MeshBasicMaterial({color:'#bff3ff'}),SO={solid:false,edges:false,shadow:false};
+      const red=mat(SL_FUN?'#f4c22b':'#d3302a'),led=new THREE.MeshBasicMaterial({color:'#bff3ff'}),SO={solid:false,edges:false,shadow:false};
       const trim=(uS,dir,v0,v1,y0,n,rise,run)=>{for(let i=0;i<n;i++){const a=uS+dir*run*i,top=y0+rise*(i+1);
           S.box(Math.min(a,a+dir*.12),Math.max(a,a+dir*.12),v0,v1,top-.06,top+.015,null,Object.assign({mat:red},SO));
           S.box(Math.min(a-dir*.02,a),Math.max(a-dir*.02,a),v0+.08,v1-.08,top-.2,top-.12,null,Object.assign({mat:led},SO));
@@ -6045,7 +6037,7 @@ const MAPS={
   /* 70 x 50 m (Big size): just two buildings, the red-roofed hospital and the green-roofed home, two storeys each,
      either side of the road near the middle (a little off-centre, one towards each end); the four smaller side buildings are gone */
   const X=35,Z=25;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  floor(-130,130,-140,140,'#ffffff','lawn',-.02,8);
+  floor(-X,X,-Z,Z,'#ffffff','lawn',-.02,8);floor(-130,130,-140,140,'#3f6b38','grass',-.06,4);/* striped lawn inside the fence only; plain deep green outside so it stands out */
   floor(-5.5,5.5,-Z,Z,'#4a4d55','asphalt',0,1);
   floor(-8,-5.5,-Z,Z,'#d5d6da','tile',.05,2);floor(5.5,8,-Z,Z,'#d5d6da','tile',.05,2);
   for(let z=-Z+2;z<Z;z+=6)floor(-.15,.15,z,z+3,'#ffffff',null,.02);
@@ -6055,11 +6047,11 @@ const MAPS={
   // the two small houses that used to sit at opposite ends (yellow and green) are gone, leaving open corners
   const RC=['#e8b81f','#f4f5f7','#2f6fd6',null,null,'#c8322b','#c9ced6','#2f63c8'];
   // three houses a side, spread evenly along the street and set further back from the road (big ones well clear of the end fences)
-  const L=[[-1,2.5,'C','#3b4048',2,'home'],[1,-2.5,'C',RC[5],3,'hospital']];/* (the four smaller side buildings are gone) *//* the two big ones face each other across the road, a few metres off true */
-  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?1.7:1.1,cx=side*22,/* scaled to fit the Big plot: a front yard before the pavement, a strip of lawn behind */hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
-    if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc,th==='homeB'?(z>0?'studio':'den'):th==='hospB'?(z>0?'pharmacy':'cafe'):null);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?'#c8322b':th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);
+  const L=[[-1,3,'C','#3b4048',2,'home'],[1,-3,'C',SL_FUN?'#f4c22b':RC[5],3,'hospital']];/* (the four smaller side buildings are gone) *//* the two big ones face each other across the road, a few metres off true */
+  for(const [side,z,kind,rc,k,th] of L){const flip=side>0?1:-1,big=kind!=='B',hk=big?2:1.1,cx=side*21.5,/* turned sideways (24 Nov): fronts face along the street (the home south, the other one north), so they can be bigger and fill their side */hw=5.5*hk,ci=kind==='A'?0:kind==='B'?1:2;
+    rotBuild(cx,z,1,()=>{if(kind==='B'){const r=ruinBegin(),wc=th==='homeB'?'#f7f7f5':th==='hospB'?'#f7f8fa':cols[(ci*2+1)%cols.length],tc=th==='homeB'?'#2c3036':th==='hospB'?'#c8322b':trims[(ci+1)%4];houseB(cx,z,flip,wc,tc,hk,rc,th==='homeB'?(z>0?'studio':'den'):th==='hospB'?(z>0?'pharmacy':'cafe'):null);ruinEnd(r,cx,z,flip,hk,wc,tc,4.4);}else houseA(cx,z,flip,th==='hospital'?'#f7f8fa':th==='home'?'#f7f7f5':cols[(ci*2+k)%cols.length],rc,th==='hospital'?(SL_FUN?'#f4c22b':'#c8322b'):th==='home'?'#2c3036':trims[ci%4],kind==='C',hk,true,th);});
     /* a mailbox beside the path, not on it */
-    box(side*8.7,0,z-hw+.8,.4,1.1,.4,'#3a3d45');box(side*8.7,1.1,z-hw+.8,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
+    box(side*9.6,0,z+side*15.5,.4,1.1,.4,'#3a3d45');box(side*9.6,1.1,z+side*15.5,.7,.45,.5,k%2?'#2f7fe0':'#e8463a');}
   /* the boundary is a white picket fence (white-washed vertical slats with gaps you can see through, two rails) on an invisible wall */
   {const iv={mat:INVIS,shadow:false};for(const side of [-1,1]){fence(side*X,-Z,side*X,Z,2.8,'#b07a4a',null,iv);}
   fence(-X,-Z,X,-Z,2.8,'#b07a4a',null,iv);fence(-X,Z,X,Z,2.8,'#b07a4a',null,iv);picketFence([[-X,-Z,X,-Z],[-X,Z,X,Z],[-X,-Z,-X,Z],[X,-Z,X,Z]]);}
@@ -6085,10 +6077,10 @@ const MAPS={
      and the loose bits (chairs, plants, drips, cups, the wheelchair...) smash once they've taken enough */
   for(const b of M.props)if(b.prop==='crate'||b.prop==='bin')b.shove=1;
   for(const K of M.knocks)if(!K.pop)K.brk=K.bhp=Math.round(clamp(30+K.w*K.h*K.d*60,30,160));
-  // the shop goes beside the road near the middle, clear of the cars
-  M.shopOK=(x,z)=>Math.abs(x)>10;
+  // the shop stands at the south end of the road, its back against the fence, facing up the street (24 Nov)
+  M.shopAt=[{x:0,z:-Z+.85,y:0,q:0}];
   for(const z of [-22,22])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
-  M.spawns=[[9,18],[-9,-18],[28,19],[-28,-19],[29,-19],[-29,19],[-2,14],[2,-14],[20,13],[-20,-13]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
+  M.spawns=[[-20,-19],[-31,-20],[-12,-19],[20,19],[31,20],[12,19],[-2,14],[2,-14],[-22,21],[22,-21]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
  rail:{modes:['duel'],name:'Railed',desc:'Small freight yard split by a live line, with a footbridge over it',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A sleek, upmarket beach: a lit Tiki Bar, a hut at each end, lookout stairs and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Fast room-to-room fights: colour-coded rooms joined by wide doorways and open archways, with straight runs right through the house',sw:['#c99a5b','#f3efe6','#e8463a'],build(){

@@ -92,7 +92,8 @@ Last updated: 2026-11-24
 
 ### Bots
 - Levels Easy, Normal, Hard (Easy is much gentler, no revenge). 10 hidden random play styles. Bot teammates no better than enemies.
-- A bot you kill hunts you until its next kill but doesn't ignore others; slight pull towards whoever's winning. Bots shoot through glass, can fall off things, go for nearby explosives.
+- A bot you kill hunts you until its next kill but doesn't ignore others; slight pull towards whoever's winning. Bots shoot through glass, can fall off things, go for nearby explosives, and shoot away breakable cover (crates, furniture, bushes, loungers, tool boards) that someone has just ducked behind.
+- Bots can get everywhere a player can on every map: ladders, stairs, portals, launch pads, the zipline, ledges and container tops (single and double jumps), hopping counters and low walls, and long routes (a roof reached only by a ladder on the far side of the house). Spots no player can reach (pillar tops, backdrop rocks, wall tops) are left out. Any new map element must keep this true.
 
 ### Menus and HUD
 - Navy and white everywhere (navy instead of black since 24 Nov), menus and in-game HUD alike, layout copied from the Unity version. The menus' accent colour (main buttons, logo, Rematch, Defeat, highlights) is neon pink, not red; red stays only for in-game danger/enemy cues (HUD enemy score, damage, Man Down, countdown). tools/navy-theme.py and tools/pink-menus.py convert anything new.
@@ -119,6 +120,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
+- Bot navigation checked on every map: bots now use the Arena portals, double-jump onto container tops and the Street Life ledge, hop counters, railings and low walls, get into both Street Life under-stair nooks and up the arcade stairs, find the Mansion roof from anywhere inside (route planned on a coarse map when it's far), and shoot away breakable cover a player hides behind. Sky High cabana doorways widened to fit a body; one Street Life arcade machine by the stairs removed (it blocked the way).
 - Ziplines: 3 s cooldown after any ride (players and bots). Riders can be shot; a downing hit on the zipline kills outright and the body tumbles off, falls all the way and explodes where it lands.
 - Fixed invisible walls under staircases (Street Life's house and hospital, The Mansion, The House): stairs keep their solid blocks for walking, but shots, throws and sight now only meet the visible steps, so you can shoot under and between them.
 - Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.

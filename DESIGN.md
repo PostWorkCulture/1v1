@@ -118,11 +118,8 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-24
-<<<<<<< Updated upstream
 - Fixed getting stuck aiming down a sniper scope (pressing Fire again before the last shot had gone, or a held aim carried into the next round). Sniper scopes zoom further: HDR 20° to 12°, Vanguard 44° to 27°, with look speed scaled to the zoom.
-=======
 - Ziplines: stand on the pad at either end for 1.5 s to grab the handle (no jump); after a ride you step off the pad before it can take you back.
->>>>>>> Stashed changes
 - Rocket Launcher re-skinned as "Hellfire" (black-and-red horns) with matching rockets; lethals re-skinned as "Neon Arcade". Picked from four concepts each.
 - Vanguard re-finished in shiny mirror chrome (was gold, which clashed with the gold M4).
 - Stun stars removed completely (no stars, halo ring or sparks over a stunned or dazed player's head).

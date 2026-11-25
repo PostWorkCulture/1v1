@@ -1699,14 +1699,15 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 #menu .mfull.duels[data-step="setup"] .mopts .mmodegrp{display:flex;align-items:flex-start}
 #menu .mfull.duels[data-step="setup"] .mopts .mmode{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:8px;background:linear-gradient(90deg,#ff369b,#f5007a);color:#fff;font:700 13px/1 var(--f-body);letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 18px rgba(255,54,155,.35)}
 #menu .mfull.duels[data-step="setup"] .mpick .mbig{position:relative}
+#menu .mfull.duels[data-step="setup"] #d-maps.m5 .mpick .mrg{--ts:clamp(56px,calc((var(--mh,clamp(240px,calc(100vh - 352px),760px)) - 36px)/2),150px);grid-template-columns:repeat(5,var(--ts))!important}
 #menu .mfull.duels[data-step="setup"] .mpick .mbig .msize{position:absolute;top:12px;right:12px;padding:6px 10px;border-radius:6px;background:rgba(10,17,34,.78);color:#fff;font:700 12px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 #menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap .chip,#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap .rule{display:none!important}
-#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{display:grid!important;grid-template-columns:auto minmax(0,1fr) clamp(220px,20vw,340px);grid-template-rows:minmax(0,1fr);gap:0 20px;height:var(--mh,clamp(240px,calc(100vh - 352px),760px))!important}
+#menu .mfull.duels[data-step="setup"] .mpick .mcar-stage{display:grid!important;grid-template-columns:auto minmax(0,1fr) clamp(200px,17vw,280px);grid-template-rows:minmax(0,1fr);gap:0 14px;height:var(--mh,clamp(240px,calc(100vh - 352px),760px))!important}
 #menu .mfull.duels[data-step="setup"] .mpick .mrg{--ts:clamp(56px,calc((var(--mh,clamp(240px,calc(100vh - 352px),760px)) - 48px)/3),150px);grid-column:1;grid-row:1;flex:none;grid-template-columns:repeat(4,var(--ts))!important;grid-template-rows:none!important;grid-auto-rows:var(--ts);align-content:start;justify-content:start;margin:12px 0 12px 12px!important}
 #menu .mfull.duels[data-step="setup"] .mpick .mrg-t{aspect-ratio:auto;height:auto;width:auto}
 #menu .mfull.duels[data-step="setup"] .mpick .mrg-t span{font-size:10px}
-#menu .mfull.duels[data-step="setup"] .mbig{display:grid;place-items:center;grid-column:2;grid-row:1;margin:12px 0;min-height:0;height:calc(100% - 24px);width:100%;max-width:calc((var(--mh,clamp(240px,calc(100vh - 352px),760px)) - 24px)*1.5);justify-self:center;border-radius:10px;overflow:hidden;background:#16264b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-#menu .mfull.duels[data-step="setup"] .mbig img{width:100%;height:100%;object-fit:cover;object-position:50% 60%;display:block}
+#menu .mfull.duels[data-step="setup"] .mbig{display:grid;place-items:center;grid-column:2;grid-row:1;margin:12px 0;min-height:0;height:calc(100% - 24px);width:100%;justify-self:stretch;border-radius:10px;overflow:hidden;background:#16264b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+#menu .mfull.duels[data-step="setup"] .mbig img{width:100%;height:100%;object-fit:cover;object-position:50% 72%;display:block}#menu .mfull.duels[data-step="setup"] .mpick .mbig img.wide{object-position:50% 50%}
 #menu .mfull.duels[data-step="setup"] .mbig b{font:800 72px/1 Arial,sans-serif;color:#8a96b8}
 #menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap{grid-column:3;grid-row:1;align-self:start;justify-self:stretch;display:flex!important;flex-direction:column;align-items:flex-start;gap:10px;padding:16px 16px 12px 0!important}
 #menu .mfull.duels[data-step="setup"] .mpick .mcar-stage .mcar-cap .b{align-self:flex-start!important;text-align:left!important;justify-self:auto!important;max-width:100%!important;-webkit-line-clamp:5!important;margin:4px 0 0!important}
@@ -11102,7 +11103,11 @@ function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,
   g.drawImage(renderer.domElement,0,0,W,H,0,0,OW,OH);
   const vg=g.createRadialGradient(OW/2,OH/2,OH*.35,OW/2,OH/2,OH*.95);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');g.fillStyle=vg;g.fillRect(0,0,OW,OH);
   if(o){try{o.url=cv.toDataURL('image/jpeg',.92);}catch(e){}}else{try{thumbs[id]=cv.toDataURL('image/jpeg',.88);}catch(e){}
-  if(mapPending().length)thumbsPartial.add(id);else thumbsPartial.delete(id);}
+  if(mapPending().length)thumbsPartial.add(id);else thumbsPartial.delete(id);
+    /* plus a wide 16:9 shot from the same hero camera (the framing it was tuned for) for the big map preview, which is wider than tall */
+    try{const WW=1600,WH=900;renderer.setSize(WW*1.5,WH*1.5,false);camera.aspect=WW/WH;camera.fov=hc[3];camera.updateProjectionMatrix();if(M.thumb)M.thumb(true);renderer.render(scene,camera);if(M.thumb)M.thumb(false);
+      const c2=document.createElement('canvas');c2.width=WW;c2.height=WH;const g2=c2.getContext('2d');g2.imageSmoothingQuality='high';g2.drawImage(renderer.domElement,0,0,renderer.domElement.width,renderer.domElement.height,0,0,WW,WH);
+      const v2=g2.createRadialGradient(WW/2,WH/2,WH*.4,WW/2,WH/2,WW*.6);v2.addColorStop(0,'rgba(0,0,0,0)');v2.addColorStop(1,'rgba(0,0,0,.25)');g2.fillStyle=v2;g2.fillRect(0,0,WW,WH);thumbs['w_'+id]=c2.toDataURL('image/jpeg',.88);}catch(e){}}
   for(const [o,sz] of saveSh){o.shadow.mapSize.set(sz,sz);if(o.shadow.map){o.shadow.map.dispose();o.shadow.map=null;}}
   try{renderer.setPixelRatio(savePR);renderer.setSize(saveSz.x,saveSz.y,false);}catch(e){}
   camera.aspect=saveA;camera.fov=saveF;camera.updateProjectionMatrix();for(const f of hid)f.ch.root.visible=true;if(!o&&keep&&keep!==id)buildMap(keep);}
@@ -12651,7 +12656,7 @@ function renderDuelMenu(){
     const L=mlist.sort(mapRank),i=S.randMap?-1:L.findIndex(([k])=>k===S.map),cur=i>=0?L[i]:null,m=cur&&cur[1];
     /* the map picker: every map as a small picture (plus Random); the picked one has a red edge and a soft glow drifts between them */
     if(!S.picking)setHTML('d-maps',`<div class="mcar rand mpick"><div class="mcar-stage"><div class="mrg" style="--cols:${Math.ceil((L.length+1)/2)}">${L.map(([k,mm])=>`<button class="mrg-t${!S.randMap&&k===S.map?' sel':''}" data-rk="${k}" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}" title="${(mm.desc||mm.name)+(MAP_SIZE[k]?' ('+MAP_SIZE[k][1]+')':'')}">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}<span>${mm.name}</span></button>`).join('')}<button class="mrg-t rnd${S.randMap?' sel':''}" data-map="random" aria-pressed="${!!S.randMap}" title="Random: let it pick a map for you"><b aria-hidden="true">?</b><span>Random</span></button></div>
-      <div class="mbig" id="d-mapbig">${cur&&thumbs[cur[0]]?`<img src="${thumbs[cur[0]]}" alt="">`:'<b aria-hidden="true">?</b>'}${cur&&MAP_SIZE[cur[0]]?`<span class="msize">${MAP_SIZE[cur[0]][1]}</span>`:''}</div>
+      <div class="mbig" id="d-mapbig" data-k="${cur?cur[0]:''}">${cur&&thumbs[cur[0]]?`<img src="${thumbs['w_'+cur[0]]||thumbs[cur[0]]}" class="${thumbs['w_'+cur[0]]?'wide':''}" alt="">`:'<b aria-hidden="true">?</b>'}${cur&&MAP_SIZE[cur[0]]?`<span class="msize">${MAP_SIZE[cur[0]][1]}</span>`:''}</div>
       <div class="mcar-cap"><span class="chip">${mapChip()}${cur&&MAP_SIZE[cur[0]]?' · '+MAP_SIZE[cur[0]][1]:''}</span><span class="t">${cur?m.name:'Random'}</span><i class="rule"></i><span class="b">${cur?(MAP_TAG[cur[0]]||m.desc):MAP_TAG.random}</span></div></div></div>`);if($('d-modechip'))$('d-modechip').textContent=mapChip();requestAnimationFrame(mapFit);}
   const mapNow=S.randMap?null:S.map;if(!S.randGun&&!priOK(S.gun,mapNow))S.randGun=true;
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;const ok=priOK(k,mapNow);return `<button class="opt gun-opt${ok?'':' off'}" ${attr}="${k}" aria-pressed="${ok&&k===sel}"${ok?'':` disabled aria-disabled="true" title="Not available"`}><img class="gp${HERO[k]?' spot':''}" src="${PREV['g_'+k]||''}" alt="">${GCAT[k]?`<span class="gc">${GCAT[k]}</span>`:''}<span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
@@ -12682,13 +12687,16 @@ $('d-maps').addEventListener('click',e=>{if(S.picking)return;const b=e.target.cl
   S.randMap=false;S.map=b.dataset.map;renderDuelMenu();mapLater();});
 
 /* caption + big preview for one map (k null/'random' = Random); used for the pick, while a tile is hovered, and as Random's spin lands */
-function mapFit(){const st=document.querySelector('#d-maps .mcar-stage'),hold=$('d-maps');if(!st||!hold)return;const big=$('d-mapbig');if(!big||!big.offsetParent){hold.style.removeProperty('--mh');return;}
-  const top=st.getBoundingClientRect().top;const h=Math.max(240,Math.min(760,Math.round(innerHeight-top-128)));hold.style.setProperty('--mh',h+'px');}
+/* the big preview uses the wide 16:9 shot when the box is wide, and the square shot when it's nearer square (so it never zooms into the middle of the map) */
+function bigSrc(){const big=$('d-mapbig'),im=big&&big.querySelector('img'),k=big&&big.dataset.k;if(!im||!k||!thumbs[k])return;const w=big.clientWidth,h=big.clientHeight;if(!w||!h)return;
+  const wide=thumbs['w_'+k]&&w/h>=1.45,u=wide?thumbs['w_'+k]:thumbs[k];if(im.getAttribute('src')!==u)im.setAttribute('src',u);im.classList.toggle('wide',!!wide);}
+function mapFit(){const st=document.querySelector('#d-maps .mcar-stage'),hold=$('d-maps');if(!st||!hold)return;const big=$('d-mapbig');if(!big||!big.offsetParent){hold.style.removeProperty('--mh');hold.classList.remove('m5');return;}
+  const top=st.getBoundingClientRect().top;const h=Math.max(240,Math.min(760,Math.round(innerHeight-top-100)));hold.style.setProperty('--mh',h+'px');{const W=st.clientWidth,cap=Math.max(200,Math.min(280,innerWidth*.17)),t5=Math.min(150,(h-36)/2),pw=W-12-5*t5-4*10-28-cap;hold.classList.toggle('m5',h<480&&pw>=1.25*(h-24));}bigSrc();}
 addEventListener('resize',()=>requestAnimationFrame(mapFit));
 if(window.ResizeObserver){const ro=new ResizeObserver(()=>mapFit());const hook=()=>{const o=document.querySelector('#menu .mopts');if(o)ro.observe(o);else setTimeout(hook,500);};hook();}
 function mapCap(k){const cap=document.querySelector('#d-maps .mcar-cap');if(!cap)return;const m=MAPS[k],tt=cap.querySelector('.t'),bb=cap.querySelector('.b'),ch=cap.querySelector('.chip');
   if(tt)tt.textContent=m?m.name:'Random';if(bb)bb.textContent=m?(MAP_TAG[k]||m.desc||''):MAP_TAG.random;if(ch)ch.textContent=mapChip()+(m&&MAP_SIZE[k]?' · '+MAP_SIZE[k][1]:'');
-  const big=$('d-mapbig');if(big){const u=m&&thumbs[k];if(big.dataset.k!==String(k)){big.dataset.k=String(k);big.innerHTML=(u?`<img src="${u}" alt="">`:'<b aria-hidden="true">?</b>')+(m&&MAP_SIZE[k]?`<span class="msize">${MAP_SIZE[k][1]}</span>`:'');}}}
+  const big=$('d-mapbig');if(big){const u=m&&(thumbs['w_'+k]||thumbs[k]);if(big.dataset.k!==String(k)){big.dataset.k=String(k);big.innerHTML=(u?`<img src="${u}" class="${thumbs['w_'+k]?'wide':''}" alt="">`:'<b aria-hidden="true">?</b>')+(m&&MAP_SIZE[k]?`<span class="msize">${MAP_SIZE[k][1]}</span>`:'');bigSrc();}}}
 // random map: rolled fresh at the start of every match (rematches too), never the same one twice in a row when there's a choice
 /* Random loadout picks (the default): a fresh gun and lethal every match, never the same one twice in a row */
 function rollLoad(){const pk=(l,last)=>{const p=l.length>1?l.filter(k=>k!==last):l;return p[(Math.random()*p.length)|0];};if(S.randGun||!priOK(S.gun))S.gun=pk(priList().filter(k=>priOK(k)),S.gun);if(S.randCons)S.cons=pk(CONS_IDS,S.cons);}

@@ -11580,7 +11580,7 @@ function realGun(id,K){const {g,RB,vm,add,box,cyl,cylX,cylY,ext,tor,mag,scope,vm
   }
   else if(id==='vanguard'){ /* Vanguard 7.62 DMR "Sovereign": mirror-chrome upper, lower and long M-LOK handguard with black accents (shiny silver, so it never reads as the gold M4), fluted stainless barrel with a chrome brake,
        open dust cover, forward assist, ambi charging handle, fenced mag release, polished trigger, adjustable stock with cheek riser, folded bipod, chrome-ringed scope with flip caps */
-    BY=.072;const hw=.05,W=.1,au=RAW('#e4e8ee',{metalness:1,roughness:.07}),auD=RAW('#a7aeb8',{metalness:1,roughness:.2}),blk=RAW('#16171a',{metalness:.55,roughness:.45,roughnessMap:NT.rough}),
+    BY=.072;const hw=.05,W=.1,au=RAW('#e4e8ee',{metalness:1,roughness:.07}),auD=RAW('#c9ced6',{metalness:.85,roughness:.32}),blk=RAW('#16171a',{metalness:.55,roughness:.45,roughnessMap:NT.rough}),
       ss=RAW('#dfe3e8',{metalness:1,roughness:.16}),pol=RAW('#f7f9fb',{metalness:1,roughness:.04});
     extZ([[-hw,.012],[hw,.012],[hw,.106],[.036,.142],[.03,.15],[-.03,.15],[-.036,.142],[-hw,.106]],-.3,.3,au,.005);prail(-.288,.3,au);
     ext([[-.3,.012],[.3,.012],[.3,-.035],[.276,-.046],[.27,-.15],[.05,-.12],[.05,-.06],[-.2,-.06],[-.305,-.02],[-.332,.0],[-.332,.11],[-.3,.11]],W,au,0,.006);
@@ -12382,15 +12382,19 @@ function heroOutline(g,w){const OL=new THREE.ShaderMaterial({side:THREE.BackSide
   return g;}
 
 /* renders transparent hero shots with a studio env map; returns {id:dataURL} */
+/* One photo studio for every weapon preview (loadout cards and the spinning showcase), so both always show the same model the same way */
+function gunStudio(r){const ES=new THREE.Scene();ES.background=new THREE.Color('#2b3039');
+  const panel=(c,i,w,h,x,y,z)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);ES.add(m);};
+  /* photo-studio reflections: a big overhead softbox, tall strip lights that draw long highlights down barrels and rails, cool and warm rim strips behind, a thin hot strip above-front for a crisp glint and a faint warm floor bounce, all on a near-black studio so blacks stay black */
+  panel('#ffffff',9,7,3,0,7,1);panel('#ffffff',14,.7,9,5.5,1,6);panel('#ffffff',11,.7,9,-5.5,1,6);panel('#cfe6ff',9,.6,8,-6,1,-5);panel('#ffe6cc',7,.6,8,6,1,-5);panel('#ffd9b0',1.6,10,1.2,0,-6,3);panel('#ffffff',5,3,1.6,0,3,-8);panel('#ffffff',16,.35,6,2.2,4,7);
+    panel('#ffffff',3.2,14,6,0,0,9);panel('#e8eef8',2.4,7,7,-8,2,4);panel('#ffffff',2.4,7,7,8,2,4); /* broad soft fills so mirror chrome reads silver, not black */
+  const pm=new THREE.PMREMGenerator(r);const t=pm.fromScene(ES,.02).texture;pm.dispose();return t;}
 function heroShots(ids,RB,W=640,H=320){const out={};let r;
   try{r=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});}catch(e){return out;}
   r.setPixelRatio(1);r.setSize(W,H,false);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;r.setClearColor(0,0);
   const S=new THREE.Scene();
   // simple studio environment for metal reflections
-  const ES=new THREE.Scene();ES.background=new THREE.Color('#5d6676');
-  const panel=(c,i,w,h,x,y,z)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);ES.add(m);};
-  panel('#ffffff',7,8,2.5,0,6,3);panel('#ffffff',4,3,7,7,1,4);panel('#bfe0ff',3.5,3,7,-7,1,-1);panel('#ffe2c0',3,9,1.5,0,-5,5);panel('#ffffff',5,6,1,0,1.5,8);
-  const pm=new THREE.PMREMGenerator(r);S.environment=pm.fromScene(ES,.02).texture;S.environmentIntensity=1.2;
+  S.environment=gunStudio(r);S.environmentIntensity=1.2; /* same studio as the spinning preview, so a gun looks the same in its card and when you pick it */
   S.add(new THREE.HemisphereLight('#ffffff','#445',0.6));const key=new THREE.DirectionalLight('#ffffff',2.2);key.position.set(2,5,6);S.add(key);
   const rim=new THREE.DirectionalLight('#ffffff',2.4);rim.position.set(-4,3,-5);S.add(rim);
   const C=new THREE.PerspectiveCamera(24,W/H,.05,100);
@@ -12401,7 +12405,7 @@ function heroShots(ids,RB,W=640,H=320){const out={};let r;
     const box=new THREE.Box3().setFromObject(wrap),c=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3());
     const span=Math.max(sz.x/(W/H),sz.y)*1.1;const d=span/2/Math.tan(C.fov*Math.PI/360)+sz.z/2,up=span*.13;C.position.set(c.x,c.y+up,c.z+d);C.lookAt(c.x,c.y+up,c.z); /* sits a little low, under the card's spotlight */
     r.render(S,C);out[id]=r.domElement.toDataURL('image/webp',.92);S.remove(wrap);}
-  pm.dispose();r.dispose();try{r.forceContextLoss();}catch(e){}return out;}
+  r.dispose();try{r.forceContextLoss();}catch(e){}return out;}
 /* loadout showcase in 3D: the picked weapon (or lethal) is drawn live, so you can drag it round with the mouse or a finger to see every side;
    it eases to a stop when you let go and turns slowly by itself after a few seconds untouched. One small renderer of its own,
    running only while the showcase is on screen; built models are kept, so flicking between weapons is instant. */
@@ -12409,11 +12413,8 @@ const WS3={r:null,S:null,C:null,cv:null,hint:null,id:null,piv:null,cache:{},yaw:
 function ws3Init(){if(WS3.r!==null)return !!WS3.r;
   try{const cv=document.createElement('canvas');cv.className='ws-3d';cv.setAttribute('aria-label','Drag to spin the weapon');const r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,powerPreference:'high-performance'});
     r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.08;r.setClearColor(0,0);WS3.r=r;WS3.cv=cv;}catch(e){WS3.r=false;return false;}
-  const S=new THREE.Scene(),ES=new THREE.Scene();ES.background=new THREE.Color('#121419');
-  const panel=(c,i,w,h,x,y,z)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);ES.add(m);};
-  /* photo-studio reflections: a big overhead softbox, tall strip lights that draw long highlights down barrels and rails, cool and warm rim strips behind, a thin hot strip above-front for a crisp glint and a faint warm floor bounce, all on a near-black studio so blacks stay black */
-  panel('#ffffff',9,7,3,0,7,1);panel('#ffffff',14,.7,9,5.5,1,6);panel('#ffffff',11,.7,9,-5.5,1,6);panel('#cfe6ff',9,.6,8,-6,1,-5);panel('#ffe6cc',7,.6,8,6,1,-5);panel('#ffd9b0',1.6,10,1.2,0,-6,3);panel('#ffffff',5,3,1.6,0,3,-8);panel('#ffffff',16,.35,6,2.2,4,7);
-  try{const pm=new THREE.PMREMGenerator(WS3.r);S.environment=pm.fromScene(ES,.02).texture;S.environmentIntensity=1.2;pm.dispose();}catch(e){}
+  const S=new THREE.Scene();
+  try{S.environment=gunStudio(WS3.r);S.environmentIntensity=1.2;}catch(e){}
   S.add(new THREE.HemisphereLight('#ffffff','#2a2e38',.2));const key=new THREE.DirectionalLight('#ffffff',1.9);key.position.set(3,6,7);S.add(key);const rim=new THREE.DirectionalLight('#ffffff',2.6);rim.position.set(-5,3,-6);S.add(rim);const kick=new THREE.DirectionalLight('#bfe0ff',1.0);kick.position.set(-6,-1,4);S.add(kick);
   /* a glint light that drifts slowly across the front so highlights travel along the metal */const gl=new THREE.PointLight('#ffffff',40,14,2);gl.position.set(0,2.5,4);S.add(gl);WS3.glint=gl;
   WS3.S=S;WS3.C=new THREE.PerspectiveCamera(24,2,.05,100);

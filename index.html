@@ -5521,7 +5521,13 @@ function testArenaMap(){const X=20,Z=30;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
   box(-8,0,6,3,1,3,'#8a6a4a');box(-8,0,12,3,2,3,'#7a5a3a');box(8,0,6,3,1,3,'#6a8ab0');box(8,0,12,3,2,3,'#5a7aa0');
   box(-12,0,-8,.6,3,10,'#2a2c32');box(12,0,-8,.6,3,10,'#f2f2f2');}
 function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
-  floor(-120,120,-120,120,'#3a3e48','asphalt',-.02,1);floor(-X,X,-Z,Z,'#d9dce1','slab',0,10);/* 5 m slabs (24 Nov; were 2 m tiles): joints on every 5 m, so the floor between the walkways is 8 slabs across and 14 long, and each one can be a trapdoor */
+  for(const [a0,a1,b0,b1] of [[-120,-X,-120,120],[X,120,-120,120],[-X,X,-120,-Z],[-X,X,Z,120]])floor(a0,a1,b0,b1,'#3a3e48','asphalt',-.02,1);/* asphalt round the arena, not under it, so an open trapdoor shows its shaft */
+  /* the arena floor as separate 5 m slabs (one instanced mesh, 25 Nov) so a trapdoor's own slab can be taken away and the hole is a real hole */
+  {const g=new THREE.PlaneGeometry(5,5);g.rotateX(-Math.PI/2);const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*.5,uv.getY(i)*.5);
+    const cells=[];for(let x=-X+2.5;x<X;x+=5)for(let z=-Z+2.5;z<Z;z+=5)if(!(Math.abs(x)>X-5&&Math.abs(z)<10))cells.push([x,z]);/* none under the walkway decks */
+    const im=new THREE.InstancedMesh(g,mat('#d9dce1','slab'),cells.length),m4=new THREE.Matrix4(),idx=new Map();im.receiveShadow=true;im.frustumCulled=false;im.userData.dyn=1;
+    cells.forEach(([x,z],i)=>{m4.makeTranslation(x,0,z);im.setMatrixAt(i,m4);idx.set(x+','+z,i);});M.group.add(im);
+    M.floorSlab=(x,z,on)=>{const i=idx.get(x+','+z);if(i==null)return;m4.makeTranslation(x,on?0:-300,z);im.setMatrixAt(i,m4);im.instanceMatrix.needsUpdate=true;};}/* 5 m slabs (24 Nov; were 2 m tiles): joints on every 5 m, so the floor between the walkways is 8 slabs across and 14 long, and each one can be a trapdoor */
   /* markings: centre circle and halfway line */
   {const t=canvasTex(512,512,(g,w,h)=>{g.clearRect(0,0,w,h);g.strokeStyle='#ffffff';g.lineWidth=14;g.beginPath();g.arc(w/2,h/2,w/2-10,0,TAU);g.stroke();});
     const m=new THREE.Mesh(new THREE.PlaneGeometry(16,16),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(0,.015,0);M.group.add(m);}
@@ -5573,7 +5579,8 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
     const conc=c=>new THREE.MeshStandardMaterial({color:c,map:CT,roughness:.88}),grip=c=>new THREE.MeshStandardMaterial({color:c,map:GT,roughness:.55});const GT2=GT.clone();GT2.rotation=Math.PI/2;GT2.needsUpdate=true;const gripX=c=>new THREE.MeshStandardMaterial({color:c,map:GT2,roughness:.55});/* treads across the slope on the ramps */
     [-1,1].forEach((sx,k)=>{const x1=sx*X,x0=sx*(X-W),xa=Math.min(x0,x1),xb=Math.max(x0,x1),xm=(xa+xb)/2,col=cols[k];
       const dk=new THREE.Color(col).multiplyScalar(.82).getStyle();
-      collider(xa,xb,0,H,D0,D1);box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#b7bac1',{solid:false,mat:conc('#c2c5cc')});{const tg=B.boxGeo(D1-D0,.2,W),tm=new THREE.Mesh(tg,grip(col));tm.rotation.y=Math.PI/2;tm.position.set(xm,H-.1,(D0+D1)/2);tm.castShadow=tm.receiveShadow=true;M.group.add(tm);}{const jm=new THREE.MeshBasicMaterial({color:'#7d838d'});for(let z=D0+5;z<D1;z+=5){const j=new THREE.Mesh(B.boxGeo(W,.012,.07),jm);j.position.set(xm,H+.006,z);M.group.add(j);}}/* slab joints every 5 m: the deck is four 5 x 5 m slabs, the trapdoor size */
+      collider(xa,xb,0,H,D0,D1);{const bm=box(xm,0,(D0+D1)/2,W,H-.2,D1-D0,'#b7bac1',{solid:false,mat:conc('#c2c5cc')}),cm=bm.material;bm.material=[cm,cm,new THREE.MeshBasicMaterial({visible:false}),cm,cm,cm];bm.userData.dyn=1;}/* no lid: the deck slabs cover it, and an open trapdoor looks down inside */
+      {const gm=grip(col);gm.map=GT.clone();gm.map.repeat.set(.25,1);gm.map.needsUpdate=true;for(let z=D0+2.5;z<D1;z+=5){const tm=new THREE.Mesh(B.boxGeo(5,.2,W),gm);tm.rotation.y=Math.PI/2;tm.position.set(xm,H-.1,z);tm.castShadow=tm.receiveShadow=true;tm.userData.dyn=1;M.group.add(tm);(M.walkSlabs||(M.walkSlabs={}))[xm+','+z]=tm;}}/* the deck as four 5 m slabs (one per trapdoor) */{const jm=new THREE.MeshBasicMaterial({color:'#7d838d'});for(let z=D0+5;z<D1;z+=5){const j=new THREE.Mesh(B.boxGeo(W,.012,.07),jm);j.position.set(xm,H+.006,z);M.group.add(j);}}/* slab joints every 5 m: the deck is four 5 x 5 m slabs, the trapdoor size */
       {const gx=sx*(X-W+.12),np=8,pw=(D1-D0)/np,fm=mat('#b9c0c9',null,{metalness:.8,roughness:.3});
         for(let i=0;i<np;i++)box(gx,H,D0+(i+.5)*pw,.1,1.15,pw-.06,'#bfe6ff',{mat:RL_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false});
         for(let i=0;i<=np;i++)deco(B.boxGeo(.14,1.2,.14),fm,gx,H+.6,D0+i*pw);deco(B.boxGeo(.16,.08,D1-D0),fm,gx,H+1.2,0);}
@@ -5591,21 +5598,28 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
      under a pillar, ramp, drum or the shop, never beside another open one, never in front of a portal. The host picks them (sent in the
      snapshot); bots step away */
   {const T=5,traps=[];
-    const hT=canvasTex(64,64,(c,w,h)=>{const g=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w*.72);g.addColorStop(0,'#000000');g.addColorStop(.62,'#05060a');g.addColorStop(1,'#2b2e36');c.fillStyle=g;c.fillRect(0,0,w,h);c.strokeStyle='#8d929c';c.lineWidth=3;c.strokeRect(1.5,1.5,w-3,h-3);});
-    const tg=new THREE.PlaneGeometry(T-.1,T-.1);tg.rotateX(-Math.PI/2);const hg=new THREE.PlaneGeometry(T-.04,T-.04);hg.rotateX(-Math.PI/2);
-    const redE=new THREE.MeshBasicMaterial({color:'#ff2a1a',toneMapped:false}),sg=new THREE.BoxGeometry(T-.04,30,T-.04);sg.translate(0,-15,0);const sm=new THREE.MeshBasicMaterial({color:'#030305',side:THREE.BackSide}),hm=new THREE.MeshBasicMaterial({map:hT});
+    /* the shaft (25 Nov: a real hole, not a black square): concrete walls lit near the top with a lip line every half metre, fading to black about
+       5 m down, a black bottom 30 m down; the slab itself is taken away and two door leaves swing down against the sides */
+    const shT=canvasTex(8,512,(c,w,h)=>{const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#a3a8b0');g.addColorStop(.04,'#7b8088');g.addColorStop(.12,'#3a3d44');g.addColorStop(.22,'#0b0c0f');g.addColorStop(.4,'#020203');g.addColorStop(1,'#000');c.fillStyle=g;c.fillRect(0,0,w,h);
+        for(let i=1;i<14;i++){c.fillStyle=`rgba(0,0,0,${.45-i*.025})`;c.fillRect(0,Math.round(i*h/60),w,2);}});
+    const tg=new THREE.PlaneGeometry(T-.1,T-.1);tg.rotateX(-Math.PI/2);
+    const redE=new THREE.MeshBasicMaterial({color:'#ff2a1a',toneMapped:false}),sg=new THREE.BoxGeometry(T-.04,30,T-.04);sg.translate(0,-15,0);
+    const swm=new THREE.MeshBasicMaterial({map:shT,side:THREE.BackSide}),sbm=new THREE.MeshBasicMaterial({color:'#000',side:THREE.BackSide}),sm=[swm,swm,new THREE.MeshBasicMaterial({visible:false}),sbm,swm,swm];
+    const lfG=new THREE.BoxGeometry(T/2-.04,.1,T-.08);lfG.translate((T/2-.04)/2,-.05,0);const lfM=mat('#c9ccd3',null,{roughness:.6,metalness:.2});
     for(let i=0;i<6;i++){const m=new THREE.MeshStandardMaterial({color:'#d9dce1',emissive:'#ffb030',emissiveIntensity:0,roughness:.45,metalness:.1});
-      const tile=new THREE.Mesh(tg,m),hole=new THREE.Mesh(hg,hm),shaft=new THREE.Mesh(sg,sm),edge=new THREE.Group();for(const [w,d,dx,dz] of [[T+.3,.15,0,T/2],[T+.3,.15,0,-T/2],[.15,T,T/2,0],[.15,T,-T/2,0]]){const e=new THREE.Mesh(B.boxGeo(w,.05,d),redE);e.position.set(dx,0,dz);edge.add(e);}/* the red square outline */
+      const leaves=new THREE.Group(),lv=[];for(const sd of [-1,1]){const p=new THREE.Group();p.position.x=sd*(T/2-.02);p.rotation.y=sd>0?Math.PI:0;p.add(new THREE.Mesh(lfG,lfM));leaves.add(p);lv.push(p);}
+      const tile=new THREE.Mesh(tg,m),hole=leaves,shaft=new THREE.Mesh(sg,sm),edge=new THREE.Group();for(const [w,d,dx,dz] of [[T+.3,.15,0,T/2],[T+.3,.15,0,-T/2],[.15,T,T/2,0],[.15,T,-T/2,0]]){const e=new THREE.Mesh(B.boxGeo(w,.05,d),redE);e.position.set(dx,0,dz);edge.add(e);}/* the red square outline */
       for(const o of [tile,hole,shaft,edge]){o.visible=false;o.userData.dyn=1;M.group.add(o);}tile.receiveShadow=true;
-      traps.push({tile,hole,shaft,edge,m,x:0,z:0,y:0,st:0,t:0});}
+      traps.push({tile,hole,shaft,edge,m,lv,la:0,x:0,z:0,y:0,st:0,t:0});}
     /* the slabs that can open: the floor between the walkways (8 x 14) and the walkway decks (4.4 m up, one slab wide, four long) */
     const floorSq=[],walkSq=[];for(let x=-17.5;x<=17.5;x+=5)for(let z=-32.5;z<=32.5;z+=5)floorSq.push([x,z,0]);for(const sx of [1,-1])for(let z=-7.5;z<=7.5;z+=5)walkSq.push([sx*22.5,z,4.4]);
     const h=T/2,free=(x,z,y)=>{for(const b of M.boxes)if(!(y&&b.prop==='glass')/* the walkway's own edge glass doesn't count */&&b.y1>y+.1&&b.y0<y+2&&b.x1>x-h&&b.x0<x+h&&b.z1>z-h&&b.z0<z+h)return false;
       for(const o of traps)if(o.st&&o.y===y&&Math.abs(o.x-x)<T*1.5&&Math.abs(o.z-z)<T*1.5)return false;
       if(!y)for(const [px,pz] of [[10,15.9],[-10,-15.9]])if(Math.abs(px-x)<T&&Math.abs(pz-z)<T)return false;
       return true;};
-    const place=(o,x,z,y)=>{o.x=x;o.z=z;o.y=y;o.tile.position.set(x,y+.02,z);o.hole.position.set(x,y+.025,z);o.edge.position.set(x,y+.03,z);o.shaft.position.set(x,y+.01,z);};
-    const setSt=(o,st)=>{o.st=st;o.t=0;o.tile.visible=st===1;o.hole.visible=o.shaft.visible=o.edge.visible=st===2;o.m.emissiveIntensity=0;if(st===2)sfx('land',{x:o.x,y:o.y,z:o.z},{rate:.55,vol:.9,range:30});};
+    const place=(o,x,z,y)=>{o.x=x;o.z=z;o.y=y;o.tile.position.set(x,y+.02,z);o.hole.position.set(x,y,z);o.edge.position.set(x,y+.03,z);o.shaft.position.set(x,y+.01,z);};
+    const slab=(o,on)=>{if(o.y>1){const m=M.walkSlabs&&M.walkSlabs[o.x+','+o.z];if(m)m.visible=on;}else if(M.floorSlab)M.floorSlab(o.x,o.z,on);};
+    const setSt=(o,st)=>{if(o.st===2&&st!==2)slab(o,true);if(st===2){slab(o,false);o.la=0;for(const p of o.lv)p.rotation.z=0;}o.st=st;o.t=0;o.tile.visible=st===1;o.hole.visible=o.shaft.visible=o.edge.visible=st===2;o.m.emissiveIntensity=0;if(st===2)sfx('land',{x:o.x,y:o.y,z:o.z},{rate:.55,vol:.9,range:30});};
     let next=4;M.traps=traps;
     M.trapSet=a=>{for(let i=0;i<traps.length;i++){const o=traps[i],q=a[i];if(!q){if(o.st)setSt(o,0);continue;}if(q[0]!==o.x||q[1]!==o.z||q[2]!==o.y)place(o,q[0],q[1],q[2]);if(q[3]!==o.st)setSt(o,q[3]);o.t=q[4];}};
     M.onReset.push(()=>{next=4;for(const o of traps)setSt(o,0);});
@@ -5614,7 +5628,8 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
         if(o){const L=Math.random()<.25?walkSq:floorSq;for(let tr=0;tr<40;tr++){const c=L[Math.floor(Math.random()*L.length)];if(free(c[0],c[1],c[2])){place(o,c[0],c[1],c[2]);setSt(o,1);break;}}}}
       for(const o of traps){if(!o.st)continue;o.t+=dt;
         if(o.st===1){o.m.emissiveIntensity=(o.t%1)<.6?1.5:0;if(host&&o.t>=3)setSt(o,2);}/* three slow flashes over 3 s, then it drops */
-        else if(host){for(const f of FS){if(!f.alive||f.finishing||f.edgeFall||f.onLadder||Math.abs(f.pos.y-o.y)>.3||Math.abs(f.pos.x-o.x)>h-.1||Math.abs(f.pos.z-o.z)>h-.1)continue;trapFall(f,o);}
+        else{if(o.la<1.52){o.la=Math.min(1.52,o.la+dt*7);for(const p of o.lv)p.rotation.z=-o.la;}}/* the two leaves swing down */
+        if(o.st===2&&host){for(const f of FS){if(!f.alive||f.finishing||f.edgeFall||f.onLadder||Math.abs(f.pos.y-o.y)>.3||Math.abs(f.pos.x-o.x)>h-.1||Math.abs(f.pos.z-o.z)>h-.1)continue;trapFall(f,o);}
           if(o.t>3.5)setSt(o,0);}}});}
   arenaStadium(X,Z);
   /* the shop stands against the middle of the south end wall, facing into the arena (it used to sit on top of the cross ramp in the middle) */
@@ -11157,6 +11172,8 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
   shootThumb(id,keep);}
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
+/* bump a map's number whenever its layout or look changes, so players never see its old menu picture after a publish (25 Nov) */
+const MAP_LOOK={rail:2,arena:2,lagoon:2,skyhigh:2};
 const HERO_CAM={mansion:[-.5,.55,.55,36],arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */
@@ -11168,7 +11185,7 @@ function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,
   const cv=document.createElement('canvas');cv.width=OW;cv.height=OH;const g=cv.getContext('2d');g.imageSmoothingQuality='high';const W=renderer.domElement.width,H=renderer.domElement.height;
   g.drawImage(renderer.domElement,0,0,W,H,0,0,OW,OH);
   const vg=g.createRadialGradient(OW/2,OH/2,OH*.35,OW/2,OH/2,OH*.95);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.28)');g.fillStyle=vg;g.fillRect(0,0,OW,OH);
-  if(o){try{o.url=cv.toDataURL('image/jpeg',.92);}catch(e){}}else{try{thumbs[id]=cv.toDataURL('image/jpeg',.88);}catch(e){}
+  if(o){try{o.url=cv.toDataURL('image/jpeg',.92);}catch(e){}}else{try{thumbs[id]=cv.toDataURL('image/jpeg',.88);thumbs['look_'+id]=MAP_LOOK[id]||1;}catch(e){}
   if(mapPending().length)thumbsPartial.add(id);else thumbsPartial.delete(id);
     /* plus a wide 16:9 shot from the same hero camera (the framing it was tuned for) for the big map preview, which is wider than tall */
     try{const WW=1600,WH=900;renderer.setSize(WW*1.5,WH*1.5,false);camera.aspect=WW/WH;camera.fov=hc[3];camera.updateProjectionMatrix();if(M.thumb)M.thumb(true);renderer.render(scene,camera);if(M.thumb)M.thumb(false);
@@ -12720,6 +12737,8 @@ function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
     if(full(v)){use(v);return;}
     const old=await IMG_DB.any().catch(()=>null);
     /* an older version's gun and lethal pictures are never shown: guns change often, so they're drawn fresh straight away (first in the queue, without waiting for the menu to go idle) */
+    /* a map whose look changed (its MAP_LOOK number went up) never shows its old picture: it's dropped here, so it is drawn first, straight away */
+    if(old&&old.thumbs)for(const k of Object.keys(MAPS))if((old.thumbs['look_'+k]||1)!==(MAP_LOOK[k]||1)){delete old.thumbs[k];delete old.thumbs['w_'+k];}
     if(old&&old.prev&&old.thumbs){const have=Object.keys(MAPS).filter(k=>!MAPS[k].dev&&old.thumbs[k]),pv={};for(const k in old.prev)if(!k.startsWith('g_'))pv[k]=old.prev[k];use({prev:pv,thumbs:old.thumbs});startImgQueue(true,have);}
     else startImgQueue();});
   else if(!menuImagesReady())imgLoad.then(()=>{if(!menuImagesReady())startImgQueue();});}
@@ -12727,7 +12746,7 @@ function ensureMenuImages(){if(menuImagesReady()||imgQ)return;
 function startImgQueue(refresh,have){if(imgQ||(!refresh&&menuImagesReady()))return;
   const maps=Object.keys(MAPS).filter(k=>!MAPS[k].dev),miss=maps.filter(k=>!thumbs[k]),again=refresh?maps.filter(k=>thumbs[k]&&(!have||have.includes(k))):[];
   const gunT=previewsMade&&!refresh?[]:previewTasks();for(const t of gunT)t.urgent=true;
-  imgQ=[...gunT,...miss.map(k=>()=>makeThumb(k)),...again.map(k=>()=>makeThumb(k,true))];setTimeout(runImgQ,60);}
+  imgQ=[...gunT,...miss.map(k=>Object.assign(()=>makeThumb(k),{urgent:true}))/* a map with no picture (new, or its look changed) is drawn straight away */,...again.map(k=>()=>makeThumb(k,true))];setTimeout(runImgQ,60);}
 function runImgQ(){if(!imgQ)return;if(S.state!=='menu'){setTimeout(runImgQ,400);return;}// never during a match
   if(!(imgQ[0]&&imgQ[0].urgent)&&performance.now()-imgLastIn<2000){setTimeout(runImgQ,300);return;}// and never while you're using the menu (gun pictures excepted: they're quick and must match the guns)
   const t=imgQ.shift();if(t){let r=null;try{r=t();}catch(e){console.warn('menu image',e);}const next=()=>{if(S.state==='menu')renderDuelMenu();setTimeout(runImgQ,16);};if(r&&r.then)r.then(next,next);else next();return;}

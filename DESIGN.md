@@ -85,7 +85,7 @@ Last updated: 2026-11-24
 ### Characters
 - Current roster (10): Wednesday, Lil Pink, then North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic (added 24 Nov from Pete's picked concepts, Puffa with black hair; Glitch's trim is neon orange, not cyan; Raven keeps black hair). Shadow is dev-only (Test Arena) for now. New characters share Lil Pink's and Wednesday's look and movement: Tripo image-to-3D models on the same six-part rig.
 - Movement (Pete, 24 Nov): everyone, players and bots, runs about 9.5 m/s with a gun out (25% slower than before); the bat adds 40%.
-- Strafing (Pete, 24 Nov): the hips turn up to about 60° towards where you're going and the legs run that way, while the upper body twists back to keep the aim (going back and to the side, they turn the other way and backpedal); legs never side-step across each other. Shoes stay level and on top of the floor (the bottom of each shin bends at the ankle; a stretched leg lifts its foot), never dipping through it.
+- Strafing (Pete, 24-25 Nov): small, quick side steps, never a wide stance or a crossover. The hips turn only a little (up to about 20°) towards where you're going, with the upper body twisting back to keep the aim. Side steps are shorter, quicker and lower, and a planted foot only trails a short way behind the hip before it slides along. The feet never cross. Shoes stay level and on top of the floor: the bottom of each shin bends at the ankle, and a stretched leg lifts its foot, so shoes never dip through the floor.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
@@ -124,6 +124,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-25
+- Strafing toned down: small, quick side steps with the feet close together (hips turn only about 20°, not 60°), instead of running sideways with wide legs.
 - Man Down has its own sound (sfx/mandown.mp3): a rush of wind with a falling whistle and low rumble, about 3 s (option A of 3, wind a little quieter); replaces the slowed whiz. Glass boom kept.
 - Gun finishes picked from concepts: HDR "Op Art" (wavy black-and-white zebra chassis and stock, gloss white barrel, black scope and action, blood-red riser, rings and small parts; no steel trim or engraving, keeps the hot muzzle). Crossbow "Apex" (new refined model: gloss black skeleton thumbhole stock and sculpted body, polished silver split limbs, riser, cams and hardware, neon-orange pinstripes, cam rings, cables, fletching and nocks; no textured/pixel finishes). Dual Pistols "Cosmic" (nebula slides with stars, black-chrome frames, gold fittings, violet crystal grips, gold planet ring and moon round each barrel, star sight). Crosshairs: Crossbow orange, Dual Pistols pink.
 - Free-for-all match length: 2, 4 or 6 minutes (was 3, 5 or 10); 4 by default, Quick start uses 4.

@@ -4948,7 +4948,7 @@ tex('slab',256,256,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let i=0;
 tex('felt',128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let y=0;y<h;y+=16){g.fillStyle='rgba(0,0,0,.12)';g.fillRect(0,y,w,2);}for(let i=0;i<700;i++){g.fillStyle=`rgba(0,0,0,${Math.random()*.12})`;g.fillRect(Math.random()*w,Math.random()*h,2,2);}});
 tex('ribs',128,64,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);for(let x=0;x<w;x+=16){g.fillStyle='rgba(0,0,0,.16)';g.fillRect(x,0,5,h);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(x+7,0,3,h);}
   g.fillStyle='rgba(60,40,20,.08)';for(let i=0;i<40;i++)g.fillRect(Math.random()*w,Math.random()*h,2+Math.random()*5,1+Math.random()*3);});
-const RL={X:25,Z:35,lines:[0],sid:[]};/* 50 x 70 m (Big size) */
+const RL={X:35,Z:25,lines:[0],sid:[]};/* 70 x 50 m (Big size): long across the line (25 Nov: turned round, the sheds now stand at the two far ends and the train crosses the short middle) */
 // fuel drums blow up when they're shot apart (and set each other off)
 function drumBoom(b){const at=new V3((b.x0+b.x1)/2,b.y0+.6,(b.z0+b.z1)/2),Rr=4.6,src=S.lastShooter&&S.lastShooter.alive!==undefined?S.lastShooter:null;sfx('explode',at,{range:26});boomFX(at,Rr);
   if(ME.alive&&ME.pos.distanceTo(at)<16)S.shake=Math.max(S.shake,.6*(1-ME.pos.distanceTo(at)/16)+.15);
@@ -5119,9 +5119,9 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
       for(const s of [-1,1])box(x+s*(hw+.375),0,zf-sz*.15,.75,sh,.3,'#bdb5a6',{tx:'rock',solid:false});box(x,sh+hw+.05,zf-sz*.2,1,1,.4,'#d6cfc2',{tx:'rock',solid:false});}
     for(const [x,y,zz,sx,sy,sz2] of [[-24,-3,z+sz*4,13,15,17],[24,-3,z+sz*4,13,15,17],[0,8,z+sz*30,22,9,11],[-40,-6,z+sz*14,18,14,20],[40,-6,z+sz*14,18,14,20]]){const hm=deco(new THREE.SphereGeometry(1,28,14),grassM,x,y,zz);hm.scale.set(sx,sy,sz2);hm.castShadow=false;}}}
     /* the sheds are laid out from the old big-yard plans and slid in beside the line */
-  rlShift(10,0,()=>{// ---------- west: loading dock and goods shed ----------
-  wcBox(-16.2,-12.95,0,1.25,-14,14,'#8d8a83');box(-13.05,1.25,0,.15,.02,28,'#f4c22b',{solid:false,edges:false});
-  wcStairs(-17,1,-16.1,-13.1,0,1.25,3,1,'#8d8a83',true);wcStairs(17,-1,-16.1,-13.1,0,1.25,3,1,'#8d8a83',true);
+  rlShift(1,0,()=>{// ---------- west: loading dock (stays beside the line) and goods shed (out at the west end) ----------
+  wcBox(-7.2,-3.95,0,1.25,-14,14,'#8d8a83');box(-4.05,1.25,0,.15,.02,28,'#f4c22b',{solid:false,edges:false});
+  wcStairs(-17,1,-7.1,-4.1,0,1.25,3,1,'#8d8a83',true);wcStairs(17,-1,-7.1,-4.1,0,1.25,3,1,'#8d8a83',true);
   {const x0=-32,x1=-19,z0=-10,z1=16,H=6.6,col='#a5543a',S2=St(0,0,1);
     /* the front (track side) is a glass shopfront like the Engine Shed's: brick piers at the corners, a brick header carrying the sign,
        breakable panes in a steel frame either side of the two doorways so you can see who's inside */
@@ -5184,7 +5184,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
     // the shed's name across the dock side
     rlSign('GOODS SHED','#1c1d22','#ffffff',{stripe:'#f4c22b'},10,1,x1+.22,5.0,3,Math.PI/2,'#fff1c4');}
     });
-  rlShift(-12,0,()=>{  // ---------- east: engine shed ----------
+  rlShift(-1,0,()=>{  // ---------- east: engine shed (out at the east end) ----------
   {const x0=20,x1=34,z0=-8,z1=14,H=7,col='#6e737c';
     wcWall('x',z0,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);wcWall('x',z1,x0,x1,0,H,[{c:27,w:5.4,y0:0,y1:5.6}],col,{tx:'ribs'},.35);
     /* the front (track side) is a glass shopfront in a steel frame so you can see who's inside: breakable panes round the two doorways, a solid header carries the sign */
@@ -5295,26 +5295,38 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   {const z=-20,y=7.6;wcBox(-6,6,y-.3,y,z-1.75,z+1.75,'#5b6070',{tx:'rock'});for(const s of [-1,1]){wcBox(-6,6,y,y+1.2,z+s*1.7-.05,z+s*1.7+.05,'#9aa0a8');box(0,y+1.1,z+s*1.7,12,.1,.14,'#f4c22b',{solid:false,edges:false});}
     for(const x of [-5.6,5.6])wcBox(x-.4,x+.4,0,y-.3,z-.4,z+.4,'#5b6070');
     wLadder(-6.25,z,0,y,1,0);wLadder(6.25,z,0,y,-1,0);}
-  // shipping containers: big enough to walk through, doors open at both ends
-  const CO={open:2,W:3.4,H:3.4};
-  /* the long side facing into the yard is glass */
-  rlContainer(-15,0,-31.5,'x','#e8463a',{...CO,glass:1});rlContainer(15,0,31.5,'x','#2f7fe0',{...CO,glass:-1});/* end containers moved out with the longer yard */
-  rlContainer(-18,0,25,'x','#f4c22b',{...CO,L:8,glass:-1});rlContainer(18,0,-25,'x','#3bb54a',{...CO,L:8,glass:1});
+  /* STACKED PERCHES (25 Nov; replaced four walk-through containers you got stuck manoeuvring round and hardly used). In the south-west and north-east
+     corners of the open yard: a long walk-through container on the ground (both ends wide open, no swung door leaves to snag on) with a short one
+     stacked crosswise on its far end as a covered nest, open towards the line and at one end; a white ladder up the yard side onto the lower roof,
+     a sandbag wall along its edge. In the other two corners a short closed container as plain cover */
+  {const RIB={tx:'ribs'},H=3.4,tH=2.7,cast=mat('#2b2d33');
+    for(const sg of [1,-1]){const x=sg*-13,z=sg*-20,L=12,W=3.4,t=.15,col=sg>0?'#e8463a':'#2f7fe0',col2=sg>0?'#f4c22b':'#3bb54a';
+      /* the ground container: two long sides, roof, timber floor, corner castings */
+      for(const sd of [-1,1])box(x,0,z+sd*(W/2-t/2),L,H,t,col,RIB);box(x,H-.15,z,L,.15,W,col,RIB);box(x,0,z,L-.3,.12,W-.3,'#6b4a33',{tx:'wood',solid:false});
+      for(const ex of [-1,1])for(const sd of [-1,1])deco(B.boxGeo(.3,H,.3),cast,x+ex*(L/2-.15),H/2,z+sd*(W/2-.15));
+      /* the nest on top of its far end: 6 m long across it (overhanging both sides), floor, back wall, short stubs either side of a 3.6 m opening towards the line, one closed end, roof */
+      const nx=x-sg*4;box(nx,H-.12,z,3.4,.12,6,col2,RIB);
+      box(nx-sg*1.6,H,z,.15,tH,6,col2,RIB);for(const e of [-1,1])box(nx+sg*1.6,H,z+e*2.4,.15,tH,1.2,col2,RIB);
+      box(nx,H,z-sg*2.92,3.4,tH,.15,col2,RIB);box(nx,H+tH-.15,z,3.4,.15,6,col2,RIB);
+      box(x+sg*3.5,H,z+sg*1.4,4,.9,.6,'#b7a47c',{tx:'rock',edges:false});/* sandbags along the yard-side edge of the lower roof */
+      wLadder(x+sg*1.5,z+sg*1.95,0,H,0,-sg);
+      /* plain cover in the other corner of this end */
+      box(sg*26,0,sg*-20,6,2.6,2.5,sg>0?'#3bb54a':'#f4c22b',RIB);}}
   // fuel drums on the ground (they blow up)
   for(const [x,z] of [[-23.6,-20],[-22.9,-20.3],[23.6,20],[22.9,20.3]])rlDrum(x,0,z);
   // painted walkway lines and a few stains on the yard
   for(const sx of [-1,1]){floor(sx*4.6-.07,sx*4.6+.07,-Z+.5,Z-.5,'#f4c22b',null,.01);}
   {const pm=new THREE.MeshBasicMaterial({color:'#3a3d45',transparent:true,opacity:.28,depthWrite:false}),pg=new THREE.CircleGeometry(1,12);pg.rotateX(-Math.PI/2);
-    for(const [x,z,s] of [[-12,-22,1.6],[13,21,1.8],[-20,28,1.2],[21,-28,1.3],[-6,-32,1],[7,31,1.1]]){const m=new THREE.Mesh(pg,pm);m.position.set(x,.012,z);m.scale.set(s*1.4,1,s);M.group.add(m);}}
+    for(const [x,z,s] of [[-12,-22,1.6],[13,21,1.8],[-28,20,1.2],[28,-20,1.3],[-10,-12,1],[11,12,1.1]]){const m=new THREE.Mesh(pg,pm);m.position.set(x,.012,z);m.scale.set(s*1.4,1,s);M.group.add(m);}}
   // signals beside the line: red while a train is in the section, green when it's clear
-  const sig=[];for(const [x,z,ln] of [[-3,-30,0],[3,30,0]]){box(x,0,z,.2,4.2,.2,'#2b2d33',{edges:false});box(x,4.2,z,.5,1.1,.4,'#1c1d22',{solid:false,edges:false});
+  const sig=[];for(const [x,z,ln] of [[-3,-23,0],[3,23,0]]){box(x,0,z,.2,4.2,.2,'#2b2d33',{edges:false});box(x,4.2,z,.5,1.1,.4,'#1c1d22',{solid:false,edges:false});
     const r=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:'#ff3b2f'})),g=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),new THREE.MeshBasicMaterial({color:'#123a1c'}));
     r.position.set(x,4.95,z+(z<0?.21:-.21));g.position.set(x,4.55,z+(z<0?.21:-.21));M.group.add(r,g);sig.push({r,g,ln});}
   M.life.push(()=>{for(const s of sig){const T=(M.trains||[])[s.ln],busy=T&&T.z>-9000;s.r.material.color.set(busy?'#ff3b2f':'#4a1010');s.g.material.color.set(busy?'#123a1c':'#3bff7a');}});
   // trees from the Tripo Trees pack, all well outside the fence so none stand in (or hang over) the play space
-  for(const [id,x,z,h,ry] of [['tt_bigoak',34,-24,8,.4],['tt_pine',-35,22,9,2.1],['tt_pink',-34,-12,6.5,1],['tt_orange',34,12,6.5,2.5],['tt_pine',-40,2,9.5,.3],['tt_smalloak',38,-4,6.5,3.6],['tt_bigoak',-36,37,8,4],['tt_pine',36,33,9,1.7],['tt_smalloak',-38,-33,6.5,.8],['tt_pink',42,22,6,5],['tt_orange',-43,-18,6.5,2],['tt_bigoak',44,-39,8.5,1.2],['tt_pine',-45,12,9,1]])glbTree(id,x,z,h,ry);
+  for(const [id,x0t,z,h,ry] of [['tt_bigoak',34,-24,8,.4],['tt_pine',-35,22,9,2.1],['tt_pink',-34,-12,6.5,1],['tt_orange',34,12,6.5,2.5],['tt_pine',-40,2,9.5,.3],['tt_smalloak',38,-4,6.5,3.6],['tt_bigoak',-36,37,8,4],['tt_pine',36,33,9,1.7],['tt_smalloak',-38,-33,6.5,.8],['tt_pink',42,22,6,5],['tt_orange',-43,-18,6.5,2],['tt_bigoak',44,-39,8.5,1.2],['tt_pine',-45,12,9,1]]){const x=Math.sign(x0t)*(Math.abs(x0t)+10);/* moved out with the wider yard (25 Nov) */glbTree(id,x,z,h,ry);}
   // strip lights under the shed roofs
-  {const lm=new THREE.MeshBasicMaterial({color:'#fff2c4'});for(const [x,z0,z1,y] of [[-15.5,-8,14,6.5],[15,-6,12,6.9],[11,-6,12,6.9],[19,-6,12,6.9]])for(let z=z0;z<=z1;z+=5.5){if(x<0&&z>-7.2&&z<1.2)continue;/* none in the goods shed's open roof hatch over the stairs (one used to hang there in thin air) */const m=new THREE.Mesh(B.boxGeo(.3,.08,1.6),lm);m.position.set(x,y,z);M.group.add(m);}}
+  {const lm=new THREE.MeshBasicMaterial({color:'#fff2c4'});for(const [x,z0,z1,y] of [[-24.5,-8,14,6.5],[26,-6,12,6.9],[22,-6,12,6.9],[30,-6,12,6.9]])for(let z=z0;z<=z1;z+=5.5){if(x<0&&z>-7.2&&z<1.2)continue;/* none in the goods shed's open roof hatch over the stairs (one used to hang there in thin air) */const m=new THREE.Mesh(B.boxGeo(.3,.08,1.6),lm);m.position.set(x,y,z);M.group.add(m);}}
   M.railGlow=glow;M.life.push((t,dt)=>{for(const G of glow){const T=(M.trains||[])[G.ln];const hot=T&&(T.z>-9000||railPos(T,t+4)!=null);G.k=clamp(G.k+(hot?dt*2.5:-dt*1.5),0,1);G.hot=G.k>.5;
       const p=.75+.25*Math.sin(t*10);G.rm.emissiveIntensity=G.k*1.6*p;G.pm.opacity=G.k*.3*p;}
     if(S.state!=='fight')return;for(const f of FS){if(!f.alive||f.pos.y>.45||Math.abs(f.pos.z)>Z||Math.abs(f.pos.z+50)<3.1)continue;for(const G of glow){if(!G.hot)continue;const d=Math.abs(f.pos.x-G.x);if(Math.abs(d-.75)>R*.7+.08)continue;
@@ -5325,7 +5337,7 @@ function railYard(){OPEN_STAIRS=true;const X=RL.X,Z=RL.Z;M.bounds={x0:-X,x1:X,z0
   railTrainInit(t1);
   // the shop sits on the loading dock, halfway along the line
   M.shopAt=[{x:-4.6,z:0,y:1.25,k:.7}];
-  M.spawns=[[-20,-17],[20,17],[-6.5,-32],[6.5,32],[-23.2,-32],[23.2,32],[14,-15],[-14,15.5],[-10,22],[10,-22]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
+  M.spawns=[[-26,-17],[26,17],[-9,9],[9,-9],[-14,-14],[14,14],[-31,-22],[31,22],[-20,23],[20,-23]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}
 // cross ramp in the middle of Arena: a raised square deck with four ramps running down to the floor, each in its own colour, curbs with glowing strips along both sides
 function arenaCross(H=2){const C=3.25,L=8,n=Math.round(H/.25),cw=.3,DECK='#e8cf86',DECK_HI='#eedca6',DECK_LO='#e3c678',cols=['#e8463a','#2f7fe0','#3bb54a','#a05ad6'].map(c=>'#'+new THREE.Color(c).lerp(new THREE.Color('#d9dce1'),.5).getHexString())/* softened halfway towards the floor grey */,glows=[];
   const dark=c=>{const v=new THREE.Color(c);v.multiplyScalar(.62);return '#'+v.getHexString();};
@@ -6189,7 +6201,7 @@ const MAPS={
   M.shopAt=[{x:0,z:-Z+.85,y:0,q:0}];
   for(const z of [-22,22])for(const x of [-4.6,4.6])box(x,0,z,.9,1.3,.9,'#2b2d33',{prop:'bin'});
   M.spawns=[[-20,-19],[-31,-20],[-12,-19],[20,19],[31,20],[12,19],[-2,14],[2,-14],[-22,21],[22,-21]].map(([x,z])=>({x,z,yaw:Math.atan2(-x,-z)}));}},
- rail:{modes:['duel'],name:'Railed',desc:'Small freight yard split by a live line, with a footbridge over it',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
+ rail:{modes:['duel'],name:'Railed',desc:'Freight yard with a shed at each end and a live line across the middle',sw:['#b0a898','#f4c22b','#a5543a'],build(){railYard();}},
  wreck:{modes:['duel'],name:'Beach Please',desc:'A sleek, upmarket beach: a lit Tiki Bar, a hut at each end, lookout stairs and loungers along the shore',sw:['#f3e2b3','#2fb0cc','#6e4628'],build(){wreckCove();}},
  house:{modes:['rumble'],name:'The House',desc:'Fast room-to-room fights: colour-coded rooms joined by wide doorways and open archways, with straight runs right through the house',sw:['#c99a5b','#f3efe6','#e8463a'],build(){
   const X=15,Z=24,H=5.8,T=.4,DH=3,GH=3,HOP=2.6;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};const LS=layoutSnap();let TUB=null;/* laid out at 30 x 48 m, fitted to 30 x 40 m (Small size) at the end */

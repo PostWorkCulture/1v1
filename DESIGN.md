@@ -79,6 +79,7 @@ Last updated: 2026-11-24
 - Top quality, never cheesy or harsh; preview new sounds before publishing. Sources: CC0 Freesound/Pixabay/Kenney etc. (ElevenLabs is unreliable).
 - Volume: Sound (master), SFX, Weapons, Music; Weapons controls only weapon sounds.
 - Near-miss puff only on extremely close misses. Round start = gong. Menu sounds subtle (Kenney Interface pack).
+- When you get killed: body-fall sound (not the kill sound) and a brief 'Tunnel' darkening of the screen edges (Pete picked E, 25 Nov).
 - Music: dark, bass-led trap on menus/between rounds/end of game. The menu song rotates between 3 tracks (Dark Trap, Dark Trap 2, Dark - Dark Beat), a different one each time the game opens.
 
 ### Characters

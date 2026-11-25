@@ -342,6 +342,7 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #d-sense.bot{box-shadow:inset 0 0 170px 34px rgba(255,59,92,.36)}
 #d-adsvig{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse 75% 70% at center,transparent 58%,rgba(10,17,34,.42) 100%)}
 #d-vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(220,25,25,.5));opacity:0}
+#d-deathvig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 38%,rgba(0,0,0,.7) 75%);opacity:0} /* 'Tunnel': when you die the edges close in briefly, then open again */
 .d-tag{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:4px;transform:translate(-50%,-100%);
   font:700 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#fff;text-shadow:0 1px 2px #0a1122,0 0 6px rgba(10,17,34,.5);white-space:nowrap}
 .d-tag i{display:none;width:70px;height:7px;border-radius:9px;background:rgba(10,12,18,.55);overflow:hidden;box-shadow:0 0 0 1.5px rgba(10,12,18,.7)}
@@ -1922,7 +1923,7 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
     <div id="d-rpg" hidden><svg viewBox="-100 -100 200 200" aria-hidden="true"><g fill="none" stroke="#141418" stroke-width="1.6" stroke-linecap="round"><path d="M-14 8 L0 2 L14 8"/><path d="M-12 22 L0 16 L12 22"/><path d="M-10 36 L0 30 L10 36"/><path d="M-8 50 L0 44 L8 50"/><path d="M-30 -42 V-36 M-20 -42 V-38 M-10 -42 V-38 M0 -44 V-34 M10 -42 V-38 M20 -42 V-38 M30 -42 V-36"/><path d="M-78 20 Q-60 18 -52 -10 Q-48 -26 -46 -40"/><circle cx="0" cy="0" r="1.6" fill="#ff2a2a" stroke="none"/></g><g fill="#141418" font-size="7" font-family="monospace" font-weight="700"><text x="17" y="10">200</text><text x="15" y="24">300</text><text x="13" y="38">400</text><text x="11" y="52">500</text></g></svg><i class="ring"></i><span class="tag"></span></div>
     <div id="d-lock" hidden><i class="br"></i><div class="pips"><b></b><b></b><b></b><b></b></div><span class="tag">SEARCH</span><span class="rng"></span></div>
     <div id="d-holo" hidden><i class="rim"></i><i class="glass"></i><i class="tk t"></i><i class="tk b"></i><i class="tk l"></i><i class="tk r"></i><i class="dot"></i></div>
-    <div id="d-vig"></div><div id="d-adsvig"></div>
+    <div id="d-vig"></div><div id="d-deathvig"></div><div id="d-adsvig"></div>
     <div id="d-flash"></div><canvas id="d-after"></canvas>
     <div id="d-sense"></div>
     <div id="d-nums"></div>
@@ -3297,13 +3298,13 @@ window.__br={renderer,buildCharacter,makeTex,rrect,boxGeo,roundedBox,showMenu,co
 <script>
 /* ================= sound effects (ElevenLabs-generated, files in sfx/) ================= */
 (function(){
-  const NAMES=['vanguard','uiselect','uifwd','uiback','uitick','uiland','uistart','akm','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
+  const NAMES=['death','vanguard','uiselect','uifwd','uiback','uitick','uiland','uistart','akm','m4','hdr','kar','shotboom','glboom','smgnova','sniper','smg','shotgun','pistol','revolver','lmg','rocket','rpg','swarmfire','spas','explode','stun','reload','dry','swing','punch','hit','headshot','hurt','kill','down','land','throw','gong','wall','swap',
     'step1','step2','step3','step4','step5','fs_wood1','fs_wood2','fs_wood3','fs_wood4','fs_wood5','fs_carpet1','fs_carpet2','fs_carpet3','fs_carpet4','fs_carpet5','fs_stone1','fs_stone2','fs_stone3','fs_stone4','fs_stone5','fs_grass1','fs_grass2','fs_grass3','fs_grass4','fs_grass5','impact','wood','whiz','nearmiss','bounce1','bounce2','brick','smash','frost','volt','hook','zip','thorn','jet','djump','fisthit','batswing','swordswing','swordhit','fireball','blink','vanish','sense','buy','tick','win','lose','heart',
     'horn','trainhorn','birds','gulls','wade1','wade2','splash','cash','crate','bin','bush','plate','breath','sink','respawn','firework','waves','engine','boat','crossbow','bing'];
   const LOOPS={waves:1,engine:1,boat:1,discomusic:1,cinemasound:1,spamusic:1,arcademusic:1};
   const LAZY={discomusic:1,cinemasound:1,spamusic:1,arcademusic:1},lazyReq={};/* big music beds only download the first time they're needed */ // seamless loops ship as .wav so they don't click at the seam
   // mix level per sound, so nothing pokes out
-  const MIX={vanguard:.7,uiselect:.35,uifwd:.35,uiback:.35,uitick:.3,uiland:.4,uistart:.4,djump:.36,discomusic:.55,cinemasound:.4,spamusic:.32,arcademusic:.26,/* Street Life's arcade: quiet trap */akm:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
+  const MIX={death:.6,vanguard:.7,uiselect:.35,uifwd:.35,uiback:.35,uitick:.3,uiland:.4,uistart:.4,djump:.36,discomusic:.55,cinemasound:.4,spamusic:.32,arcademusic:.26,/* Street Life's arcade: quiet trap */akm:.7,m4:.7,hdr:.75,kar:.7,shotboom:.55,spas:.55,rpg:.6,swarmfire:.6,glboom:.32,smgnova:.6,sniper:.62,smg:.42,shotgun:.6,pistol:.5,revolver:.6,lmg:.48,rocket:.6,explode:.85,flame:.55,stun:.6,reload:.5,dry:.55,swing:.42,punch:.6,hit:.2,headshot:.16,hurt:.5,kill:.6,down:.42,land:.3,throw:.4,gong:.45,wall:.5,swap:.32,
     step1:.22,step2:.22,step3:.22,step4:.22,step5:.22,fs_wood1:.24,fs_wood2:.24,fs_wood3:.24,fs_wood4:.24,fs_wood5:.24,fs_carpet1:.2,fs_carpet2:.2,fs_carpet3:.2,fs_carpet4:.2,fs_carpet5:.2,fs_stone1:.26,fs_stone2:.26,fs_stone3:.26,fs_stone4:.26,fs_stone5:.26,fs_grass1:.22,fs_grass2:.22,fs_grass3:.22,fs_grass4:.22,fs_grass5:.22,impact:.32,wood:.38,whiz:.5,nearmiss:.35,bounce1:.4,bounce2:.4,brick:.45,smash:.7,frost:.55,volt:.55,hook:.45,zip:.4,thorn:.45,jet:.42,fisthit:.6,batswing:.45,swordswing:.45,swordhit:.6,fireball:.5,blink:.45,vanish:.4,sense:.45,buy:.45,tick:.5,win:.5,lose:.5,heart:.5,
     horn:.45,trainhorn:.55,birds:.4,gulls:.35,wade1:.3,wade2:.3,splash:.5,cash:.5,crate:.5,bin:.45,bush:.4,plate:.5,breath:.4,sink:.4,respawn:.45,firework:.4,waves:.4,engine:.35,boat:.35,crossbow:.41,bing:.25}; /* shop bing at half its old default .5 */
   const MAXV=6; // voices per sound
@@ -9159,7 +9160,7 @@ function down(f,src,gun){if(NET.role==='client'&&!NET.replay)return;if(f.zip){ki
   hitSpray(f.pos.x,f.pos.y+1.2,f.pos.z,null,{n:18,k:1.6});
   feedMsg(f===ME?'<span class="y">You</span><em>are down</em>':`${tg(f)}<em>is down</em>`);}
 // an ordinary kill: no explosion and no slow motion (that read as a stutter); the body drops flat with a few small red blocks round it. 
-function kill(f,src,head,gun){if(NET.role==='client'&&!NET.replay)return;if(f.finishing||!f.alive)return;if(!f.downed||!RP.marks.some(m=>m.v===f))rpMark(f,src);f.killSnd=S.t;sfx('kill',null,{vol:src===ME||f===ME?1:.6});f.thrownT=0;const fx='Fall';
+function kill(f,src,head,gun){if(NET.role==='client'&&!NET.replay)return;if(f.finishing||!f.alive)return;if(!f.downed||!RP.marks.some(m=>m.v===f))rpMark(f,src);f.killSnd=S.t;if(f===ME)deathFx();else sfx('kill',null,{vol:src===ME?1:.6});f.thrownT=0;const fx='Fall';
   f.finishing={fx,t:0,by:src,obj:[],gun,head,dur:.7,r0:f.ch.root.rotation.x};f.corpse=true;f.onLadder=null;
   if(f.zip){const Z=f.zip,L=Z.line,k=ZIP_V*.35;f.finishing=Object.assign(f.finishing,{fx:'ZipFall',vx:L.ux*Z.dir*k,vz:L.uz*Z.dir*k,vy:2,dur:99,move:1,done:1,sx:rnd(7,10)*(Math.random()<.5?-1:1),sz:rnd(3,6)});f.zip=null;if(f._zt)f._zt.visible=false;}
   else if(!f.edgeFall){const gy=groundAt(f.pos.x,f.pos.z,f.pos.y),h=f.pos.y-gy;if(h>.3){f.finishing.fallTo=gy;f.finishing.dur=.7+Math.sqrt(2*h/30);}}if(src===ME||f===ME)S.shake=Math.max(S.shake,.2);
@@ -10001,6 +10002,8 @@ $('dt-pause').addEventListener('pointerdown',e=>{e.preventDefault();if(D.active&
 const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 const hc={};const txt=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;}};
 let vigA=0;function vig(a){vigA=Math.max(vigA,a);}
+/* you got killed: body-fall sound (Freesound #417994, CC0) instead of the kill sound, and the edges close in briefly ('Tunnel', 1.45 s) */
+function deathFx(){sfx('death');const o=$('d-deathvig');if(!o||!o.animate)return;o.getAnimations().forEach(a=>a.cancel());o.animate([{opacity:0,transform:'scale(1.25)'},{opacity:1,transform:'scale(1)',offset:.24},{opacity:1,transform:'scale(1)',offset:.45},{opacity:0,transform:'scale(1.25)'}],{duration:1450,easing:'ease-out'});}
 function hitMarker(head){if(OPT.hs==='1')sfx(head?'headshot':'hit',null,{rate:head?1:1.05});if(OPT.hm!=='1')return;const h=$('d-hit');h.classList.toggle('head',!!head);h.classList.remove('on');requestAnimationFrame(()=>h.classList.add('on'));} // restart next frame (forcing a layout here caused hitches)
 const nums=[],numPool=[];
 /* someone already going down in their death effect can't be hurt (see damage0), so hits on them show a grey 0 */
@@ -10665,7 +10668,7 @@ function hideIntro(now){const el=$('d-intro');if(!el||el.hidden)return;if(now){e
 /* the mode shown under the map's name on the title card: 1v1, 2v2, Free for all or Rumble */
 const modeTag=()=>S.mode==='rumble'?'Rumble':S.one?'1v1':(PLAYERS[S.players]||'Duels');
 function teamsAlive(){const t=new Set();for(const f of FS)if(f.alive)t.add(f.team);return t;}
-function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;sfx('kill',null,{vol:by===ME||v===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
+function eliminated(v,by){clipKill(v,by);if(!(S.t-(v.killSnd||-99)<6)){v.killSnd=S.t;if(v===ME)deathFx();else sfx('kill',null,{vol:by===ME?1:.6});}/* the kill goes to whoever downed them, even if someone else finished them off (the finisher gets an assist) */const cr=v.downedBy&&v.downedBy!==v&&isFoe(v.downedBy,v)?v.downedBy:by;v.downedBy=null;
   if(cr&&cr!==v&&isFoe(cr,v))cr.k=(cr.k||0)+1;v.d=(v.d||0)+1;const asd=new Set();if(v.hitBy)for(const [src,t] of v.hitBy)if(src!==cr&&src!==v&&isFoe(src,v)&&S.t-t<15&&!asd.has(src)){asd.add(src);src.as=(src.as||0)+1;}if(by&&by!==cr&&by!==v&&isFoe(by,v)&&!asd.has(by))by.as=(by.as||0)+1;v.hitBy=null;lbDirty=1;
   if(cr===ME&&v!==ME&&S.stats)S.stats.elims++;killNotes(v,cr);
   S.deathMarks=(S.deathMarks||[]).filter(m=>S.t-m.t<3);S.deathMarks.push({x:v.pos.x,z:v.pos.z,t:S.t});

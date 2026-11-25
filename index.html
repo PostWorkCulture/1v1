@@ -360,12 +360,15 @@ kbd{display:inline-block;min-width:22px;padding:3px 6px 4px;border-radius:5px;fo
 #mandown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;visibility:hidden;opacity:0;z-index:6;
   background:radial-gradient(ellipse at center,rgba(70,0,0,0) 35%,rgba(45,0,0,.7) 100%)}
 #mandown.on{visibility:visible;animation:mdIn 3.6s ease-out forwards}
+#mandown.on b{animation:mdText 3.6s cubic-bezier(.2,.8,.2,1) forwards}
 #duel-hud.mdcine>*:not(#mandown):not(#d-center){opacity:0!important;transition:opacity .25s}
 #mandown b{font-family:'Creepster','Nosifer',Georgia,serif;font-weight:400;font-size:clamp(58px,12vw,160px);line-height:1;color:#c80a0a;letter-spacing:.05em;
-  text-shadow:0 0 14px rgba(255,20,20,.6),0 0 46px rgba(140,0,0,.9),0 5px 0 #260000;animation:mdShake .11s steps(2) infinite,mdFlick 1.7s infinite}
-@keyframes mdIn{0%{opacity:0;transform:scale(1.7);filter:blur(10px)}10%{opacity:1;transform:scale(1);filter:blur(0)}78%{opacity:1;transform:scale(1.06) translateY(6px)}100%{opacity:0;transform:scale(1.1) translateY(14px)}}
-@keyframes mdShake{0%{transform:translate(0,0) rotate(-.6deg)}100%{transform:translate(2px,-1px) rotate(.6deg)}}
-@keyframes mdFlick{0%,100%{opacity:1}46%{opacity:1}48%{opacity:.55}50%{opacity:1}83%{opacity:.8}}
+  text-shadow:0 0 14px rgba(255,20,20,.6),0 0 46px rgba(140,0,0,.9),0 5px 0 #260000;will-change:transform,opacity}
+/* Pete 25 Nov: smooth, no jitter. The dark vignette only fades; the words punch in once and drift slightly, no blur, shake or flicker */
+@keyframes mdIn{0%{opacity:0}8%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes mdText{0%{opacity:0;transform:scale(1.35)}9%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1.05) translateY(4px)}100%{opacity:0;transform:scale(1.08) translateY(10px)}}
+
+
 #d-center.sm{top:15%;gap:6px}#d-center.top{top:96px;gap:6px}
 /* Eliminated banner: small, near the top */
 #d-center.elim{top:84px;gap:4px}#d-center.elim #d-big{font-size:clamp(20px,2.8vw,34px);text-shadow:0 3px 0 #111e3c,2px 2px 0 #111e3c,-2px 2px 0 #111e3c,2px -2px 0 #111e3c,-2px -2px 0 #111e3c}#d-center.elim #d-sub{font-size:11px;padding:5px 9px}#d-center.top #d-big{font-size:clamp(28px,4vw,48px)}#d-big.sm{font-size:clamp(22px,3.2vw,36px);text-shadow:0 3px 0 #111e3c,2px 2px 0 #111e3c,-2px 2px 0 #111e3c,2px -2px 0 #111e3c,-2px -2px 0 #111e3c}#d-center.sm #d-sub{font-size:11px;padding:5px 9px}
@@ -8387,7 +8390,7 @@ function flushGlass(){while(TGQ.length){const q=TGQ.shift();if(q.b.alive)breakPr
 const freeEdge=f=>!!M.edgeDrop&&(!!f.edgeFall||!f.bot||!!(f.ai&&f.ai.reck)||f.thrownT>0||(!f.grounded&&(S.players!=='ffa'||!f.ai||f.ai.airLoose))/* free for all: a bot mid-jump is only sometimes let over the edge */||!!(f.finishing&&f.finishing.fall));
 /* ---------- Man Down: you went through the glass and off the edge. Slow motion, a camera out over the drop, and you lose the round ---------- */
 function startEdgeFall(f){const ax=Math.abs(f.pos.x)/18.5>Math.abs(f.pos.z)/22.5,n=M.edgeN?M.edgeN(f.pos.x,f.pos.z):ax?new V3(Math.sign(f.pos.x),0,0):new V3(0,0,Math.sign(f.pos.z));
-  const out=f.vel.x*n.x+f.vel.z*n.z;if(out<3.2){f.vel.x+=n.x*(3.2-out);f.vel.z+=n.z*(3.2-out);}
+  const out=f.vel.x*n.x+f.vel.z*n.z;if(out<5.5){f.vel.x+=n.x*(5.5-out);f.vel.z+=n.z*(5.5-out);}/* enough push to clear the tower face, so the tumbling body doesn't scrape through the wall below */
   f.edgeFall={t:0,rx:0,spin:(Math.random()<.5?-1:1)*rnd(4.5,6.5)};f.onLadder=null;f.ads=false;f.reloadT=0;f.crouchOn=false;f.downed=false;
   /* Free for all: a bot going over the edge gets no cinematic (no camera cut, slow motion or Man Down banner), just the falling sound; its kill-feed line has a red outline */
   if(S.players==='ffa'&&f!==ME){sfx('whiz',null,{rate:.42,vol:.8});sfx('glboom',null,{rate:.5,vol:.55});return;}

@@ -104,6 +104,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Smoother Man Down (25 Nov 2026)** – the Man Down banner no longer jitters: the dark red edges just fade in and out and the words punch in once and drift slightly (no blur, shaking or flicker). Going over the edge now pushes you clear of the tower, so your body tumbles away from the wall instead of scraping through it.
+
 **Shop glow removed (25 Nov 2026)** – the yellow halo and the yellow light that shone down from above the shop's SHOP sign are gone; the sign itself is still lit.
 
 **Mines after you die (24 Nov 2026)** – in modes where you respawn, any mines you laid before you died quietly disappear 3 seconds after you come back; mines you lay after respawning stay as normal.

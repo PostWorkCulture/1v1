@@ -124,6 +124,7 @@ Last updated: 2026-11-24
 
 ### 2026-11-25
 - Weapon previews: the loadout cards and the big spinning showcase now share one photo studio, so a gun always looks the same in both (the chrome Vanguard showed silver on its card but black in the showcase). Vanguard's front grip is satin silver.
+- Man Down: banner animation smoothed (vignette just fades; the words punch in once, no blur, shake or flicker); the body is pushed clear of the tower face so it doesn't scrape through it.
 - Shops: no yellow halo glow or yellow light above the shop; just the lit SHOP sign.
 
 ### 2026-11-24

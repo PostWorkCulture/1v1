@@ -48,7 +48,7 @@ Last updated: 2026-11-24
 
 ### Modes
 - Duels (1v1, 2v2, Free for all), Rumble. 1v1 and 2v2 always use your own loadout (the Simple rules were removed on 24 Nov).
-- Free for all: 2, 4, 6 or 8 players; timed 3/5/10 min, most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
+- Free for all: 2, 4, 6 or 8 players; timed 2/4/6 min (Pete, 25 Nov), most kills wins; leaderboard shows top 3; bot falls off get no Man Down cinematic.
 - Rumble: bats only, no armour; Speed Shoes pickup appears 10 s into each round.
 - Free for all: straight kills, no downed state (1v1/2v2 keep downs and revives).
 - Every gun is allowed on every map (no small-map weapon limits). The Reaper, Titan .50 and Phantom snipers stay in the code but aren't offered anywhere until Pete picks which, if any, to bring in.
@@ -123,6 +123,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-25
+- Free-for-all match length: 2, 4 or 6 minutes (was 3, 5 or 10); 4 by default, Quick start uses 4.
 - AKM is "Graffiti" (Pete picked from 4 concepts): spray-tagged receiver, dust cover and mag (BANG / RAW / AK!), white paint-splattered furniture with paint drips and LOL stickers, black optic riser, sights and barrel, chrome bolt, yellow sight ring; pink crosshair and card glow. Keeps the live round counter and the muzzle that glows hot; no gold trim or engraving on it.
 - Armour plate pickups: smaller ceramic trauma plate (option 1 of 4): curved shooter's-cut, charcoal face, blue kevlar-weave edge, two glowing chevrons, LVL IV stamp; about 0.36 x 0.46 m (was a 0.62 x 0.78 blue slab); smaller floor ring.
 - Weapon previews: the loadout cards and the big spinning showcase now share one photo studio, so a gun always looks the same in both (the chrome Vanguard showed silver on its card but black in the showcase). Vanguard's front grip is satin silver.
@@ -168,7 +169,7 @@ Last updated: 2026-11-24
 - Sky High middle cover raised to 1.8 m (hidden crouched, shoot over standing); sculpture plinths 1.4 m.
 - SMG sights (MP5, Vector, UMP) get a blue dot.
 - Sky High rebuilt as an infinity-pool roof terrace: helipad, chopper (model and rotor sound), stairwell buildings, tanks and skylights removed; wooden-ended glass pool, raised sun decks with solid cover, teak cover walls.
-- Mode & map screen: options in one row across the top with Quick start first (Free for all, 4 players, 5 min, random map and weapons), map picker full width below.
+- Mode & map screen: options in one row across the top with Quick start first (Free for all, 4 players, 4 min, random map and weapons), map picker full width below.
 - Flash Bang removed completely (lethal, projectile, model, icon, bot use); lethals are Grenade, Cluster, Mine and Stun.
 - Finishing moves removed completely: no F key, binding or phone Finish button, no finisher camera, sounds or effects; downed players are shot out or bleed out, and bots shoot downed players.
 - Street Life: the hospital became the yellow ARCADE (game machines on both floors, star signs, a star on the ridge); both buildings turned sideways and made bigger; the home's brown wood replaced by bright boards (a colour per wall, black frame kept); fewer, bigger glass panes; deep green plain ground outside the fence; the shop moved to the south end of the road against the fence.

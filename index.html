@@ -2108,8 +2108,9 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
         <div class="dzb-low"><div class="dz-rlog" id="dd-rlog"></div><div class="dd-side"><div class="xpbar"><b id="dx-lvl">Level 1</b><span class="xpt"><i style="transform:scaleX(0)" id="dx-bar"></i></span><span id="dx-txt" class="xpn">0/100 XP</span></div><div class="newbest" id="dd-unlock"></div></div></div>
         <div class="btns dz-btns">
         <button class="btn primary" id="dd-again">Rematch</button>
-        <button class="btn" id="dd-map">Change map</button>
-        <button class="btn" id="dd-load">Change loadout</button>
+        <button class="btn" id="dd-nextmap">Next map</button>
+        <button class="btn" id="dd-map" hidden>Change map</button>
+        <button class="btn" id="dd-load" hidden>Change loadout</button>
         <button class="btn" id="dd-home">Menu</button>
         <button class="btn dd-vid" id="dd-clips" hidden title="Clips from this game" aria-label="Clips from this game" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="2.5" fill="currentColor"/><path d="M17 10.2 21.5 7.5v9L17 13.8z" fill="currentColor"/><path d="M7.6 9.6v4.8l4-2.4z" fill="#14161c"/></svg><b id="dd-clipn"></b></button><span class="dd-auto" id="dd-auto"></span>
       </div>
@@ -10685,11 +10686,13 @@ function openSpots(){if(M.spots&&M.spots.id===M.id)return M.spots.list;const g=M
     list.push({x,z,y,yaw:Math.atan2(M.center.x-x,M.center.z-z),open:1});}
   M.spots={id:M.id,list};return list;}
 const spotFree=p=>!(M.movers||[]).some(b=>p.x>b.x0-1&&p.x<b.x1+1&&p.z>b.z0-1&&p.z<b.z1+1)&&!(M.blds||[]).some(B=>B.stage===2&&p.x>B.x0-1&&p.x<B.x1+1&&p.z>B.z0-1&&p.z<B.z1+1);
+/* Pete 25 Nov: nobody starts (or respawns) in plain sight of another player. spotSeen(s,o): true if eyes at s can see o's head or chest, or o's eyes can see s's chest */
+function spotSeen(s,o){const sy=s.y||0,oy=o.y||0;for(const [h1,h2] of [[1.6,1.6],[1.6,1],[1,1.6]])if(los(new V3(s.x,sy+h1,s.z),new V3(o.x,oy+h2,o.z)))return true;return false;}
 function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1-b.x0,b.z1-b.z0)*.5),d=(p,q)=>Math.hypot(p.x-q.x,p.z-q.z),rp=a=>a[Math.floor(Math.random()*a.length)];
   /* a different start every round: nobody begins within 7 m of where they started in either of the last two rounds on this map (if the map has room) */
   const H=(S.spHist&&S.spHist.map===S.map)?S.spHist:(S.spHist={map:S.map,h:[]}),recent=(i,s)=>H.h.slice(-2).some(r=>r[i]&&d(r[i],s)<7),
     keep=r=>{H.h.push(r.map(s=>s&&{x:s.x,z:s.z}));if(H.h.length>4)H.h.shift();return r;};
-  if(S.players==='ffa'){const n=FS.length,cand=(sp.length>=n+2?sp:sp.concat(openSpots())).filter(spotFree);const out=[rp(cand)];while(out.length<n){let best=null,bv=-1;for(const s of cand){if(out.includes(s))continue;const m=Math.min(...out.map(o=>d(o,s)))*(s.open?.8:1);if(m>bv){bv=m;best=s;}}out.push(best||rp(cand));}
+  if(S.players==='ffa'){const n=FS.length,cand=(sp.length>=n+2?sp:sp.concat(openSpots())).filter(spotFree);const out=[rp(cand)];while(out.length<n){let best=null,bv=-1;for(const s of cand){if(out.includes(s))continue;let m=Math.min(...out.map(o=>d(o,s)))*(s.open?.8:1);if(out.some(o=>spotSeen(s,o)))m*=.02;if(m>bv){bv=m;best=s;}}out.push(best||rp(cand));}
     out.sort(()=>Math.random()-.5);for(let i=0;i<out.length;i++)if(recent(i,out[i])){for(let j=0;j<out.length;j++)if(j!==i&&!recent(i,out[j])&&!recent(j,out[i])){[out[i],out[j]]=[out[j],out[i]];break;}}
     for(let i=0;i<out.length;i++)if(wasHere(FS[i],out[i])){let done=false;for(let j=0;j<out.length&&!done;j++)if(j!==i&&!wasHere(FS[i],out[j])&&!wasHere(FS[j],out[i])){[out[i],out[j]]=[out[j],out[i]];done=true;}
       if(!done){let best=null,bv=-1;for(const s of cand){if(out.includes(s)||wasHere(FS[i],s))continue;const m=Math.min(...out.filter((_,k)=>k!==i).map(o=>d(o,s)));if(m>bv){bv=m;best=s;}}if(best)out[i]=best;}}
@@ -10701,7 +10704,7 @@ function pickSpawns(){const sp=M.spawns,b=M.bounds,lim=Math.min(45,Math.max(b.x1
   let pairs=[];for(const p of pool)for(const q of pool)if(p!==q&&d(p,q)>lim)pairs.push([p,q]);if(!pairs.length)for(const p of pool)for(const q of pool)if(p!==q)pairs.push([p,q]);
   pairs.sort(()=>Math.random()-.5);const two=S.players==='2v2';{const fresh=pairs.filter(([p,q])=>!recent(0,p)&&!recent(two?2:1,q));if(fresh.length)pairs=fresh;}let best=null,bv=1e9;
   {const nw=pairs.filter(([p,q])=>!wasHere(FS[0],p)&&!wasHere(FS[two?2:1],q));if(nw.length)pairs=nw;}
-  for(const [p,q] of pairs.slice(0,40)){const r=two?teamSpots(p,q):[p,q];if(r.some((x,k)=>wasHere(FS[k],x))&&pairs.length>1&&best)continue;const v=two?seen([r[0],r[1]],[r[2],r[3]]):seen([p],[q]);if(v<bv||(best&&best.some((x,k)=>wasHere(FS[k],x))&&!r.some((x,k)=>wasHere(FS[k],x)))){bv=v;best=r;}if(v===0&&!r.some((x,k)=>wasHere(FS[k],x)))break;}
+  for(const [p,q] of pairs.slice(0,160)){const r=two?teamSpots(p,q):[p,q];if(r.some((x,k)=>wasHere(FS[k],x))&&pairs.length>1&&best)continue;const v=two?seen([r[0],r[1]],[r[2],r[3]]):seen([p],[q]);if(v<bv||(best&&best.some((x,k)=>wasHere(FS[k],x))&&!r.some((x,k)=>wasHere(FS[k],x)))){bv=v;best=r;}if(v===0&&!r.some((x,k)=>wasHere(FS[k],x)))break;}
   /* 1v1: nobody starts already looking at the other player. Each turns 100-140 degrees off the line to their opponent, to whichever side has
      more open space in front, so you have to turn and find them */
   if(!two&&best){const [p,q]=best,turn=(a,o)=>{const toO=Math.atan2(o.x-a.x,o.z-a.z),off=(100+Math.random()*40)*Math.PI/180,y=a.y||0;let pick=null,far=-1;
@@ -10742,7 +10745,7 @@ function ffaN(){return FFA_NS.includes(+S.ffaN)?+S.ffaN:+S.ffaN>8?8:4;}
 // spawn point furthest from everyone still standing
 /* nobody spawns where they last spawned: a spot within SAME_SPOT metres of a fighter's previous spawn on this map is never used for them while another spot exists */
 const SAME_SPOT=6,wasHere=(f,s)=>!!(f&&f.lastSpawn&&f.lastSpawn.map===S.map&&s&&Math.hypot(f.lastSpawn.x-s.x,f.lastSpawn.z-s.z)<SAME_SPOT);
-function dmSpawn(f){let best=null,bv=-1;let cand=(FS.length>4?M.spawns.concat(openSpots()):M.spawns).filter(spotFree);if(!cand.length)cand=M.spawns;{const nw=cand.filter(s=>!wasHere(f,s));if(nw.length)cand=nw;}for(const sp of cand){let m=1e9;for(const o of FS)if(o!==f&&o.alive)m=Math.min(m,Math.hypot(o.pos.x-sp.x,o.pos.z-sp.z));if(m>bv){bv=m;best=sp;}}return best||M.spawns[0];}
+function dmSpawn(f){let best=null,bv=-1;let cand=(FS.length>4?M.spawns.concat(openSpots()):M.spawns).filter(spotFree);if(!cand.length)cand=M.spawns;{const nw=cand.filter(s=>!wasHere(f,s));if(nw.length)cand=nw;}for(const sp of cand){let m=1e9;for(const o of FS)if(o!==f&&o.alive)m=Math.min(m,Math.hypot(o.pos.x-sp.x,o.pos.z-sp.z));if(FS.some(o=>o!==f&&o.alive&&spotSeen(sp,o.pos)))m*=.02;if(m>bv){bv=m;best=sp;}}return best||M.spawns[0];}
 function dmRespawn(f){setTimeout(()=>sfx('respawn',f,{range:20}),0);for(const m of mines)if(m.f===f&&!m.gone)m.gone=S.t+3;/* Pete 24 Nov: mines you laid before you died vanish 3 s after you respawn */f.respawnT=0;if(f.finishing){for(const o of f.finishing.obj||[])scene.remove(o);if(f.finishing.fx==='Disco')hemi.color.set(ENV.hemi[0]);f.finishing=null;}f.ch.root.rotation.set(0,0,0);if(f!==ME)applyStyle(f);resetFighter(f,dmSpawn(f));f.lastHurt=S.t;/* no coloured-block burst on respawn (removed at the user's request: don't add it back) */if(f===ME)center('','');lbDirty=1;}
 function dmTick(dt){if(!isDM()||S.state!=='fight')return;for(const f of FS)if(!f.alive&&f.respawnT>0&&(!f.finishing||f.finishing.t>3)){f.respawnT-=dt;if(f.respawnT<=0)dmRespawn(f);}}
 function dmWin(w){if(NET.role==='client'&&!NET.replay)return;if(S.state!=='fight')return;S.state='roundEnd';S.t0=RP.round.length?4.5:3.2;for(const f of FS)S.score[f.team]=f.k||0;const won=w===ME;S.matchOver=true;if(won)markWinningClip(true);S.lastWin=w?w.team:-1;if(!won)setTimeout(()=>sfx('lose'),450);
@@ -10988,12 +10991,12 @@ function matchEnd(){if(NET.role==='client'&&!NET.replay)return;S.state='done';$(
    const aw=[['Most kills',best(f=>f.k||0),v=>v],['Most assists',best(f=>f.as||0),v=>v],['Best accuracy',best(accOf),v=>Math.round(v*100)+'%']];
    $('dd-awards').innerHTML=rows.length>1?aw.map(([l,r,fmtv])=>`<div>${r?av(r[0]):'<span class="dzb-av"></span>'}<span><span class="lbl">${l}</span><b>${r?esc(nm(r[0]))+' · '+fmtv(r[1]):'–'}</b></span></div>`).join(''):'';}
   const nu=S.newUnlocks||[];$('dd-best')&&($('dd-best').textContent='');const nb=$('dd-unlock');nb.textContent=nu.length?'Unlocked: '+nu.join(', '):'';xpBar('dx');S.newUnlocks=[];
-  /* after a win the choice is just Rematch or Menu (back to the main menu) */for(const id of ['dd-map','dd-load','dd-clips'])if($(id))$(id).hidden=!!won;
+  /* Pete 25 Nov: after every match, win or lose, the choice is Rematch, Next map or Menu */for(const id of ['dd-map','dd-load','dd-clips'])if($(id))$(id).hidden=true;$('dd-nextmap').hidden=NET.role==='client';
   $('duel-hud').hidden=true;$('duel-done').hidden=false;{const m=document.querySelector('#duel-done .dzb-main');if(m)m.scrollTop=0;}$('dd-again').focus({preventScroll:true});renderRecord();renderDuelMenu();startAutoHome(won);}
-// no choice on the end-of-match bar within 10 s (20 s after a win): back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
-const AUTO_HOME=10;let autoHomeT=null;
+// no choice on the end-of-match bar within 60 s: back to the home screen. Any click or key on the bar (Rematch, View Clips, a replay) cancels it.
+const AUTO_HOME=60;/* Pete 25 Nov: one minute on the results before going home by itself */let autoHomeT=null;
 function stopAutoHome(){if(autoHomeT){clearInterval(autoHomeT);autoHomeT=null;}const e=$('dd-auto');if(e)e.textContent='';}
-function startAutoHome(won){stopAutoHome();const end=performance.now()+AUTO_HOME*(won?2:1)*1000;const tick=()=>{const left=Math.ceil((end-performance.now())/1000);if($('duel-done').hidden||S.state!=='done'||S.replayOpen){stopAutoHome();return;}if(left<=0){stopAutoHome();leave();return;}$('dd-auto').textContent=`Home in ${left}s`;};tick();autoHomeT=setInterval(tick,250);}
+function startAutoHome(won){stopAutoHome();const end=performance.now()+AUTO_HOME*1000;const tick=()=>{const left=Math.ceil((end-performance.now())/1000);if($('duel-done').hidden||S.state!=='done'||S.replayOpen){stopAutoHome();return;}if(left<=0){stopAutoHome();leave();return;}$('dd-auto').textContent=`Home in ${left}s`;};tick();autoHomeT=setInterval(tick,250);}
 $('duel-done').addEventListener('pointerdown',stopAutoHome);$('duel-done').addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'||e.code==='Tab')stopAutoHome();});
 const nextUnlock=()=>FX_XP.find(x=>x>(S.xp||0));
 const lvlOf=x=>Math.floor(x/100)+1;
@@ -12968,7 +12971,10 @@ $('m-opt-btn').addEventListener('click',e=>{e.stopPropagation();menuOpts();});
 $('duel-pause').addEventListener('click',e=>{if(!menuOptsOn())return;if(e.target===e.currentTarget){menuOptsClose();return;}if(e.target.closest('[data-go="main"]')){e.stopPropagation();menuOptsBack();}},true);
 document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!menuOptsOn()||(typeof KB!=='undefined'&&KB.cap))return;menuOptsBack();});
 $('dp-leave').addEventListener('click',leave);
-$('dd-again').addEventListener('click',startMatch);$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});/* Change map / Change loadout: back to just that menu screen with everything else kept, then straight into the next match.
+$('dd-again').addEventListener('click',startMatch);
+/* Next map (Pete 25 Nov): same rules, loadout and players, on the map to the right of the one you just played in the menu's map picker (wrapping round to the first) */
+$('dd-nextmap').addEventListener('click',()=>{const L=mapList().map(k=>[k,MAPS[k]]).sort(mapRank).map(x=>x[0]);if(!L.length)return startMatch();const i=L.indexOf(S.map),nx=L[(i+1)%L.length];
+  if(S.randMap)S.randPre=nx;else S.map=nx;startMatch();});$('dd-home').addEventListener('click',()=>{$('d-rend').hidden=true;leave();});/* Change map / Change loadout: back to just that menu screen with everything else kept, then straight into the next match.
    Change map: the map screen's button reads Play. Change loadout: Start, with a small Play same map / Play random map choice */
 $('dd-load').addEventListener('click',()=>{leave();S.qr='load';S.qrRand=false;menuStep('loadout');renderDuelMenu();});
 $('dd-map').addEventListener('click',()=>{leave();S.qr='map';menuStep('setup');renderDuelMenu();});

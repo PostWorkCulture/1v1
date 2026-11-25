@@ -5585,7 +5585,7 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
         const wd=new THREE.Mesh(eg,conc(dk));wd.castShadow=wd.receiveShadow=true;g.add(wd);
         for(let i=1;i<5;i++){const st=new THREE.Mesh(new THREE.BoxGeometry(.25,.03,W*.8),new THREE.MeshBasicMaterial({color:'#ffffff'}));const u=RL*i/5;st.position.set(u,(H-.1)*(1-u/RL)+.02,0);g.add(st);}}});
   /* TRAPDOORS (24 Nov): any one of the floor's 5 m slabs, or any 5 m slab of either raised side walkway (never the ramps or the middle cross,
-     so the middle isn't a safe spot either), can flash amber 3 times (1.5 s) and then drop open: anyone standing on it falls down the shaft and
+     so the middle isn't a safe spot either), can flash amber 3 times (3 s warning, 25 Nov; was 1.5 s) and then drop open, with a glowing red square outline round the hole while it's open: anyone standing on it falls down the shaft and
      is out (counts as a fall, credited to whoever last hurt them). It stays open 3.5 s, then shuts flush with the floor again, so you can't tell
      where the next one will be. A new one starts every 1.5-2.8 s (about 1 in 4 on the walkways, so they aren't a safe hiding place); never
      under a pillar, ramp, drum or the shop, never beside another open one, never in front of a portal. The host picks them (sent in the
@@ -5593,18 +5593,19 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
   {const T=5,traps=[];
     const hT=canvasTex(64,64,(c,w,h)=>{const g=c.createRadialGradient(w/2,h/2,4,w/2,h/2,w*.72);g.addColorStop(0,'#000000');g.addColorStop(.62,'#05060a');g.addColorStop(1,'#2b2e36');c.fillStyle=g;c.fillRect(0,0,w,h);c.strokeStyle='#8d929c';c.lineWidth=3;c.strokeRect(1.5,1.5,w-3,h-3);});
     const tg=new THREE.PlaneGeometry(T-.1,T-.1);tg.rotateX(-Math.PI/2);const hg=new THREE.PlaneGeometry(T-.04,T-.04);hg.rotateX(-Math.PI/2);
-    const sg=new THREE.BoxGeometry(T-.04,30,T-.04);sg.translate(0,-15,0);const sm=new THREE.MeshBasicMaterial({color:'#030305',side:THREE.BackSide}),hm=new THREE.MeshBasicMaterial({map:hT});
+    const redE=new THREE.MeshBasicMaterial({color:'#ff2a1a',toneMapped:false}),sg=new THREE.BoxGeometry(T-.04,30,T-.04);sg.translate(0,-15,0);const sm=new THREE.MeshBasicMaterial({color:'#030305',side:THREE.BackSide}),hm=new THREE.MeshBasicMaterial({map:hT});
     for(let i=0;i<6;i++){const m=new THREE.MeshStandardMaterial({color:'#d9dce1',emissive:'#ffb030',emissiveIntensity:0,roughness:.45,metalness:.1});
-      const tile=new THREE.Mesh(tg,m),hole=new THREE.Mesh(hg,hm),shaft=new THREE.Mesh(sg,sm);for(const o of [tile,hole,shaft]){o.visible=false;o.userData.dyn=1;M.group.add(o);}tile.receiveShadow=true;
-      traps.push({tile,hole,shaft,m,x:0,z:0,y:0,st:0,t:0});}
+      const tile=new THREE.Mesh(tg,m),hole=new THREE.Mesh(hg,hm),shaft=new THREE.Mesh(sg,sm),edge=new THREE.Group();for(const [w,d,dx,dz] of [[T+.3,.15,0,T/2],[T+.3,.15,0,-T/2],[.15,T,T/2,0],[.15,T,-T/2,0]]){const e=new THREE.Mesh(B.boxGeo(w,.05,d),redE);e.position.set(dx,0,dz);edge.add(e);}/* the red square outline */
+      for(const o of [tile,hole,shaft,edge]){o.visible=false;o.userData.dyn=1;M.group.add(o);}tile.receiveShadow=true;
+      traps.push({tile,hole,shaft,edge,m,x:0,z:0,y:0,st:0,t:0});}
     /* the slabs that can open: the floor between the walkways (8 x 14) and the walkway decks (4.4 m up, one slab wide, four long) */
     const floorSq=[],walkSq=[];for(let x=-17.5;x<=17.5;x+=5)for(let z=-32.5;z<=32.5;z+=5)floorSq.push([x,z,0]);for(const sx of [1,-1])for(let z=-7.5;z<=7.5;z+=5)walkSq.push([sx*22.5,z,4.4]);
     const h=T/2,free=(x,z,y)=>{for(const b of M.boxes)if(!(y&&b.prop==='glass')/* the walkway's own edge glass doesn't count */&&b.y1>y+.1&&b.y0<y+2&&b.x1>x-h&&b.x0<x+h&&b.z1>z-h&&b.z0<z+h)return false;
       for(const o of traps)if(o.st&&o.y===y&&Math.abs(o.x-x)<T*1.5&&Math.abs(o.z-z)<T*1.5)return false;
       if(!y)for(const [px,pz] of [[10,15.9],[-10,-15.9]])if(Math.abs(px-x)<T&&Math.abs(pz-z)<T)return false;
       return true;};
-    const place=(o,x,z,y)=>{o.x=x;o.z=z;o.y=y;o.tile.position.set(x,y+.02,z);o.hole.position.set(x,y+.025,z);o.shaft.position.set(x,y+.01,z);};
-    const setSt=(o,st)=>{o.st=st;o.t=0;o.tile.visible=st===1;o.hole.visible=o.shaft.visible=st===2;o.m.emissiveIntensity=0;if(st===2)sfx('land',{x:o.x,y:o.y,z:o.z},{rate:.55,vol:.9,range:30});};
+    const place=(o,x,z,y)=>{o.x=x;o.z=z;o.y=y;o.tile.position.set(x,y+.02,z);o.hole.position.set(x,y+.025,z);o.edge.position.set(x,y+.03,z);o.shaft.position.set(x,y+.01,z);};
+    const setSt=(o,st)=>{o.st=st;o.t=0;o.tile.visible=st===1;o.hole.visible=o.shaft.visible=o.edge.visible=st===2;o.m.emissiveIntensity=0;if(st===2)sfx('land',{x:o.x,y:o.y,z:o.z},{rate:.55,vol:.9,range:30});};
     let next=4;M.traps=traps;
     M.trapSet=a=>{for(let i=0;i<traps.length;i++){const o=traps[i],q=a[i];if(!q){if(o.st)setSt(o,0);continue;}if(q[0]!==o.x||q[1]!==o.z||q[2]!==o.y)place(o,q[0],q[1],q[2]);if(q[3]!==o.st)setSt(o,q[3]);o.t=q[4];}};
     M.onReset.push(()=>{next=4;for(const o of traps)setSt(o,0);});
@@ -5612,7 +5613,7 @@ function arenaMap(){const X=25,Z=35;/* 50 x 70 m (Big size) */M.bounds={x0:-X,x1
       if(host&&(next-=dt)<=0){next=1.5+Math.random()*1.3;const o=traps.find(q=>!q.st);
         if(o){const L=Math.random()<.25?walkSq:floorSq;for(let tr=0;tr<40;tr++){const c=L[Math.floor(Math.random()*L.length)];if(free(c[0],c[1],c[2])){place(o,c[0],c[1],c[2]);setSt(o,1);break;}}}}
       for(const o of traps){if(!o.st)continue;o.t+=dt;
-        if(o.st===1){o.m.emissiveIntensity=(o.t%.5)<.25?1.5:0;if(host&&o.t>=1.5)setSt(o,2);}/* three flashes, then it drops */
+        if(o.st===1){o.m.emissiveIntensity=(o.t%1)<.6?1.5:0;if(host&&o.t>=3)setSt(o,2);}/* three slow flashes over 3 s, then it drops */
         else if(host){for(const f of FS){if(!f.alive||f.finishing||f.edgeFall||f.onLadder||Math.abs(f.pos.y-o.y)>.3||Math.abs(f.pos.x-o.x)>h-.1||Math.abs(f.pos.z-o.z)>h-.1)continue;trapFall(f,o);}
           if(o.t>3.5)setSt(o,0);}}});}
   arenaStadium(X,Z);

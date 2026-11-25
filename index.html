@@ -7398,20 +7398,20 @@ function buildShop(x,z,gy,k=1,qf){const c=M.center||{x:0,z:0},dx=c.x-x,dz=c.z-z,
   /* pick-up tray with a flap */
   mesh(RB(W*.72,.46,.1,.04),dark,-.06*k,.34,D/2+.03);mesh(new THREE.BoxGeometry(W*.66,.32,.04),new THREE.MeshStandardMaterial({color:'#2b2d33',roughness:.25,metalness:.5,transparent:true,opacity:.85}),-.06*k,.36,D/2+.085);
   mesh(new THREE.BoxGeometry(W*.3,.04,.06),chrome,-.06*k,.53,D/2+.1);
-  /* SHOP lightbox on top: glows bright, with a halo and a light that washes the ground */
+  /* SHOP lightbox on top */
   const signM=new THREE.MeshBasicMaterial({map:T.sign,toneMapped:false,color:new THREE.Color(1.25,1.25,1.25)}),capM=new THREE.MeshBasicMaterial({color:'#ffc61a',toneMapped:false});
   const sign=new THREE.Mesh(new THREE.BoxGeometry(W*.98,.62,.34),[capM,capM,capM,capM,signM,signM]);sign.position.set(0,H+.6,0);root.add(sign);
   mesh(new THREE.BoxGeometry(W*.2,.16,.2),dark,-W*.3,H+.2,0);mesh(new THREE.BoxGeometry(W*.2,.16,.2),dark,W*.3,H+.2,0);
   const haloM=new THREE.MeshBasicMaterial({map:T.halo,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
-  const halos=[];for(const sz of [1,-1]){const h=new THREE.Mesh(new THREE.PlaneGeometry(W*2.4,2.0),haloM);h.position.set(0,H+.6,sz*.2);if(sz<0)h.rotation.y=Math.PI;root.add(h);halos.push(h);}
-  const lamp=new THREE.PointLight('#ffd27a',14,12,1.6);lamp.position.set(0,H+.3,.9);root.add(lamp);
+  /* Pete 25 Nov: no yellow halo or yellow light above the shop; just the lit SHOP sign */
+  
   root.traverse(o=>{o.userData.dyn=1;});
   /* one invisible solid block for the cabinet */
   box(x,gy,z,(ax?D:W)+.04,H+.95,(ax?W:D)+.04,'#c99a5b',{mat:INVIS,edges:false,shadow:false});
   const pad=new THREE.Mesh(new THREE.RingGeometry(1.3,3,48),new THREE.MeshBasicMaterial({color:'#ffc61a',transparent:true,opacity:.35,depthWrite:false}));pad.rotation.x=-Math.PI/2;pad.position.set(x,gy+.03,z);pad.visible=false;/* no yellow circle under the shop */M.group.add(pad);
   const drops=[],white=new THREE.Color('#ffffff');let lastT=0;
   const sh={x,z,y:gy,pad,sign,glowMat:haloM,press:it=>{const B=btns[it&&it.id]||btns.health;B.t0=lastT;const col=it&&it.col||'#ffffff';const m=new THREE.Mesh(new THREE.BoxGeometry(.24,.18,.1),new THREE.MeshStandardMaterial({color:col,roughness:.4,metalness:.3,emissive:col,emissiveIntensity:.25}));m.position.set(-.06*k+(Math.random()-.5)*.5,.62,D/2+.15);root.add(m);drops.push({m,t0:lastT});},
-    tick:t=>{lastT=t;const p=.85+.15*Math.sin(t*3.1)+.05*Math.sin(t*17);lamp.intensity=14*p;haloM.opacity=.75+.25*Math.sin(t*3.1);signM.color.setScalar(1.15+.2*p);
+    tick:t=>{lastT=t;const p=.85+.15*Math.sin(t*3.1)+.05*Math.sin(t*17);signM.color.setScalar(1.15+.2*p);
       for(const id in btns){const B=btns[id],a=B.t0==null?9:t-B.t0,on=a>=0&&a<.35;B.b.position.z=B.z-(on?.025:0);B.m.color.copy(on?white:B.c);}
       for(let i=drops.length-1;i>=0;i--){const d=drops[i],a=t-d.t0;if(a<0||a>1.6){root.remove(d.m);d.m.geometry.dispose();d.m.material.dispose();drops.splice(i,1);continue;}const u=Math.min(1,a/.35);d.m.position.y=.62-.3*u*u;d.m.rotation.z=u*.6;}}};
   (M.shops||(M.shops=[])).push(sh);if(!M.shop)M.shop=sh;}

@@ -111,7 +111,7 @@ Last updated: 2026-11-24
 - Characters: Volt, Zip, Hook, Xero, Pyro, Blaze, Thor, Isaac, Blink, Angel, Ice Maiden, Gorillaz, Jet, Murda Medic, Spacebot, Crusty, Dracz, Starscreen, Anti Hero (the last eight removed 24 Nov). Character abilities.
 - Weapons/items: the Flash Bang (removed 24 Nov), FAMAS, AUG, SCAR-H, Shotty Horror, Uzi, P90, Sting and Kar98 (cut on 24 Nov), the Simple rules (Normal/Simple row), the secondary weapon slot and two-gun loadouts, the Knife, loadout tabs (Primary/Secondary/Lethal), Snipers only mode, small-map weapon limits, building walls (Q), the Sentry (V), the separate shop-grenade key (T), stamina, the weapon-swap delay, fists (and boxing gloves, punch poses, first-person fists, the bat pickup), the reload button/R key, slower per-gun ADS times, .44 Magnum, Thumper, Ninja Stars, Stim, HeartBeat, Gold Armour (the always-on 30-armour lethal), auto weapon switch, Extreme bots, Health/Stamina in the shop, Tripo market-stall shop, grab/carry mechanic.
 - Finishers: all finishing moves (removed 24 Nov: Pancake, Heartbreaker, Roast, Combat, the F key and the Finish button), Knockout, Piledriver, Clear!, Overcharge, Dog pile, Sky drop, Hot potato, Ice sculpture, Sawn in half, Shadow grab, Blur rush, Overgrown, Gone fishing, signature finishers.
-- Effects: stun stars over the head (removed 24 Nov), floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
+- Effects: the yellow halo/light above shops (removed 25 Nov), stun stars over the head (removed 24 Nov), floating yellow/pink butterflies, confetti, coloured particle squares, black zig-zag cracks, building smoke, green downed smoke, revive glow, respawn burst, white finisher flash, cartoon outlines, clouds.
 - Beach Please: the jetties and glass promenade walkway (removed 24 Nov).
 - Arena: the live floor's marked hazard panels that shocked (replaced by unmarked trapdoors, 24 Nov) and the 6-pillar layout.
 - Street Life: the 4 smaller side buildings, the big buildings' middle floor, the hospital theme (red, crosses, medical kit, helipad) and the home's brown cedar (all removed 24 Nov).
@@ -120,6 +120,9 @@ Last updated: 2026-11-24
 ---
 
 ## Part 3 – Daily log (newest first)
+
+### 2026-11-25
+- Shops: no yellow halo glow or yellow light above the shop; just the lit SHOP sign.
 
 ### 2026-11-24
 - Mines laid before you die disappear 3 s after you respawn (mines laid after respawning stay).

@@ -104,6 +104,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Shop glow removed (25 Nov 2026)** – the yellow halo and the yellow light that shone down from above the shop's SHOP sign are gone; the sign itself is still lit.
+
 **Mines after you die (24 Nov 2026)** – in modes where you respawn, any mines you laid before you died quietly disappear 3 seconds after you come back; mines you lay after respawning stay as normal.
 
 **Sights (24 Nov 2026)** – two sights only: the ARs (AKM, M4) wear the twin steel-blade sight and the SMGs (MP5, Vector, UMP, with a blue dot) and the Dual Pistols (red dot) the round ring sight, on the gun in the world, in the menu previews and when aiming. The UMP's old micro red dot and the Vector's holo box were removed; the Dual Pistols keep their twin aim view.

@@ -8732,6 +8732,23 @@ function breakProp(b,at){if(!b.alive)return;if(b.mesh&&!b.sc0)b.sc0=b.mesh.scale
    from the spawns by walking, climbing stairs, dropping and jumping. A pool of those hard spots is kept; plates stand in different
    areas of the map from each other, and one that's taken comes back 60 s later somewhere else in the pool (away from where it was and
    from the other plates). They're shuffled to fresh spots at every round start. */
+/* armour plate pickup (Pete 25 Nov, option 1): a small ceramic trauma plate, shooter's cut (clipped top corners), matte charcoal face,
+   blue kevlar-weave edge, two glowing blue chevrons and a LVL IV stamp. About 0.36 x 0.46 m (the old blue slab was 0.62 x 0.78) */
+let PLATE_KIT=null;
+function plateModel(){const T=THREE;if(!PLATE_KIT){
+    const cut=(w,h,c)=>{const s=new T.Shape();s.moveTo(-w/2,-h/2);s.lineTo(w/2,-h/2);s.lineTo(w/2,h/2-c);s.lineTo(w/2-c,h/2);s.lineTo(-w/2+c,h/2);s.lineTo(-w/2,h/2-c);s.closePath();return s;};
+    const ext=(sh,d,bv,seg=12)=>{const g=new T.ExtrudeGeometry(sh,{depth:d,bevelEnabled:true,bevelThickness:bv,bevelSize:bv,bevelSegments:3,curveSegments:seg});g.translate(0,0,-d/2);
+      const p=g.attributes.position,R=.55;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),a=x/R;p.setX(i,Math.sin(a)*(R+z));p.setZ(i,Math.cos(a)*(R+z)-R);}g.computeVertexNormals();return g;};/* gently curved like a real plate */
+    const cv=document.createElement('canvas');cv.width=cv.height=64;{const g=cv.getContext('2d');g.fillStyle='#1d2a44';g.fillRect(0,0,64,64);g.fillStyle='#2f4f86';for(let y=0;y<64;y+=8)for(let x=0;x<64;x+=8){if(((x+y)/8)%2)g.fillRect(x,y,8,4);else g.fillRect(x,y+4,8,4);}}
+    const wt=new T.CanvasTexture(cv);wt.wrapS=wt.wrapT=T.RepeatWrapping;wt.repeat.set(4,4);if(T.SRGBColorSpace)wt.colorSpace=T.SRGBColorSpace;
+    const lc=document.createElement('canvas');lc.width=256;lc.height=80;{const g=lc.getContext('2d');g.fillStyle='#9fb3cc';g.font='bold 54px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText('LVL IV',128,44);}
+    const lt=new T.CanvasTexture(lc);if(T.SRGBColorSpace)lt.colorSpace=T.SRGBColorSpace;
+    const ch=new T.Shape();ch.moveTo(-.1,.02);ch.lineTo(0,-.05);ch.lineTo(.1,.02);ch.lineTo(.1,.06);ch.lineTo(0,-.01);ch.lineTo(-.1,.06);ch.closePath();
+    PLATE_KIT={face:ext(cut(.36,.46,.08),.035,.012),rim:ext(cut(.385,.485,.09),.02,.008),chev:new T.ExtrudeGeometry(ch,{depth:.006,bevelEnabled:false}),lab:new T.PlaneGeometry(.2,.06),
+      faceM:new T.MeshStandardMaterial({color:'#2b2f36',roughness:.55,metalness:.15}),rimM:new T.MeshStandardMaterial({map:wt,roughness:.8}),glowM:new T.MeshBasicMaterial({color:'#7fd0ff',toneMapped:false}),labM:new T.MeshBasicMaterial({map:lt,transparent:true,depthWrite:false})};}
+  const K=PLATE_KIT,g=new T.Group();g.add(new T.Mesh(K.face,K.faceM));const rim=new T.Mesh(K.rim,K.rimM);rim.position.z=-.012;g.add(rim);
+  for(const y of [.06,-.04]){const m=new T.Mesh(K.chev,K.glowM);m.position.set(0,y,.038);g.add(m);}
+  const lab=new T.Mesh(K.lab,K.labM);lab.position.set(0,-.16,.043);g.add(lab);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.userData.dyn=1;}});return g;}
 function placePlates(){M.plates=[];if(S.mode==='rumble')return;/* Rumble: no armour (any map) */const g=M.grid;if(!g||!g.comp)return;const nx=g.nx,nz=g.nz,N=nx*nz,NN=N*NL,seen=new Uint8Array(NN),q=[];
   const base=M.spawns.filter(s=>!s.bld);for(const sp of base){const id=nearestNode(sp.x,sp.y||0,sp.z);if(id>=0&&!seen[id]){seen[id]=1;q.push(id);}}
   while(q.length){const id=q.pop(),k=(id/NL)|0,i=k%nx,j=(k-i)/nx,h=g.h[id];for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[2,0],[-2,0],[0,2],[0,-2]]){const a=i+di,b=j+dj;if(a<1||b<1||a>=nx-1||b>=nz-1)continue;const k2=a+b*nx,far=Math.abs(di+dj)>1;
@@ -8745,9 +8762,8 @@ function placePlates(){M.plates=[];if(S.mode==='rumble')return;/* Rumble: no arm
   let gap=Math.max(8,.3*Math.max(bb.x1-bb.x0,bb.z1-bb.z0));const fits=g=>{const p=[];for(const c of pool)if(p.every(q=>Math.hypot(q.x-c.x,q.z-c.z)>g))p.push(c);return p.length>=want;};
   while(gap>4&&!fits(gap))gap*=.85;M.plateSpots=pool;M.plateGap=gap;const pick=[];
   for(const c of pool){if(pick.length>=want)break;if(pick.every(p=>Math.hypot(p.x-c.x,p.z-c.z)>gap))pick.push(c);}
-  for(const p of pick){const grp=new THREE.Group();const plate=new THREE.Mesh(B.roundedBox?B.roundedBox(.62,.78,.12,.06,3):new THREE.BoxGeometry(.62,.78,.12),new THREE.MeshStandardMaterial({color:'#2f7fe0',metalness:.6,roughness:.3,emissive:'#1f5fd0',emissiveIntensity:.35}));
-    const strip=new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.14),new THREE.MeshBasicMaterial({color:'#bfe3ff',toneMapped:false}));strip.position.y=.18;plate.add(strip);grp.add(plate);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.04,8,32),new THREE.MeshBasicMaterial({color:'#7fc4ff',transparent:true,opacity:.7,toneMapped:false}));ring.rotation.x=Math.PI/2;ring.position.y=-.55;grp.add(ring);
+  for(const p of pick){const grp=new THREE.Group();const plate=plateModel();grp.add(plate);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.03,8,32),new THREE.MeshBasicMaterial({color:'#7fc4ff',transparent:true,opacity:.7,toneMapped:false}));ring.rotation.x=Math.PI/2;ring.position.y=-.55;grp.add(ring);
     grp.position.set(p.x,p.y+.9,p.z);grp.userData.dyn=1;M.group.add(grp);M.plates.push({x:p.x,y:p.y,z:p.z,grp,plate,back:0});}}
 const PLATE_BACK=60;
 // a fresh spot for plate P from the pool: away from every other plate (shown or waiting), away from where P just was, not on a

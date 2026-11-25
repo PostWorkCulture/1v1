@@ -106,6 +106,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**New armour plate pickup (25 Nov 2026)** – armour plates on the map are now a smaller, more detailed ceramic trauma plate (about 0.36 x 0.46 m, was a 0.62 x 0.78 blue slab): gently curved with clipped top corners, a matte charcoal face, a blue kevlar-weave edge, two glowing blue chevrons and a LVL IV stamp, over a smaller blue ring. Picking one up works exactly as before (+50 armour).
+
 **Smoother Man Down (25 Nov 2026)** – the Man Down banner no longer jitters: the dark red edges just fade in and out and the words punch in once and drift slightly (no blur, shaking or flicker). Going over the edge now pushes you clear of the tower, so your body tumbles away from the wall instead of scraping through it.
 
 **Shop glow removed (25 Nov 2026)** – the yellow halo and the yellow light that shone down from above the shop's SHOP sign are gone; the sign itself is still lit.

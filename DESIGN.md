@@ -124,6 +124,7 @@ Last updated: 2026-11-24
 
 ### 2026-11-25
 - AKM is "Graffiti" (Pete picked from 4 concepts): spray-tagged receiver, dust cover and mag (BANG / RAW / AK!), white paint-splattered furniture with paint drips and LOL stickers, black optic riser, sights and barrel, chrome bolt, yellow sight ring; pink crosshair and card glow. Keeps the live round counter and the muzzle that glows hot; no gold trim or engraving on it.
+- Armour plate pickups: smaller ceramic trauma plate (option 1 of 4): curved shooter's-cut, charcoal face, blue kevlar-weave edge, two glowing chevrons, LVL IV stamp; about 0.36 x 0.46 m (was a 0.62 x 0.78 blue slab); smaller floor ring.
 - Weapon previews: the loadout cards and the big spinning showcase now share one photo studio, so a gun always looks the same in both (the chrome Vanguard showed silver on its card but black in the showcase). Vanguard's front grip is satin silver.
 - Man Down: banner animation smoothed (vignette just fades; the words punch in once, no blur, shake or flicker); the body is pushed clear of the tower face so it doesn't scrape through it.
 - Shops: no yellow halo glow or yellow light above the shop; just the lit SHOP sign.

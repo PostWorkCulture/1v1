@@ -124,6 +124,7 @@ Last updated: 2026-11-24
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-25
+- Man Down has its own sound (sfx/mandown.mp3): a rush of wind with a falling whistle and low rumble, about 3 s (option A of 3, wind a little quieter); replaces the slowed whiz. Glass boom kept.
 - Free-for-all match length: 2, 4 or 6 minutes (was 3, 5 or 10); 4 by default, Quick start uses 4.
 - AKM is "Graffiti" (Pete picked from 4 concepts): spray-tagged receiver, dust cover and mag (BANG / RAW / AK!), white paint-splattered furniture with paint drips and LOL stickers, black optic riser, sights and barrel, chrome bolt, yellow sight ring; pink crosshair and card glow. Keeps the live round counter and the muzzle that glows hot; no gold trim or engraving on it.
 - Armour plate pickups: smaller ceramic trauma plate (option 1 of 4): curved shooter's-cut, charcoal face, blue kevlar-weave edge, two glowing chevrons, LVL IV stamp; about 0.36 x 0.46 m (was a 0.62 x 0.78 blue slab); smaller floor ring.

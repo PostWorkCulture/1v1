@@ -4902,6 +4902,14 @@ function wreckCove(){const G=WC.G,Z=25;/* 70 x 50 m (Big size): from the foot of
   wcPalm(-7,-21,.6,1.1);wcPalm(-33,-12,-.3,.9);wcPalm(-7,22,2.4,1);wcPalm(-34,13,.9,1);
 
   /* ---------- in the water ---------- */
+  /* two red-and-white striped barriers out in the shallows (25 Nov): cover to fight from while wading, so the water isn't just open ground.
+     1.8 m tall (crouch and you're hidden, stand and you shoot over), sitting on the sea bed parallel to the shore, one each side of the middle */
+  {const ST=canvasTex(256,128,(g,w,h)=>{for(let i=-4;i<12;i++){g.fillStyle=i&1?'#f7f7f5':'#e3262d';g.beginPath();g.moveTo(i*32,0);g.lineTo(i*32+32,0);g.lineTo(i*32+32-64,h);g.lineTo(i*32-64,h);g.closePath();g.fill();}
+      g.fillStyle='rgba(0,0,0,.18)';g.fillRect(0,h-10,w,10);g.fillStyle='rgba(255,255,255,.35)';g.fillRect(0,0,w,4);});ST.wrapS=ST.wrapT=THREE.RepeatWrapping;ST.repeat.set(.65,1);
+    const bm=new THREE.MeshStandardMaterial({map:ST,roughness:.38,metalness:.05}),cap=mat('#f7f7f5',null,{roughness:.35}),foot=mat('#3a3d45',null,{roughness:.7});
+    for(const [x,z,L] of [[21,-8,4.6],[23.5,9,4.6]]){box(x,.03,z,.7,1.8,L,'#e3262d',{mat:bm,edges:false,wood:false});
+      const c=deco(new THREE.CylinderGeometry(.35,.35,L,14,1,false,0,Math.PI),cap,x,1.83,z);c.rotation.x=Math.PI/2;c.rotation.y=Math.PI/2;
+      deco(B.boxGeo(.9,.2,L+.2),foot,x,.13,z);}}
   // buoy line marks the edge of the swimming area
   {const fm=[mat('#e8463a'),mat('#ffffff')];for(let z=-24,i=0;z<=24;z+=3,i++){const b=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),fm[i%2]);b.castShadow=true;wcFloat(b,26.6,z,{sink:0,roll:.2,pitch:.2});}
     const rp=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,48),mat('#f4efe6'));rp.position.set(26.6,.3,0);M.group.add(rp);}
@@ -11189,7 +11197,7 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
 /* bump a map's number whenever its layout or look changes, so players never see its old menu picture after a publish (25 Nov) */
-const MAP_LOOK={rail:3,arena:2,lagoon:3,skyhigh:2,street:2};
+const MAP_LOOK={wreck:2,rail:3,arena:2,lagoon:3,skyhigh:2,street:2};
 const HERO_CAM={mansion:[-.5,.55,.55,36],arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */

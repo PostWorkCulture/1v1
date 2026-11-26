@@ -5050,7 +5050,7 @@ function rlContainer(x,y,z,along,col,o={}){const L=o.L||12,W=o.W||2.5,H=o.H||2.6
   // door leaves swung open
   for(const ee of thr?[-1,1]:[e])for(const sd of [-1,1]){if(ax)box(x+ee*(L/2+.6),y,z+sd*(W/2+.05),1.2,H,.08,col,{tx:'ribs'});else box(x+sd*(W/2+.05),y,z+ee*(L/2+.6),.08,H,1.2,col,{tx:'ribs'});}}
 function rlCrate(x,y,z,s=1.2){return box(x,y,z,s,s,s,s>1.1?'#c99a5b':'#b9895a',{tx:'wood',prop:'crate',hp:80});}
-function rlDrum(x,y,z,c='#c8322b',boom=true){const b=box(x,y,z,.7,1.0,.7,c,{prop:boom?'fuel':'drum',hp:boom?1:110,snd:'bin',mat:INVIS,edges:false,shadow:false});
+function rlDrum(x,y,z,c,boom=true){if(!c)c=boom?DRUM_COLS[(DRUM_I++)%DRUM_COLS.length]:'#c8322b';/* explosive ones come in the five drum colours in turn */const b=box(x,y,z,.7,1.0,.7,c,{prop:boom?'fuel':'drum',hp:boom?1:110,snd:'bin',mat:INVIS,edges:false,shadow:false});
   for(const [g,cc,dy] of [[new THREE.CylinderGeometry(.35,.35,1,14),c,0],[new THREE.CylinderGeometry(.355,.355,.05,14),'#1c1d22',-.18],[new THREE.CylinderGeometry(.355,.355,.05,14),'#1c1d22',.2]]){const m=new THREE.Mesh(g,mat(cc));m.position.y=dy;m.castShadow=true;b.mesh.add(m);}
   if(boom){const m=new THREE.Mesh(new THREE.PlaneGeometry(.36,.36),new THREE.MeshBasicMaterial({map:canvasTex(64,64,(g)=>{g.fillStyle='#f4c22b';g.beginPath();g.moveTo(32,4);g.lineTo(60,58);g.lineTo(4,58);g.closePath();g.fill();g.fillStyle='#1c1d22';g.font='bold 34px sans-serif';g.textAlign='center';g.fillText('!',32,52);}),transparent:true}));m.position.set(0,.05,.356);b.mesh.add(m);b.boom=true;}
   return b;}
@@ -7356,17 +7356,18 @@ function liftCar(cx,cz,nx,nz,top,col){const ax=nx!==0,rung=ax?cx+nx*.85:cz+nz*.8
   M.life.push((t,dt)=>{let y=null;for(const f of FS)if(f.onLadder===L){y=f.pos.y;break;}car.position.y=y!=null?Math.max(0,y-.18):Math.max(0,car.position.y-dt*10);});}
 
 
-// red explosive drums on every duel map (current and future): small clusters on open ground tucked beside cover,
+// explosive drums in different colours on every duel map, current and future (Pete 26 Nov: red, blue, green, yellow and white; Sky High and Lagoon get a couple too): small clusters on open ground tucked beside cover,
 // clear of spawns, shops, ladders, stairs, water and the train lines; same spots each time a map is built
-function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble'||md.drums===0)return false;const g=M.grid;if(!g)return false;
+const DRUM_COLS=['#c8322b','#2f7fe0','#2f9e5a','#f4c22b','#f4f5f7'];let DRUM_I=0;
+function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble')return false;const g=M.grid;if(!g)return false;
   let sd=0;for(const ch of M.id)sd=(sd*31+ch.charCodeAt(0))|0;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
-  const b=M.bounds,area=(b.x1-b.x0)*(b.z1-b.z0),want=md.drums||Math.round(Math.min(5,Math.max(3,area/2500))),placed=[],far=(x,z,L,d)=>L.every(p=>Math.hypot(p.x-x,p.z-z)>=d);
+  const b=M.bounds,area=(b.x1-b.x0)*(b.z1-b.z0),want=md.drums===0?2:md.drums||Math.round(Math.min(5,Math.max(3,area/2500))),placed=[],far=(x,z,L,d)=>L.every(p=>Math.hypot(p.x-x,p.z-z)>=d);
   for(const B of M.boxes)if(B.boom)placed.push({x:(B.x0+B.x1)/2,z:(B.z0+B.z1)/2});
   const avoid=[...(M.spawns||[]),...(M.shops||[])],lad=M.ladders||[];
-  const goal=placed.length+want;for(let tries=0;tries<4000&&placed.length<goal;tries++){
+  const goal=placed.length+want;for(let pass=0;pass<2&&placed.length<goal;pass++)for(let tries=0;tries<4000&&placed.length<goal;tries++){const loose=pass===1;/* second pass, only if the first found too few: no cover needed, closer spacing */
     const i=1+((rnd()*(g.nx-2))|0),j=1+((rnd()*(g.nz-2))|0),k=i+j*g.nx;if(!g.n[k])continue;const h=g.h[k*NL];if(h>1.2)continue;
     const x=g.x0+(i+.5)*CS,z=g.z0+(j+.5)*CS;if(x<b.x0+3||x>b.x1-3||z<b.z0+3||z>b.z1-3)continue;if(M.id==='rail'&&Math.abs(x)<14.5)continue;
-    if(!far(x,z,avoid,7)||!far(x,z,placed,22))continue;
+    if(!far(x,z,avoid,loose?5:7)||!far(x,z,placed,loose?10:22))continue;
     if(lad.some(L=>x>L.x0-2.5&&x<L.x1+2.5&&z>L.z0-2.5&&z<L.z1+2.5))continue;if(M.noDrums&&M.noDrums.some(q=>Math.hypot(q.x-x,q.z-z)<q.r))continue;/* doorways, stair feet and hop walls kept clear */
     if(M.wade&&M.wade(x,z))continue;if(M.waterY!=null&&h<M.waterY+.05)continue;
     if(M.railGlow&&M.railGlow.some(G=>Math.abs(x-G.x)<2.6))continue;
@@ -7374,12 +7375,12 @@ function scatterDrums(){const md=MAPS[M.id];if(!md||S.mode==='rumble'||md.drums=
     let ok=true,cover=false;for(const B of M.boxes){if(B.mover){if(x>B.x0-3&&x<B.x1+3&&z>B.z0-3&&z<B.z1+3){ok=false;break;}continue;}
       if(B.y1>h+.05&&B.y0<h+2.2&&x>B.x0-.9&&x<B.x1+.9&&z>B.z0-.9&&z<B.z1+.9){ok=false;break;}
       if(B.y1>h+1.1&&B.y0<h+.3&&x>B.x0-2.2&&x<B.x1+2.2&&z>B.z0-2.2&&z<B.z1+2.2)cover=true;}
-    if(!ok||!cover)continue;
+    if(!ok||(!cover&&!loose))continue;
     // stairs feet stay clear: a level change of more than a step within 2 m
     let stair=false;for(let di=-4;di<=4&&!stair;di++)for(let dj=-4;dj<=4;dj++){const k2=i+di+(j+dj)*g.nx;if(k2<0||k2>=g.n.length)continue;for(let l=0;l<g.n[k2];l++){const dh=g.h[k2*NL+l]-h;if(dh>.3&&dh<1.6){stair=true;break;}}if(stair)break;}
     if(stair)continue;
     const n=rnd()<.6?2:rnd()<.5?3:1,a=rnd()*Math.PI*2;
-    for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz);}
+    const c0=(rnd()*DRUM_COLS.length)|0;for(let q=0;q<n;q++){const ox=q===0?0:Math.cos(a+q*2.1)*.85,oz=q===0?0:Math.sin(a+q*2.1)*.85;rlDrum(x+ox,h,z+oz,DRUM_COLS[(c0+q)%DRUM_COLS.length]);}
     placed.push({x,z});}
   return true;}
 function buildMap(id){clearMap();FURN_USED.clear();OPEN_STAIRS=false;M.id=id;M.pl=S.players;M.ru=S.mode==='rumble';/* shop, armour and barrels depend on the mode, not the map */applyEnv(MAPS[id].env);MAPS[id].build();OPEN_STAIRS=false;const b=M.bounds;M.center.set((b.x0+b.x1)/2,0,(b.z0+b.z1)/2);placeShop();batchStatic();ruinBatch();buildGrid();if(scatterDrums())buildGrid();addBuildingSpawns();placePlates();}
@@ -8842,7 +8843,7 @@ function placePlates(){M.plates=[];if(S.mode==='rumble')return;/* Rumble: no arm
   for(const p of pick){const grp=new THREE.Group();const plate=plateModel();grp.add(plate);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.36,.03,8,32),new THREE.MeshBasicMaterial({color:'#7fc4ff',transparent:true,opacity:.7,toneMapped:false}));ring.rotation.x=Math.PI/2;ring.position.y=-.55;grp.add(ring);
     grp.position.set(p.x,p.y+.9,p.z);grp.userData.dyn=1;M.group.add(grp);M.plates.push({x:p.x,y:p.y,z:p.z,grp,plate,back:0});}}
-const PLATE_BACK=60;
+const PLATE_BACK=60,PICK_R=1.75;/* Pete 26 Nov: pickups (armour, Swarm, speed shoes) grab from 1.75 m (was 1.1-1.2); mines go off from 2.2 m (was 1.7) */
 // a fresh spot for plate P from the pool: away from every other plate (shown or waiting), away from where P just was, not on a
 // collapsed building and not right next to anyone; the distance rule is relaxed step by step if nothing qualifies
 function movePlate(P,keepAway=true){const pool=M.plateSpots||[];if(!pool.length)return;const others=(M.plates||[]).filter(q=>q!==P);
@@ -8914,7 +8915,7 @@ function updShoes(dt){SHOE.t+=dt;
     if(f.downed||!f.alive)f.shoeT=0;}
   if(!SHOE.grp)return;if(!SHOE.vis){if(S.state==='fight'){SHOE.back-=dt;if(SHOE.back<=0)placeShoes();}return;}
   SHOE.pad.userData.tick(SHOE.t);SHOE.pair.rotation.y=-.5+SHOE.t*.9;SHOE.pair.position.y=.42+Math.sin(SHOE.t*2.4)*.04;
-  if(S.state!=='fight')return;for(const f of FS){if(!f.alive||f.downed||f.finishing)continue;if(Math.hypot(f.pos.x-SHOE.x,f.pos.z-SHOE.z)<1.1&&Math.abs(f.pos.y-SHOE.y)<1.6){
+  if(S.state!=='fight')return;for(const f of FS){if(!f.alive||f.downed||f.finishing)continue;if(Math.hypot(f.pos.x-SHOE.x,f.pos.z-SHOE.z)<PICK_R&&Math.abs(f.pos.y-SHOE.y)<1.6){
     f.shoeT=SHOE_T;SHOE.vis=false;SHOE.grp.visible=false;SHOE.back=SHOE_BACK;emit(SHOE.x,SHOE.y+.6,SHOE.z,{n:30,speed:5,up:2,size:.14,life:.5,grav:0,colors:[SHOE_CY,'#ffffff','#8ff4ff']});sfx('bing',f,{range:12});
     feedMsg(f===ME?'<span class="y">You</span><em>grabbed the Neon Runners</em>':`${tg(f)}<em>grabbed the Neon Runners</em>`);break;}}}
 /* ===== Swarm pickup: the Swarm launcher is no longer a loadout choice. A crate-less floating launcher turns up at a random spot 10 s into each round
@@ -8931,12 +8932,12 @@ function swarmOut(f){if(f.primary!=='swarm'||f.swarmPrev==null)return;f.primary=
 function resetSwarm(){for(const f of FS){if(f.primary==='swarm'&&f.swarmPrev!=null){f.primary=f.swarmPrev;f.swarmPrev=null;if(f.guns)equip(f,f.slot);}}if(!SWM.grp||SWM.grp.parent!==M.group){SWM.grp=swmGroup();M.group.add(SWM.grp);}SWM.vis=false;SWM.grp.visible=false;SWM.back=PICKUP_DELAY;}
 function updSwarm(dt){if(!SWM.grp)return;if(!SWM.vis){if(S.state==='fight'){SWM.back-=dt;if(SWM.back<=0)placeSwarm();}return;}
   SWM.spin.rotation.y+=dt*1.6;SWM.spin.position.y=Math.sin(S.t*2.2)*.1;SWM.ring.material.opacity=.55+Math.sin(S.t*4)*.2;if(S.state!=='fight')return;
-  for(const f of FS){if(!f.alive||f.downed||f.finishing||f.primary==='swarm'||f.primary==='flamer')continue;if(Math.hypot(f.pos.x-SWM.x,f.pos.z-SWM.z)<1.2&&Math.abs(f.pos.y-SWM.y)<1.6){
+  for(const f of FS){if(!f.alive||f.downed||f.finishing||f.primary==='swarm'||f.primary==='flamer')continue;if(Math.hypot(f.pos.x-SWM.x,f.pos.z-SWM.z)<PICK_R&&Math.abs(f.pos.y-SWM.y)<1.6){
     f.swarmPrev=f.primary;f.primary='swarm';f.ammo.swarm=GUNS.swarm.mag;f.swarmMags=1;f.slot=-1;equip(f,0);SWM.vis=false;SWM.grp.visible=false;SWM.back=SWM_BACK;
     emit(SWM.x,SWM.y+.9,SWM.z,{n:28,speed:5,up:2,size:.15,life:.5,grav:0,colors:[SWM_C,'#ffffff','#ffd0a0']});sfx('bing',f,{range:12});
     if(f===ME)feedMsg('<span class="y">You</span><em>picked up the Swarm</em>');else feedMsg(`${tg(f)}<em>picked up the Swarm</em>`);break;}}}
 function updPlates(dt){for(const P of M.plates||[]){if(P.back>0){P.back-=dt;if(P.back<=0){if(P.move){P.move=0;movePlate(P);}P.grp.visible=true;}continue;}P.plate.rotation.y+=dt*2;P.grp.position.y=P.y+.9+Math.sin(S.t*2.5)*.12;
-  if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<1.1&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=PLATE_BACK;P.move=1;P.grp.visible=false;
+  if(S.state!=='fight')continue;for(const f of FS){if(!f.alive||f.downed||(f.armor||0)>=100)continue;if(Math.hypot(f.pos.x-P.x,f.pos.z-P.z)<PICK_R&&Math.abs(f.pos.y-P.y)<1.6){f.armor=Math.min(100,(f.armor||0)+50);P.back=PLATE_BACK;P.move=1;P.grp.visible=false;
     emit(P.x,P.y+.9,P.z,{n:24,speed:4,up:2,size:.16,life:.5,grav:0,colors:['#2f7fe0','#bfe3ff','#ffffff']});sfx('plate',f,{range:10});if(f===ME)feedMsg('<span class="y">You</span><em>picked up armour</em>');break;}}}}
 function resetPlates(){const L=M.plates||[];for(const P of L){P.back=0;P.move=0;P.x=P.z=1e5;}for(const P of L){movePlate(P,false);P.grp.visible=true;}}
 function blastProps(at,Rr,src){knockBlast(at,Rr,src);ruinBlast(at,Rr,src);for(const c of M.cars||[]){if(!c.alive)continue;const b=c.boxes[0],px=clamp(at.x,b.x0,b.x1),py=clamp(at.y,b.y0,b.y1),pz=clamp(at.z,b.z0,b.z1);if(Math.hypot(px-at.x,py-at.y,pz-at.z)<=Math.max(1.5,Rr*.55))wreckCar(c,at);}
@@ -9456,7 +9457,7 @@ function mineSettle(m,dt){m.ck=(m.ck||0)-dt;if(m.ck<=0||m.vy){m.ck=.15;m.fl=mine
   if(m.y>fl+.02||m.vy){m.vy=(m.vy||0)-24*dt;m.y=Math.max(fl,m.y+m.vy*dt);if(m.y<=fl+.001){m.y=fl;m.vy=0;}m.mesh.position.y=m.y;}return m.y>-50;}
 function boomMine(m,i,by){scene.remove(m.mesh);mines.splice(i,1);explode(by&&by.alive?by:m.f,new V3(m.x,m.y+.35,m.z),null,{dmg:GUNS.mine.dmg,radius:GUNS.mine.radius,wall:150,gun:'grenade',colors:['#ffd23f','#ff7a1f','#3a3d45','#9aa0a8','#ffffff']});}
 function updMines(dt){for(let i=mines.length-1;i>=0;i--){const m=mines[i];if(!m)continue;/* a blast can clear other mines mid-loop */m.t+=dt;if(m.gone&&S.t>=m.gone){scene.remove(m.mesh);mines.splice(i,1);continue;}if(!mineSettle(m,dt)){scene.remove(m.mesh);mines.splice(i,1);continue;}if(m.arm>0){m.arm-=dt;m.led.visible=Math.sin(m.t*30)>0;continue;}m.led.visible=(m.t%2)<.12;
-  if(!m.f||S.state!=='fight')continue;if(FS.some(o=>o.alive&&isFoe(m.f,o)&&!o.finishing&&Math.hypot(o.pos.x-m.x,o.pos.z-m.z)<1.7&&Math.abs(o.pos.y-m.y)<1.1)){sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10,wpn:1});boomMine(m,i);}}}
+  if(!m.f||S.state!=='fight')continue;if(FS.some(o=>o.alive&&isFoe(m.f,o)&&!o.finishing&&Math.hypot(o.pos.x-m.x,o.pos.z-m.z)<2.2&&Math.abs(o.pos.y-m.y)<1.3)){sfx('dry',{x:m.x,y:m.y,z:m.z},{range:10,wpn:1});boomMine(m,i);}}}
 function clearMines(){for(const m of mines)scene.remove(m.mesh);mines.length=0;}
 /* shooting a mine sets it off: a full mine blast (same damage and radius as stepping on it), credited to whoever shot it,
    so it hurts their enemies and half-hurts them if they're inside it. The host decides and mirrors popMine to the friend */
@@ -9488,7 +9489,7 @@ const SHOP_ITEMS=[
   {id:'speed',name:'Speed',desc:'+25% for 30s',col:'#f08a24',ic:'»',rumble:1,can:f=>(f.speedT||0)<45,buy:f=>{f.speedT=(f.speedT||0)+30;}}];
 const shopList=()=>SHOP_ITEMS.filter(it=>S.mode==='rumble'?!it.guns:!it.rumble);
 function resetShopKit(f){f.shopCD=0;f.armor=0;f.scopeKit=false;f.nades=0;f.goldNade=0;f.nadeT=0;f.speedT=0;}
-const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.1&&Math.abs(f.pos.y-s.y)<1.6);
+const nearShop=f=>(M.shops||[]).some(s=>Math.hypot(f.pos.x-s.x,f.pos.z-s.z)<3.6&&Math.abs(f.pos.y-s.y)<1.6);
 const canShopNow=()=>S.mode!=='rumble'&&ME.alive&&!ME.downed&&!ME.finishing&&(S.state==='fight'||S.state==='countdown');
 function openShop(){if(S.shopOpen)return;S.shopOpen=true;$('d-hint').classList.add('fade');$('d-shop').hidden=false;renderShop(true);}
 function closeShop(){if(!S.shopOpen)return;S.shopOpen=false;$('d-shop').hidden=true;}
@@ -9917,6 +9918,7 @@ const keys={};let mouseL=false,mouseR=false;
    held state is sampled each tick, and one-off actions (reload, wall, lethal, swap...) are queued and applied at the start of the next tick.
    This is the shape a multiplayer client will send to the server. */
 const CMD={acts:[],last:null};const queueAct=a=>{CMD.acts.push(a);};const queueSwap=()=>{if(ME.primary==='bat')return;queueAct(ME.slot===2?'Digit1':'Digit2');}; /* gun ⇄ bat: the wheel either way, or the touch Swap button */
+const STRAFE_K=.82;/* Pete 26 Nov: side-stepping (strafing) at 82% of running speed, so left-right isn't so quick */
 function sampleCmd(){const c={fi:clamp((keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-(S.touch?TM.y:0),-1,1),si:clamp((keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+(S.touch?TM.x:0),-1,1),
   yaw:ME.yaw,pitch:ME.pitch,jump:!!keys.Space,jumpPress:!!ME.jumpPress,fire:!!mouseL,aim:!!(mouseL||mouseR),run:!!(S.touch&&Math.hypot(TM.x,TM.y)>.93),acts:CMD.acts.splice(0)};CMD.last=c;return c;}
 function applyActs(acts,ME0){const ME=ME0||window.__duel.ME;for(const a of acts){if((S.paused&&!ME0)||!D.active)continue;if(NET.role==='client'&&!ME0){netAct(a);if(a==='KeyC'&&!ME.downed)ME.crouchOn=!ME.crouchOn;else if(a==='Digit1'||a==='Digit2'||a==='Digit3'){equip(ME,a==='Digit1'?0:2);NET.swapAt=performance.now();}else if(a==='KeyG'){if(ME.nades>0||ME.goldNade>0)ME.aimNade=true;else if(AIMED.has(ME.cons)&&consReady(ME))ME.aimThrow=true;}else if(a==='KeyG:up'){ME.aimThrow=false;ME.aimNade=false;}continue;}
@@ -11034,7 +11036,7 @@ function step(rdt){pfBudget=24000;for(const f of FS){(f.pp||(f.pp=new V3())).cop
   const live=S.state==='fight';
   // player
   if(SNQ.hold&&(!isSnipe()||!ME.alive||ME.downed))snipeUp(false);if(!SNQ.hold&&!SNQ.fire&&!SNQ.rel)mouseR=false; /* only a held Fire aims (there's no aim button), so never stay scoped once it's let go */if(SNQ.fire){if(!isSnipe()||!ME.alive||ME.downed||S.t-SNQ.at>2.5){SNQ.fire=false;mouseR=SNQ.hold;}else if(canFire(ME)){SNQ.fire=false;mouseL=true;SNQ.rel=true;}}aimAssist(rdt);const cmd=sampleCmd();applyActs(cmd.acts);const f=ME;if(f.alive&&S.state!=='menu'&&S.state!=='done'&&!f.finishing){
-    const fi=cmd.fi,si=cmd.si;
+    const fi=cmd.fi,si=cmd.si*STRAFE_K;
     if(!S.lockOK){if(keys.KeyJ)f.yaw+=2.2*rdt;if(keys.KeyL)f.yaw-=2.2*rdt;}
     const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*fi+rx*si,wz=fz*fi+rz*si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
     f.ads=cmd.aim&&live&&!f.downed&&!f.onLadder&&gunOf(f)!=='bat'; /* aiming does nothing with the bat */f.reviving=f.downed&&!!keys.KeyE;if(!live)f.crouchOn=false;{const rk=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);if(rk&&f.crouchOn&&(keys.KeyW||keys.ArrowUp||(S.touch&&TM.y<-.5)))f.crouchOn=false;}updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);const runKey=!!(keys.ShiftLeft||keys.ShiftRight)||(S.touch&&Math.hypot(TM.x,TM.y)>.93);f.sprinting=false&&runKey&&!f.ads&&!f.downed&&!f.crouching&&!(f.stunT>0)&&Math.hypot(wx,wz)>.5&&fi>=0;
@@ -13134,7 +13136,7 @@ function netDrive(f,dt,live){const c=NET.cmd||{fi:0,si:0,yaw:f.yaw,pitch:f.pitch
   if(NET.acts.length)applyActs(NET.acts.splice(0),f);
   if(f.thrownT>0||f.stunT>0){physics(f,dt,0,0,false,0,false);return;}
   if(!f.alive||f.finishing)return;
-  const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*c.fi+rx*c.si,wz=fz*c.fi+rz*c.si;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
+  const fx=Math.sin(f.yaw),fz=Math.cos(f.yaw),rx=-Math.cos(f.yaw),rz=Math.sin(f.yaw);let wx=fx*c.fi+rx*c.si*STRAFE_K,wz=fz*c.fi+rz*c.si*STRAFE_K;const wl=Math.hypot(wx,wz);if(wl>1){wx/=wl;wz/=wl;}
   f.ads=!!c.aim&&live&&!f.downed&&gunOf(f)!=='bat';updCrouch(f,f.downed||(live&&!!f.crouchOn),dt);const id=gunOf(f);
   const spd=moveSpeed(f,id);const jp=!!NET.jumpQ;NET.jumpQ=false;
   if(live||S.state==='roundEnd')physics(f,dt,live?wx:0,live?wz:0,live&&!!c.jump,spd,live&&jp);

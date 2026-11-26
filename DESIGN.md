@@ -132,6 +132,9 @@ Last updated: 2026-11-25
 
 ### 2026-11-26
 - Street Life: about 5 m of lawn round the back of each building by the fence (buildings scaled 2.0 to 1.85 and moved in to x 18.6, road a lane narrower: asphalt ±4.5 m, pavements to 6.5 m); the home's outside chimney stack removed; home furniture pushed back against walls and into corners (coffee table, kitchen island).
+- Strafing (side-stepping) at 82% of running speed for players.
+- Explosive drums in five colours (red, blue, green, yellow, white) on every map, Sky High, Lagoon and The House included; the Railed drums cycle the colours too.
+- Easier pickups: armour, Swarm and speed shoes grab from 1.75 m (was 1.1-1.2 m); mines go off from 2.2 m (was 1.7 m); shop reach 3.6 m (was 3.1 m).
 - Death darkness ('Tunnel'): much darker and covers most of the screen (only a small dim window in the middle), held a bit longer (2.2 s, was 1.45 s).
 - Weapon skins: hover a tile to preview it; skin row fixed height so the preview doesn't jump; removed Synthwave, Oil Slick and Sky Pulse (max 4 options per gun).
 

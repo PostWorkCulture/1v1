@@ -110,6 +110,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Strafing, drums and pickups (26 Nov 2026)** – moving left or right (strafing) is now 82% of your running speed, so side-to-side isn't so quick. Explosive drums now come in five colours (red, blue, green, yellow and white) and are on every map, Sky High, Lagoon and The House included. Pickups are easier to grab: armour, the Swarm and speed shoes from 1.75 m (was about 1.1 m), mines go off when someone comes within 2.2 m (was 1.7 m), and you can use the shop from a little further away (3.6 m).
+
 **Stronger death darkness (26 Nov 2026)** – when you die the screen now goes much darker: the black closes in over almost all of it, leaving only a small dim window in the middle, and stays a little longer (2.2 s, was 1.45 s) before opening again.
 
 **Results bar and spawns (25 Nov 2026)** – after every match, win or lose, the results offer just **Rematch**, **Next map** and **Menu**. Next map keeps everything the same (mode, players, bots, loadout) and plays the map to the right of the one you just played in the menu's map picker, wrapping round to the first. With no choice, it goes back to the home screen after 1 minute (was 10 seconds). Starts and respawns now also check sight lines: nobody begins in plain view of another player (head or chest visible) as long as the map has a hidden spot to use.

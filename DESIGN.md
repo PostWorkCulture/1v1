@@ -131,6 +131,7 @@ Last updated: 2026-11-25
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-26
+- Death darkness ('Tunnel'): much darker and covers most of the screen (only a small dim window in the middle), held a bit longer (2.2 s, was 1.45 s).
 - Weapon skins: hover a tile to preview it; skin row fixed height so the preview doesn't jump; removed Synthwave, Oil Slick and Sky Pulse (max 4 options per gun).
 
 ### 2026-11-25

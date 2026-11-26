@@ -110,6 +110,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Stronger death darkness (26 Nov 2026)** – when you die the screen now goes much darker: the black closes in over almost all of it, leaving only a small dim window in the middle, and stays a little longer (2.2 s, was 1.45 s) before opening again.
+
 **Results bar and spawns (25 Nov 2026)** – after every match, win or lose, the results offer just **Rematch**, **Next map** and **Menu**. Next map keeps everything the same (mode, players, bots, loadout) and plays the map to the right of the one you just played in the menu's map picker, wrapping round to the first. With no choice, it goes back to the home screen after 1 minute (was 10 seconds). Starts and respawns now also check sight lines: nobody begins in plain view of another player (head or chest visible) as long as the map has a hidden spot to use.
 
 **New armour plate pickup (25 Nov 2026)** – armour plates on the map are now a smaller, more detailed ceramic trauma plate (about 0.36 x 0.46 m, was a 0.62 x 0.78 blue slab): gently curved with clipped top corners, a matte charcoal face, a blue kevlar-weave edge, two glowing blue chevrons and a LVL IV stamp, over a smaller blue ring. Picking one up works exactly as before (+50 armour).

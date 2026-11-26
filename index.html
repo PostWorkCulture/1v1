@@ -6228,15 +6228,15 @@ const MAPS={
   /* the zipline from the top of the home's roof to the top of the arcade's (24 Nov): a small flat deck on each ridge (up the roof ladder, then the slope) with a steel
      post, a ZIP sign and a hazard-striped pad; the cable sags across high over the road. Stand on the pad for 1 s to ride across, very fast (see zipStep). Bots use it both ways */
   {const peak=(x,z)=>{let y=0;for(const b of M.boxes)if(b.x0<=x&&b.x1>=x&&b.z0<=z&&b.z1>=z&&b.y1>y)y=b.y1;return y;};
-   const ZA={x:-SL_CX,z:4.4},ZB={x:SL_CX,z:-4.4},FY=Math.max(peak(ZA.x,ZA.z),peak(ZB.x,ZB.z))+.18,dx=ZB.x-ZA.x,dz=ZB.z-ZA.z,dl=Math.hypot(dx,dz),ux=dx/dl,uz=dz/dl,PO=1.0,TOP=FY+ZIP_HANG+.2;
+   const ZA={x:-SL_CX,z:4.4},ZB={x:SL_CX,z:-4.4},FY=Math.max(peak(ZA.x,ZA.z),peak(ZB.x,ZB.z))+.18,dx=ZB.x-ZA.x,dz=ZB.z-ZA.z,dl=Math.hypot(dx,dz),ux=dx/dl,uz=dz/dl,PO=1.85,TOP=FY+ZIP_HANG+.2; /* PO: the post stands just behind the (26 Nov, twice as big) pad */
    const A={x:ZA.x-ux*PO,y:TOP,z:ZA.z-uz*PO},B={x:ZB.x+ux*PO,y:TOP,z:ZB.z+uz*PO},len=Math.hypot(B.x-A.x,B.z-A.z),s0=PO/len;
    const L={A,B,len,s0,sag:2.2,ux,uz,a:{x:ZA.x,y:FY,z:ZA.z},b:{x:ZB.x,y:FY,z:ZB.z}};M.zips=[L];
    const pts=[];for(let i=0;i<=32;i++)pts.push(new V3(...Object.values(zipAt(L,i/32))));const cab=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),64,.035,6,false),mat('#1c1d22',null,{metalness:.7,roughness:.3}));M.group.add(cab);
    const hz=canvasTex(64,64,(g,w,h)=>{for(let i=-4;i<8;i++){g.fillStyle=i%2?'#1c1d22':'#ffe14d';g.beginPath();g.moveTo(i*12,0);g.lineTo(i*12+12,0);g.lineTo(i*12+12-h,h);g.lineTo(i*12-h,h);g.closePath();g.fill();}});
    const zs=canvasTex(128,64,(g,w,h)=>{g.fillStyle='#ffe14d';g.fillRect(0,0,w,h);g.fillStyle='#1c1d22';g.font='bold 38px Bungee, Impact, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('ZIP',w/2,h/2+2);});
    for(const [E,sg] of [[ZA,-1],[ZB,1]]){/* the deck: a flat top on the ridge, with a yellow edge, the pad and the post behind it */
-     const dk=box(E.x,FY-1.6,E.z,2.2,1.6,2.6,'#2c3036',{extra:{metalness:.3,roughness:.6}});const ed=deco(new THREE.BoxGeometry(2.24,.06,2.64),mat('#ffe14d'),E.x,FY+.01,E.z);ed.castShadow=false;
-     const pd=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshLambertMaterial({map:hz}));pd.rotation.x=-Math.PI/2;pd.position.set(E.x,FY+.05,E.z);M.group.add(pd);
+     const dk=box(E.x,FY-1.6,E.z,4.1,1.6,3.4,'#2c3036',{extra:{metalness:.3,roughness:.6}});const ed=deco(new THREE.BoxGeometry(4.14,.06,3.44),mat('#ffe14d'),E.x,FY+.01,E.z);ed.castShadow=false;
+     const pd=new THREE.Mesh(new THREE.PlaneGeometry(2.8,2.8),new THREE.MeshLambertMaterial({map:hz}));pd.rotation.x=-Math.PI/2;pd.position.set(E.x,FY+.05,E.z);M.group.add(pd);
      const px=E===ZA?A.x:B.x,pz=E===ZA?A.z:B.z;box(px,FY,pz,.24,TOP+.5-FY,.24,'#2c3036',{extra:{metalness:.5,roughness:.4}});
      const arm=deco(new THREE.BoxGeometry(.12,.12,.12),mat('#2c3036'),px,TOP+.05,pz);arm.castShadow=true;const cap=deco(new THREE.BoxGeometry(.32,.1,.32),mat('#ffe14d'),px,TOP+.55,pz);cap.castShadow=false;
      for(const fz of [-1,1]){const sgn=new THREE.Mesh(new THREE.PlaneGeometry(.55,.27),new THREE.MeshBasicMaterial({map:zs}));sgn.position.set(px,FY+1.6,pz+fz*.125);sgn.rotation.y=fz>0?0:Math.PI;M.group.add(sgn);}}
@@ -6826,8 +6826,8 @@ const GUNS={
   titan:{base:'sniper',name:'Titan .50',dmg:70,head:2,rate:.55,mag:6,reload:2.8,spread:6,adsSpread:.1,pellets:1,fall:null,zoom:22,auto:false,kick:.12,bloom:0,heavy:1,color:'#4a4e56',note:'Semi-auto .50 cal: two quick body shots, huge kick'},
   vanguard:{base:'sniper',name:'Vanguard',dmg:45,head:2.3,rate:.28,mag:12,reload:2.1,spread:3,adsSpread:.2,pellets:1,fall:[45,110],zoom:27,auto:false,kick:.035,bloom:0,color:'#c49a3e',note:'Marksman rifle: fast follow-ups, 3 body shots or 1 headshot, light scope'},
   phantom:{base:'sniper',name:'Phantom',dmg:58,head:2.2,rate:.75,mag:6,reload:2.2,spread:4,adsSpread:.1,pellets:1,fall:[40,100],zoom:30,auto:false,kick:.04,bloom:0,silent:1,color:'#1b1c22',note:'Suppressed bolt-action: quiet, no tracer or flash; 2 body shots or 1 headshot'},
-  ar:{name:'AKM',dmg:30,head:1.8,rate:.14,mag:26,reload:1.9,spread:1.1,adsSpread:.25,ads:ADS_T,pellets:1,fall:[55,130],zoom:34,auto:true,kick:.014,bloom:.1,color:'#f08a24',note:'Hard-hitting long-range rifle: keeps its damage further than any other AR, kicks harder than any other rifle'},
-  gar:{name:'M4',base:'ar',dmg:28,head:1.8,rate:.13,mag:30,reload:2.2,spread:1.05,adsSpread:.2,ads:ADS_T,pellets:1,fall:[45,110],zoom:33,auto:true,kick:.009,bloom:.08,color:'#ffc23d',note:'Gold M4: fast-firing AR, lighter hits, 30-round mag'},
+  ar:{name:'AKM',dmg:22,head:1.8,rate:.1,mag:26,reload:1.9,spread:1.1,adsSpread:.25,ads:ADS_T,pellets:1,fall:[55,130],zoom:34,auto:true,kick:.014,bloom:.1,color:'#f08a24',note:'Hard-hitting long-range rifle: keeps its damage further than any other AR, kicks harder than any other rifle'},
+  gar:{name:'M4',base:'ar',dmg:20,head:1.8,rate:.085,mag:30,reload:2.2,spread:1.05,adsSpread:.2,ads:ADS_T,pellets:1,fall:[45,110],zoom:33,auto:true,kick:.009,bloom:.08,color:'#ffc23d',note:'Gold M4: fast-firing AR, lighter hits, 30-round mag'},
   smg:{name:'MP5',dmg:16,head:1.6,rate:.055,mag:25,reload:1.5,spread:.8,adsSpread:.9,ads:ADS_T,pellets:1,fall:[8,26],zoom:48,auto:true,kick:.006,bloom:.13,color:'#a05ad6',note:'Shreds up close, falls off fast'},
   ump:{name:'UMP',base:'smg',dmg:18,head:1.6,rate:.095,mag:25,reload:2,spread:.75,adsSpread:.35,ads:ADS_T,pellets:1,fall:[20,48],zoom:40,auto:true,kick:.007,bloom:.1,color:'#2f6bff',note:'Long-range SMG: heavy rounds that hold their damage out to about 20 m'},
   swarm:{name:'Swarm',base:'rocket',type:'proj',dmg:15,radius:1.6,head:1,rate:.75,burst:4,burstGap:.075,mag:8,reload:3,spread:.6,adsSpread:.2,speed:20,maxSpeed:40,accel:60,grav:0,zoom:40,auto:false,kick:.03,bloom:0,ads:ADS_T,color:'#ff7a1f',note:'Pickup only: turns up at a random spot 10 s into a round. Micro-missiles, 4 per pull that curve onto what you aim at, small splash each; two mags, then your own gun comes back'},
@@ -7271,7 +7271,7 @@ function needModel(id){if(MODELS[id]||MODEL_LOAD[id]||!MODEL_IDS.includes(id))re
 function modelFor(id){if(!MODELS[id])needModel(id);return MODELS[id];}
 setTimeout(()=>{let i=0;const next=()=>{if(i>=MODEL_IDS.length)return;const id=MODEL_IDS[i++];const p=CHARS[id]&&CHARS[id].dev?null:needModel(id);(p||Promise.resolve()).then(next,next);};next();},2500);
 function modelSkin(ch,M,id){hideBase(ch);const P=M.parts,add=(g,p)=>{const me=new THREE.Mesh(g,M.mat);me.castShadow=true;p.add(me);return me;};
-  add(P.torso,ch.body);ch.mHead=add(P.head,ch.headG);ch.model=true;
+  ch.mTorso=add(P.torso,ch.body);ch.mHead=add(P.head,ch.headG);ch.model=true;
   armElbows(ch,M,add);legKnees(ch,M,add);
   for(const [k,o] of [['armL',ch.aL.p],['armR',ch.aR.p],['legL',ch.lL.p],['legR',ch.lR.p]])if(M.piv[k])o.position.fromArray(M.piv[k]);
   if(!P.armR.boundingBox)P.armR.computeBoundingBox();ch.handY=Math.min(-.7,P.armR.boundingBox.min.y+.14);
@@ -7329,6 +7329,47 @@ function armIK(A,T,pole){const V=IKv,S=A.p.position,a=A.up,b=A.fore;
   V.u.copy(V.n).multiplyScalar(cA).addScaledVector(V.p,sA);V.e.copy(S).addScaledVector(V.u,a);V.v.copy(V.n).multiplyScalar(L).add(S).sub(V.e).normalize();
   V.y.copy(V.u).negate();V.z.copy(V.v).addScaledVector(V.u,-V.u.dot(V.v));if(V.z.lengthSq()<1e-6)V.z.copy(V.p);V.z.normalize();V.x.crossVectors(V.y,V.z);
   V.m.makeBasis(V.x,V.y,V.z);A.p.quaternion.setFromRotationMatrix(V.m);A.e.rotation.set(-Math.acos(clamp(V.u.dot(V.v),-1,1)),0,0);}
+/* ===== Held guns never sink into the body (Pete, 26 Nov: the M4 came out through Johnny Rotten's back). The characters are chunky, so a rifle
+   gripped in front of the chest buried its stock deep in the torso. Each frame the gun is placed as before, then its sample points are tested against a
+   depth map of the torso and head (front and back surface per 2.5 cm cell, built once per character from its meshes, in upper-body space); if any point
+   is inside, the gun slides clear, beside the body or forward, whichever is the shorter move; the legs are checked as boxes each frame. The hands follow it, as before, by IK. ===== */
+const BPC=.025,bpk=(a,b)=>(Math.round(a/BPC)+512)*1024+Math.round(b/BPC)+512;
+function bodyProf(ch){const M=ch.mTorso&&ch.mTorso.geometry;if(!M)return null;if(ch.bprof&&ch.bprof.g===M)return ch.bprof;const up=ch.upIn||ch.body;up.updateMatrixWorld(true);
+  const inv=new THREE.Matrix4().copy(up.matrixWorld).invert(),Z=new Map(),X=new Map(),Y=new Map(),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),p=new THREE.Vector3(),mt=new THREE.Matrix4();
+  const put=(x,y,z)=>{const kz=bpk(x,y),kx=bpk(y,z);const e=Z.get(kz);if(!e)Z.set(kz,[z,z]);else{if(z>e[0])e[0]=z;if(z<e[1])e[1]=z;}const r=X.get(kx);if(!r)X.set(kx,[x,x]);else{if(x>r[0])r[0]=x;if(x<r[1])r[1]=x;}const ky=Math.round(y/BPC),w=Y.get(ky);if(!w)Y.set(ky,[x,x]);else{if(x>w[0])w[0]=x;if(x<w[1])w[1]=x;}};
+  for(const me of [ch.mTorso,ch.mHead]){if(!me)continue;mt.multiplyMatrices(inv,me.matrixWorld);const g=me.geometry,P=g.attributes.position,I=g.index,n=I?I.count:P.count;
+    for(let t=0;t<n;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;a.fromBufferAttribute(P,i0).applyMatrix4(mt);b.fromBufferAttribute(P,i1).applyMatrix4(mt);c.fromBufferAttribute(P,i2).applyMatrix4(mt);
+      const L=Math.max(a.distanceTo(b),b.distanceTo(c),c.distanceTo(a)),k=Math.min(40,Math.ceil(L/(BPC*.7)));
+      for(let u=0;u<=k;u++)for(let v=0;v<=k-u;v++){p.copy(a).multiplyScalar(1-(u+v)/k).addScaledVector(b,u/k).addScaledVector(c,v/k);put(p.x,p.y,p.z);}}}
+  /* conservative: each cell also takes its neighbours' front/outer surface, so a sloping surface inside a cell is never under-counted */
+  const grow=G=>{const O=new Map();for(const [k,e] of G){let f=e[0];for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const n=G.get(k+dx*1024+dy);if(n&&n[0]>f)f=n[0];}O.set(k,[f,e[1]]);}return O;};
+  return ch.bprof={g:M,Z:grow(Z),X:grow(X),Y};} /* Y: widest point of each 2.5 cm slice, the fallback where the side profile has a gap */
+/* sample points of a held gun (rig space, before the rig's scale): ~1400 points spread over its surface by area, so big flat parts like a stock are always covered */
+function gunSamp(P){if(P.samp)return P.samp;const tri=[];let tot=0;const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
+  for(const q of P.parts){const A=q.geo.attributes.position,I=q.geo.index,n=I?I.count:A.count;for(let t=0;t<n;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;a.fromBufferAttribute(A,i0);b.fromBufferAttribute(A,i1);c.fromBufferAttribute(A,i2);
+    const ar=b.clone().sub(a).cross(c.clone().sub(a)).length()/2;if(ar>0){tot+=ar;tri.push(tot,a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z);}}}
+  const N=1400,out=new Float32Array(N*3);let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let k=0;k<N;k++){const r=rnd()*tot;let lo=0,hi=tri.length/10-1;while(lo<hi){const m=(lo+hi)>>1;if(tri[m*10]<r)lo=m+1;else hi=m;}const o=lo*10;let u=rnd(),v=rnd();if(u+v>1){u=1-u;v=1-v;}
+    for(let d=0;d<3;d++)out[k*3+d]=tri[o+1+d]+(tri[o+4+d]-tri[o+1+d])*u+(tri[o+7+d]-tri[o+1+d])*v;}
+  return P.samp=out;}
+const GCV=new THREE.Vector3();
+/* how far the gun has to move forward (z) or outward (x) so none of it is inside the torso or head; GCN.z / GCN.x */
+const GCN={z:0,x:0};
+let GM=.035; /* clearance margin, 3.5 cm (6 cm for shoulder launchers, which sit by the head as it nods) */
+function gunClear(ch,P,R){GCN.z=GCN.x=0;const B=bodyProf(ch);if(!B)return GCN;const S=gunSamp(P),m=R.matrix,v=GCV;
+  for(let i=0;i<S.length;i+=3){v.set(S[i],S[i+1],S[i+2]).applyMatrix4(m);
+    const e=B.Z.get(bpk(v.x,v.y));if(e&&v.z<e[0]+GM){if(e[0]+GM-v.z>GCN.z)GCN.z=e[0]+GM-v.z;
+      const r=B.X.get(bpk(v.y,v.z))||B.Y.get(Math.round(v.y/BPC));if(r&&r[0]+GM-v.x>GCN.x)GCN.x=r[0]+GM-v.x;}
+    const L=ch._lb;if(L)for(let k=0;k<L.length;k+=6)if(v.x>L[k]&&v.x<L[k+3]&&v.y>L[k+1]&&v.y<L[k+4]&&v.z>L[k+2]&&v.z<L[k+5]){if(L[k+5]+GM-v.z>GCN.z)GCN.z=L[k+5]+GM-v.z;if(L[k+3]+GM-v.x>GCN.x)GCN.x=L[k+3]+GM-v.x;}}
+  GCN.z=Math.min(GCN.z,.8);GCN.x=Math.min(GCN.x,.8);return GCN;}
+/* the legs move, so each frame they are boxes (slightly shrunk, they're rounded) in upper-body space: ch._lb = [x0,y0,z0,x1,y1,z1, ...] */
+const LBV=new THREE.Vector3(),LBM=new THREE.Matrix4(),LBI=new THREE.Matrix4();
+function legBoxes(ch){const up=ch.upIn||ch.body,out=ch._lb||(ch._lb=[]);out.length=0;if(!ch.mTorso)return out;up.updateWorldMatrix(true,false);LBI.copy(up.matrixWorld).invert();
+  for(const L of [ch.lL&&ch.lL.p,ch.lR&&ch.lR.p]){if(!L)continue;L.updateWorldMatrix(true,true);L.traverse(o=>{if(!o.isMesh||!o.visible||!o.geometry)return;const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
+    LBM.multiplyMatrices(LBI,o.matrixWorld);let x0=9,y0=9,z0=9,x1=-9,y1=-9,z1=-9;const cx=(bb.min.x+bb.max.x)/2,cy=(bb.min.y+bb.max.y)/2,cz=(bb.min.z+bb.max.z)/2,hx=(bb.max.x-bb.min.x)*.43,hy=(bb.max.y-bb.min.y)*.47,hz=(bb.max.z-bb.min.z)*.43;
+    for(let c=0;c<8;c++){LBV.set(cx+(c&1?hx:-hx),cy+(c&2?hy:-hy),cz+(c&4?hz:-hz)).applyMatrix4(LBM);if(LBV.x<x0)x0=LBV.x;if(LBV.y<y0)y0=LBV.y;if(LBV.z<z0)z0=LBV.z;if(LBV.x>x1)x1=LBV.x;if(LBV.y>y1)y1=LBV.y;if(LBV.z>z1)z1=LBV.z;}
+    out.push(x0,y0,z0,x1,y1,z1);});}
+  return out;}
 function heldRig(ch,id){ch.held??={};if(ch.held[id])return ch.held[id];const P=heldParts(id),rig=new THREE.Group();rig.rotation.order='YXZ';
   // mirrored across x so the gun matches the first-person view (ejection port, second pistol on the left hand's side)
   rig.scale.set(-P.s,P.s,P.s);for(const q of P.parts){const me=new THREE.Mesh(q.geo,q.mat);me.castShadow=true;rig.add(me);}
@@ -7349,15 +7390,20 @@ function holdGun(f,ch,dt,sp,lean,on){const id=gunOf(f),C=HOLD[id],low=f.guns&&f.
   const rl=f.reloadT>0?Math.sin(Math.min(1,1-f.reloadT/(f.reloadMax||1))*Math.PI):0,sw=f.switchT>0?f.switchT/.35:0;
   const p=f.pitch||0,bob=f.grounded?Math.sin((f.phase||0)*2)*clamp(sp/9,0,1):0,k=f.kick||0,tw=P.twin,shd=C.sh;
   // where the right hand (grip) sits in the body, and how the gun is turned about it
-  const gx=sx*(tw?.3:shd?.62:.22+.15*r),gy=sy-(shd?.12:tw?.42:.24)-(tw?.25:.4)*r-.12*rl-.35*sw+bob*(.035+.03*r),gz=(tw?.55:shd?.2:.36)+.06*r-.1*rl-.07*k;
-  R.rotation.set(-p*(1-r*.7)-lean+(tw?.7:.62)*r+.32*rl+.7*sw-.06*k*(shd?3:1),tw?-.04:-.06-.55*r-.15*rl,tw?0:.22*r+.5*rl);
+  const gx=sx*(tw?.3:shd?.62:.22+.15*r),gy=sy-(shd?.12:tw?.42:.24)-(tw?.25:.2)*r-.12*rl-.35*sw+bob*(.035+.03*r),gz=(tw?.55:shd?.2:.36)+.06*r-.1*rl-.07*k;
+  R.rotation.set(-p*(1-r*.7)-lean+(tw?.7:.4)*r+.32*rl+.7*sw-.06*k*(shd?3:1),tw?-.04:-.06-.55*r-.15*rl,tw?0:.22*r+.5*rl);
   const s=P.s;HV.r.set(-H.r[0]*s,H.r[1]*s,H.r[2]*s).applyEuler(R.rotation);R.position.set(gx,gy,gz).sub(HV.r);R.updateMatrix();
+  legBoxes(ch);GM=shd?.06:.035;{const N=gunClear(ch,P,R),sx2=f.hClrX==null?N.x<=N.z:f.hClrX?N.x<N.z+.12:N.x<N.z-.12,ax=sx2?'x':'z'; /* keep to one way unless the other is clearly shorter, so it doesn't flick between them */let need=sx2?N.x:N.z;
+   {const b0=R.position[ax];for(let it=0;it<3&&need>0;it++){R.position[ax]=b0+need;R.updateMatrix();const more=gunClear(ch,P,R)[ax];if(!more)break;need+=more;}} /* more passes catch parts a move pushed into another part of the body */
+   f.hClr=Math.max(need,f.hClrX===sx2?(f.hClr||0)-dt*2:0);f.hClrX=sx2;R.position.set(gx,gy,gz).sub(HV.r);R.position[ax]+=f.hClr;R.updateMatrix();} /* never inside the body: slide it clear, outward (beside the body) or forward, whichever is the shorter move, easing back slowly */
   HV.r.fromArray(H.r).applyMatrix4(R.matrix);
   // left hand: handguard (kept within reach), sliding to the magazine and down (mag out) during a reload; for Dual Pistols the second grip
   let lt=tw?H.l:[H.l[0],H.l[1],Math.min(H.l[2],H.r[2]+.62)];
   if(f.reloadT>0&&!tw){const u=1-f.reloadT/(f.reloadMax||1),mag=[0,H.r[1]-.12,H.r[2]+.3],out=[0,H.r[1]-.7,H.r[2]+.22],w=clamp(u<.25?u/.25:u<.75?1:1-(u-.75)/.25,0,1),m=u>.3&&u<.6?out:mag;
     lt=lt.map((v,i)=>v+(m[i]-v)*w);}
   HV.l.fromArray(lt).applyMatrix4(R.matrix);
+  if(!tw&&!(f.reloadT>0)){const sh2=ch.aL.p.position,reach=(ch.aL.up+ch.aL.fore)*.97;let z=lt[2];const zmin=H.r[2]+.12; /* short arms: slide the left hand back along the gun (towards the magazine) until it can reach */
+    while(z>zmin&&HV.l.distanceTo(sh2)>reach){z=Math.max(zmin,z-.05);HV.l.set(lt[0],lt[1],z).applyMatrix4(R.matrix);}}
   for(const [A,T,pole] of [[ch.aR,HV.r,HV.pr.set(.7,-1,-.35)],[ch.aL,HV.l,HV.pl.set(-.9,-1,-.2)]]){HV.t.copy(T);
     for(let it=0;it<2;it++){armIK(A,HV.t,pole);const h=A.hand;HV.t.copy(T).sub(IKv.x.multiplyScalar(h[0])).sub(IKv.z.multiplyScalar(h[2]));}armIK(A,HV.t,pole);}
   return true;}
@@ -7508,7 +7554,7 @@ const TEAMC=['#2f7fe0','#e8463a','#3bb54a','#f0a020','#a05ad6','#1fb5b0','#ff6fa
 const NET={role:null,peer:null,conn:null,R:null,live:false,cmd:null,acts:[],shots:[],ev:[],replay:false,fromRemote:false,code:'',load:null,tick:0,lastRx:0,snapN:0};
 window.__net=NET;
 const isFoe=(a,b)=>a!==b&&a.team!==b.team;
-const SNQ={hold:false,prevR:false,fire:false,rel:false};const isSnipe=()=>{const g=gunOf(ME);return (isSn(g)||g==='rocket'||g==='swarm')&&S.mode!=='rumble';}; /* hold Fire to aim, let go to fire: the snipers, the Rocket Launcher and the Swarm */
+const SNQ={hold:false,prevR:false,fire:false,rel:false};const isSnipe=()=>{const g=gunOf(ME);return (isSn(g)||g==='rocket'||g==='swarm'||g==='shotgun')&&S.mode!=='rumble';}; /* hold Fire to aim, let go to fire: the snipers, the Rocket Launcher, the Swarm and (Pete, 26 Nov) the SPAS-12 */
 function snipeDown(){if(!isSnipe()||!ME.alive||ME.downed)return false;SNQ.hold=true;mouseR=true;$('d-sx').hidden=false;return true;}
 function snipeUp(fire){if(!SNQ.hold)return;SNQ.hold=false;$('d-sx').hidden=true;if(fire){SNQ.fire=true;SNQ.at=S.t;}else mouseR=SNQ.hold;}
 const foesOf=f=>FS.filter(o=>o.alive&&isFoe(f,o));
@@ -7624,7 +7670,7 @@ function zipStep(f,dt,jump,jumpPress){const Z=f.zip;
     return true;}
   if(!M.zips||S.t<(f._zipCD||0)||f.downed||!f.alive||f.finishing)return false;
   let near=false;
-  for(const L of M.zips)for(const [e,dir] of [[L.a,1],[L.b,-1]]){if(Math.abs(f.pos.y-e.y)>.6||Math.hypot(f.pos.x-e.x,f.pos.z-e.z)>1.2)continue;near=true;
+  for(const L of M.zips)for(const [e,dir] of [[L.a,1],[L.b,-1]]){if(Math.abs(f.pos.y-e.y)>.6||Math.abs(f.pos.x-e.x)>1.45||Math.abs(f.pos.z-e.z)>1.45)continue;near=true; /* the pad is 2.8 m square (Pete, 26 Nov: twice as big) */
     /* Pete 24 Nov: players just stand on the pad for 1 s to grab the handle (a small countdown shows while you wait) (no jump). After a ride you have to step off the pad first, so you don't ride straight back */
     let go;if(f.bot){const n=f.ai&&f.ai.path&&f.ai.path[0];go=!!(n&&n.lad&&n.lad.warp&&n.lad.warp.zip===L&&n.lad.warp.dir===dir);}else{if(f._zipOff)continue;f._zipW=(f._zipW||0)+dt;go=f._zipW>=ZIP_WAIT;}
     if(!go)continue;f.zip={line:L,dir,s:0,t:0,last:null};f._zipW=0;f._zipOff=true;sfx('zip',f,{range:16});return true;}
@@ -9021,7 +9067,7 @@ function botThink(f,dt){if(S.test)return{wx:0,wz:0,jump:false};botReckless(f);co
   return{wx,wz,jump,jumpPress:jp};}
 
 /* ================= input ================= */
-const keys={};let mouseL=false,mouseR=false;
+const keys={};let mouseL=false,mouseR=false,mouseRT=false;
 /* input -> one command per game tick. Everything the player does reaches the game as {fi,si,yaw,pitch,jump,jumpPress,fire,aim,acts}:
    held state is sampled each tick, and one-off actions (reload, wall, lethal, swap...) are queued and applied at the start of the next tick.
    This is the shape a multiplayer client will send to the server. */
@@ -9106,8 +9152,8 @@ window.addEventListener('keydown',e=>{const code=mapKey(e),raw=e.code;if(!D.acti
 },true);
 window.addEventListener('keyup',e=>{const code=mapKey(e);keys[code]=false;if(code==='KeyG'&&D.active&&!S.paused)queueAct('KeyG:up');});
 canvas.addEventListener('contextmenu',e=>{if(D.active)e.preventDefault();});
-canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){if(snipeDown())return;mouseL=true;}/* no aim button: holding fire aims down sights; snipers hold fire to scope and fire on release, as on touch. Right click cancels a sniper scope */if(e.button===2&&SNQ.hold)snipeUp(false);});
-window.addEventListener('mouseup',e=>{if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}});
+canvas.addEventListener('mousedown',e=>{if(!D.active||S.state==='menu'||S.paused||S.touch)return;if(!S.locked)lock();if(e.button===0){if(snipeDown())return;mouseL=true;}/* no aim button: holding fire aims down sights; snipers hold fire to scope and fire on release, as on touch. Right click cancels a sniper scope */if(e.button===2){if(SNQ.hold)snipeUp(false);else{queueAct('KeyG');mouseRT=true;}}}); /* Pete 26 Nov: right click is the throwable (hold to aim it, let go to throw), except it still cancels a held scope */
+window.addEventListener('mouseup',e=>{if(e.button===2&&mouseRT){mouseRT=false;if(D.active&&!S.paused)queueAct('KeyG:up');}if(e.button===0){if(SNQ.hold){snipeUp(true);return;}mouseL=false;}});
 window.addEventListener('mousemove',e=>{if(!D.active||S.state==='menu'||S.state==='off'||S.paused)return;if(!S.locked&&S.lockOK)return;if(Math.abs(e.movementX)>250||Math.abs(e.movementY)>250||performance.now()-S.lockAt<120)return;
   const SN=window.SENS||{cam:1,ads:1};const sc=SN.cam*(ME.ads?(isSn(gunOf(ME))?(SN.snipe??SN.ads)*Math.min(.65,GUNS[gunOf(ME)].zoom/66):SN.ads*.65):1);ME.yaw-=e.movementX*.0022*sc;ME.pitch=clamp(ME.pitch-e.movementY*.0022*sc,-1.3,1.3);});
 window.addEventListener('wheel',e=>{if(D.active&&S.state!=='menu'&&!S.paused)queueSwap(e.deltaY<0?1:-1);},{passive:true});

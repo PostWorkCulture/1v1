@@ -64,9 +64,9 @@ Last updated: 2026-11-25
 - Controls are kept few: E throws a shop grenade if you have one, otherwise uses your lethal (no separate T key); the phone's single Item button does the same and shows the picture and count of whatever it will use next (Gold Grenade, grenade, mine, stun, molotov) (Pete 26 Nov); no wall building and no Sentry.
 - The barbed-wire bat is always the 2nd slot: 1 = gun, 2 = bat (3 also works), and the wheel or the phone Swap button flips between them. You're 40% faster with the bat out (not in Rumble) and it swings twice as quick (every 0.275 s); ADS with the bat does nothing; it downs in 3 hits (34 a hit, Rumble too). No fists anywhere.
 - Bat colours: every spawn you get one of six bats at random, same shape: classic white and red, Gold, Toxic (neon green and purple), Candy (pink, yellow, cyan), Galaxy (starry purple) and Lava (black with glowing cracks). The Gold Bat is the lucky one and must look it: bright polished gold with glitter flecks, a warm glow, little stars twinkling all over it, a gold swing arc with glitter and a shower of gold on every hit; its name glows gold on the HUD. 50 a hit, downs in 2. Your bat's colour shows on the HUD.
-- No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. Shotguns only one-shot at point blank, otherwise max 75%.
+- No overpowered outliers; headshots do extra damage on all guns. ARs/SMGs: faster fire, lighter hits, bigger mags. AKM is the long-range AR. ARs fire faster with lighter hits (Pete, 26 Nov: they felt sluggish): AKM 22 damage every 0.1 s, M4 20 every 0.085 s. Shotguns only one-shot at point blank, otherwise max 75%.
 - Sights (Pete, 24 Nov): two designs only. ARs (AKM, M4) use the twin steel-blade sight; SMGs (MP5, Vector, UMP) and the Dual Pistols use the round ring sight. SMG dots are blue; AR and pistol dots red. No other red dots/holos on those guns. Small aiming dots, no glow ring round red dots; shiny triggers and mirror scopes.
-- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher and the Swarm hold Fire to aim and fire on release, right click only cancels a held aim. No touch Aim button, no right-click aim, no "Aim when firing" setting.
+- No aim button (Pete, 24 Nov): holding Fire aims down sights while shooting (left click or touch Fire); snipers, the Rocket Launcher, the Swarm and the SPAS-12 (26 Nov) hold Fire to aim and fire on release. Right click is the throwable (Pete, 26 Nov): hold to aim it, let go to throw, same as G; while a hold-to-aim gun is held aimed, right click cancels the aim instead. No touch Aim button, no right-click aim, no "Aim when firing" setting.
 - Sniper scopes zoom in hard (Pete, 24 Nov): HDR 12° field of view, Vanguard 27° (about 1.6x closer than before); look speed through a scope scales with the zoom. Letting go of Fire always drops the scope; nothing can leave you stuck aiming.
 - Weapon previews (cards and showcase) are drawn live from the real gun models under one shared studio, so any gun change shows identically in both.
 - Default gun finishes: HDR "Op Art" (zebra chassis, white barrel, red parts), AKM "Graffiti" (spray tags, splattered white furniture, no gold trim), Crossbow "Apex" (gloss black skeleton stock, silver limbs, neon-orange accents), Dual Pistols "Cosmic" (nebula slides, crystal grips, planet ring) (all picked 25 Nov); Vanguard shiny mirror chrome with a satin silver front grip (the M4 is the gold gun); Vector black.
@@ -135,6 +135,11 @@ Last updated: 2026-11-25
 - Strafing (side-stepping) at 82% of running speed for players.
 - Explosive drums in five colours (red, blue, green, yellow, white) on every map, Sky High, Lagoon and The House included; the Railed drums cycle the colours too.
 - Easier pickups: armour, Swarm and speed shoes grab from 1.75 m (was 1.1-1.2 m); mines go off from 2.2 m (was 1.7 m); shop reach 3.6 m (was 3.1 m).
+- Held guns never pass through the body (Pete: the M4 came out through Johnny Rotten's back): every frame the third-person gun is tested against a depth map of the torso and head and slides clear (beside the body or forward, whichever is shorter); running carry is higher and less tilted so the gun stays off the legs. Checked for every gun on every character, verified by a separate agent.
+- ARs faster: AKM 22 dmg / 0.1 s (was 30 / 0.14), M4 20 / 0.085 s (was 28 / 0.13).
+- Right click throws your lethal (hold to aim, let go to throw); still cancels a held scope.
+- Zipline pads twice as big (2.8 m square, bigger deck, post moved behind the pad).
+- SPAS-12 is hold Fire to aim, let go to fire, like the snipers.
 - Death darkness ('Tunnel'): much darker and covers most of the screen (only a small dim window in the middle), held a bit longer (2.2 s, was 1.45 s).
 - Weapon skins: hover a tile to preview it; skin row fixed height so the preview doesn't jump; removed Synthwave, Oil Slick and Sky Pulse (max 4 options per gun).
 
@@ -164,7 +169,7 @@ Last updated: 2026-11-25
 ### 2026-11-24
 - Mines laid before you die disappear 3 s after you respawn (mines laid after respawning stay).
 - Smoother strafing: hips turn towards the way you're going and the legs run that way with the chest still on aim, so legs no longer cross and wobble; shoes stay level on the floor instead of dipping through it (forward running too).
-- Ziplines: 1 s on the pad to grab (was 1.5 s), with a small "Zipline in 0.6s" countdown pop-up while you wait.
+- Ziplines: 1 s on the pad to grab (was 1.5 s), with a small "Zipline in 0.6s" countdown pop-up while you wait. Pads are 2.8 m square (Pete, 26 Nov: twice as big), on a bigger deck with the post just behind the pad.
 - Map picker: small square pictures on the left and a big preview of the picked map beside them (follows hover, no pop-up; map size tagged in its corner), name and description stacked on the right, the mode summary as a pink label by the Bots buttons; it shrinks to fit when the options row wraps so nothing overlaps.
 - Character menu pictures re-rendered for all 10 at high res (picker tile 512 px, full body 960 x 1216, face 360 px) with transparent backgrounds: no black squares behind the characters on the dark blue tiles or scoreboard avatars.
 - Glitch's cyan trim (zip, socks, trainers) changed to neon orange, menu colour too; Raven keeps her black hair (blonde tried, Pete chose to keep black).

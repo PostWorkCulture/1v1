@@ -4812,6 +4812,11 @@ function wreckCove(){const G=WC.G,Z=25;/* 70 x 50 m (Big size): from the foot of
     for(const x of [x0+.4,cx-6.5,cx,cx+6.5,x1-.4])for(const z of [z0+.4,z1-.4])wcBox(x-.28,x+.28,y,RB,z-.28,z+.28,'#c9a25a',{mat:bamM});
     for(const x of [x0+.4,x1-.4])wcBox(x-.28,x+.28,y,RB,cz-.28,cz+.28,'#c9a25a',{mat:bamM});
     const rc0=M.group.children.length;roofGable(cx,cz,x1-x0+1.6,z1-z0+1.6,RB,'#c9a25a',true,'thatch2','#b88a5a');const thatch=M.group.children.slice(rc0);
+    /* skylights (26 Nov): each thatch slope is rebuilt in strips with three glass strips down it, so you can see people under the roof from up top (and the sky from inside). The roof's walkable colliders are unchanged, so you can still stand on the glass */
+    {const gm=new THREE.MeshStandardMaterial({color:'#cfe9f5',transparent:true,opacity:.22,roughness:.05,metalness:.3,depthWrite:false,side:2});
+     for(const o of thatch.filter(o=>o.isMesh&&o.geometry.type==='BoxGeometry')){const p=o.geometry.parameters,W=p.width,Lz=p.depth,T=p.height;M.group.remove(o);thatch.splice(thatch.indexOf(o),1);
+      const segs=[];let a=-W/2;for(const c of [-8.5,0,8.5]){segs.push([a,c-1.3,0],[c-1.3,c+1.3,1]);a=c+1.3;}segs.push([a,W/2,0]);
+      for(const [s0,s1,gl] of segs){const m=new THREE.Mesh(gl?B.boxGeo(s1-s0,.05,Lz-.3):B.boxGeo(s1-s0,T,Lz),gl?gm:o.material);m.position.copy(o.position);m.rotation.copy(o.rotation);m.translateX((s0+s1)/2);m.castShadow=!gl;m.receiveShadow=!gl;if(gl){m.renderOrder=2;m.userData.glassRoof=1;}M.group.add(m);thatch.push(m);}}}
     /* glass panels along the top of the roof (26 Nov): a 1.2 m run of single-shot glass each side of a gap in the middle of the ridge, cover for whoever is up there */
     for(const [a0,a1] of [[x0+1.2,cx-1.3],[cx+1.3,x1-1.2]])glassRun(a0,cz,a1,cz,RB+2.6+.1,1.2,1.6);
     // woven back wall with bottle shelves, a long bamboo bar in front of it, and the rest open to walk round
@@ -10308,7 +10313,7 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
 /* bump a map's number whenever its layout or look changes, so players never see its old menu picture after a publish (25 Nov) */
-const MAP_LOOK={house:2,wreck:3,rail:4,arena:2,lagoon:4,skyhigh:3,street:2};
+const MAP_LOOK={house:2,wreck:4,rail:4,arena:2,lagoon:4,skyhigh:3,street:2};
 const HERO_CAM={arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */

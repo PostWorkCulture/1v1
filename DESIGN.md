@@ -180,7 +180,7 @@ Last updated: 2026-11-25
 - Bat: 40% speed boost while held (was 20%) and swings twice as quick. Six bat colours at random each spawn; the Gold Bat downs in 2, the rest in 3.
 - Throwables smash through any glass without bouncing or going off; thrown grenades set off barrels and mines anywhere in their blast; Gold Grenade blast twice as big with a slight screen shake; Flamethrower more powerful (6 a tick, 16 m, wider jet, 3 s fuel, harder burn).
 - Stun stars half the size (and a little lower). Watching someone after you're out no longer judders/looks fuzzy (the camera now moves with their smoothed position).
-- Sharp loading picture; after every match (win or lose) the results offer Rematch, Next map (same rules on the map to the right in the menu's map picker, wrapping round) and Menu, nothing else; with no choice it goes home after 60 s.
+- Sharp loading picture, shown straight away (no low-res menu picture first); after every match (win or lose) the results offer Rematch, Next map (same rules on the map to the right in the menu's map picker, wrapping round) and Menu, nothing else; with no choice it goes home after 60 s.
 - Mansion: the side hedges (out of bounds) raised to the full height of the house (11 m), and the roof's side parapets to 2.6 m, so both are obvious.
 - Street Life: the home all yellow (black frame kept); the arcade's outside frames black like the home's, and loud dark clashing colours inside (red floor, electric-blue wall, deep purple ceiling/upstairs floor, loft lined blue/purple/teal/magenta).
 - 8 new characters added (North West, Johnny Rotten, Emo Bunny, Glitch, Kitty, Puffa, Raven, Toxic), and Crusty, Dracz, Starscreen and Anti Hero removed completely; roster is now 10 (Wednesday, Lil Pink and the 8).

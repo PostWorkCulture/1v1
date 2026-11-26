@@ -131,6 +131,7 @@ Last updated: 2026-11-25
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-26
+- Street Life: about 5 m of lawn round the back of each building by the fence (buildings scaled 2.0 to 1.85 and moved in to x 18.6, road a lane narrower: asphalt ±4.5 m, pavements to 6.5 m); the home's outside chimney stack removed; home furniture pushed back against walls and into corners (coffee table, kitchen island).
 - Death darkness ('Tunnel'): much darker and covers most of the screen (only a small dim window in the middle), held a bit longer (2.2 s, was 1.45 s).
 - Weapon skins: hover a tile to preview it; skin row fixed height so the preview doesn't jump; removed Synthwave, Oil Slick and Sky Pulse (max 4 options per gun).
 

@@ -1662,14 +1662,15 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
 /* weapon skins: a row of picks above the weapon preview */
 #menu #d-wshow .ws-skins{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));gap:6px}
 #menu #d-wshow .ws-skins .sk{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0;padding:3px 3px 4px;border-radius:9px;border:2px solid #2b3a66;background:linear-gradient(#1a2446,#121a33);color:#e9eefc;font-family:inherit;font-weight:700;font-size:11.5px;line-height:1.1;cursor:pointer;position:relative}
-#menu #d-wshow .ws-skins .sk i{display:block;border-radius:6px;background:linear-gradient(135deg,var(--a) 0 50%,var(--b) 50% 100%);background-size:100% 100%;aspect-ratio:2/1;overflow:hidden;opacity:.96}
-#menu #d-wshow .ws-skins .sk img{display:block;width:100%;height:100%;object-fit:contain;background:#141c36}
+#menu #d-wshow .ws-skins{height:76px;grid-template-rows:100%;flex:none}#menu #d-wshow .ws-skins .sk{min-height:0;overflow:hidden}#menu #d-wshow .ws-skins.ws-sk-none{visibility:hidden} /* same height for every gun and lethal, so the preview never jumps */
+#menu #d-wshow .ws-skins .sk i{display:block;border-radius:6px;background:linear-gradient(135deg,var(--a) 0 50%,var(--b) 50% 100%);background-size:100% 100%;flex:1;min-height:0;overflow:hidden;opacity:.96;position:relative}
+#menu #d-wshow .ws-skins .sk img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;background:#141c36}
 #menu #d-wshow .ws-skins .sk img[src=""]{opacity:0}
-#menu #d-wshow .ws-skins .sk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+#menu #d-wshow .ws-skins .sk span{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
 #menu #d-wshow .ws-skins .sk:hover{border-color:#8fa0c8}
 #menu #d-wshow .ws-skins .sk.on{border-color:#ff2bd6;box-shadow:0 0 0 2px #ff2bd655,0 0 14px #ff2bd655}
 @media (min-width:600px){#menu .mfull.duels[data-step="loadout"] #col3.wsc #d-wshow:has(.ws-skins) .ws-img{height:clamp(110px,calc(100vh - 500px),380px)}} /* the skin row takes its room from the preview, so the stats stay clear of Back/Start */
-@media (max-height:520px){#menu #d-wshow .ws-skins{gap:4px}#menu #d-wshow .ws-skins .sk{padding:2px;font-size:10px;border-width:1.5px}#menu #d-wshow .ws-skins .sk i{aspect-ratio:3/1}}
+@media (max-height:520px){#menu #d-wshow .ws-skins{gap:4px}#menu #d-wshow .ws-skins .sk{padding:2px;font-size:10px;border-width:1.5px}#menu #d-wshow .ws-skins{height:44px}}
 @media (max-height:620px){
   #menu .mfull.duels[data-step="loadout"] #col3.wsc #d-wshow .ws-img{height:clamp(70px,calc(100vh - 360px),240px)!important}
   #menu #d-wshow .ws-note{font-size:13px;line-height:1.3;margin:0 0 4px}
@@ -12296,7 +12297,6 @@ const GSKP={
  hazard:()=>gunPat('sk_hazard',256,256,(c,w,h)=>{c.fillStyle='#ffd21a';c.fillRect(0,0,w,h);c.fillStyle='#0c0c0e';for(let i=-8;i<16;i++){c.beginPath();c.moveTo(i*32,0);c.lineTo(i*32+16,0);c.lineTo(i*32+16-h,h);c.lineTo(i*32-h,h);c.closePath();c.fill();}}),
  tiger:()=>gunPat('sk_tiger2',512,512,(c,w,h)=>{c.fillStyle='#ff7a00';c.fillRect(0,0,w,h);const r=gpRnd(31);c.fillStyle='#0b0b0d';for(let i=0;i<14;i++){const y=i*37+r()*10;for(const ox of [-w,0,w]){const x=ox+r()*w*.3,l=180+r()*200,t=12+r()*14;c.beginPath();c.moveTo(x,y);c.bezierCurveTo(x+l*.3,y-t*1.5,x+l*.6,y+t*2.2,x+l,y+r()*8);c.bezierCurveTo(x+l*.6,y+t*.4,x+l*.3,y+t*2,x,y+t);c.closePath();c.fill();}}}),
  zebra:()=>gunPat('sk_zebra',512,512,(c,w,h)=>{c.fillStyle='#f6f6f6';c.fillRect(0,0,w,h);c.fillStyle='#0b0b0d';for(let i=0;i<22;i++){c.beginPath();for(let x=0;x<=w;x+=8)c.lineTo(x,i*24+Math.sin(x*.025+i*.7)*14);for(let x=w;x>=0;x-=8)c.lineTo(x,i*24+11+Math.sin(x*.025+i*.7)*14+Math.sin(x*.06)*4);c.closePath();c.fill();}}),
- grid:()=>gunPat('sk_grid',256,256,(c,w,h)=>{c.fillStyle='#0a0414';c.fillRect(0,0,w,h);c.shadowBlur=10;for(let i=0;i<=4;i++){c.strokeStyle='#ff2bd6';c.shadowColor='#ff2bd6';c.lineWidth=5;c.beginPath();c.moveTo(0,i*64);c.lineTo(w,i*64);c.stroke();c.strokeStyle='#22f3ff';c.shadowColor='#22f3ff';c.beginPath();c.moveTo(i*64,0);c.lineTo(i*64,h);c.stroke();}}),
  acid:()=>gunPat('sk_acid',256,256,(c,w,h)=>{const r=gpRnd(19),cols=['#0c0c10','#9dff1a','#7a2bff','#2a2d33','#d4ff4a'];c.fillStyle='#16161a';c.fillRect(0,0,w,h);for(let i=0;i<420;i++){c.fillStyle=cols[(r()*5)|0];c.fillRect(((r()*w)/16|0)*16,((r()*h)/16|0)*16,16*(1+(r()*3|0)),16*(1+(r()*2|0)));}}),
  lava:()=>gunPat('sk_lava',512,512,(c,w,h)=>{const r=gpRnd(7);c.fillStyle='#0b0706';c.fillRect(0,0,w,h);c.lineCap='round';for(let i=0;i<70;i++){let x=r()*w,y=r()*h;c.shadowColor='#ff3a00';c.shadowBlur=14;c.strokeStyle=i%4?'#ff4a00':'#ffc02a';c.lineWidth=2+r()*5;c.beginPath();c.moveTo(x,y);for(let j=0;j<6;j++){x+=(r()-.5)*90;y+=(r()-.5)*90;c.lineTo(x,y);}c.stroke();}}),
  frost:()=>gunPat('sk_frost2',512,512,(c,w,h)=>{const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,'#e6f8ff');g.addColorStop(.45,'#4fc3ff');g.addColorStop(1,'#0b3a8a');c.fillStyle=g;c.fillRect(0,0,w,h);const r=gpRnd(12);
@@ -12307,8 +12307,6 @@ const GSKP={
  popart:()=>gunPat('sk_popart',256,256,(c,w,h)=>{c.fillStyle='#ffe11a';c.fillRect(0,0,w,h);c.fillStyle='#ff2a3a';for(let y=0;y<h;y+=16)for(let x=(y/16%2)*8;x<w;x+=16){c.beginPath();c.arc(x,y,5.5,0,7);c.fill();}c.strokeStyle='#111';c.lineWidth=6;c.beginPath();for(let i=0;i<5;i++){c.moveTo(0,i*64+20);c.lineTo(w,i*64-10);}c.stroke();c.fillStyle='#1a5aff';for(let i=0;i<3;i++){c.beginPath();c.arc(40+i*90,180-i*60,22,0,7);c.fill();}}),
  blood:()=>gunPat('sk_blood',256,256,(c,w,h)=>{c.fillStyle='#c4001a';c.fillRect(0,0,w,h);const r=gpRnd(5);for(let i=0;i<24;i++){c.fillStyle=i%3?'#7a000f':'#ff2a3a';const x=r()*w,y=r()*h;c.beginPath();c.moveTo(x,y);for(let k=0;k<6;k++){const a=k/6*7;c.lineTo(x+Math.cos(a)*(10+r()*26),y+Math.sin(a)*(10+r()*26));}c.closePath();c.fill();}}),
  electric:()=>gunPat('sk_electric',512,512,(c,w,h)=>{c.fillStyle='#05070f';c.fillRect(0,0,w,h);const r=gpRnd(3);c.lineCap='round';for(let i=0;i<14;i++){let x=r()*w,y=0;c.shadowColor='#22d3ff';c.shadowBlur=16;c.strokeStyle=i%3?'#4fe0ff':'#ffffff';c.lineWidth=2+r()*3;c.beginPath();c.moveTo(x,y);while(y<h){x+=(r()-.5)*70;y+=20+r()*40;c.lineTo(x,y);}c.stroke();}}),
- oil:()=>gunPat('sk_oil2',512,512,(c,w,h)=>{const id=c.createImageData(w,h),d=id.data,stops=[[40,10,90],[120,40,220],[20,200,200],[230,190,60],[200,40,160],[40,10,90]];for(let y=0;y<h;y++)for(let x=0;x<w;x++){let v=(Math.sin(x*.018+Math.sin(y*.021)*2.2)+Math.sin(y*.015+Math.cos(x*.012)*2))*.25+.5;v=Math.min(.999,Math.max(0,v))*5;
-   const k=v|0,f=v-k,a=stops[k],b=stops[k+1],i=(y*w+x)*4;for(let n=0;n<3;n++)d[i+n]=a[n]+(b[n]-a[n])*f;d[i+3]=255;}c.putImageData(id,0,0);}),
  amethyst:()=>gunPat('sk_amethyst',512,512,(c,w,h)=>{const g=c.createLinearGradient(0,0,w,h);g.addColorStop(0,'#2a0a5a');g.addColorStop(.5,'#8a3aff');g.addColorStop(1,'#3a0a7a');c.fillStyle=g;c.fillRect(0,0,w,h);c.strokeStyle='#ffcf5a';c.lineCap='round';
    for(let i=0;i<4;i++)for(let j=0;j<4;j++){const x=64+i*128,y=64+j*128;c.lineWidth=5;c.beginPath();c.arc(x,y-26,24,.3,5.4);c.stroke();c.beginPath();c.arc(x,y+26,24,3.4,8.6);c.stroke();c.lineWidth=3;c.beginPath();c.moveTo(x-60,y);c.bezierCurveTo(x-20,y-20,x+20,y+20,x+60,y);c.stroke();
    c.fillStyle='#ff6af0';c.beginPath();c.moveTo(x,y-9);c.lineTo(x+7,y);c.lineTo(x,y+9);c.lineTo(x-7,y);c.closePath();c.fill();}}),
@@ -12319,15 +12317,12 @@ const GSKP={
    for(let i=0;i<70;i++){const x=r()*w,y=r()*h,rr=3+r()*12;c.fillStyle='rgba(240,255,200,.55)';c.beginPath();c.arc(x,y,rr,0,7);c.fill();c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.arc(x-rr*.35,y-rr*.35,rr*.25,0,7);c.fill();}}),
  viper:()=>gunPat('sk_viper2',256,256,(c,w,h)=>{c.fillStyle='#0b0d08';c.fillRect(0,0,w,h);for(let y=0;y<h+16;y+=16)for(let x=(y/16%2)*16;x<w+32;x+=32){const g=c.createLinearGradient(x,y-8,x,y+8);g.addColorStop(0,'#a8ff1a');g.addColorStop(1,'#3fc400');c.fillStyle=g;c.beginPath();c.ellipse(x,y,14,9,0,0,7);c.fill();}
    c.fillStyle='#0b0d08';for(let i=0;i<4;i++){const cx=32+i*64;c.beginPath();c.moveTo(cx,40);c.lineTo(cx+24,64);c.lineTo(cx,88);c.lineTo(cx-24,64);c.closePath();c.fill();c.beginPath();c.moveTo(cx,168);c.lineTo(cx+24,192);c.lineTo(cx,216);c.lineTo(cx-24,192);c.closePath();c.fill();}}),
- pulse:()=>gunPat('sk_pulse',512,512,(c,w,h)=>{const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,'#3a4aff');g.addColorStop(.5,'#7f9cff');g.addColorStop(1,'#3a4aff');c.fillStyle=g;c.fillRect(0,0,w,h);c.shadowColor='#22f3ff';c.shadowBlur=14;
-   c.strokeStyle='#bff8ff';c.lineWidth=6;for(let i=-2;i<10;i++){c.beginPath();c.moveTo(i*64,0);c.lineTo(i*64+40,h/2);c.lineTo(i*64,h);c.stroke();}c.shadowBlur=0;c.fillStyle='rgba(255,255,255,.9)';for(let y=16;y<h;y+=64)for(let x=48;x<w;x+=64){c.fillRect(x,y,4,4);}}),
 };
 /* skins: pattern for the main painted part (sc = pattern scale), dark/light secondary colours, metal [colour, metalness, roughness], glow colour; glowPat = the pattern also glows */
 const GSKINS={
  hazard:{name:'Hazard',pat:'hazard',sc:2,dark:'#0c0c0e',light:'#ffd21a',metal:['#121316',.9,.2],glow:'#ffd21a',sw:['#ffd21a','#0c0c0e']},
  tiger:{name:'Tiger',pat:'tiger',sc:1.5,dark:'#0b0b0d',light:'#f6f6f6',metal:['#e8edf5',1,.1],glow:'#ff7a00',sw:['#ff7a00','#0b0b0d']},
  zebra:{name:'Op Art',pat:'zebra',sc:2,dark:'#0b0b0d',light:'#e0102a',metal:['#e0102a',.6,.2],glow:'#ff2a3a',sw:['#f6f6f6','#0b0b0d']},
- synth:{name:'Synthwave',pat:'grid',sc:5,glowPat:1.1,dark:'#1a0b2e',light:'#ff2bd6',metal:['#eef1f5',1,.06],glow:'#22f3ff',sw:['#ff2bd6','#22f3ff']},
  acid:{name:'Acid Camo',pat:'acid',sc:2.5,dark:'#121317',light:'#9dff1a',metal:['#7a2bff',.6,.25],glow:'#9dff1a',sw:['#9dff1a','#7a2bff']},
  inferno:{name:'Inferno',pat:'lava',sc:1.6,glowPat:1.4,dark:'#120806',light:'#ff6a00',metal:['#1a1214',1,.15],glow:'#ff5a00',sw:['#ff4a00','#0b0706']},
  ice:{name:'Glacier',pat:'frost',sc:1.3,dark:'#0b2a5a',light:'#ffffff',metal:['#e8f6ff',1,.06],glow:'#5fe0ff',sw:['#bfeaff','#0f2a44']},
@@ -12336,7 +12331,6 @@ const GSKINS={
  popart:{name:'Pop Art',pat:'popart',sc:3,dark:'#1a5aff',light:'#ff2a3a',metal:['#111111',.5,.3],glow:'#ffe11a',sw:['#ffe11a','#ff2a3a']},
  blood:{name:'Blood Diamond',pat:'blood',sc:3,dark:'#0b0b0d',light:'#f6f6f6',metal:['#f2f5fa',1,.05],glow:'#ff2a3a',sw:['#c4001a','#f2f5fa']},
  electric:{name:'Voltage',pat:'electric',sc:1.6,glowPat:1.5,dark:'#05070f',light:'#22d3ff',metal:['#d8e4f0',1,.1],glow:'#4fe0ff',sw:['#22d3ff','#05070f']},
- oil:{name:'Oil Slick',pat:'oil',sc:1.4,dark:'#101114',light:'#101114',metal:['#101114',1,.12],glow:'#ff8af0',sw:['#7a5aff','#2affc8'],bodyMetal:1},
   /* lime green, Pete's favourite (25 Nov) */
  limerush:{name:'Lime Rush',pat:'limerush',sc:1.8,rough:.6,dark:'#0b0b0d',light:'#9dff1a',metal:['#e8edf5',1,.08],glow:'#9dff1a',sw:['#9dff1a','#0b0b0d']},
  slime:{name:'Slime',pat:'slime',sc:1.8,rough:.45,dark:'#1f5a00',light:'#c8ff3a',metal:['#c8ff3a',.6,.15],glow:'#b8ff2a',sw:['#9dff1a','#2f8a00']},
@@ -12344,11 +12338,10 @@ const GSKINS={
   /* SMG upgrades: their current colours, turned up */
  mp5x:{name:'Royal Amethyst',pat:'amethyst',sc:1.6,glowPat:.25,dark:'#1a0a33',light:'#ffcf5a',metal:['#ffcf5a',1,.12],glow:'#ff6af0',sw:['#8a3aff','#ffcf5a']},
  vecx:{name:'Black Gold Circuit',pat:'circuit',sc:1.6,glowPat:1,dark:'#07070a',light:'#ffc23d',metal:['#ffc23d',1,.12],glow:'#ffd84a',sw:['#07070a','#ffc23d']},
- umpx:{name:'Sky Pulse',pat:'pulse',sc:1.6,glowPat:.35,dark:'#141a4a',light:'#ffffff',metal:['#e8edf5',1,.06],glow:'#22f3ff',sw:['#7f9cff','#22f3ff']},
 };
 /* each gun's skins, picked to clash with its default finish */
-const GSK_GUN={gar:['limerush','tiger','oil'],ar:['ice','hazard','popart'],crossbow:['viper','ice','synth'],shotgun:['inferno','popart','zebra'],smg:['synth','tiger','candy','mp5x'],vector:['slime','oil','blood','vecx'],
-  ump:['hazard','cosmic','ice','umpx'],duals:['blood','electric','candy'],rocket:['ice','acid','popart'],sniper:['synth','acid','tiger'],vanguard:['blood','cosmic','inferno']};;
+const GSK_GUN={gar:['limerush','tiger'],ar:['ice','hazard','popart'],crossbow:['viper','ice'],shotgun:['inferno','popart','zebra'],smg:['tiger','candy','mp5x'],vector:['slime','blood','vecx'],
+  ump:['hazard','cosmic','ice'],duals:['blood','electric','candy'],rocket:['ice','acid','popart'],sniper:['acid','tiger'],vanguard:['blood','cosmic','inferno']};;
 const skLum=c=>.2126*c.r+.7152*c.g+.0722*c.b;
 /* box-map UVs in gun space so a pattern runs at one scale across every part */
 function skinUV(me,inv,sc){const g0=me.geometry,g=g0.index?g0.toNonIndexed():g0.clone();const P=g.attributes.position,N=g.attributes.normal;if(!N)return;
@@ -12928,13 +12921,16 @@ function wsPaint(tab,k,sk){const WC=GCAT;
      img=`<img src="${PREV['g_'+k]||''}" alt="">`;cls=WC[k]||lab[tab];name=g.name;
      const mob=g.type==='melee'?10:Math.max(1,Math.min(10,Math.round((weightMul(k)-.83)/(1.08-.83)*9+1)));
      body=`<p class="ws-note">${g.note||''}</p><div class="ws-st">${bar('Damage',rt(dmg,MX.dmg,1))}${bar('Fire rate',rt(rps,MX.rps,1))}${bar('Range',rt(rng,MX.rng))}${bar('Mobility',mob)}<div class="mg">Mag<em>${isFinite(g.mag)&&g.mag?g.mag+' rounds':'—'}</em></div></div>`;}
-   const key=tab+':'+(k||'r');const ws=$('d-wshow'),hasSk=tab==='pri'&&k&&GSK_GUN[k];if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`${hasSk?'<div class="ws-skins" id="d-skins" role="radiogroup" aria-label="Skin"></div>':''}<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}if(hasSk)skinBox(k);ws3Show(sk||!k?null:tab==='let'?'c_'+k:hasSk?skinned(ME,k):k);}
+   const key=tab+':'+(k||'r');const ws=$('d-wshow'),hasSk=tab==='pri'&&k&&GSK_GUN[k];if(ws.dataset.k!==key){ws.dataset.k=key;ws.innerHTML=`${hasSk?'<div class="ws-skins" id="d-skins" role="radiogroup" aria-label="Skin"></div>':'<div class="ws-skins ws-sk-none" aria-hidden="true"></div>'}<div class="ws-img">${img}<span class="ws-ov-c">${cls}</span><span class="ws-ov-n">${name}</span></div><div>${body}</div>`;}if(hasSk)skinBox(k);ws3Show(sk||!k?null:tab==='let'?'c_'+k:hasSk?(SKHOV&&SKHOV.k===k?SKHOV.id:skinned(ME,k)):k);}
 /* the skin box above the weapon preview: Default plus the gun's skins, each with a little picture (drawn the first time you open that gun) */
-const SKPREV={};
+const SKPREV={};let SKHOV=null; /* the skin tile under the mouse, so menu repaints keep showing it */
 function skinBox(k){const bx=$('d-skins');if(!bx)return;const L=GSK_GUN[k]||[],cur=(S.skins||{})[k]||'';
   const pic=s=>s?SKPREV[k+'@'+s]||'':PREV['g_'+k]||'';
   const h=['',...L].map(s=>`<button type="button" class="sk${s===cur?' on':''}" data-skin="${s}" role="radio" aria-checked="${s===cur}"><i style="--a:${s?GSKINS[s].sw[0]:'#8a95ab'};--b:${s?GSKINS[s].sw[1]:'#23252c'}"><img src="${pic(s)}" alt=""></i><span>${s?GSKINS[s].name:'Default'}</span></button>`).join('');
   if(bx._h!==h){bx._h=h;bx.innerHTML=h;bx.style.setProperty('--n',L.length+1);}
+  /* hovering a skin (mouse or pen) tries it on in the preview; leaving the row puts your pick back */
+  bx.onpointerover=e=>{if(e.pointerType==='touch')return;const b=e.target.closest('[data-skin]');if(!b)return;const s=b.dataset.skin;SKHOV={k,id:s?k+'@'+s:k};ws3Show(SKHOV.id);};
+  bx.onpointerleave=e=>{if(e.pointerType==='touch')return;SKHOV=null;ws3Show(skinned(ME,k));};
   bx.onclick=e=>{const b=e.target.closest('[data-skin]');if(!b)return;const s=b.dataset.skin;S.skins=S.skins||{};if(s)S.skins[k]=s;else delete S.skins[k];store.set('skins',S.skins);skinBox(k);ws3Show(skinned(ME,k));};
   if(L.some(s=>!SKPREV[k+'@'+s])&&!skinBox.busy){skinBox.busy=1;setTimeout(()=>{try{const ids=L.map(s=>k+'@'+s).filter(i=>!SKPREV[i]);Object.assign(SKPREV,heroShots(ids,B.roundedBox,240,120));}catch(e){console.warn('skin pics',e);}skinBox.busy=0;if($('d-skins'))skinBox(k);},60);}}
 function wsPick(){const tab=S.wtab==='let'?'let':'pri';return [tab,tab==='let'?(S.randCons?null:S.cons):(S.randGun?null:S.gun)];}

@@ -59,6 +59,14 @@
 #menu .stage.rand .st-q{display:none!important}
 #menu .stage .crg .mrg-t{background:#d9dce1}#menu #d-prof .crg .mrg-t.rnd{background:#12203f}#menu .stage .crg .mrg-t span{left:0;right:0;bottom:0;padding:16px 7px 6px;background:linear-gradient(transparent,rgba(10,17,34,.78))}#menu .stage .crg .mrg-t img{object-fit:cover;object-position:50% 20%}
 #menu .mcar.rand .mcar-stage .mcar-cap .t{font-size:46px}#menu .mcar.rand .mcar-stage .mcar-cap{padding-top:20px}
+
+/* phones (Pete 26 Nov): no Random tiles; weapon and lethal tiles are all picture, no names or tags */
+body.phone #menu :is(.mrg-t.rnd,.crg [data-char="random"],.char-opt.rand,.gun-opt.rand){display:none!important}
+body.phone #menu :is(#d-guns,#d-consl) .gun-opt{position:relative;padding:0!important;overflow:hidden;min-height:0;height:auto!important;aspect-ratio:2/1}
+body.phone #menu .mfull.duels[data-step="loadout"] :is(#d-guns,#d-consl){grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+body.phone #menu .mfull.duels[data-step="loadout"] #d-picks{gap:10px!important}
+body.phone #menu :is(#d-guns,#d-consl) .gun-opt .gp{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;margin:0!important;object-fit:cover;border-radius:inherit;transform:none!important}
+body.phone #menu :is(#d-guns,#d-consl) .gun-opt :is(.t,.gc,.b){display:none!important}
 </style>
 <title>imok 1v1</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -700,6 +708,7 @@ input[type=range]:focus-visible{outline:2px solid var(--rt);outline-offset:3px;b
 .dt-btns .dt-b{position:absolute;right:var(--x);bottom:var(--y);width:var(--s,50px);height:var(--s,50px);transform:translate(50%,50%) scale(var(--bz,1));margin:0;padding:0;display:grid;place-content:center;line-height:1.05}
 .dt-btns .dt-b[hidden]{display:none}
 .dt-btns .dt-b small{display:block;font:800 10px/1 var(--f-body);opacity:.8;margin-top:2px}
+.dt-btns #dt-g .ic{display:block;line-height:0}.dt-btns #dt-g .ic svg{width:30px;height:30px;display:block;margin:0 auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}.dt-btns #dt-g small{text-align:center;margin-top:0}
 .dt-btns [data-k=fire]{--x:78px;--y:128px;--s:82px}
 .dt-btns [data-k=Space]{--x:152px;--y:48px;--s:62px}
 .dt-btns [data-k=KeyC]{--x:42px;--y:40px;--s:50px}
@@ -1814,7 +1823,6 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
             </div></div>
             <div id="d-ffanrow" hidden><div class="mgrp"><div class="msub">Free for all size</div>
             <div class="seg" role="radiogroup" aria-label="Number of players in free for all" id="d-ffan">
-              <button role="radio" data-n="2" aria-checked="false">2</button>
               <button role="radio" data-n="4" aria-checked="true">4</button>
               <button role="radio" data-n="6" aria-checked="false">6</button>
               <button role="radio" data-n="8" aria-checked="false">8</button>
@@ -1827,8 +1835,8 @@ body:has(#duel-pause:not([hidden])) #d-homebtn,body:has(#duel-done:not([hidden])
             </div></div></div>
             <div class="mgrp"><div class="msub">Bots</div>
             <div class="seg" role="radiogroup" aria-label="Bot difficulty" id="d-diff">
-              <button role="radio" data-diff="easy" aria-checked="false">Easy</button>
-              <button role="radio" data-diff="normal" aria-checked="true">Normal</button>
+              <button role="radio" data-diff="easy" aria-checked="true">Easy</button>
+              <button role="radio" data-diff="normal" aria-checked="false">Normal</button>
               <button role="radio" data-diff="hard" aria-checked="false">Hard</button>
             </div></div>
             <div class="mgrp mmodegrp"><div class="msub">Playing</div><span class="mmode" id="d-modechip"></span></div>
@@ -8392,7 +8400,7 @@ const ME=makeFighter(false),BOT=makeFighter(true),B2=makeFighter(true),B3=makeFi
 for(const b of [B2,B3]){b.alive=false;b.ch.root.visible=false;}
 ME.team=0;BOT.team=1;B2.team=2;B3.team=3;let FS=[ME,BOT];
 // every bot there can be: free for all goes up to 10 players, so extra bots are made the first time they're needed
-const BOTS=[BOT,B2,B3];const FFA_NS=[2,4,6,8];
+const BOTS=[BOT,B2,B3];const FFA_NS=[4,6,8];/* no 2: that is just a 1v1 (Pete 26 Nov) */
 function ensureBots(n){while(BOTS.length<n){const b=makeFighter(true);b.alive=false;b.ch.root.visible=false;b.team=BOTS.length+1;BOTS.push(b);}}
 const allFighters=()=>[ME,...BOTS];
 const TEAMC=['#2f7fe0','#e8463a','#3bb54a','#f0a020','#a05ad6','#1fb5b0','#ff6fae','#8a5a34','#7a8f3d','#14161c'],PLAYERS={'1v1':'1v1','2v2':'2v2',ffa:'Free for all'};
@@ -8581,7 +8589,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   return base;}
 /* 1v1: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
 const MAP_SIZE={mansion:[4,'120 × 90 m'],wreck:[2,'70 × 50 m'],street:[2,'70 × 50 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[1,'40 × 30 m'],lagoon:[2,'70 × 50 m'],house:[1,'40 × 30 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
-const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',one:false,fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[2,4,6].includes(+store.get('duel:dmlen',4))?+store.get('duel:dmlen',4):4,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'normal')(store.get('duel:diff','normal')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
+const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',one:false,fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[2,4,6].includes(+store.get('duel:dmlen',4))?+store.get('duel:dmlen',4):4,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'easy')(store.get('duel:diff','easy')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
   yaw:+f.yaw.toFixed(4),pitch:+f.pitch.toFixed(4),hp:f.hp,armor:f.armor||0,alive:f.alive,downed:!!f.downed,slot:f.slot,gun:gunOf(f),ammo:Object.assign({},f.ammo),reloadT:f.reloadT,nades:f.nades||0,ads:!!f.ads,crouch:!!f.crouching};}
@@ -10112,8 +10120,13 @@ function toScreen(p){proj.copy(p).project(camera);if(proj.z>1)return null;return
 function updTouchLabels(){if(!S.touch)return;const c=$('dt-c');const cl='Crouch';if(c.textContent!==cl)c.textContent=cl;
   // only show what can be used; counts and cooldowns sit under the label
   const set=(el,html,dim,hide)=>{if(el._h!==html){el._h=html;el.innerHTML=html;}el.classList.toggle('dim',!!dim);hide=hide&&!S.hudEdit;if(el.hidden!==!!hide)el.hidden=!!hide;};
-  const cc=CONS[ME.cons],merge=ME.cons==='grenade',n=cc&&cc.uses?(ME.consN||0)+(merge?ME.nades||0:0):0;
-  set($('dt-g'),cc&&cc.uses?`Item<small>${n}</small>`:ME.consT>0?`Item<small>${Math.ceil(ME.consT)}s</small>`:'Item',cc&&!consReady(ME),!cc||(cc.uses&&n<=0));}
+  const it=itemNext(ME),tg=$('dt-g');set(tg,it?`<span class="ic">${ICON[it.ic]||''}</span><small>${it.n}</small>`:'',it&&!it.ready,!it);if(tg){tg.classList.toggle('glow',!!(it&&it.ready));tg.dataset.it=it?it.ic:'';tg.setAttribute('aria-label',it?it.name:'Item');}}
+/* the phone's single item button: whatever the next press will use (Pete 26 Nov). A shop Gold Grenade goes first, then shop grenades, then your lethal;
+   its picture and count are that item's */
+function itemNext(f){const gold=(f.goldNade||0)>0,shop=(f.nades||0)>0,cc=CONS[f.cons],merge=f.cons==='grenade';
+  if(gold||shop){const n=(f.goldNade||0)+(f.nades||0)+(merge?f.consN||0:0);return {ic:gold?'goldnade':'grenade',n:String(n),ready:!(f.nadeT>0)&&f.alive&&!f.downed,name:gold?'Gold Grenade':'Grenade'};}
+  if(!cc)return null;if(cc.uses&&!(f.consN>0))return null;
+  return {ic:ICON[f.cons]?f.cons:'grenade',n:cc.uses?String(f.consN):f.consT>0?Math.ceil(f.consT)+'s':'',ready:consReady(f),name:cc.name};}
 /* name tag colour: the player's team colour, or in free for all the colour of their character (lifted so it reads on dark backgrounds) */
 const tagColC=new THREE.Color(),tagColH={};
 function tagCol(f){const raw=S.players==='ffa'?(typeof stageCC==='function'?stageCC(f.char):null)||TEAMC[f.team]:TEAMC[f.team]||'#ffffff';const k=raw;if(tagColH[k])return tagColH[k];
@@ -10230,6 +10243,7 @@ const ICON={
   wall:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="#e8463a" stroke="#14161c" stroke-width="1.6"/><path d="M3 10h18M3 15h18M9 5v5M15 10v5M9 15v4" stroke="#14161c" stroke-width="1.4"/></svg>',
   
   boots:'<svg viewBox="0 0 24 24"><path d="m4 6 6 6-6 6M12 6l6 6-6 6" fill="none" stroke="#f08a24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+ICON.goldnade=ICON.grenade.replace(/#4f7a3a/g,'#ffc61a');
 /* throwables in yellow when you have one ready (grey again while it recharges or when you're out) */
 const THR_AC={grenade:'#ffd400',stun:'#ffd400',mine:'#ffd400',molotov:'#ffd400'};/* one colour for every throwable: yellow = ready */
 function renderItems(){const C=CHARS[ME.char],cc=CONS[ME.cons],L=[];
@@ -10252,7 +10266,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
 }
   renderItems();
   const C=CHARS[ME.char];
-  {const tg=$('dt-g');if(tg){tg.hidden=!CONS[ME.cons];tg.classList.toggle('dim',!consReady(ME));tg.classList.toggle('glow',consReady(ME));}
+  {
    const gl=(id,on,dim)=>{const b=$(id);if(!b)return;if(b.classList.contains('glow')!==on)b.classList.toggle('glow',on);if(dim!=null&&b.classList.contains('dim')!==dim)b.classList.toggle('dim',dim);};}
   
   let pr='';if(!ME.alive&&S.state==='fight'&&isDM()&&ME.respawnT>0)pr=`Respawning in ${Math.ceil(ME.respawnT)}`;else if(!ME.alive)pr='';else if(ME.alive&&!ME.downed&&FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0))pr='An enemy used HeartBeat: they can see you';else if(ME.alive&&ME.downed&&!ME.finishing)pr=`Down · reviving ${Math.round(ME.revive*100)}% · click to tag an enemy`;
@@ -10286,7 +10300,7 @@ function updHUD(dt){updLB();{/* the floating Home icon is gone: Home is on the p
       const tg=lk.querySelector('.tag'),tx=lockT?'LOCK':'SEARCH';if(tg.textContent!==tx)tg.textContent=tx;const rg=lk.querySelector('.rng'),rt=lockT?Math.round(hf.t)+' m':'';if(rg.textContent!==rt)rg.textContent=rt;
       const am=ME.ammo.swarm||0,left=am>4?am-4:am;lk.querySelectorAll('.pips b').forEach((b,i)=>b.classList.toggle('l',i<left));}}
   const cr=$('d-cross');const spr=curSpread(ME);const px=Math.tan(spr*Math.PI/180)/Math.tan(camera.fov*Math.PI/360)*innerHeight/2;
-  cr.style.setProperty('--g',((id==='shotgun')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(isSn(id)?' reddot':id==='rocket'?' ring':scoped?' dot':id==='grenade'?' dot':xhClass())+'';cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'?1:clamp(1-(VM.fp>0?VM.aim:VM.raise)*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
+  cr.style.setProperty('--g',((id==='shotgun')?clamp(px*.45,5,14):Math.max(4,px)).toFixed(1)+'px');cr.className='d-cross'+(scoped?' dot':id==='grenade'?' dot':xhClass())+'';/* your crosshair style on every gun, snipers and the rocket too (Pete 26 Nov: changing it seemed to do nothing) */cr.style.opacity=S.state==='menu'||scoped||holo||(ovR&&(id==='rocket'||id==='swarm'))?0:id==='duals'?1:clamp(1-(VM.fp>0?VM.aim:VM.raise)*1.6,0,1);{const on=S.state!=='menu'&&ME.alive&&onTarget(ME,id),cc=on?'#ff2a2a':OPT.xc;if(cr.dataset.cc!==cc){cr.dataset.cc=cc;cr.dataset.on=String(on);cr.style.setProperty('--cc',cc);}}
   if(S.flashHold>0){S.flashHold-=dt;flashA=Math.max(flashA,.96);}else flashA=Math.max(0,flashA-dt*1.65);$('d-flash').style.opacity=flashA.toFixed(3);{const ao=(Math.min(1,flashA*1.5)*.55).toFixed(3);const ae=$('d-after');if(ae.style.opacity!==ao)ae.style.opacity=ao;}{const se=$('d-sense');const fs=FS.some(v=>isFoe(ME,v)&&v.alive&&v.senseT>0);const a=ME.senseT>0?1:fs?.8:0;se.style.opacity=a;se.classList.toggle('bot',!(ME.senseT>0)&&fs);}
   vigA=Math.max(0,vigA-dt*1.2);$('d-vig').style.opacity=Math.max(vigA,ME.alive&&ME.hp<30?.35+Math.sin(S.t*6)*.1:0).toFixed(2);
   for(let i=nums.length-1;i>=0;i--){const n=nums[i];n.t+=dt;n.p.y+=dt*1.2;const sc=toScreen(n.p);if(!sc||n.t>.9){if(n.t>.9){n.el.hidden=true;numPool.push(n.el);nums.splice(i,1);}else n.el.style.opacity=0;continue;}
@@ -12935,8 +12949,15 @@ function skinBox(k){const bx=$('d-skins');if(!bx)return;const L=GSK_GUN[k]||[],c
   bx.onclick=e=>{const b=e.target.closest('[data-skin]');if(!b)return;const s=b.dataset.skin;S.skins=S.skins||{};if(s)S.skins[k]=s;else delete S.skins[k];store.set('skins',S.skins);skinBox(k);ws3Show(skinned(ME,k));};
   if(L.some(s=>!SKPREV[k+'@'+s])&&!skinBox.busy){skinBox.busy=1;setTimeout(()=>{try{const ids=L.map(s=>k+'@'+s).filter(i=>!SKPREV[i]);Object.assign(SKPREV,heroShots(ids,B.roundedBox,240,120));}catch(e){console.warn('skin pics',e);}skinBox.busy=0;if($('d-skins'))skinBox(k);},60);}}
 function wsPick(){const tab=S.wtab==='let'?'let':'pri';return [tab,tab==='let'?(S.randCons?null:S.cons):(S.randGun?null:S.gun)];}
+/* phones: no Random anywhere in the pickers (Pete 26 Nov): any Random pick becomes a real one, and the Random tiles are hidden */
+const isPhone=()=>!!S.touch;
+function phoneNoRand(){const ph=isPhone();document.body.classList.toggle('phone',ph);if(!ph)return;
+  if(S.randMap){S.randMap=false;if(!S.map||!MAPS[S.map]||!mapOK(MAPS[S.map]))S.map=topMap();}
+  if(S.randChar){S.randChar=false;}if(!S.char||!CHARS[S.char])S.char=CHAR_IDS[0];
+  S.randGun=false;if(!S.gun||!GUNS[S.gun]||!priOK(S.gun,S.map))S.gun=priList().find(k=>priOK(k,S.map))||priList()[0];
+  S.randCons=false;if(!S.cons||!CONS[S.cons])S.cons=CONS_IDS[0];}
 function renderDuelMenu(){
-  xpBar('mx');const ru=S.mode==='rumble',sk=ru;
+  phoneNoRand();xpBar('mx');const ru=S.mode==='rumble',sk=ru;
   const c=S.char&&CHARS[S.char];
   stageShow(S.randChar?'__rand':c?S.char:null);crgMark();
   setHTML('d-chars',`<button class="opt char-opt rand" data-char="random" aria-pressed="${!!S.randChar}" title="Random: a surprise fighter every match"><span class="rq" aria-hidden="true">?</span><span class="t">Random</span></button>`+CHAR_IDS.map(k=>{const ch=CHARS[k];return `<button class="opt char-opt" data-char="${k}" aria-pressed="${!S.randChar&&k===S.char}" title="${ch.name}"><img src="${PREV['c_'+k]||''}" alt=""><span class="t">${ch.name}</span></button>`;}).join(''));
@@ -12947,7 +12968,7 @@ function renderDuelMenu(){
     if(!S.picking)setHTML('d-maps',`<div class="mcar rand mpick"><div class="mcar-stage"><div class="mrg" style="--cols:${Math.ceil((L.length+1)/2)}">${L.map(([k,mm])=>`<button class="mrg-t${!S.randMap&&k===S.map?' sel':''}" data-rk="${k}" data-map="${k}" aria-pressed="${!S.randMap&&k===S.map}" title="${(mm.desc||mm.name)+(MAP_SIZE[k]?' ('+MAP_SIZE[k][1]+')':'')}">${thumbs[k]?`<img src="${thumbs[k]}" alt="">`:''}<span>${mm.name}</span></button>`).join('')}<button class="mrg-t rnd${S.randMap?' sel':''}" data-map="random" aria-pressed="${!!S.randMap}" title="Random: let it pick a map for you"><b aria-hidden="true">?</b><span>Random</span></button></div>
       <div class="mbig" id="d-mapbig" data-k="${cur?cur[0]:''}">${cur&&thumbs[cur[0]]?`<img src="${thumbs['w_'+cur[0]]||thumbs[cur[0]]}" class="${thumbs['w_'+cur[0]]?'wide':''}" alt="">`:'<b aria-hidden="true">?</b>'}${cur&&MAP_SIZE[cur[0]]?`<span class="msize">${MAP_SIZE[cur[0]][1]}</span>`:''}</div>
       <div class="mcar-cap"><span class="chip">${mapChip()}${cur&&MAP_SIZE[cur[0]]?' · '+MAP_SIZE[cur[0]][1]:''}</span><span class="t">${cur?m.name:'Random'}</span><i class="rule"></i><span class="b">${cur?(MAP_TAG[cur[0]]||m.desc):MAP_TAG.random}</span></div></div></div>`);if($('d-modechip'))$('d-modechip').textContent=mapChip();requestAnimationFrame(mapFit);}
-  const mapNow=S.randMap?null:S.map;if(!S.randGun&&!priOK(S.gun,mapNow))S.randGun=true;
+  const mapNow=S.randMap?null:S.map;if(!S.randGun&&!priOK(S.gun,mapNow)){if(isPhone())S.gun=priList().find(k=>priOK(k,mapNow))||S.gun;else S.randGun=true;}
   const card=(k,sel,attr)=>{const g=GUNS[k];const meta=g.type==='melee'?'Melee':`Mag ${g.mag}`;const ok=priOK(k,mapNow);return `<button class="opt gun-opt${ok?'':' off'}" ${attr}="${k}" aria-pressed="${ok&&k===sel}"${ok?'':` disabled aria-disabled="true" title="Not available"`}><img class="gp${HERO[k]?' spot':''}" src="${PREV['g_'+k]||''}" alt="">${GCAT[k]?`<span class="gc">${GCAT[k]}</span>`:''}<span class="t">${g.name}<em>${meta}</em></span><span class="b">${g.note}</span></button>`;};
   const rcard=(attr,on,what)=>`<button class="opt gun-opt rand" ${attr}="random" aria-pressed="${!!on}" title="Random: a surprise ${what} every match"><span class="gp rq" aria-hidden="true">?</span><span class="t">Random</span><span class="b">A surprise ${what} every match</span></button>`;
   {const L=priList(),ok=L.filter(k=>priOK(k,mapNow)),no=L.filter(k=>!priOK(k,mapNow));setHTML('d-guns',ok.map(k=>card(k,S.randGun?null:S.gun,'data-gun')).join('')+rcard('data-gun',S.randGun,'gun')+no.map(k=>card(k,null,'data-gun')).join(''));}/* allowed guns first, Random right after them (it only rolls from these), greyed-out ones last */

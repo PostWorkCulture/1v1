@@ -1,7 +1,7 @@
 /* imok 1v1 offline cache.
    The page itself is fetched fresh whenever there's a connection (so updates show up straight away) and falls back to the cached copy offline.
    Sounds, icons, three.js and fonts are served from the cache after the first visit. Music streams normally (browsers fetch it in ranges). */
-const CACHE='imok-1v1-v421';
+const CACHE='imok-1v1-v422';
 const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png',
   'chars/wednesday_p.webp','chars/wednesday_c.webp','chars/wednesday_k.webp','chars/lilpink_k.webp','chars/neonrave_p.webp','chars/neonrave_c.webp','chars/neonrave_k.webp','chars/spike_p.webp','chars/spike_c.webp','chars/spike_k.webp','chars/bun_p.webp','chars/bun_c.webp','chars/bun_k.webp','chars/glitch_p.webp','chars/glitch_c.webp','chars/glitch_k.webp','chars/kitty_p.webp','chars/kitty_c.webp','chars/kitty_k.webp','chars/puffer_p.webp','chars/puffer_c.webp','chars/puffer_k.webp','chars/raven_p.webp','chars/raven_c.webp','chars/raven_k.webp','chars/toxic_p.webp','chars/toxic_c.webp','chars/toxic_k.webp','chars/roboid_p.webp','chars/roboid_c.webp','chars/roboid_k.webp',
   'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js'];

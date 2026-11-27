@@ -4498,7 +4498,7 @@ function addBuildingSpawns(){const g=M.grid,b=M.bounds,c=M.center;if(!g||!M.spaw
   const pick=(list,n)=>{const out=[];const pool=list.sort(()=>Math.random()-.5);for(const p of pool){if(out.length>=n)break;if(M.spawns.concat(out).some(s=>Math.hypot(s.x-p.x,s.z-p.z)<9))continue;out.push(p);}return out;};
   for(const p of [...pick(hi,4),...pick(ins,3)])M.spawns.push({x:p.x,z:p.z,y:p.y,yaw:Math.atan2(c.x-p.x,c.z-p.z),bld:1});}
 function clearMap(){M.onReset=[];if(M.group){scene.remove(M.group);M.group.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
-  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.zips=null;M.navWarps=null;M.spotBias=null;M.stepSurf=null;M.batchZone=null;M.byPlayers=null;M.floorName=null;M.floorAt=null;M.noDrums=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.traps=null;M.trapSet=null;M.edgeDrop=null;M.edgeN=null;M.thumb=null;}
+  M.group=new THREE.Group();scene.add(M.group);M.boxes=[];M.life=[];M.movers=[];M.props=[];M.chips=[];M.knocks=[];M.blds=[];M.trains=[];M.fires=[];M.ladders=[];M.cars=[];M.mmPaint=null;M.shopAt=null;M.shopOK=null;M.wade=null;M.quietWade=null;M.roomBeds=null;M.zips=null;M.navWarps=null;M.spotBias=null;M.stepSurf=null;M.batchZone=null;M.byPlayers=null;M.floorName=null;M.floorAt=null;M.floorMax=null;M.waterLevel=null;M.noDrums=null;M.reachSpawns=null;M.spawnOK=null;M.splash=null;M.waterY=null;M.deepWater=false;M.flockLists=null;M.gulls=null;M.boats=null;M.railGlow=null;M.traps=null;M.trapSet=null;M.edgeDrop=null;M.edgeN=null;M.thumb=null;}
 
 let OPEN_STAIRS=false;
 /* ================= Wreck Cove ================= */
@@ -6134,11 +6134,406 @@ function layoutRemap(st,fx,fz){const ax=[new THREE.Vector3(1,0,0),new THREE.Vect
   for(const b of M.boxes.slice(st.b)){b.x0=fx(b.x0)[0];b.x1=fx(b.x1)[0];b.z0=fz(b.z0)[0];b.z1=fz(b.z1)[0];}
   for(const L of (M.ladders||[]).slice(st.l)){L.x0=fx(L.x0)[0];L.x1=fx(L.x1)[0];L.z0=fz(L.z0)[0];L.z1=fz(L.z1)[0];if(L.rung!=null)L.rung=L.nx?fx(L.rung)[0]:fz(L.rung)[0];}
   for(const q of [...(M.spawns||[]),...(M.shopAt||[])]){q.x=fx(q.x)[0];q.z=fz(q.z)[0];if(q.yaw!=null)q.yaw=Math.atan2(-q.x,-q.z);}}
+/* ===== Valley (27 Nov 2026): a 120 x 100 m river valley ringed by heaped grey cliffs (Pete's reference: a Roblox-style island valley).
+   Real ground heights (M.floorAt) you stand on and that stop shots and sight (terrainRay); a river from a waterfall into a lake and out through a cave;
+   rock masses of faceted slabs (offset masses of different heights, leaning-slab ramps, jump ledges) with walkable tops; a high route
+   (north ledge, a rope bridge to the Crown, the rock arch, a rope bridge to the midstone, stepping rocks to the island) and four ziplines;
+   a village, a mill, a barn with a loft, a boathouse on stilts. Points of interest all round, so there are no two ends. */
+function valleyMap(){const X=60,Z=50;M.bounds={x0:-X,x1:X,z0:-Z,z1:Z};
+  let sd=11;const R=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+  const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s);};
+  const vn=(x,z)=>{const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz),a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;};
+  const fbm=(x,z)=>vn(x,z)*.55+vn(x*2.03+5,z*2.03)*.3+vn(x*4.1,z*4.1+9)*.15;
+  const ss=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
+  const sdR=(x,z,x0,x1,z0,z1)=>{const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1);return dx||dz?Math.hypot(dx,dz):Math.max(x0-x,x-x1,z0-z,z-z1);};
+  const WY=-.38,SO={wood:false,chip:false,edges:false};
+  /* ---------- canvas textures ---------- */
+  const cv=(n,f)=>{const c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d');f(g,n);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t;};
+  const wtex=cv(256,(g,n)=>{const im=g.createImageData(n,n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const a=x/n*6.283,b=y/n*6.283;
+      let v=Math.sin(a*3+Math.sin(b*2)*1.3)+Math.sin(b*4+Math.sin(a*3)*1.1)+.6*Math.sin((a+b)*5+Math.sin(a*7)*.8);v=Math.pow(Math.abs(v)/2.6,1.6);const k=(150+v*105)|0,i=(y*n+x)*4;im.data[i]=k;im.data[i+1]=k;im.data[i+2]=k;im.data[i+3]=255;}g.putImageData(im,0,0);});
+  const streak=cv(256,(g,n)=>{g.clearRect(0,0,n,n);for(let i=0;i<260;i++){const x=Math.random()*n,y=Math.random()*n,l=20+Math.random()*90,w=1+Math.random()*2.5;g.strokeStyle=`rgba(255,255,255,${.12+Math.random()*.4})`;g.lineWidth=w;g.beginPath();g.moveTo(x,y);g.bezierCurveTo(x+(Math.random()-.5)*8,y+l*.3,x+(Math.random()-.5)*8,y+l*.6,x+(Math.random()-.5)*6,y+l);g.stroke();
+      if(y+l>n){g.beginPath();g.moveTo(x,y-n);g.lineTo(x,y+l-n);g.stroke();}}});
+  const foam=cv(256,(g,n)=>{g.clearRect(0,0,n,n);for(let i=0;i<1400;i++){const x=Math.random()*n,y=Math.random()*n,r=1+Math.random()*5;g.fillStyle=`rgba(255,255,255,${.15+Math.random()*.55})`;
+      for(const [ox,oy] of [[0,0],[n,0],[-n,0],[0,n],[0,-n]]){g.beginPath();g.arc(x+ox,y+oy,r,0,6.283);g.fill();}}});
+  const soft=cv(64,(g,n)=>{const r=g.createRadialGradient(n/2,n/2,0,n/2,n/2,n/2);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.45,'rgba(255,255,255,.55)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,n,n);});
+  /* ---------- river, lake, pool ---------- */
+  const CR=pts=>new THREE.CatmullRomCurve3(pts.map(p=>new V3(p[0],0,p[1])),false,'centripetal');
+  const UP=CR([[-30,-46],[-29,-38],[-24,-30],[-20,-22],[-21,-13],[-16,-5],[-8,2],[1,6]]),LO=CR([[11,10],[21,14],[31,14],[41,10],[51,13],[60,15],[72,15]]);
+  const samp=(c,w,rap)=>{const L=c.getLength(),n=Math.ceil(L/.5),o=[];let v=0;for(let i=0;i<=n;i++){const t=i/n,p=c.getPointAt(t),tg=c.getTangentAt(t),d=t*L;if(i)v+=.5/(rap?rap(d):1);o.push({x:p.x,z:p.z,tx:tg.x,tz:tg.z,w:w(d),d,v});}return o;};
+  const RS=[samp(UP,d=>3+.4*Math.sin(d*.21),d=>d>14&&d<30?2.2:1),samp(LO,d=>3.5+.5*Math.sin(d*.17))];/* rapids: the water runs about twice as fast between the rocks below the upper bridge */
+  const LK={x:6,z:8},lr=a=>13.5+2.2*Math.sin(3*a+1)+1.3*Math.sin(5*a+2),POOL={x:-30,z:-45,r:6.2};
+  const inLake=(x,z,m=0)=>{const dx=x-LK.x,dz=z-LK.z;return Math.hypot(dx,dz)<lr(Math.atan2(dz,dx))-m;};
+  const riv=(x,z)=>{let best=1e9,bw=3;for(const S of RS)for(let i=0;i<S.length;i+=2){const s=S[i],d=(x-s.x)*(x-s.x)+(z-s.z)*(z-s.z);if(d<best){best=d;bw=s.w;}}return [Math.sqrt(best),bw];};
+  /* ---------- ground height ---------- */
+  const PADS=[];const pad=(x,z,r,h)=>PADS.push({x,z,r,h});
+  const carve=(h,d,w,deep)=>{if(d<w){const q=d/w;return Math.min(h,-.2-deep*(1-q*q));}const k=ss(w,w+3.5,d);return h>-.2?-.2+(h+.2)*k:h;};
+  const H=(x,z)=>{let h=(fbm(x/15+3,z/15)-.5)*1.3;
+    h=Math.max(h,3.2*(1-ss(-1,7,sdR(x,z,-90,-38,-16,30)))+(fbm(x/6,z/6)-.5)*.4);/* the west rise */
+    h=Math.max(h,1.6*(1-ss(0,5,sdR(x,z,8,90,-90,-25))));/* the village terrace */
+    {const d=Math.hypot(x-28,z-34);if(d<14)h=Math.max(h,4.4*Math.pow(Math.cos(d/14*Math.PI/2),2));}/* the lookout hill */
+    {const d=Math.hypot(x+30,z-41);if(d<10)h=Math.max(h,2*Math.pow(Math.cos(d/10*Math.PI/2),2));}
+    {const e=-sdR(x,z,-X,X,-Z,Z);if(e<6)h+=1.3*(1-ss(-1,6,e));}/* scree: the ground rises a little towards the cliff foot */
+    for(const p of PADS){const d=Math.hypot(x-p.x,z-p.z);const k=1-ss(p.r,p.r+3,d);h=h+(p.h-h)*k;}
+    h=Math.max(h,-.1);/* no stray puddles: only the river, lake and pool go below the water */
+    const [dr,wr]=riv(x,z);h=carve(h,dr,wr,.95);
+    {const dx=x-LK.x,dz=z-LK.z,d=Math.hypot(dx,dz),r=lr(Math.atan2(dz,dx));h=carve(h,d/r*12,12,1.4);}
+    {const d=Math.hypot(x-POOL.x,z-POOL.z);h=carve(h,d,POOL.r,1.3);}
+    {const dT=sdR(x,z,-34.8,-29,-42.4,-38);if(dT<1.4)h=Math.min(h,-.95+(Math.max(h,-.95)+.95)*ss(0,1.4,dT));}/* the mill wheel's tailrace: a pit under the wheel, open to the river */
+    const o=sdR(x,z,-63,63,-53,53);if(o>0&&!(x>58&&Math.abs(z-15)<4.5))h=h+(-2.6-h)*ss(0,7,o);/* beyond the cliff ring it falls away to the sea */
+    return h;};
+  pad(-48,8,9,3.2);pad(-40,-38,4.5,0);pad(24,-1,2.6,0);
+  const HUTS=[[18,-40,'s',7,5.5,'#6b3a22'],[30,-43,'s',8,6,'#7a4a2a'],[42,-38,'w',6.5,5.5,'#5a3020'],[24,-30,'e',6.5,5,'#8a5a3a'],[51.5,-26,'w',7,5.5,'#6b3a22']];
+  for(const [x,z] of HUTS)pad(x,z,4.6,1.6);pad(31,-35,3,1.6);
+  /* height grid, 0.5 m, shared by the ground mesh, M.floorAt and the shot/sight ray (terrainRay) */
+  const G0x=-82,G0z=-72,GS=.5,NX=329,NZ=289,HG=new Float32Array(NX*NZ);for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++)HG[j*NX+i]=H(G0x+i*GS,G0z+j*GS);
+  const hAt=(x,z)=>{const fx=Math.max(0,Math.min(NX-1.001,(x-G0x)/GS)),fz=Math.max(0,Math.min(NZ-1.001,(z-G0z)/GS)),i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,a=HG[j*NX+i],b=HG[j*NX+i+1],c=HG[(j+1)*NX+i],d=HG[(j+1)*NX+i+1];return a*(1-u)*(1-v)+b*u*(1-v)+c*(1-u)*v+d*u*v;};
+  M.floorAt=hAt;{let m=-9;for(let i=0;i<HG.length;i++)if(HG[i]>m)m=HG[i];M.floorMax=m;}
+  /* ---------- trails, ground mesh (tiled meadow grass and sand, tinted per vertex), scree at the cliff foot ---------- */
+  const TRAILS=[[[32,-27],[22,-18],[15,-8],[24,-2],[27,12],[30,22],[25,38]],[[-21,-24],[-12,-31],[0,-38],[14,-36],[26,-34]],[[-21,-24],[-31,-28],[-38,-35]],
+    [[-44,6],[-33,12],[-18,18],[-4,22],[6,24]],[[-4,22],[-9,29]],[[42,-22],[33,-13],[33,-2],[29,13]],[[-34,-4],[-24,-4],[-10,-4],[2,-9],[15,-8]],[[30,22],[44,24],[50,20]],[[-33,12],[-38,26],[-30,38]],[[6,24],[12,22],[24,18],[30,22]]];
+  const trailD=(x,z)=>{let m=1e9;for(const T of TRAILS)for(let k=0;k<T.length-1;k++){const [ax,az]=T[k],[bx,bz]=T[k+1],dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz)));m=Math.min(m,Math.hypot(x-ax-dx*t,z-az-dz*t));}return m;};
+  const isSand=(x,z,h)=>(x>8&&z<-24+(fbm(x/4,z/4)-.5)*3&&h>.3)||(h<.05&&h>WY-.05);
+  { const geo=new THREE.BufferGeometry(),P=new Float32Array(NX*NZ*3),C=new Float32Array(NX*NZ*3),U=new Float32Array(NX*NZ*2),SM=new Float32Array(NX*NZ),c=new THREE.Color(),
+      gA=new THREE.Color('#5f9a3c'),gB=new THREE.Color('#8cbc52'),dirt=new THREE.Color('#b0895a'),sand=new THREE.Color('#ecd9a4'),wet=new THREE.Color('#8a8460'),deep=new THREE.Color('#3f6b6c'),rockG=new THREE.Color('#8f9a78'),grav=new THREE.Color('#a9a497');
+    for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const k=j*NX+i,x=G0x+i*GS,z=G0z+j*GS,h=HG[k];P[k*3]=x;P[k*3+1]=h;P[k*3+2]=z;U[k*2]=x/6;U[k*2+1]=z/6;let sm=0;
+      const n=fbm(x/7,z/7);c.copy(gA).lerp(gB,ss(.25,.75,n));
+      const sl=Math.abs(hAt(x+.6,z)-hAt(x-.6,z))+Math.abs(hAt(x,z+.6)-hAt(x,z-.6));if(sl>.9)c.lerp(rockG,ss(.9,1.8,sl)*.55);
+      if(x>8&&z<-24+(fbm(x/4,z/4)-.5)*3&&h>.3){c.lerp(sand,.92);sm=1;}
+      const td=trailD(x,z)+(fbm(x/2,z/2)-.5)*.9;if(td<1.5){const k2=ss(1.5,.6,td);c.lerp(dirt,k2*.85);sm=Math.max(sm,k2*.8);}
+      const e=-sdR(x,z,-X,X,-Z,Z)+(fbm(x/3,z/3)-.5)*2.2;if(e<3.5){const k2=ss(3.5,.5,e);c.lerp(grav,k2*.75);sm=Math.max(sm,k2);}
+      if(h<.05){const k2=ss(.05,-.15,h);c.lerp(sand,k2*.85);sm=Math.max(sm,k2);}if(h<WY+.05){c.copy(wet).lerp(deep,ss(WY,-1.3,h));sm=1;}
+      if(Math.abs(x)>62||Math.abs(z)>52){c.lerp(sand,ss(-.5,-1.8,h));sm=Math.max(sm,ss(-.5,-1.8,h));}
+      C[k*3]=c.r;C[k*3+1]=c.g;C[k*3+2]=c.b;SM[k]=sm;}
+    const I=[];for(let j=0;j<NZ-1;j++)for(let i=0;i<NX-1;i++){const a=j*NX+i,b=a+1,d=a+NX,e=d+1;I.push(a,d,b,b,d,e);}
+    geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('color',new THREE.BufferAttribute(C,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.setAttribute('smix',new THREE.BufferAttribute(SM,1));geo.setIndex(I);geo.computeVertexNormals();
+    const gmM=new THREE.MeshStandardMaterial({vertexColors:true,map:TX.meadow,roughness:.95});
+    gmM.onBeforeCompile=sh=>{sh.uniforms.sandMap={value:TX.sand};sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float smix;varying float vSm;').replace('#include <begin_vertex>','#include <begin_vertex>\nvSm=smix;');
+      sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform sampler2D sandMap;varying float vSm;').replace('#include <map_fragment>','#ifdef USE_MAP\n vec4 tA=texture2D(map,vMapUv);vec4 tB=texture2D(sandMap,vMapUv*3.0);diffuseColor*=mix(tA,tB,vSm);\n#endif');};
+    gmM.customProgramCacheKey=()=>'valleyGround';
+    const gm=new THREE.Mesh(geo,gmM);gm.receiveShadow=true;gm.userData.dyn=1;M.group.add(gm);}
+  /* the sea all round, beyond the cliffs */
+  {const g=new THREE.PlaneGeometry(600,600);g.rotateX(-Math.PI/2);const t=wtex.clone();t.needsUpdate=true;t.repeat.set(60,60);const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:'#3a9ec2',roughness:.15,metalness:.1,map:t}));m.position.y=-1.1;m.userData.dyn=1;M.group.add(m);}
+  /* ---------- soft spray (round, fading droplets and mist puffs: no square particles) ---------- */
+  const SP={n:1400,i:0,p:new Float32Array(1400*3),v:new Float32Array(1400*3),a:new Float32Array(1400),s:new Float32Array(1400),life:new Float32Array(1400),max:new Float32Array(1400),g:new Float32Array(1400)};
+  {const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(SP.p,3));g.setAttribute('aA',new THREE.BufferAttribute(SP.a,1));g.setAttribute('aS',new THREE.BufferAttribute(SP.s,1));
+    const m=new THREE.ShaderMaterial({uniforms:{map:{value:soft}},transparent:true,depthWrite:false,
+      vertexShader:'attribute float aA;attribute float aS;varying float vA;void main(){vA=aA;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=aS*420.0/max(.5,-mv.z);gl_Position=projectionMatrix*mv;}',
+      fragmentShader:'uniform sampler2D map;varying float vA;void main(){vec4 t=texture2D(map,gl_PointCoord);gl_FragColor=vec4(vec3(.93,.98,1.0),t.a*vA);if(gl_FragColor.a<.01)discard;}'});
+    const pts=new THREE.Points(g,m);pts.frustumCulled=false;pts.renderOrder=10;pts.userData.dyn=1;M.group.add(pts);SP.geo=g;for(let i=0;i<SP.n;i++){SP.life[i]=1;SP.max[i]=1;SP.p[i*3+1]=-50;}}
+  const spray=(x,y,z,vx,vy,vz,life,size,grav=6)=>{const i=SP.i;SP.i=(SP.i+1)%SP.n;SP.p[i*3]=x;SP.p[i*3+1]=y;SP.p[i*3+2]=z;SP.v[i*3]=vx;SP.v[i*3+1]=vy;SP.v[i*3+2]=vz;SP.life[i]=0;SP.max[i]=life;SP.s[i]=size;SP.g[i]=grav;};
+  M.life.push((t,dt)=>{for(let i=0;i<SP.n;i++){if(SP.life[i]>=SP.max[i]){SP.a[i]=0;continue;}SP.life[i]+=dt;const k=SP.life[i]/SP.max[i];SP.v[i*3+1]-=SP.g[i]*dt;SP.v[i*3]*=.985;SP.v[i*3+2]*=.985;
+      SP.p[i*3]+=SP.v[i*3]*dt;SP.p[i*3+1]+=SP.v[i*3+1]*dt;SP.p[i*3+2]+=SP.v[i*3+2]*dt;if(SP.p[i*3+1]<WY)SP.p[i*3+1]=WY;SP.a[i]=Math.min(1,k*6)*(1-k)*.9;}
+    SP.geo.attributes.position.needsUpdate=true;SP.geo.attributes.aA.needsUpdate=true;SP.geo.attributes.aS.needsUpdate=true;});
+  const mist=(x,y,z,s,op)=>{const sm=new THREE.SpriteMaterial({map:soft,color:'#ffffff',transparent:true,opacity:op,depthWrite:false});const sp=new THREE.Sprite(sm);sp.position.set(x,y,z);sp.scale.set(s,s*.6,1);sp.renderOrder=9;sp.userData.dyn=1;M.group.add(sp);return sp;};
+  /* ---------- water: one surface for the river, lake and pool (the ground hides it everywhere else), flow streaks and foam on top ---------- */
+  const wbase=new THREE.MeshStandardMaterial({color:'#2f8fb2',map:wtex,transparent:true,opacity:.68,roughness:.04,metalness:.25,emissive:'#0d4a63',emissiveIntensity:.25,depthWrite:false,side:2});
+  {const g=new THREE.PlaneGeometry(136,112);g.rotateX(-Math.PI/2);const uv=g.attributes.uv,p=g.attributes.position;for(let i=0;i<uv.count;i++)uv.setXY(i,p.getX(i)/8,p.getZ(i)/8);const m=new THREE.Mesh(g,wbase);m.position.set(1.5,WY,0);m.renderOrder=3;m.userData.dyn=1;M.group.add(m);}
+  const wflow=new THREE.MeshBasicMaterial({color:'#ffffff',map:streak,transparent:true,opacity:.42,depthWrite:false,side:2});
+  const wfoam=new THREE.MeshBasicMaterial({color:'#ffffff',map:foam,transparent:true,opacity:.8,depthWrite:false,side:2});
+  const cut=S=>S.filter(s=>!inLake(s.x,s.z,1.5)&&Math.hypot(s.x-POOL.x,s.z-POOL.z)>POOL.r-1.5&&s.x<62);
+  const strip=(S,f,mt,ord)=>{const P=[],U=[],I=[];let n=0;S.forEach((s,i)=>{const nx=s.tz,nz=-s.tx;for(const q of f(s)){P.push(s.x+nx*q[0],WY+.015,s.z+nz*q[0]);U.push(q[1],s.v/q[2]);}if(i){const a=(i-1)*2;I.push(a,a+1,a+2,a+1,a+3,a+2);}n++;});
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);const m=new THREE.Mesh(g,mt);m.renderOrder=ord;m.userData.dyn=1;M.group.add(m);};
+  for(const S0 of RS){const S=cut(S0);strip(S,s=>[[-s.w*.95,0,7],[s.w*.95,1,7]],wflow,4);for(const e of [-1,1])strip(S,s=>[[e*s.w*.9-.35,0,5],[e*s.w*.9+.35,.25,5]],wfoam,5);}
+  {const P=[],U=[],I=[];for(let i=0;i<=140;i++){const a=i/140*6.283,r=lr(a)*.935;for(const q of [-.45,.45]){P.push(LK.x+Math.cos(a)*(r+q),WY+.02,LK.z+Math.sin(a)*(r+q));U.push(i/6,q<0?0:.3);}if(i){const b=(i-1)*2;I.push(b,b+2,b+1,b+1,b+2,b+3);}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);const fm=wfoam.clone();fm.map=foam.clone();fm.map.needsUpdate=true;fm.opacity=.5;const m=new THREE.Mesh(g,fm);m.renderOrder=5;m.userData.dyn=1;M.group.add(m);
+    M.life.push(t=>{fm.map.offset.x=Math.sin(t*.4)*.15;fm.opacity=.42+Math.sin(t*1.3)*.1;});}
+  const blob=(cx,cz,rf,y,mt,ord,sc)=>{const sh=new THREE.Shape();for(let i=0;i<=72;i++){const a=i/72*6.283,r=rf(a);const px=Math.cos(a)*r,pz=Math.sin(a)*r;i?sh.lineTo(px,pz):sh.moveTo(px,pz);}
+    const g=new THREE.ShapeGeometry(sh,4);g.rotateX(Math.PI/2);const uv=g.attributes.uv,p=g.attributes.position;for(let i=0;i<uv.count;i++)uv.setXY(i,p.getX(i)/sc,p.getZ(i)/sc);const m=new THREE.Mesh(g,mt);m.position.set(cx,y,cz);m.renderOrder=ord;m.userData.dyn=1;M.group.add(m);return m;};
+  M.life.push((t,dt)=>{wflow.map.offset.y=-(t*.55)%1;wbase.map.offset.set(Math.sin(t*.06)*.3,(t*.02)%1);wfoam.map.offset.y=-(t*.35)%1;});
+  /* ---------- rock slabs ---------- */
+  const RM=['#b7b8b4','#a6a7a3','#c4c5c1','#9b9c98'].map(c=>new THREE.MeshStandardMaterial({color:c,map:TX.crag,bumpMap:TX.crag,bumpScale:.06,roughness:.93,flatShading:true}));
+  const BLD=[];const inBld=(x,z)=>BLD.some(b=>x>b[0]&&x<b[1]&&z>b[2]&&z<b[3]);const used=[];const keep=(x,z,r)=>used.push({x,z,r});const clear=(x,z,r)=>used.every(u=>Math.hypot(u.x-x,u.z-z)>u.r+r);
+  /* one slab: a faceted block w x d with a flat top you can stand on. Every corner has its own chamfer; the faces stay within 0.3 m of its three colliders.
+     y0 null = it stands on the ground (its foot sunk below the lowest ground under it); a number = it floats from there (a lintel, an overhang).
+     o.rot / o.tilt turn and lean it: only for rock you can't reach (the cliff ring) or with o.nocol and its own colliders (a ramp slab) */
+  const chunk=(cx,cz,w,d,top,y0=null,o={})=>{const fl=y0!=null;let g0=y0;if(!fl){let m=1e9;for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1],[0,0],[0,-1],[0,1],[-1,0],[1,0]])m=Math.min(m,hAt(cx+a*w/2,cz+b*d/2));g0=m;y0=m-1.2;}
+    /* natural rock: the sides taper (the foot flares out up to 1 m), 12 points round with a rough, jittered middle, every corner its own chamfer;
+       bigger masses are turned a few degrees (their colliders shrink to stay inside). Colliders: three boxes inside the top outline, plus stepped skirts inside the flared foot */
+    const Hv=top-g0,b=fl||o.notaper?0:Math.min(1,.3+Hv*.1),small=Math.min(w,d)<3.2,yaw=o.rot!=null?o.rot:(!o.nocol&&!fl&&Math.min(w,d)>=5.5?(R()-.5)*.14:0);
+    const mn=Math.min(w,d),CH=[0,1,2,3].map(()=>Math.min(1.2,mn*(.08+R()*.2))),j=()=>(R()-.5);
+    const ring=(y,ins,jit)=>{const hw=w/2-ins,hd=d/2-ins,q=CH.map(v=>Math.max(.15,v-Math.max(0,ins)*.4));
+      return [[-hw+q[0],-hd],[(q[0]-q[1])/2,-hd],[hw-q[1],-hd],[hw,-hd+q[1]],[hw,(q[1]-q[2])/2],[hw,hd-q[2]],[hw-q[2],hd],[(q[3]-q[2])/2,hd],[-hw+q[3],hd],[-hw,hd-q[3]],[-hw,(q[3]-q[0])/2],[-hw,-hd+q[0]]].map(([a,c])=>[a+j()*jit,y,c+j()*jit]);};
+    const tp=top-Math.min(.4,Hv*.2),rs=fl?[ring(y0,.05,.3),ring(y0+(top-y0)*.5,.02,.3),ring(tp,.12,.2),ring(top,.3,.06)]:
+      [ring(y0,-b,.3),ring(g0,-b,.35),ring(g0+Hv*.45,-.45*b,small?.3:.6),ring(tp,.12,.2),ring(top,.3,.06)];
+    const N=12,pos=[];const tri=(a,c,e)=>pos.push(...a,...c,...e);
+    for(let r=0;r<rs.length-1;r++)for(let k=0;k<N;k++){const k2=(k+1)%N,a=rs[r][k],c=rs[r][k2],e=rs[r+1][k],f=rs[r+1][k2];tri(a,e,c);tri(c,e,f);}
+    const T=rs[rs.length-1];for(let k=1;k<N-1;k++)tri(T[0],T[k+1],T[k]);
+    const g=new THREE.BufferGeometry();const p=new Float32Array(pos);
+    const ym=(y0+top)/2,cr=Math.cos(yaw),sr=Math.sin(yaw),ct=Math.cos(o.tilt||0),st=Math.sin(o.tilt||0);for(let i=0;i<p.length;i+=3){let lx=p[i],y=p[i+1]-ym,lz=p[i+2];if(o.tilt){const z2=lz*ct-y*st;y=lz*st+y*ct;lz=z2;}p[i]=cx+lx*cr-lz*sr;p[i+1]=ym+y;p[i+2]=cz+lx*sr+lz*cr;}
+    g.setAttribute('position',new THREE.BufferAttribute(p,3));g.computeVertexNormals();
+    const nn=g.attributes.normal,uv=new Float32Array(p.length/3*2);for(let i=0;i<p.length/3;i++){const ny=Math.abs(nn.getY(i)),x=p[i*3],y=p[i*3+1],z=p[i*3+2];if(ny>.7){uv[i*2]=x/4;uv[i*2+1]=z/4;}else{const nx=nn.getX(i),nz=nn.getZ(i);uv[i*2]=(Math.abs(nx)>Math.abs(nz)?z*Math.sign(nx):-x*Math.sign(nz))/4;uv[i*2+1]=y/4;}}g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+    const m=new THREE.Mesh(g,o.mat||RM[Math.floor(R()*RM.length)]);m.castShadow=true;m.receiveShadow=true;M.group.add(m);
+    if(!o.nocol){const sx=(d/2)*Math.abs(sr),sz=(w/2)*Math.abs(sr),[q0,q1,q2,q3]=CH,zA=Math.max(q0,q1)*.8,zB=Math.max(q2,q3)*.8,xA=Math.max(q0,q3)*.8,xB=Math.max(q1,q2)*.8;
+      const cross=(ins,yb,yt)=>{const iw=w/2-ins-sx,id=d/2-ins-sz;collider(cx-iw,cx+iw,yb,yt,cz-id+zA,cz+id-zB);collider(cx-iw+xA,cx+iw-xB,yb,yt,cz-id,cz+id);};
+      cross(.3,y0,top);{const iw=w/2-.3-sx,id=d/2-.3-sz;collider(cx-iw+xA/2,cx+iw-xB/2,y0,top,cz-id+zA/2,cz+id-zB/2);}
+      if(b>0)for(const f of [.2,.45,.7]){const fi=f<=.45?-b+.55*b*(f/.45):-.45*b+(.12+.45*b)*Math.min(1,(f-.45)/Math.max(.05,(tp-g0)/Hv-.45));const ins=fi+.3;if(ins<.27)cross(ins,y0,g0+Hv*f);}}
+    if(!o.nokeep)keep(cx,cz,Math.max(w,d)/2+1+b);return {x:cx,z:cz,y:top};};
+  /* broken slabs tilted up on the outer top edge of a sheer face: 2-3 pieces of different size, height and lean with gaps, one wedged low (breaks a flat skyline; each solid inside) */
+  const crest=(x,z,len,alongX,top,rot,tilt)=>{const n=len>3.2?3:2;let a=-len/2;for(let k=0;k<n;k++){const pl=Math.max(1.1,Math.min(2.2,(len-(n-1)*.35)/n*(.8+R()*.4))),c=a+pl/2;a+=pl+.2+R()*.3;if(c+pl/2>len/2+.4)break;
+      const th=.6+R()*.8,up=k===1?.35+R()*.25:.55+R()*.5,px=x+(alongX?c:(R()-.5)*.3),pz=z+(alongX?(R()-.5)*.3:c),tl=(k%2?-1:1)*(Math.abs(tilt)*(.7+R()*.5)),ro=rot+(R()-.5)*.3;
+      chunk(px,pz,alongX?pl:th,alongX?th:pl,top+up,top-1.3,{nocol:1,nokeep:1,rot:ro,tilt:tl});const hx=Math.max(.15,(alongX?pl:th)/2-.35),hz=Math.max(.15,(alongX?th:pl)/2-.35);
+      if(alongX)collider(px-hx,px+hx,top-1.3,top+up-.05,pz-hz,pz+hz);else{const dz=pl/4*Math.sin(tl);/* leaning lengthwise: two stepped boxes follow the slope */collider(px-hx,px+hx,top-1.3,top+up-.05-dz,pz-hz,pz);collider(px-hx,px+hx,top-1.3,top+up-.05+dz,pz,pz+hz);}}};
+  /* a boulder: solid (a box collider inside it) when it's big enough to hide behind or trip over, looks-only below that */
+  const boulder=(x,z,r,o={})=>{const sy=.72+R()*.25,g0=o.y??hAt(x,z),cy=g0+r*sy*(o.sink??.45);const b=deco(new THREE.IcosahedronGeometry(r,0),RM[Math.floor(R()*RM.length)],x,cy,z);b.rotation.set(R()*.6,R()*6.3,R()*.6);b.scale.y=sy;
+    if(r>=.45&&!o.nocol){const hw=r*.58;collider(x-hw,x+hw,g0-.6,cy+r*sy*.62,z-hw,z+hw);}return b;};
+  /* a fallen slab leaning against a rock: walk straight up it. Looks: one tilted slab; colliders: low steps under it (0.35 m or less each) */
+  const ramp=(ax,a0,a1,c,W,yA,yB,o={})=>{const L=Math.abs(a1-a0),dy=yB-yA,s=dy/(a1-a0),tl=Math.atan(s),mid=(a0+a1)/2,ym=(yA+yB)/2,cx=ax==='x'?mid:c,cz=ax==='x'?c:mid;
+    if(!o.novis)chunk(cx,cz,W,Math.hypot(L,dy)+1,ym+.05,ym-.75,{nocol:1,nokeep:1,rot:ax==='x'?-Math.PI/2:0,tilt:tl});
+    const n=Math.max(2,Math.ceil(Math.abs(dy)/.32));for(let i=0;i<n;i++){const p0=a0+(a1-a0)*i/n,p1=a0+(a1-a0)*(i+1)/n,top=yA+dy*(i+.5)/n,lo=Math.min(p0,p1),hi=Math.max(p0,p1),gy=Math.min(hAt(ax==='x'?lo:c,ax==='x'?c:lo),hAt(ax==='x'?hi:c,ax==='x'?c:hi))-.8;
+      if(ax==='x')collider(lo,hi,gy,top,c-W/2+.3,c+W/2-.3);else collider(c-W/2+.3,c+W/2-.3,gy,top,lo,hi);}keep(cx,cz,L/2+1);};
+  const g=(x,z)=>Math.max(0,hAt(x,z));
+  /* ---------- the cliff ring: heaped rock in three rows that step back and up (front heap 4-9 m, middle 8-15 m, back 14-30 m leaning 10-25 degrees),
+       a ragged skyline with notches, boulders on top and scree at the foot. It all stands outside the edge (you can't reach it), so it turns and leans freely ---------- */
+  const ringSeg=(ax,sg)=>{const L=(ax?X:Z)+18,at=ax?Z:X,P=(off,al)=>ax?[al,sg*(at+off)]:[sg*(at+off),al];
+    const skip=pos=>ax&&sg<0&&Math.abs(pos+30)<7.5?'falls':!ax&&sg>0&&Math.abs(pos-15)<7?'cave':null;
+    const rot=()=>(R()-.5)*.6,lean=a=>(R()<.5?-1:1)*a;
+    for(let a=-L;a<L;){const s=8+R()*6,pos=a+s/2;a+=s*.72;const sk=skip(pos),notch=R()<.14;const w=s+2,d=8+R()*4,[x,z]=P(15+R()*3,pos);
+      chunk(x,z,ax?w:d,ax?d:w,sk==='falls'?18:notch?13+R()*3:17+R()*13,null,{nocol:1,nokeep:1,rot:rot(),tilt:lean(.17+R()*.27)});}
+    for(let a=-L;a<L;){const s=6+R()*4,pos=a+s/2;a+=s*.75;if(skip(pos))continue;const w=s+1,d=6+R()*3,[x,z]=P(9+R()*2,pos);const top=8+R()*7;
+      const fr=chunk(x,z,ax?w:d,ax?d:w,top,null,{nocol:1,nokeep:1,rot:rot(),tilt:lean(.1+R()*.2)});if(R()<.5)boulder(x,z,1.8+R()*1.8,{y:fr.y-.2,nocol:1,sink:.3});}
+    for(let a=-L;a<L;){const s=4+R()*3,pos=a+s/2;a+=s*.8;if(skip(pos))continue;const w=s,d=3.5+R()*2.5,H=4+R()*5,ro=R()*6.283,tl=lean(R()*.25),ext=Math.hypot(w/2,d/2)+H/2*Math.abs(Math.sin(tl))+.3,[x,z]=P(ext+R()*.6,pos);
+      const fr=chunk(x,z,ax?w:d,ax?d:w,g(x,z)+H,null,{nocol:1,nokeep:1,rot:ro,tilt:tl});if(R()<.45)boulder(x,z,1.2+R()*1.3,{y:fr.y-.3,nocol:1,sink:.3});
+      for(let k=0;k<2;k++){const r=.5+R()*1.1,[bx,bz]=P(r+.25+R()*.5,pos+(R()-.5)*s);boulder(bx,bz,r,{nocol:1,sink:.2});}}};
+  for(const [ax,sg] of [[1,-1],[1,1],[0,-1],[0,1]])ringSeg(ax,sg);
+  chunk(-30,-53.6,11,6,WY+13.4,null,{nocol:1,nokeep:1});/* the lip the waterfall pours over */
+  /* the river leaves through a cave in the east cliff: an irregular arch of leaning rocks and boulders round the mouth, a dark rock tunnel that fades to black, white water going in */
+  {chunk(65,9.4,7,5,10,null,{nocol:1,nokeep:1,tilt:.1});chunk(65,20.6,7,5,11,null,{nocol:1,nokeep:1,tilt:-.1});chunk(66,15,9,10,11,3.4,{nocol:1,nokeep:1});
+    chunk(61.6,11,3.4,3,6.5,null,{nocol:1,nokeep:1,rot:.35,tilt:.28});chunk(61.4,19.2,3.2,3.4,5.8,null,{nocol:1,nokeep:1,rot:-.3,tilt:-.3});chunk(62.2,13.4,3.6,2.2,5.6,3.3,{nocol:1,nokeep:1,rot:.5,tilt:.35});chunk(62,17.2,3,2.4,5.2,3.5,{nocol:1,nokeep:1,rot:-.45,tilt:-.3});
+    for(const [x,z,r] of [[61.2,9.6,1.1],[60.9,20.4,1.2],[62.6,10.4,.8],[62.4,19.8,.7]])boulder(x,z,r,{nocol:1});
+    const cm=new THREE.MeshStandardMaterial({color:'#3a3d40',roughness:1,flatShading:true});for(const s of [-1,1])chunk(67.5,15+s*4.4,7,2,3.6,null,{nocol:1,nokeep:1,mat:cm});chunk(67.5,15,7,8,4.4,3,{nocol:1,nokeep:1,mat:cm});
+    for(let k=0;k<5;k++){const pl=new THREE.Mesh(new THREE.PlaneGeometry(6,3.6),new THREE.MeshBasicMaterial({color:'#000000',transparent:true,opacity:.22+k*.12,depthWrite:false}));pl.rotation.y=-Math.PI/2;pl.position.set(64.6+k*.9,1.3,15);pl.renderOrder=2;pl.userData.dyn=1;M.group.add(pl);}
+    const fo=blob(61.5,15,a=>2.6+.5*Math.sin(a*5),WY+.03,wfoam.clone(),5,2);fo.material.opacity=.75;M.life.push(t=>{fo.rotation.y=-t*.1;});mist(62.5,.6,15,5,.12);}
+  /* ---------- waterfall: three sheets of falling streaks, white water curling over the lip, a boiling foam pool, soft spray and mist ---------- */
+  {const FX=POOL.x,FZ=-49.3,FW=7,FH=13.4,fall=[];
+    for(const [k,w,op,sp,col,dz] of [[0,FW,.92,1.3,'#cdeef8',0],[1,FW*.86,.6,2,'#ffffff',.18],[2,FW*1.08,.32,.9,'#ffffff',.42]]){const tx=streak.clone();tx.needsUpdate=true;tx.repeat.set(2.2,2.4);tx.offset.x=k*.37;
+      const m=new THREE.MeshBasicMaterial({color:col,map:tx,transparent:true,opacity:op,side:2,depthWrite:false});const gg=new THREE.PlaneGeometry(w,FH,10,12);
+      const p=gg.attributes.position;for(let i=0;i<p.count;i++){const yy=p.getY(i),q=(FH/2-yy)/FH,xx=p.getX(i);p.setZ(i,Math.sin(q*1.5)*1.1+q*q*.8+Math.sin(xx*1.7+k)*.12);p.setX(i,xx*(1+q*.3));}gg.computeVertexNormals();
+      const sh=new THREE.Mesh(gg,m);sh.position.set(FX,WY+FH/2,FZ+dz);sh.renderOrder=6+k;sh.userData.dyn=1;M.group.add(sh);fall.push([tx,sp]);}
+    {const lt=foam.clone();lt.needsUpdate=true;lt.repeat.set(3,1);const lm=new THREE.MeshBasicMaterial({color:'#ffffff',map:lt,transparent:true,opacity:.9,depthWrite:false});const lp=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,FW+.2,12,1,true),lm);lp.rotation.z=Math.PI/2;lp.position.set(FX,WY+FH-.05,FZ+.15);lp.renderOrder=9;lp.userData.dyn=1;M.group.add(lp);fall.push([lt,.8]);}
+    const fo=blob(FX,FZ+3,a=>4.2+.8*Math.sin(a*4)+.4*Math.sin(a*7),WY+.03,wfoam.clone(),5,2.4);fo.material.opacity=.9;
+    const ms=[mist(FX-1.5,WY+1.6,FZ+2.4,7,.2),mist(FX+1.8,WY+2.8,FZ+2,8,.14),mist(FX,5.9,-48.2,6,.12)];let acc=0;
+    M.life.push((t,dt)=>{for(const [tx,sp] of fall)tx.offset.y=(t*sp)%1;fo.material.map.offset.set(Math.sin(t*2)*.05,(t*.7)%1);fo.rotation.y=t*.12;ms.forEach((m,k)=>{m.material.opacity=(k?.1:.16)+Math.sin(t*1.9+k*2)*.04;const s=(k===1?8:7)*(1+Math.sin(t*1.1+k)*.07);m.scale.set(s,s*.6,1);});
+      acc+=dt;while(acc>.012){acc-=.012;const x=FX+(Math.random()-.5)*FW;spray(x,WY+.2,FZ+1.6,(Math.random()-.5)*2.6,1.6+Math.random()*1.2,1.2+Math.random()*2.6,1+Math.random()*.6,.55+Math.random()*.55,5);if(Math.random()<.4)spray(FX+(Math.random()-.5)*FW*1.1,WY+.15,-44.1+Math.random()*.8,(Math.random()-.5)*1.2,.8+Math.random()*.8,1+Math.random(),1.1,.7+Math.random()*.4,2);
+        if(Math.random()<.3)spray(FX+(Math.random()-.5)*FW,WY+FH*(.2+Math.random()*.6),FZ+.9,(Math.random()-.5)*.6,0,.6,.7,.25,7);}});}
+  /* ---------- rock formations: offset masses of different heights (sheer faces), a leaning slab up one side, jump ledges (1.2-1.9 m) round another ---------- */
+  const F={};
+  // the Crown (7 m): a big main mass, a west shoulder reached by a leaning slab, a south-east shoulder reached by ledges; sheer to the north and the village
+  {const A=chunk(2,-26.5,12,9,7);chunk(-7,-21,7,7,4);chunk(-2.5,-21.8,3.2,3.4,5.5);chunk(8.5,-19.5,6,5,5.4);chunk(10.6,-17.4,2.8,2.6,3.6);chunk(11.8,-15.2,3,3,1.8);
+    ramp('z',-31.2,-24.3,-5.5,3,g(-5.5,-31.2),4);crest(3.6,-30.4,5,true,7,.22,-.3);crest(2.3,-22.6,5.4,true,7,-.15,.3);crest(7.4,-27.6,3.6,false,7,-.15,.26);boulder(1.8,-25.6,.95,{y:7});boulder(6.6,-25.4,.85,{y:7});boulder(-.8,-32.6,1.3);boulder(9,-30.5,1.1);boulder(13.5,-17,.9);F.crown={x:-2.1,y:7,z:-28.6};}
+  // the island (3.6 m) in the lake: a leaning slab from the south stepping stones, a ledge rock from the north; two zipline pads on a 10 x 8 m top
+  {for(const [x,z] of [[7,23.5],[6.4,20.6],[7,17.8]])chunk(x,z,2.4,2.2,WY+.4);chunk(6,6.5,10,8,3.6);crest(1.6,6.6,4,false,3.6,.2,-.28);crest(3.4,3.1,3.4,true,3.6,-.18,-.24);ramp('z',16.8,10.2,6.5,2.8,WY+.4,3.6);chunk(11.4,1.5,3,2.6,1.9);chunk(14.3,.6,2.4,2.4,.9);boulder(1.8,10.8,.8,{y:WY});boulder(10.8,9.6,.7,{y:WY});
+    F.isl1={x:7.8,y:3.6,z:5};}
+  // the midstone (5.1 m): three offset masses stepping down to the east, the rope bridge lands on the high one
+  {chunk(13,-6.5,6,5.5,5.1);crest(13.6,-9,3,true,5.1,.2,-.25);chunk(16.8,-3.4,4.2,4,3.4);chunk(18.2,-.2,3,2.8,1.7);boulder(11,-10.2,1);boulder(19.6,-5.6,.8);}
+  // the east crag (6.6 m): a leaning slab from the west up to the low mass, a ledge to the top; a low rock behind as cover
+  {chunk(47.5,-15,8,7,6.6);crest(50.8,-15.6,4,false,6.6,.2,.28);crest(47.8,-17.9,3.4,true,6.6,-.22,-.26);chunk(41.5,-11,5,5,3.6);chunk(43.2,-14.6,3,3,5.1);chunk(51,-9.5,4,4,2.2);ramp('x',33,39.2,-11,3,g(33,-11),3.6);boulder(46,-19.6,1.1);boulder(52.6,-13,.9);F.east={x:46,y:6.6,z:-13.6};}
+  // the south crags (5.2 m): ledges up the west side and the east side, a low overhang held up by a rock at each end
+  {chunk(-5,37.5,8.5,6.5,5.2);crest(-5.6,40.1,5,true,5.2,.18,.3);crest(-6.8,34.7,4,true,5.2,.16,-.28);crest(-8.6,37.2,3,false,5.2,-.2,-.24);chunk(-11.5,36.8,5,5,3.4);chunk(-15,32.8,3.4,3,1.7);chunk(-12,30.5,5,3.2,3.4,2.4);chunk(-10,30.5,1.8,1.8,2.45);chunk(.3,33.6,3,3,3.6);chunk(2.2,30.6,2.6,2.6,1.8);boulder(-2,41.8,1.1);boulder(-8.8,41.5,.9);F.south={x:-2.6,y:5.2,z:36.6};}
+  // the NE rocks behind the village (on the 1.6 m terrace)
+  {chunk(55,-44.5,7.5,6.5,6.6);crest(55.4,-47.1,4.4,true,6.6,-.2,-.3);crest(58.1,-43.8,3,false,6.6,.2,.26);chunk(50.5,-39.5,4.5,4.5,4.9);chunk(48,-35.6,3.2,3,3.3);boulder(57.5,-39,1);F.ne={x:54,y:6.6,z:-43.2};}
+  // the west rocks on the rise
+  {const t3=g(-38.2,19.4)+1.7;chunk(-38.2,19.4,3,3,t3);chunk(-40.8,22.6,4.6,4.2,t3+1.6);chunk(-46,25.8,7.5,6.5,t3+3.3);crest(-49.1,25.6,4,false,t3+3.3,.2,-.28);crest(-46.6,28.5,3.4,true,t3+3.3,-.2,.26);boulder(-42,29.6,1);F.west={x:-45,y:t3+3.3,z:25.5};}
+  // the lookout on the hill, and the lakeside rocks (they also break the Crown's view of the south meadow)
+  {const k=g(27.5,34.6);chunk(27.5,34.6,5.5,4.5,k+1.8);crest(30.1,35.2,2.6,false,k+1.8,.2,.26);chunk(31,32.2,2.8,2.6,g(31,32.2)+.9);chunk(25,37,3,2.6,g(25,37)+1);F.look={x:27.3,y:k+1.8,z:34.4};
+    const l=g(12,27);chunk(12,27,6.5,5.5,l+3.5);crest(11.6,29.4,3.6,true,l+3.5,.2,.28);chunk(8,28,3,2.8,l+1.8);chunk(9.6,24.2,2.8,2.4,l+1.1);boulder(15.8,24.5,.9);F.lake={x:12.5,y:l+3.5,z:26.5};}
+  // low rock groups out in the open: cover, and a jump or two up
+  for(const [x,z,parts] of [[-33,-19,[[0,0,5,4,1.6],[2.5,1.5,3,3,2.9],[-2,-2.5,2.6,2.4,1]]],[37,4,[[0,0,4.6,4,1.7],[2.5,1.8,3,3,3.1],[-2,2,2.4,2.2,1.1]]],[-31,28,[[0,0,5,4.4,1.7],[2.2,2,3,2.8,3.2],[-2.2,2.2,2.6,2.4,1]]]])
+    for(const [dx,dz,w,d,h] of parts)chunk(x+dx,z+dz,w,d,g(x+dx,z+dz)+h);
+  // the north ledge along the cliff foot: a high path of uneven slabs past the waterfall, steps up at both ends, two rocks on it as cover, slabs leaning on the cliff behind
+  {const Lw=[5.3,4.9,5.4,5.1],Le=[5.4,5,5.2];Lw.forEach((t,i)=>chunk(-53.5+i*5,-45.5,5.4,5.5,t));Le.forEach((t,i)=>chunk(-21.5+i*5,-45.5,5.4,5.5,t));chunk(-30,-46,12.5,3.4,5.3,1.6);
+    chunk(-50.5,-40.9,4,3.8,3.4);chunk(-47.5,-37.4,4,3.6,1.7);chunk(-13,-40.9,3.6,3.8,3.4);chunk(-14.5,-37.2,3.5,3.4,1.7);
+    boulder(-50.5,-46.6,.9,{y:4.9});boulder(-17.5,-46.4,.85,{y:5});for(const x of [-54,-41,-19,-12])chunk(x,-49.6,3.5,2.2,9+R()*3,null,{nocol:1,nokeep:1,tilt:-.25});chunk(-44,-44.2,4.2,3.8,6.2);F.ledge={x:-44,y:6.2,z:-44.2};
+    for(const [bx,t] of [[-51,4.9],[-46,4.9],[-41,5.1],[-36.2,5.1],[-23.8,5.3],[-19,5],[-14,5]])collider(bx-.9,bx+.9,0,t,-48.3,-42.8);/* no notches where the ledge slabs meet */
+    collider(-60,-36.3,0,16,-50,-48.3);collider(-23.7,-8.6,0,16,-50,-48.3);/* no dropping into the slot behind the ledge (the falls basin behind the lintel stays open) *//* a raised rock at the ledge front carries the zipline pad */}
+  // the rock arch over the river: walk or wade underneath, climb either pillar, cross the top
+  {chunk(-27.5,-1,3.2,3.2,1.7);chunk(-27,-6.8,3.2,3,3.2);chunk(-24,-4,4.5,5,4.7);chunk(-25.5,-2.2,3,3.4,3.4);chunk(-10,-4,4.5,5,4.7);chunk(-8.6,-6,3,3.2,3.4);chunk(-6.8,-7.2,3.2,3,3.2);chunk(-6.5,-1,3.2,3.2,1.6);chunk(-17,-4,10.5,4.2,4.9,3.6);
+    for(const [x,z] of [[-29.5,-4],[-4.5,-3.5],[-26,1.8],[-8,-9.8]])boulder(x,z,.8+R()*.4);}
+  // rapids below the upper bridge: rocks breaking the surface, white water across the channel, spray off the rocks
+  {const S=RS[0],rk=[];for(const d of [15.5,18.5,21,23.5,26,28.5]){const s=S[Math.round(d*2)],nx=s.tz,nz=-s.tx,e=(R()-.5)*1.3*s.w,fx=s.x+nx*e,fz=s.z+nz*e;boulder(fx,fz,.85+R()*.35,{y:WY-.55});rk.push([fx,fz,s.tx,s.tz]);}
+    const fs=S.filter(s=>s.d>14&&s.d<30);strip(fs,s=>[[-s.w*.8,0,1.6],[s.w*.8,.6,1.6]],wfoam,5);let acc=0;
+    M.life.push((t,dt)=>{acc+=dt;while(acc>.08){acc-=.08;const [x,z,tx,tz]=rk[Math.floor(Math.random()*rk.length)];spray(x+tx*.8,WY+.3,z+tz*.8,tx*1.2+(Math.random()-.5),1.6+Math.random()*1.4,tz*1.2+(Math.random()-.5),.7,.3,8);}});}
+  /* ---------- rope bridges (the high route): arch east pillar to the midstone, and the ledge's east end to the Crown's west shoulder ---------- */
+  const woodM=mat('#9a6a42','cedar',{roughness:.8}),deckM=mat('#a77a4e','boards',{roughness:.85}),dark=mat('#4a3020','cedar'),white=mat('#eceae4',null,{roughness:.7});
+  const ropeBridge=(ax,a0,a1,c,y0,y1,sg)=>{const N=Math.round(Math.abs(a1-a0)),pl=mat('#a77a4e','boards'),rp=mat('#c8b48a',null,{roughness:.9}),Y=t=>y0+(y1-y0)*t-sg*4*t*(1-t),P=(t,off)=>{const a=a0+(a1-a0)*t;return ax==='x'?[a,c+off]:[c+off,a];};
+    for(let i=0;i<N;i++){const t=(i+.5)/N,[xa,za]=P(i/N,0),[xb,zb]=P((i+1)/N,0);const lx=Math.abs(xb-xa),lz=Math.abs(zb-za);box((xa+xb)/2,Y(t)-.12,(za+zb)/2,ax==='x'?lx-.06:1.7,.12,ax==='x'?1.7:lz-.06,'#a77a4e',{mat:pl,...SO});}
+    for(const e of [-1,1]){const pts=[];for(let i=0;i<=24;i++){const t=i/24,[x,z]=P(t,e*.9);pts.push(new V3(x,Y(t)+1.05,z));}const r=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,.045,5,false),rp);r.userData.dyn=1;M.group.add(r);
+      for(let i=0;i<=N;i++){const t=i/N,[x,z]=P(t,e*.9);const h=deco(gC(.02,.02,1.05,4),rp,x,Y(t)+.52,z);h.castShadow=false;}
+      for(const t of [0,1]){const [x,z]=P(t,e*.9);box(x,t?y1:y0,z,.2,1.3,.2,'#6a4024',{mat:woodM,...SO});}
+      const [xa,za]=P(0,e*.95),[xb,zb]=P(1,e*1.05);const b=collider(Math.min(xa,xb),Math.max(xa,xb)+(ax==='x'?0:.001),Math.min(y0,y1)-sg+.3,Math.max(y0,y1)+1.2,Math.min(za,zb),Math.max(za,zb)+(ax==='x'?.001:0));
+      if(ax==='x'){b.z0=c+e*.95-.05;b.z1=c+e*.95+.05;}else{b.x0=c+e*.95-.05;b.x1=c+e*.95+.05;}b.edge=true;}};
+  ropeBridge('x',-8.25,10.3,-6,4.7,5.1,.9);
+  {box(-9,4.55,-6,2.6,.2,2.4,'#a77a4e',{mat:deckM,...SO});for(const [dx,dz] of [[-1.1,-1],[1.1,-1],[-1.1,1],[1.1,1]])box(-9+dx,4.2,-6+dz,.18,.55,.18,'#5a3a22',{mat:dark,...SO});}/* timber landing on the arch pillar */
+  ropeBridge('z',-42.9,-24.3,-9.3,5,4,.8);
+  /* ---------- buildings ---------- */
+  const lift=(dy,fn)=>{const g0=M.group.children.length,b0=M.boxes.length,l0=(M.ladders||[]).length;fn();for(let i=g0;i<M.group.children.length;i++)M.group.children[i].position.y+=dy;for(let i=b0;i<M.boxes.length;i++){M.boxes[i].y0+=dy;M.boxes[i].y1+=dy;}
+    const LD=M.ladders||[];for(let i=l0;i<LD.length;i++){for(const k of ['y0','y1','top','bot'])if(typeof LD[i][k]==='number')LD[i][k]+=dy;}};
+  const GL={mat:RL_GLASS,prop:'glass',hp:1,snd:'frost',wood:false,shadow:false,edges:false};
+  /* a wall along x (ax=1, at z) or along z (ax=0, at x) from a0 to a1, height H, with holes [a0,a1,y0,y1,glass] */
+  const wall=(ax,at,a0,a1,H,holes,col,mt,t=.25)=>{const cuts=[a0,a1];for(const h of holes)cuts.push(h[0],h[1]);cuts.sort((p,q)=>p-q);
+    for(let i=0;i<cuts.length-1;i++){const p=cuts[i],q=cuts[i+1];if(q-p<.02)continue;const m=(p+q)/2,hs=holes.filter(h=>h[0]<=m&&h[1]>=m);let y=0;
+      const seg=(y0,y1)=>{if(y1-y0<.03)return;box(ax?m:at,y0,ax?at:m,ax?q-p:t,y1-y0,ax?t:q-p,col,{mat:mt,wood:true});};
+      for(const h of hs.sort((u,v)=>u[2]-v[2])){seg(y,h[2]);if(h[4])box(ax?m:at,h[2],ax?at:m,ax?q-p:.06,h[3]-h[2],ax?.06:q-p,'#dcf1ff',GL);y=h[3];}seg(y,H);}};
+  const frame=(ax,at,h,col)=>{const [a0,a1,y0,y1]=h,o=.16,tt=.1;for(const [p,q,yy0,yy1] of [[a0-o,a0,y0-o,y1+o],[a1,a1+o,y0-o,y1+o]])box(ax?(p+q)/2:at,yy0,ax?at:(p+q)/2,ax?q-p:.36,yy1-yy0,ax?.36:q-p,col,{mat:white,...SO,solid:false});
+    for(const yy of [y0-o,y1])box(ax?(a0+a1)/2:at,yy,ax?at:(a0+a1)/2,ax?a1-a0+o*2:.36,o,ax?.36:a1-a0+o*2,col,{mat:white,...SO,solid:false});};
+  /* a hut: cedar walls with dark corner posts, white-framed single-shot glass windows, a porch at the door, a stone chimney, a table, stools and a shelf inside */
+  const hut=(x,z,front,w,d,roof,o={})=>{const H=3.2,t=.25,x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2,dr=[-.9,.9],wn=[-1.1,1.1];
+    const sides={n:[1,z0+t/2,x0,x1],s:[1,z1-t/2,x0,x1],w:[0,x0+t/2,z0+t,z1-t],e:[0,x1-t/2,z0+t,z1-t]};
+    for(const k in sides){const [ax,at,a0,a1]=sides[k],m=(a0+a1)/2,holes=k===front?[[m+dr[0],m+dr[1],0,2.3,0]]:[[m+wn[0],m+wn[1],1,2.2,1]];wall(ax,at,a0,a1,H,holes,'#9a6a42',woodM,t);frame(ax,ax?at+(at<z?-.06:.06):at+(at<x?-.06:.06),holes[0],'#eceae4');}
+    for(const [cx2,cz2] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1]])box(cx2,0,cz2,.34,H,.34,'#4a3020',{mat:dark,...SO,solid:false});
+    floor(x0,x1,z0,z1,'#c49a6c','boards',.02,2);box(x,-1.2,z,w,1.2,d,'#7a5a3a',{mat:woodM,...SO});roofGable(x,z,w+.7,d+.7,H,roof,front==='n'||front==='s','wood','#5a3a22');
+    if(!o.noChim){const cxh=x1-.8,czh=z0+.8;box(cxh,H-.4,czh,.9,3.3,.9,'#8d8a84',{tx:'rock',...SO});}
+    {const fx=front==='e'?x1:front==='w'?x0:x,fz=front==='s'?z1:front==='n'?z0:z,nx=front==='e'?1:front==='w'?-1:0,nz=front==='s'?1:front==='n'?-1:0,pw=3.4,pd=1.7,alongX=nz!==0;
+      box(fx+nx*pd/2,0,fz+nz*pd/2,alongX?pw:pd,.22,alongX?pd:pw,'#a77a4e',{mat:deckM,...SO});
+      for(const s of [-1,1]){const px=fx+nx*(pd-.15)+(alongX?s*(pw/2-.15):0),pz=fz+nz*(pd-.15)+(alongX?0:s*(pw/2-.15));box(px,.22,pz,.16,2.5,.16,'#4a3020',{mat:dark,...SO});}
+      box(fx+nx*pd/2,2.72,fz+nz*pd/2,alongX?pw+.3:pd+.2,.12,alongX?pd+.2:pw+.3,'#5a3a22',{mat:dark,...SO,solid:false});
+      const ln=deco(B.boxGeo(.18,.26,.18),mat('#ffd98a',null,{emissive:'#ffb347',emissiveIntensity:1.4}),fx+nx*.25+(alongX?1.3:0),2.2,fz+nz*.25+(alongX?0:1.3));ln.castShadow=false;const lc=deco(new THREE.ConeGeometry(.17,.12,4),mat('#2c2c2c'),fx+nx*.25+(alongX?1.3:0),2.39,fz+nz*.25+(alongX?0:1.3));lc.rotation.y=Math.PI/4;lc.castShadow=false;}
+    box(x-.6,0,z+.2,1.5,.78,.9,'#8a5a36',{tx:'wood'});box(x+.7,0,z-.3,.45,.48,.45,'#8a5a36',{tx:'wood'});box(x-1.9,0,z+.2,.45,.48,.45,'#8a5a36',{tx:'wood'});
+    if(!o.noShelf){const back=front==='s'?z0+.5:front==='n'?z1-.5:z;const sx=front==='e'?x0+.5:front==='w'?x1-.5:x+1.4;box(sx,0,back,front==='e'||front==='w'?.45:1.6,1.3,front==='e'||front==='w'?1.6:.45,'#7a4c2a',{tx:'wood'});}
+    keep(x,z,Math.max(w,d)/2+2.4);BLD.push([x0-2,x1+2,z0-2,z1+2]);};
+  for(const [x,z,f,w,d,rf] of HUTS)lift(1.6,()=>hut(x,z,f,w,d,rf));
+  /* village cover between the huts: a stone well, a hay cart, barrel groups, rail fences, lantern posts (cover, not hop-ups) */
+  const barrel=(x,z,y)=>{const b=deco(new THREE.CylinderGeometry(.36,.36,.95,12),mat('#7a4c2a','wood'),x,y+.475,z);for(const h of [.2,.75]){const r=deco(new THREE.TorusGeometry(.365,.025,4,14),mat('#3a3a3a',null,{metalness:.6}),x,y+h,z);r.rotation.x=Math.PI/2;r.castShadow=false;}collider(x-.3,x+.3,y-.2,y+.95,z-.3,z+.3);};
+  const railFence=(x0,z0,x1,z1,y)=>{const L=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.round(L/2.2));for(let i=0;i<=n;i++){const t=i/n;box(x0+(x1-x0)*t,y,z0+(z1-z0)*t,.14,1.1,.14,'#5a3a22',{mat:dark,...SO,solid:false});}
+    const ax=Math.abs(x1-x0)>Math.abs(z1-z0);for(const h of [.45,.9])box((x0+x1)/2,y+h,(z0+z1)/2,ax?L:.08,.1,ax?.08:L,'#7a4c2a',{mat:woodM,...SO,solid:false});collider(Math.min(x0,x1)-.05,Math.max(x0,x1)+.05,y,y+1.05,Math.min(z0,z1)-.05,Math.max(z0,z1)+.05);};
+  {const y=1.6;const wl=deco(new THREE.CylinderGeometry(1.05,1.15,.95,14,1,true),mat('#9a958c','rock',{side:2}),31,y+.47,-35);collider(30.1,31.9,y-.2,y+.95,-35.9,-34.1);
+    for(const s of [-1,1])box(31+s*.95,y,-35,.16,2.3,.16,'#4a3020',{mat:dark,...SO,solid:false});const rf=deco(new THREE.BoxGeometry(2.4,.1,1.4),mat('#5a3020','wood'),31,y+2.4,-35);rf.rotation.x=.08;keep(31,-35,2);
+    box(36.5,y+.35,-31.5,2.4,.55,1.4,'#8a5a36',{tx:'wood',solid:false});collider(35.3,37.7,y,y+1.05,-32.2,-30.8);for(const s of [-1,1]){const wh=deco(new THREE.CylinderGeometry(.48,.48,.1,14),mat('#4a3020','wood'),36.5+s*.7,y+.48,-31.5+.75);wh.rotation.x=Math.PI/2;const w2=wh.clone();w2.position.z=-31.5-.75;M.group.add(w2);}
+    box(36.5,y+.9,-31.5,2,.5,1.1,'#d4b060',{solid:false,...SO});keep(36.5,-31.5,2);
+    for(const [bx,bz] of [[20.6,-34.6],[21.3,-35.2],[27,-38.6],[27.7,-38.2],[45.6,-33],[46.2,-33.6],[46,-32.3]]){barrel(bx,bz,y);keep(bx,bz,.8);}
+    railFence(14.5,-35.2,19.5,-35.2,y);railFence(34.5,-46,34.5,-41.5,y);railFence(45.5,-22.6,52,-22.6,y);
+    for(const [lx,lz] of [[26,-36],[38,-33],[22,-26]]){box(lx,y,lz,.14,2.5,.14,'#2c2c2c',{extra:{metalness:.5},...SO,solid:false});box(lx+.3,y+2.36,lz,.6,.08,.08,'#2c2c2c',{extra:{metalness:.5},...SO,solid:false});
+      const gl=deco(B.boxGeo(.22,.3,.22),mat('#ffe3a0',null,{emissive:'#ffb347',emissiveIntensity:1.5}),lx+.55,y+2.12,lz);gl.castShadow=false;const cp=deco(new THREE.ConeGeometry(.2,.14,4),mat('#2c2c2c',null,{metalness:.5}),lx+.55,y+2.34,lz);cp.rotation.y=Math.PI/4;cp.castShadow=false;
+      for(const s of [-1,1])for(const t of [-1,1]){const fr=deco(B.boxGeo(.03,.3,.03),mat('#2c2c2c'),lx+.55+s*.11,y+2.12,lz+t*.11);fr.castShadow=false;}keep(lx,lz,.6);}}
+  /* the barn on the west rise: braced doors, white trim, glass windows, a hayloft door, a loft at 3.2 m up a white ladder, stalls and hay bales as cover */
+  lift(3.2,()=>{const cx=-48,cz=8,w=16,d=12,H=7,t=.35,x0=cx-w/2,x1=cx+w/2,z0=cz-d/2,z1=cz+d/2,red=mat('#b0402e','siding');
+    wall(1,z0+t/2,x0,x1,H,[[-53,-51,1.2,2.6,1],[-45,-43,1.2,2.6,1]],'#b0402e',red,t);wall(1,z1-t/2,x0,x1,H,[[-53,-51,1.2,2.6,1],[-45,-43,1.2,2.6,1]],'#b0402e',red,t);
+    wall(0,x1-t/2,z0+t,z1-t,H,[[cz-1.9,cz+1.9,0,3,0],[cz-1.1,cz+1.1,3.5,5.6,0]],'#b0402e',red,t);wall(0,x0+t/2,z0+t,z1-t,H,[[cz-1,cz+1,0,2.6,0]],'#b0402e',red,t);
+    for(const [ax,at,hl] of [[1,z0-.05,[-53,-51,1.2,2.6]],[1,z0-.05,[-45,-43,1.2,2.6]],[1,z1+.05,[-53,-51,1.2,2.6]],[1,z1+.05,[-45,-43,1.2,2.6]],[0,x1+.05,[cz-1.9,cz+1.9,0,3]],[0,x1+.05,[cz-1.1,cz+1.1,3.5,5.6]]])frame(ax,at,hl,'#eceae4');
+    for(const [px,pz] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1]])box(px,0,pz,.4,H,.4,'#eceae4',{mat:white,...SO,solid:false});
+    for(const s of [-1,1]){const dz=cz+s*(1.9+1),lf=new THREE.Group();lf.position.set(x1+.24,0,dz);M.group.add(lf);const pnl=new THREE.Mesh(B.boxGeo(.1,3,1.95),red);pnl.position.y=1.5;lf.add(pnl);
+      for(const [yy,hh] of [[.15,.18],[2.67,.18]]){const tb=new THREE.Mesh(B.boxGeo(.14,hh,1.95),white);tb.position.y=yy+hh/2;lf.add(tb);}
+      for(const sg of [-1,1]){const br=new THREE.Mesh(B.boxGeo(.14,.16,3.3),white);br.position.y=1.5;br.rotation.x=sg*Math.atan2(2.5,1.7);lf.add(br);}}
+    roofGable(cx,cz,w+.8,d+.8,H,'#5a2a1e',true,'wood','#b0402e');floor(x0,x1,z0,z1,'#b89a72','boards',.02,3);box(cx,-1.5,cz,w,1.5,d,'#6a6a66',{...SO});
+    box(cx+4,3.2,cz,w/2-.35,.25,d-.7,'#a77a4e',{mat:deckM,wood:true});for(const pz of [z0+.6,cz,z1-.6])box(cx+.25,0,pz,.3,3.2,.3,'#5a3a22',{mat:dark,...SO});
+    box(cx+.12,3.45,cz-3,.1,1,d/2-1.2,'#5a3a22',{mat:dark,...SO,solid:false});collider(cx+.05,cx+.2,3.45,4.6,z0+.4,cz-.6);box(cx+.12,3.45,cz+4.4,.1,1,2.4,'#5a3a22',{mat:dark,...SO,solid:false});collider(cx+.05,cx+.2,3.45,4.6,cz+3.2,z1-.4);
+    wLadder(cx-.22,cz+1.6,0,3.45,1,0);
+    for(const sx of [-54.5,-51.5])box(sx,0,z0+1.6,.18,1.3,2.8,'#7a4c2a',{tx:'wood'});
+    for(const [bx,by,bz] of [[-55,0,12.4],[-53.8,0,12.4],[-55,.82,12.4],[-50.5,0,4],[-44,3.45,4.2],[-42.6,3.45,4.2],[-44,3.45,12],[-43.4,4.27,12]])box(bx,by,bz,1.15,.8,.8,'#d4b060',{});
+    keep(cx,cz,10.5);BLD.push([x0-.5,x1+.5,z0-.5,z1+.5]);});
+  /* the mill by the waterfall pool: its wheel turns on an axle into the mill wall, fed by a wooden chute off the ledge; sacks and a millstone inside */
+  lift(0,()=>hut(-40,-38,'e',6,5.5,'#4a5a2a',{noShelf:1}));
+  {const wg=new THREE.Group();wg.position.set(-33.6,WY+1.5,-40.2);wg.userData.dyn=1;M.group.add(wg);const wm=mat('#6a4428','wood');const hub=new THREE.Mesh(new THREE.CylinderGeometry(.35,.35,1.4,10),wm);hub.rotation.z=Math.PI/2;wg.add(hub);
+    for(const sx of [-.6,.6]){const rim=new THREE.Mesh(new THREE.TorusGeometry(2.05,.09,6,24),wm);rim.rotation.y=Math.PI/2;rim.position.x=sx;wg.add(rim);}
+    for(let k=0;k<10;k++){const a=k/10*6.283,p=new THREE.Mesh(new THREE.BoxGeometry(1.3,.08,.75),wm);p.position.set(0,Math.cos(a)*1.85,Math.sin(a)*1.85);p.rotation.x=-a;wg.add(p);const s=new THREE.Mesh(new THREE.BoxGeometry(.12,1.9,.12),wm);s.position.set(0,Math.cos(a)*.95,Math.sin(a)*.95);s.rotation.x=-a;wg.add(s);}
+    box(-35.6,WY+1.32,-40.2,2.9,.36,.36,'#4a3020',{mat:dark,...SO});box(-34.9,0,-41.2,.3,WY+1.4+.4,.3,'#4a3020',{mat:dark,...SO});box(-34.9,0,-39.2,.3,WY+1.4+.4,.3,'#4a3020',{mat:dark,...SO});
+    /* the chute: its high end rests on the rock lintel beside the falls, fed by a short channel cut in the lintel top; trestles hold it up over the pool; it pours onto the top of the wheel */
+    {const P1=new V3(-35,5.36,-44.35),P2=new V3(-33.65,3.45,-40.85),Lc=P1.distanceTo(P2),ch=new THREE.Group();ch.position.copy(P1).add(P2).multiplyScalar(.5);M.group.add(ch);ch.lookAt(P2);ch.userData.dyn=1;
+      const bt=new THREE.Mesh(B.boxGeo(.9,.1,Lc),woodM);ch.add(bt);for(const s of [-1,1]){const sd2=new THREE.Mesh(B.boxGeo(.08,.35,Lc),woodM);sd2.position.set(s*.45,.15,0);ch.add(sd2);}
+      const wt=streak.clone();wt.needsUpdate=true;wt.repeat.set(1,2);const wr=new THREE.Mesh(new THREE.PlaneGeometry(.8,Lc),new THREE.MeshBasicMaterial({color:'#bfe9f5',map:wt,transparent:true,opacity:.85,depthWrite:false}));wr.rotation.x=-Math.PI/2;wr.position.y=.07;ch.add(wr);
+      /* the feed: a channel cut along the back of the lintel takes water from the foot of the falls past a head-gate, then turns across the path (low, you step over it) to the chute */
+      const wb=new THREE.MeshBasicMaterial({color:'#7fd0e6',transparent:true,opacity:.85,depthWrite:false}),ws=new THREE.MeshBasicMaterial({color:'#e6f8ff',map:wt,transparent:true,opacity:.8,depthWrite:false});
+      const run=(x0,z0,x1,z1,skip=0)=>{const lx=Math.abs(x1-x0),lz=Math.abs(z1-z0),ax=lx>lz,len=Math.max(lx,lz),cx=(x0+x1)/2,cz=(z0+z1)/2;box(cx,5.3,cz,ax?len:.7,.1,ax?.7:len,'#9a6a42',{mat:woodM,...SO,solid:false});
+        for(const s of [-1,1])if(s!==skip)box(ax?cx:cx+s*.33,5.3,ax?cz+s*.33:cz,ax?len:.06,.24,ax?.06:len,'#9a6a42',{mat:woodM,...SO,solid:false});
+        for(const [mt,dy] of [[wb,.42],[ws,.44]]){const pl=new THREE.Mesh(new THREE.PlaneGeometry(ax?len:.6,ax?.6:len),mt);pl.rotation.x=-Math.PI/2;pl.position.set(cx,5.3-.01+dy-.27,cz);pl.renderOrder=6;pl.userData.dyn=1;M.group.add(pl);}};
+      run(-32.5,-47.3,-35.75,-47.3,1);box(-33.775,5.3,-46.97,2.55,.24,.06,'#9a6a42',{mat:woodM,...SO,solid:false});box(-35.75,5.3,-47.3,.06,.24,.72,'#9a6a42',{mat:woodM,...SO,solid:false});/* the corner: the south wall stops at the turn, the west end is closed */
+      run(-35.4,-47.3,-35.4,-44.4);collider(-35.75,-35.05,5,5.54,-46.95,-44.6);collider(-35.75,-33.33,5,5.54,-47.65,-46.95);/* you walk over the low trough */
+      {const gate=box(-33.2,5.4,-47.3,.25,.75,1,'#7a4c2a',{mat:dark,...SO});for(const s of [-1,1])box(-33.2,5.3,-47.3+s*.5,.14,1.2,.14,'#4a3020',{mat:dark,...SO,solid:false});}
+      {const fo2=blob(-32.3,-47.4,a=>.55+.12*Math.sin(a*5),5.48,wfoam.clone(),7,1);fo2.material.opacity=.85;}
+      {const bp=new THREE.Mesh(new THREE.PlaneGeometry(.8,Lc),wb);bp.rotation.x=-Math.PI/2;bp.position.y=.06;bp.renderOrder=6;ch.add(bp);wr.renderOrder=7;}
+      for(const t of [.38,.72]){const q=P1.clone().lerp(P2,t),gb=hAt(q.x,q.z)-.3,top=q.y-.12;for(const s of [-1,1]){const lg=deco(B.boxGeo(.14,top-gb,.14),dark,q.x+s*.5,(top+gb)/2,q.z+s*.14);lg.castShadow=true;}const xb=deco(B.boxGeo(1.1,.1,.1),dark,q.x,top-.25,q.z);xb.rotation.y=-.28;}
+      const sp2=wt.clone();sp2.needsUpdate=true;const fallM=new THREE.MeshBasicMaterial({color:'#ffffff',map:sp2,transparent:true,opacity:.7,side:2,depthWrite:false});const fl=new THREE.Mesh(new THREE.PlaneGeometry(.7,.9),fallM);fl.position.set(-33.6,3.05,-40.75);fl.userData.dyn=1;M.group.add(fl);
+      let acc=0;M.life.push((t,dt)=>{wt.offset.y=(t*1.6)%1;sp2.offset.y=(t*2)%1;wg.rotation.x=-t*.8;acc+=dt;while(acc>.05){acc-=.05;spray(-33.6+(Math.random()-.5)*1,WY+.1,-40.2+.5+Math.random()*1.1,(Math.random()-.5),1.2+Math.random(),.8,.6,.32,8);
+        if(Math.random()<.5)spray(-33.6+(Math.random()-.5)*.5,3.1,-40.6,(Math.random()-.5)*.8,.4,.3,.5,.22,9);}});}
+    box(-41.5,0,-39.6,.7,.6,.5,'#c8b48a',{});box(-41.5,0,-38.9,.7,.6,.5,'#c8b48a',{});box(-41.5,.6,-39.25,.7,.5,.5,'#c8b48a',{});
+    const ms2=deco(new THREE.CylinderGeometry(.75,.75,.45,16),mat('#8d8a84','rock'),-39.6,.45,-36.6);collider(-40.2,-39,0,.68,-37.2,-36);keep(-33.6,-40.2,3);}
+  /* the boathouse on stilts over the lower river: teal walls, glass windows, a land door, an open boat bay over the water with walkways, a slipway and a deck */
+  {const cx=50,x0=44.5,x1=55.5,zB=9.8,zF=13.4,zS=19.4,H=4.4,t=.3,teal=mat('#2fa3a3','siding'),fy=.6;
+    collider(x0,x1,-2,fy,zF,zS);box(cx,fy-.22,(zF+zS)/2,x1-x0,.22,zS-zF,'#a77a4e',{mat:deckM,...SO,solid:false});
+    for(let px=x0+.3;px<=x1;px+=2.2)for(const pz of [zB+.2,zF,zS-.2])box(px,-1.6,pz,.24,1.98,.24,'#4a3020',{mat:dark,...SO});
+    lift(fy,()=>{wall(1,zS-t/2,x0,x1,H,[[cx-1.1,cx+1.1,0,2.4,0],[x0+1.6,x0+3.4,1.1,2.3,1],[x1-3.4,x1-1.6,1.1,2.3,1]],'#2fa3a3',teal,t);
+      wall(0,x0+t/2,zB,zS-t,H,[[zB,zF,0,2.6,0],[14.3,16.7,0,2.4,0]],'#2fa3a3',teal,t);wall(0,x1-t/2,zB,zS-t,H,[[zB,zF,0,2.6,0],[15.4,17.4,1.1,2.3,1]],'#2fa3a3',teal,t);
+      wall(1,zB+t/2,x0,x1,H,[[x0+1.4,x1-1.4,-.8,2.9,0]],'#2fa3a3',teal,t);
+      for(const [ax,at,hl] of [[1,zS+.05,[cx-1.1,cx+1.1,0,2.4]],[1,zS+.05,[x0+1.6,x0+3.4,1.1,2.3]],[1,zS+.05,[x1-3.4,x1-1.6,1.1,2.3]],[0,x0-.05,[14.3,16.7,0,2.4]],[0,x1+.05,[15.4,17.4,1.1,2.3]]])frame(ax,at,hl,'#eceae4');
+      roofGable(cx,(zB+zS)/2,x1-x0+.8,zS-zB+.8,H,'#1e5f66',false,'wood','#2fa3a3');
+      box(46.5,0,17.6,1.6,1,1.2,'#8a5a36',{tx:'wood'});box(46.5,1,17.6,1.1,.8,1.1,'#8a5a36',{tx:'wood'});box(53,0,16,2,.9,.8,'#7a4c2a',{tx:'wood'});box(47.6,0,14.2,1.2,.85,.6,'#8a5a36',{tx:'wood'});});
+    {const bt=new THREE.Group();bt.position.set(50.3,WY+.12,12.5);bt.userData.dyn=1;M.group.add(bt);const hm=mat('#e8e4da',null,{roughness:.6});const hl=new THREE.Mesh(B.boxGeo(4.2,.55,1.45),hm);hl.position.y=.2;bt.add(hl);
+      const bow=new THREE.Mesh(new THREE.CylinderGeometry(.72,.02,1.1,4,1),hm);bow.rotation.z=-Math.PI/2;bow.rotation.x=Math.PI/4;bow.scale.set(1,1,.35);bow.position.set(2.65,.2,0);bt.add(bow);
+      const sm=new THREE.Mesh(B.boxGeo(4,.06,1.25),mat('#a77a4e','boards'));sm.position.y=.46;bt.add(sm);for(const x of [-.8,.9]){const st=new THREE.Mesh(B.boxGeo(.35,.08,1.25),mat('#8a5a36','wood'));st.position.set(x,.62,0);bt.add(st);}
+      collider(48.2,52.9,WY-1,WY+.62,11.8,13.2);M.life.push(t=>{bt.position.y=WY+.12+Math.sin(t*1.3)*.04;bt.rotation.x=Math.sin(t*.9)*.03;});}
+    {const sl=new THREE.Mesh(B.boxGeo(5.9,.2,2.4),deckM);sl.position.set(41.7,(WY-.3+fy)/2-.1,15.5);sl.rotation.z=Math.atan2(fy-(WY-.3),5.4);sl.castShadow=true;M.group.add(sl);ramp('x',39,44.4,15.5,2.4,WY-.3,fy,{novis:1});}
+    keep(cx,15,7.5);BLD.push([x0-.5,x1+.5,zB-.5,zS+.5]);}
+  /* plank footbridges with a low step at each end */
+  const bridge=(x,z,len,alongX)=>{const y=.25;box(x,y,z,alongX?len:3,.3,alongX?3:len,'#8a5a36',{mat:deckM,wood:true});
+    for(const s of [-1,1]){box(alongX?x:x+s*1.4,y+1.2,alongX?z+s*1.4:z,alongX?len:.1,.1,alongX?.1:len,'#6a4024',{mat:woodM,...SO,solid:false});for(let q=-len/2+.2;q<=len/2;q+=1.6)box(alongX?x+q:x+s*1.4,y+.3,alongX?z+s*1.4:z+q,.12,.95,.12,'#6a4024',{mat:woodM,...SO});}
+    for(let q=-len/2+1;q<=len/2-1;q+=2.4)for(const s of [-1,1])box(alongX?x+q:x+s*1.3,y-1.85,alongX?z+s*1.3:z+q,.22,1.9,.22,'#5a3a22',{mat:dark,...SO});
+    for(const e of [-1,1]){const ex=alongX?x+e*(len/2+.5):x,ez=alongX?z:z+e*(len/2+.5),gy=hAt(ex,ez),top=gy+Math.max(.2,.3-gy);collider(ex-(alongX?.5:1.5),ex+(alongX?.5:1.5),gy-.4,top,ez-(alongX?1.5:.5),ez+(alongX?1.5:.5));
+      const pl=new THREE.Mesh(B.boxGeo(alongX?1.25:2.9,.08,alongX?2.9:1.25),deckM);pl.position.set(ex+(alongX?-e*.05:0),(top+gy)/2+.06,ez+(alongX?0:-e*.05));const ang=Math.atan2(.55-gy,1.2);if(alongX)pl.rotation.z=-e*ang;else pl.rotation.x=e*ang;pl.castShadow=true;M.group.add(pl);
+      for(const s of [-1,1]){const blk=deco(B.boxGeo(alongX?.16:.16,.3,.16),dark,ex+(alongX?e*.5:s*1.3),gy+.05,ez+(alongX?s*1.3:e*.5));blk.castShadow=false;}}
+    keep(x,z,len/2+1.5);};
+  bridge(-21.5,-23.5,10,true);bridge(31,14,10.5,false);
+  /* ---------- ziplines: 2.8 m hazard-striped pads on the rock tops, the post just behind each pad, bots ride them both ways ---------- */
+  M.zips=[];const hz=canvasTex(64,64,(gx,w,h)=>{for(let i=-4;i<8;i++){gx.fillStyle=i%2?'#1c1d22':'#ffe14d';gx.beginPath();gx.moveTo(i*12,0);gx.lineTo(i*12+12,0);gx.lineTo(i*12+12-h,h);gx.lineTo(i*12-h,h);gx.closePath();gx.fill();}});
+  const zs=canvasTex(128,64,(gx,w,h)=>{gx.fillStyle='#ffe14d';gx.fillRect(0,0,w,h);gx.fillStyle='#1c1d22';gx.font='bold 38px Bungee, Impact, sans-serif';gx.textAlign='center';gx.textBaseline='middle';gx.fillText('ZIP',w/2,h/2+2);});
+  const zip=(PA,PB,ea=0)=>{const dx=PB.x-PA.x,dz=PB.z-PA.z,dl=Math.hypot(dx,dz),ux=dx/dl,uz=dz/dl,PO=1.85;
+    const A={x:PA.x-ux*PO,y:PA.y+ZIP_HANG+.75+ea,z:PA.z-uz*PO},Bn={x:PB.x+ux*PO,y:PB.y+ZIP_HANG+.75,z:PB.z+uz*PO},len=Math.hypot(Bn.x-A.x,Bn.z-A.z);
+    const L={A,B:Bn,len,s0:PO/len,sag:Math.min(3.4,len*.045),ux,uz,a:{x:PA.x,y:PA.y,z:PA.z},b:{x:PB.x,y:PB.y,z:PB.z}};M.zips.push(L);
+    const pts=[];for(let i=0;i<=40;i++){const q=zipAt(L,i/40);pts.push(new V3(q.x,q.y,q.z));}const cb=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),80,.035,6,false),mat('#1c1d22',null,{metalness:.7,roughness:.3}));cb.userData.dyn=1;M.group.add(cb);
+    for(const [P,E] of [[PA,A],[PB,Bn]]){const pd=new THREE.Mesh(new THREE.PlaneGeometry(2.8,2.8),new THREE.MeshLambertMaterial({map:hz}));pd.rotation.x=-Math.PI/2;pd.position.set(P.x,P.y+.04,P.z);pd.userData.dyn=1;M.group.add(pd);
+      box(E.x,P.y,E.z,.24,E.y+.5-P.y,.24,'#2c3036',{extra:{metalness:.5,roughness:.4},solid:false});collider(E.x-.12,E.x+.12,P.y,P.y+9,E.z-.12,E.z+.12);/* the pole's collider runs well above its cap, so nobody can stand on a zipline pole */const cap=deco(new THREE.BoxGeometry(.32,.1,.32),mat('#ffe14d'),E.x,E.y+.55,E.z);cap.castShadow=false;
+      for(const fz of [-1,1]){const sgn=new THREE.Mesh(new THREE.PlaneGeometry(.55,.27),new THREE.MeshBasicMaterial({map:zs}));sgn.position.set(E.x,P.y+1.6,E.z+fz*.125);sgn.rotation.y=fz>0?0:Math.PI;M.group.add(sgn);}}
+    M.navWarps=(M.navWarps||[]).concat([{a:[PA.x,PA.y,PA.z],b:[PB.x,PB.y,PB.z],t:[PA.x,PA.z],c:2,zip:L,dir:1},{a:[PB.x,PB.y,PB.z],b:[PA.x,PA.y,PA.z],t:[PB.x,PB.z],c:2,zip:L,dir:-1}]);};
+  zip(F.crown,F.ledge);zip(F.east,F.south);zip(F.ne,F.lake);zip(F.look,F.isl1,.3);/* a little higher at the lookout so riders clear its rock */
+  /* the shop: on the lake's east shore, near the middle */
+  M.shopAt=[{x:24,z:-1,y:g(24,-1),q:1}];keep(24,-1,4);
+  /* low rock ledges against the cliff foot all round, where there's room (more levels at the edges) */
+  for(const [ax,sg] of [[1,-1],[1,1],[0,-1],[0,1]])for(let a=(ax?-X:-Z)+5+R()*4;a<(ax?X:Z)-6;a+=7+R()*10){const ins=2+R()*1.6,x=ax?a:sg*(X-ins),z=ax?sg*(Z-ins):a,L1=3.6+R()*3.4,D1=3.4+R()*1.8;
+    if(!clear(x,z,3.5)||trailD(x,z)<3||hAt(x,z)<0)continue;const g0=hAt(x,z),h1=1.3+R()*.6;chunk(x,z,ax?L1:D1,ax?D1:L1,g0+h1);if(R()<.6){const L2=2.4+R()*1.8;chunk(x+(ax?(R()-.5)*2:sg*1.2),z+(ax?sg*1.2:(R()-.5)*2),ax?L2:2.6,ax?2.6:L2,g0+h1+1.3+R()*.4);}}
+  /* loose rocks in the open (after everything else has claimed its space, so none end up inside a building) */
+  for(const T of TRAILS)for(const [x,z] of T)keep(x,z,1.5);
+  for(let k=0,tr=0;k<46&&tr<900;tr++){const x=(R()-.5)*112,z=(R()-.5)*92;const r=R()<.35?.55+R()*.5:.25+R()*.2;if(!clear(x,z,r+.6)||hAt(x,z)<0||trailD(x,z)<1.4)continue;boulder(x,z,r);keep(x,z,r+.3);k++;}
+  /* trees (they fall when chopped or shot); a clump south of the lake breaks up the long view from the Crown */
+  for(const [x,z] of [[-21.5,-23.5],[31,14],[-17,-4],[-9.3,-33],[2,-6],[-4,-6]])keep(x,z,5);
+  const TREES=['tt_oak','tt_pine','tt_bigoak','tt_smalloak','tt_pine','tt_oak'];
+  for(const [x,z,id] of [[-2,26.8,'tt_bigoak'],[-5.6,28.4,'tt_pine'],[4.6,27.6,'tt_oak'],[1,25.4,'tt_pine'],[17.6,31,'tt_oak']])if(clear(x,z,1.2)){glbTree(id,x,z,7+R()*2.5,R()*6,.7);keep(x,z,2.6);}
+  let nt=0;for(let tr=0;tr<900&&nt<34;tr++){const pine=R()<.45,x=(R()-.5)*112,z=(R()-.5)*92,h=hAt(x,z);if(h<.05||!clear(x,z,2.6)||trailD(x,z)<2.4)continue;if(x>8&&z<-24&&R()<.8)continue;
+    glbTree(pine?'tt_pine':TREES[nt%TREES.length],x,z,6+R()*3.5,R()*6,.7);keep(x,z,2.6);nt++;}
+  /* ground detail: grass tufts, wild flowers and pebbles (trail edges, rock feet, the cliff foot), instanced */
+  {const tuft=(()=>{const P=[];for(let k=0;k<7;k++){const a=k/7*6.283+R()*.5,l=.22+R()*.2,lean=.12+R()*.14,w=.035,cx=Math.cos(a),cz=Math.sin(a),px=-cz*w,pz=cx*w;
+      P.push(px,0,pz,-px,0,-pz,cx*lean,l,cz*lean);}const gq=new THREE.BufferGeometry();gq.setAttribute('position',new THREE.Float32BufferAttribute(P,3));gq.computeVertexNormals();return gq;})();
+    const pb=new THREE.IcosahedronGeometry(.16,0);
+    /* wild flowers: a five-petal head 0.14 m across on a green stem, in little clumps */
+    const head=(()=>{const P=[];for(let k=0;k<5;k++){const a=k/5*6.283,a1=a-.38,a2=a+.38,r=.075,rm=.045;P.push(0,.3,0, Math.cos(a1)*rm,.31,Math.sin(a1)*rm, Math.cos(a)*r,.325,Math.sin(a)*r, 0,.3,0, Math.cos(a)*r,.325,Math.sin(a)*r, Math.cos(a2)*rm,.31,Math.sin(a2)*rm);}
+      const gq=new THREE.BufferGeometry();gq.setAttribute('position',new THREE.Float32BufferAttribute(P,3));gq.computeVertexNormals();return gq;})(),stem=new THREE.CylinderGeometry(.008,.01,.3,3);stem.translate(0,.15,0);
+    const eye=new THREE.SphereGeometry(.022,6,4);eye.translate(0,.315,0);
+    const mk=(geo,m,n,place)=>{const im=new THREE.InstancedMesh(geo,m,n),o=new THREE.Object3D(),c=new THREE.Color();let k=0;for(let tr=0;tr<n*8&&k<n;tr++){const r=place();if(!r)continue;o.position.set(r[0],hAt(r[0],r[1])-.02,r[1]);o.rotation.set((R()-.5)*.5,R()*6.3,(R()-.5)*.5);o.scale.setScalar(r[2]);o.updateMatrix();im.setMatrixAt(k,o.matrix);if(r[3])im.setColorAt(k,c.set(r[3]));k++;}
+      im.count=k;im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.castShadow=false;im.receiveShadow=true;im.userData.dyn=1;M.group.add(im);};
+    const grassy=(x,z)=>{const h=hAt(x,z);return h>.05&&!inBld(x,z)&&!(x>8&&z<-24)&&-sdR(x,z,-X,X,-Z,Z)>2.5;};
+    mk(tuft,new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9,side:2}),3200,()=>{const x=(R()-.5)*118,z=(R()-.5)*98;if(!grassy(x,z))return null;const td=trailD(x,z);if(td<1.1)return null;if(td>2.6&&R()<.55)return null;return [x,z,.8+R()*.8,['#4f8a2c','#6aa83c','#7fbf48','#5a9634'][Math.floor(R()*4)]];});
+    {const n=520,ims=[new THREE.InstancedMesh(stem,new THREE.MeshStandardMaterial({color:'#4a8a2c',roughness:.9}),n),new THREE.InstancedMesh(head,new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.6,side:2}),n),new THREE.InstancedMesh(eye,new THREE.MeshStandardMaterial({color:'#f2c230',roughness:.6}),n)],o=new THREE.Object3D(),c=new THREE.Color();let k=0;
+      for(let tr=0;tr<4000&&k<n;tr++){const x=(R()-.5)*114,z=(R()-.5)*94;if(!grassy(x,z)||trailD(x,z)<1.3)continue;const col=['#ffffff','#ffd21f','#9b6bff','#ff6fa8','#ffffff'][Math.floor(R()*5)],m=2+Math.floor(R()*2);
+        for(let q=0;q<m&&k<n;q++){const fx=x+(R()-.5)*.35,fz=z+(R()-.5)*.35;o.position.set(fx,hAt(fx,fz)-.02,fz);o.rotation.set((R()-.5)*.25,R()*6.3,(R()-.5)*.25);o.scale.setScalar(.85+R()*.45);o.updateMatrix();for(const im of ims)im.setMatrixAt(k,o.matrix);ims[1].setColorAt(k,c.set(col));k++;}}
+      for(const im of ims){im.count=k;im.instanceMatrix.needsUpdate=true;im.castShadow=false;im.receiveShadow=true;im.userData.dyn=1;M.group.add(im);}ims[1].instanceColor.needsUpdate=true;}
+    mk(pb,new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9,flatShading:true}),900,()=>{const x=(R()-.5)*120,z=(R()-.5)*100,e=-sdR(x,z,-X,X,-Z,Z),td=trailD(x,z);if(hAt(x,z)<WY||inBld(x,z))return null;if(!(e<3.2||(td>.9&&td<1.8)||R()<.08))return null;return [x,z,.4+R()*1.2,['#9a9690','#b5b2ab','#85827c'][Math.floor(R()*3)]];});}
+  /* spawns: all round the valley on open ground, never in water, never two close; the game's extra spawns are kept out of the water too */
+  const sp=[];for(let tr=0;tr<5000&&sp.length<12;tr++){const x=(R()-.5)*108,z=(R()-.5)*88;if(!clear(x,z,2.2)||hAt(x,z)<.05)continue;if(sp.some(p=>Math.hypot(p.x-x,p.z-z)<17))continue;sp.push({x,z,y:hAt(x,z),yaw:Math.atan2(-x,-z)});}
+  M.spawns=sp;M.spawnOK=(x,z)=>!(Math.abs(z+6)<1.6&&x>-9&&x<11)&&!(Math.abs(x+9.3)<1.6&&z>-43.5&&z<-23.5)&&hAt(x,z)>WY+.25&&Math.hypot(x-POOL.x,z-POOL.z)>POOL.r+1&&!inLake(x,z,-1);
+  M.reachSpawns=id=>{const gr=M.grid,k=(id/NL)|0,i=k%gr.nx,x=gr.x0+(i+.5)*CS,z=gr.z0+((k-i)/gr.nx+.5)*CS;return M.spawnOK(x,z);};
+  M.wade=(x,z)=>hAt(x,z)<WY-.06;M.waterY=(x,z)=>M.wade(x,z)?WY:null;M.waterLevel=WY;
+  {const rg=new THREE.RingGeometry(.72,1,28);rg.rotateX(-Math.PI/2);const rings=[];let ri=0;for(let i=0;i<24;i++){const m=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));m.visible=false;m.renderOrder=6;m.userData.dyn=1;M.group.add(m);rings.push({m,t:9,s:1});}
+    M.splash=(x,z,s=1)=>{if(!M.wade(x,z))return;const r=rings[ri];ri=(ri+1)%rings.length;r.t=0;r.s=s;r.m.position.set(x,WY+.02,z);r.m.visible=true;
+      for(let k=0;k<Math.round(3+s*6);k++){const a=Math.random()*6.283,v=.6+Math.random()*1.4*s;spray(x,WY+.05,z,Math.cos(a)*v,1.5+s*2.6*Math.random(),Math.sin(a)*v,.45+s*.25,.16+s*.12,14);}};
+    M.life.push((t,dt)=>{for(const r of rings){if(r.t>1.2)continue;r.t+=dt;const k=r.t/1.2;r.m.visible=r.t<1.2;r.m.scale.setScalar(.15+r.s*1.6*Math.sqrt(k));r.m.material.opacity=.55*(1-k)*(1-k);}});}
+  /* minimap: ground, water and the trails */
+  M.mmPaint=(gx,k,b)=>{gx.fillStyle='#2a2723';gx.fillRect(0,0,(b.x1-b.x0)*k,(b.z1-b.z0)*k);for(let z=b.z0;z<b.z1;z+=1)for(let x=b.x0;x<b.x1;x+=1){const h=hAt(x+.5,z+.5);
+      if(h<WY){gx.fillStyle='#16303c';gx.fillRect((x-b.x0)*k,(z-b.z0)*k,k+.5,k+.5);}else if(Math.abs(x)<X&&Math.abs(z)<Z&&trailD(x+.5,z+.5)<1.2){gx.fillStyle='#3d352a';gx.fillRect((x-b.x0)*k,(z-b.z0)*k,k+.5,k+.5);}}};
+}
+
 const MAPS={
  testarena:{modes:['duel'],dev:true,name:'Test Arena',desc:'A plain yard for working on a fighter: half dark tarmac, half pale tiles, on grass, with a few boxes to jump on and a dark wall',sw:['#55b443','#4a4d55','#d9dce1'],build(){testArenaMap();}},
  arena:{modes:['duel'],in1v1:true,name:'Arena',desc:'An open floor with a few pillars and a colourful cross ramp in the middle',sw:['#d9dce1','#e8463a','#2f7fe0'],env:ARENA_NIGHT,build(){arenaMap();}},
  skyhigh:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Sky High',desc:'An infinity-pool roof terrace on a skyscraper at golden hour: raised sun decks, teak cover and a long way down',sw:['#ffa35c','#3a3e45','#f4c22b'],
   env:{top:'#3c4a9c',mid:'#ffa35c',bot:'#c86a52',ex:.42,fog:['#f2a679',70,560],hemi:['#ffd0b0','#6a5070',1.35],sun:['#ffb46e',2.6],sunOff:[-64,26,-26],fill:.3,glow:['#ffc070',.9],disc:['#fff2c8',.035],clouds:['#ffd2b0','#f0a090']},build(){skyHigh();}},
+ valley:{modes:['duel'],in1v1:true,name:'Valley',desc:'A river valley ringed by cliffs: rock masses to climb, a waterfall and a mill, a lake island, rope bridges and four ziplines, a village, a barn and a boathouse',sw:['#86a85a','#a9aaa8','#3f9fc0'],build(){valleyMap();}},
  lagoon:{modes:['duel'],one:true,in1v1:true,drums:0,name:'Lagoon',desc:'One big deck on stilts over a turquoise lagoon: high boardwalks at each end, bridges over to the thatched shop canopy in the middle, a tiki bar either side, palm islands at sunset',sw:['#2fd0c8','#b88250','#ff9fb6'],
   env:{top:'#4256b8',mid:'#ffb08e',bot:'#3fbfca',ex:.4,fog:['#f6b2a8',90,620],hemi:['#c6d2ff','#8a7c78',1.35],sun:['#ffc89c',2.4],sunOff:[-44,22,-58],fill:.32,glow:['#ffb070',.9],disc:['#fff0c8',.04],clouds:['#ffc4d6','#ff97b0']},build(){lagoonMap();}},
  street:{modes:['duel'],name:'Street Life',desc:'A hospital and a home across a suburban road, cars and front yards',sw:['#55b443','#3b3e45','#f4c22b'],build(){
@@ -6798,12 +7193,19 @@ function downYaw(f){if(S.t-(f._dyLast??-9)>.3){f._dyOn=false;f._dyT=0;}f._dyLast
       if(free>=L-.01){best=a;bl=L;break;}if(free>bl+.05){bl=free;best=a;}}
     f._dyw=best;if(!f._dyOn)f._dyv=f.yaw;f._dyOn=true;}
   let df=f._dyw-f._dyv;df=Math.atan2(Math.sin(df),Math.cos(df));f._dyv+=df*Math.min(1,.25);return f._dyv;}
+/* ground that isn't flat (M.floorAt: the Valley) stops shots and sight too: march along the ray below the highest ground point, then narrow in */
+const TERR={x0:0,x1:0,y0:0,y1:0,z0:0,z1:0,mesh:null,terrain:true,wood:false};
+function terrainRay(o,d,maxT){const fA=M.floorAt;if(!fA||M.floorMax==null)return null;const top=M.floorMax+.05;let t=0,tEnd=maxT;
+  if(o.y>top){if(d.y>=0)return null;t=(o.y-top)/-d.y;}if(d.y>0&&o.y<top)tEnd=Math.min(maxT,(top-o.y)/d.y+.01);if(t>tEnd)return null;
+  const st=.35;let pt=t;if(o.y+d.y*t<fA(o.x+d.x*t,o.z+d.z*t)-.02)return t===0?null:t;
+  for(t+=st;t<=tEnd+st;t+=st){const tt=Math.min(t,tEnd);if(o.y+d.y*tt<fA(o.x+d.x*tt,o.z+d.z*tt)){let a=pt,b=tt;for(let i=0;i<7;i++){const m=(a+b)/2;if(o.y+d.y*m<fA(o.x+d.x*m,o.z+d.z*m))b=m;else a=m;}return b;}pt=tt;if(tt>=tEnd)break;}return null;}
 function rayBoxes(o,d,maxT,skipSee,proj){let best=maxT,hit=null,nAx=0,nS=0;
   for(const b of allBoxes()){if(b.noShot)continue;if(skipSee&&(b.see||(b.prop==='glass'&&b.alive!==false)))continue;/* sight passes through glass (bots spot and shoot you through windows) */let t0=-1e9,t1=1e9,ax=0,sg=0;const ty=proj&&b.edge?Math.min(b.y1,b.y0+1.15):b.y1;/* proj: thrown/fired things clear a rope rail's tall invisible wall above the rope */
     for(let a=0;a<3;a++){const oo=a===0?o.x:a===1?o.y:o.z,dd=a===0?d.x:a===1?d.y:d.z,mn=a===0?b.x0:a===1?b.y0:b.z0,mx=a===0?b.x1:a===1?ty:b.z1;
       if(Math.abs(dd)<1e-9){if(oo<mn||oo>mx){t0=1e9;break;}continue;}let ta=(mn-oo)/dd,tb=(mx-oo)/dd,s=-1;if(ta>tb){const q=ta;ta=tb;tb=q;s=1;}
       if(ta>t0){t0=ta;ax=a;sg=s;}if(tb<t1)t1=tb;if(t0>t1)break;}
     if(t0<=t1&&t0>=0&&t0<best){best=t0;hit=b;nAx=ax;nS=sg;}}
+  {const tg=terrainRay(o,d,best);if(tg!=null){const e=.3,x=o.x+d.x*tg,z=o.z+d.z*tg,fA=M.floorAt;return{t:tg,box:TERR,n:new V3(fA(x-e,z)-fA(x+e,z),2*e,fA(x,z-e)-fA(x,z+e)).normalize()};}}
   if(!hit)return null;
   const nrm=new V3();nrm.setComponent(nAx,-Math.sign(nAx===0?d.x:nAx===1?d.y:d.z)||1);
   return{t:best,box:hit,n:nrm};}
@@ -7142,19 +7544,19 @@ setTimeout(()=>{for(const id of TREE_IDS)loadTree(id).catch(e=>console.warn(e));
    taken enough (or a rocket, grenade or fireball goes off close by) the tree creaks, topples away from the shot, crashes down in a burst of leaves,
    lies there a few seconds and sinks away, leaving a stump. It stands again at the start of the next round. */
 const TREE_HP=320;
-function glbTree(id,x,z,h,ry=0,tw=.7){const th=Math.min(3,h*.35),b=box(x,0,z,tw,th,tw,'#7a4c2a',{mat:INVIS,edges:false,shadow:false,prop:'tree',hp:TREE_HP,wood:false});const grp=M.group;
-  const piv=new THREE.Group();piv.position.set(x,0,z);piv.userData.dyn=1;grp.add(piv);
-  const stump=new THREE.Mesh(gC(tw*.42,tw*.5,.45,10),mat('#6b4426'));stump.position.set(x,.225,z);stump.castShadow=true;stump.visible=false;stump.userData.dyn=1;grp.add(stump);
+function glbTree(id,x,z,h,ry=0,tw=.7){const TY=M.floorAt?M.floorAt(x,z):0;/* trees stand on the ground height (the Valley) */const th=Math.min(3,h*.35),b=box(x,TY,z,tw,th,tw,'#7a4c2a',{mat:INVIS,edges:false,shadow:false,prop:'tree',hp:TREE_HP,wood:false});const grp=M.group;
+  const piv=new THREE.Group();piv.position.set(x,TY,z);piv.userData.dyn=1;grp.add(piv);
+  const stump=new THREE.Mesh(gC(tw*.42,tw*.5,.45,10),mat('#6b4426'));stump.position.set(x,TY+.225,z);stump.castShadow=true;stump.visible=false;stump.userData.dyn=1;grp.add(stump);
   const top=new THREE.Mesh(new THREE.CircleGeometry(tw*.42,10),mat('#d9b48a'));top.rotation.x=-Math.PI/2;top.position.y=.226;stump.add(top);
   const T={st:0,t:0,ax:new V3(1,0,0),q:new THREE.Quaternion()};b.color='#7a4c2a';
   b.fell=at=>{const d=new V3(x-at.x,0,z-at.z);if(d.lengthSq()<1e-4)d.set(Math.random()-.5,0,Math.random()-.5);d.normalize();T.ax.set(d.z,0,-d.x);T.st=1;T.t=0;stump.visible=true;
     sfx('wood',{x,y:1,z},{range:24});emit(x,th*.7,z,{n:24,speed:5,up:3,size:.16,life:.7,grav:10,colors:['#7a4c2a','#c99a5b','#e9d3a8']});};
-  b.onRestore=()=>{T.st=0;piv.quaternion.identity();piv.position.y=0;piv.visible=true;stump.visible=false;};
+  b.onRestore=()=>{T.st=0;piv.quaternion.identity();piv.position.y=TY;piv.visible=true;stump.visible=false;};
   M.life.push((t,dt)=>{if(!T.st)return;T.t+=dt;
     if(T.st===1){const a=Math.min(Math.PI/2*.97,1.25*T.t*T.t*1.6);piv.quaternion.setFromAxisAngle(T.ax,a);if(a>=Math.PI/2*.97){T.st=2;T.t=0;const c=new V3(0,h*.55,0).applyQuaternion(piv.quaternion).add(piv.position);
         sfx('brick',{x:c.x,y:.5,z:c.z},{range:26});emit(c.x,.6,c.z,{n:46,speed:6,up:4,size:.24,life:1.1,grav:9,colors:['#3f8f3a','#4fae45','#7fd36a','#2f6a1e','#c9e9a6']});emit(c.x,.3,c.z,{n:16,speed:2,up:1.2,size:.6,life:1.2,grav:-1,colors:['#c8b8a0','#a8987e']});}}
     else if(T.st===2){const k=Math.max(0,1-T.t*3);piv.quaternion.setFromAxisAngle(T.ax,Math.PI/2*.97+Math.sin(T.t*14)*.04*k);if(T.t>4.5){T.st=3;T.t=0;}}
-    else if(T.st===3){piv.position.y=-T.t*1.4;if(T.t>1.4){piv.visible=false;T.st=0;}}});
+    else if(T.st===3){piv.position.y=TY-T.t*1.4;if(T.t>1.4){piv.visible=false;T.st=0;}}});
   const put=()=>{const t=TREEM[id];if(M.group!==grp)return;if(!t){TREE_WAIT.push(put);return;}const m=new THREE.Mesh(t.geo,t.mat);m.rotation.y=ry;m.scale.setScalar(h);m.castShadow=true;m.receiveShadow=true;m.userData.dyn=1;piv.add(m);};
   if(TREEM[id])put();else{TREE_WAIT.push(put);loadTree(id).catch(()=>{});}}
 /* Sculpted character models (made in Tripo, split into the six moving parts offline, each carrying its own shoulder and hip pivots).
@@ -7734,7 +8136,7 @@ function botDif(f){const base=DIFF[S.diff];if(f!==ME&&!isFoe(f,ME))return base;
   if(ME.alive&&!ME.downed&&isFoe(f,ME)&&FS.filter(o=>o.alive&&!o.downed&&!isFoe(o,ME)).length===1&&FS.filter(o=>o.alive&&!o.downed&&isFoe(o,ME)).length>=2)return base.solo||(base.solo=Object.assign({},base,{react:base.react+.3,miss:Math.min(.6,base.miss+.15),rof:base.rof*1.2,flinch:base.flinch*1.3}));
   return base;}
 /* 1v1: every Duels map plus the 1v1 maps (1v1 maps first); Duels and Rumble never list 1v1 maps */
-const MAP_SIZE={wreck:[2,'70 × 50 m'],street:[2,'70 × 50 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[2,'70 × 50 m'],lagoon:[2,'70 × 50 m'],house:[2,'70 × 50 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
+const MAP_SIZE={valley:[3,'120 × 100 m'],wreck:[2,'70 × 50 m'],street:[2,'70 × 50 m'],arena:[2,'70 × 50 m'],rail:[2,'70 × 50 m'],skyhigh:[2,'70 × 50 m'],lagoon:[2,'70 × 50 m'],house:[2,'70 × 50 m']}/* three standard sizes: Biggest 120 x 90, Big 70 x 50, Small 40 x 30 (shown on each map's picture); Mansion ranks 4 so it always lists first as the largest */,mapTier=k=>(MAP_SIZE[k]||[1])[0],mapOK=m=>!!m&&!m.dev/* every map is open in every mode (Duels, 1v1, Rumble) */,oneTop=e=>!!e[1].one,mapRank0=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.one?oneTop(b)-oneTop(a):0)||(b[1].modes[0]===S.mode)-(a[1].modes[0]===S.mode),mapRank=(a,b)=>((a[0]==='arena')-(b[0]==='arena'))/* Arena always last */||(S.mode==='rumble'?mapTier(a[0])-mapTier(b[0]):mapTier(b[0])-mapTier(a[0]))/* then biggest to smallest (Rumble: smallest first, so the small maps fill the top row) */||mapRank0(a,b),mapList=()=>Object.keys(MAPS).filter(k=>mapOK(MAPS[k]));
 const S={optic:false,touch:(()=>{const v=store.get('duel:touch',null);return v===null?matchMedia('(pointer:coarse)').matches:!!v;})(),mode:store.get('duel:mode','duel')==='rumble'?'rumble':'duel',one:false,fin:store.get('duel:fin','random'),state:'off',map:'street',/* Street Life is picked when the game opens */gun:'gar',cons:'stun',xp:store.get('duel:xp2',null)??store.get('duel:xp',0)*10,fx:store.get('duel:fx','random'),players:(p=>PLAYERS[p]?p:'1v1')(store.get('duel:players','1v1')),ffaN:Math.min(8,+store.get('duel:ffan',4)||4),dmLen:[2,4,6].includes(+store.get('duel:dmlen',4))?+store.get('duel:dmlen',4):4,char:'wednesday',diff:(d=>['easy','normal','hard'].includes(d)?d:d==='extreme'?'hard':'easy')(store.get('duel:diff','easy')),/* Extreme was removed: anyone who had it gets Hard */randMap:false,randChar:true,randGun:true,randCons:true,score:[0,0],round:1,timer:90,t:0,ts:1,slowT:0,
   stats:null,shake:0,lockAt:0,record:store.get('duel:record',{}),menuT:0,locked:false,lockOK:true,paused:false};
 function snapFighter(f){return {id:FS.indexOf(f),team:f.team,char:f.char,x:+f.pos.x.toFixed(3),y:+f.pos.y.toFixed(3),z:+f.pos.z.toFixed(3),vx:+f.vel.x.toFixed(3),vy:+f.vel.y.toFixed(3),vz:+f.vel.z.toFixed(3),
@@ -8352,12 +8754,12 @@ function fire(f,origin,dir,fromBurst){const id=gunOf(f),g=GUNS[id];if(id!=='cros
       if(g.fall){dm*=dist<=g.fall[0]?1:dist>=g.fall[1]?.45:lerp(1,.45,(dist-g.fall[0])/(g.fall[1]-g.fall[0]));}
       const hr=hits.get(hf.who)||{t:0,h:false,n:0,d:1e9};hr.t+=dm;hr.n++;hr.d=Math.min(hr.d,dist);if(hf.part==='head'){hr.h=true;head=true;}hits.set(hf.who,hr);anyHit=true;hitSpray(end.x,end.y,end.z,d,{n:g.pellets>1?2:6,puff:hr.n===1});}
     else if(hb){end=origin.clone().addScaledVector(d,hb.t);if(p===0)sfx('impact',end,{range:9});
-      emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:2,speed:2.6,up:.8,size:.07,life:.3,colors:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
+      if(!(hb.box.terrain&&M.wade&&M.wade(end.x,end.z)))/* no grit kicked up from a riverbed under the water */emit(end.x+hb.n.x*.05,end.y+hb.n.y*.05,end.z+hb.n.z*.05,{n:2,speed:2.6,up:.8,size:.07,life:.3,colors:['#d8d4cc','#8a8f99','#ffffff'],vx:hb.n.x*2,vz:hb.n.z*2});
       if(hb.box.car)hitCar(hb.box.car,g.dmg,end);else if(hb.box.prop||hb.box.chip)damageWood(hb.box,g.dmg,end,d);} // walls go down twice as fast to gunfire
     else end=origin.clone().addScaledVector(d,180);
     {const et=origin.distanceTo(end);let wsnd=p>0;knockRay(origin,d,et,g.dmg,f);if(p===0&&f!==ME&&ME.alive&&!hits.has(ME)){const hp=new V3(ME.pos.x,ME.pos.y+2*SC,ME.pos.z),t=clamp(hp.clone().sub(origin).dot(d),0,et),q=origin.clone().addScaledVector(d,t),m=q.distanceTo(hp);if(m<.9&&t>4&&t<et-.5&&S.t-(S.whizT||-9)>.6){S.whizT=S.t;sfx('nearmiss',q,{vol:1-m/.9*.4});}}
     for(const w of pen.woods){if(w.t>et)break;const q=origin.clone().addScaledVector(d,w.t);damageWood(w.box,g.dmg*.7,q,d);if(!wsnd){wsnd=true;sfx('wood',q,{range:9});}emit(q.x+w.n.x*.05,q.y,q.z+w.n.z*.05,{n:3,speed:2.5,up:1,size:.09,life:.35,colors:['#c99a5b','#8a5a34','#e9d3a8']});}}
-    if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-.3)/-d.y;if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
+    if(M.splash&&d.y<-.002&&(p<2||Math.random()<.5)){const tw=(origin.y-(M.waterLevel??.3))/-d.y;/* the Valley's water is lower */if(tw>0&&tw<origin.distanceTo(end)+.01){const wx=origin.x+d.x*tw,wz=origin.z+d.z*tw;if(M.waterY(wx,wz)!=null)M.splash(wx,wz,.45);}}
     if(!g.silent&&(g.pellets>1?p<3:((f.trc=(f.trc||0)+1)%2===1)))tracer(mz,end,f===ME?'#fff8e6':'#ffe2d2',g.heavy?.022:.013,1);} /* clean: every other bullet, thin warm-white streak */
   if(anyHit){const sg=id==='shotgun'||g.base==='shotgun';for(const [foe,hr] of hits){let total=Math.round(hr.t),shown=total;
       // shotguns: a blast only downs in one shot point-blank (most of the pellets landing from right next to them); anywhere else one blast tops out at 75% of their health
@@ -10359,8 +10761,8 @@ function makeThumb(id,force){if(!force&&thumbs[id]&&!thumbsPartial.has(id))retur
 /* menu map pictures: a hero shot of each map, rendered off-screen at a fixed high setting (2x supersampled, sharp shadows) so they look the same on every device.
    HERO_CAM = [x, y, z offsets as fractions of the map size from its centre, field of view]; maps not listed use the default three-quarter view */
 /* bump a map's number whenever its layout or look changes, so players never see its old menu picture after a publish (25 Nov) */
-const MAP_LOOK={house:2,wreck:4,rail:4,arena:2,lagoon:4,skyhigh:3,street:2};
-const HERO_CAM={arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
+const MAP_LOOK={valley:1,house:2,wreck:4,rail:4,arena:2,lagoon:4,skyhigh:3,street:2};
+const HERO_CAM={valley:[-.5,.4,.5,38],arena:[-.42,.2,.1,40],rail:[-.55,.3,.55,36],wreck:[.6,.32,-.5,36],lagoon:[-.55,.28,.55,36],street:[-.62,.36,.62,34]},HERO_DEF=[-.6,.34,.6,35];
 function shootThumb(id,keep,o){const b=M.bounds,c=M.center,r=Math.max(b.x1-b.x0,b.z1-b.z0),hc=HERO_CAM[id]||HERO_DEF;
   /* square pictures (the map picker tiles are square): the old 16:9 shot's width is kept by widening the field of view, so the square shows the same width plus more of the map above and below */
   const OW=o?o.w:1200,OH=o?o.h:1200,SS=o?1:2,saveA=camera.aspect,saveF=camera.fov,savePR=renderer.getPixelRatio(),saveSz=renderer.getSize(new THREE.Vector2()),saveSh=[];
@@ -12068,7 +12470,7 @@ function stageLoop(G){const rm=matchMedia('(prefers-reduced-motion: reduce)');le
 /* only touch a menu list when its contents really change, so a tap isn't lost to a list being rebuilt under the finger (menu pictures are still being made for a few seconds after load) */
 function setHTML(id,h){const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}}
 /* map picker title: a one-liner per map under the big cinematic name */
-const MAP_TAG={arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
+const MAP_TAG={valley:'Rivers, rocks and ziplines. Get high, stay hidden.',arena:"Floodlights on. Crowd's loud. Nowhere to hide.",skyhigh:"Golden hour, sixty floors up. Don't look down.",lagoon:'Sunset, cocktails and a long drop into the sea.',
   street:'Two buildings. One street. Zero manners.',rail:'Mind the gap. And the sniper on the roof.',wreck:'Glass, neon and loungers. Pick your spot.',house:'Room to room, toe to toe.',random:'Roll the dice. Any map, any match.'};
 function mapChip(){const ru=store.get('mode','duels')==='rumble';return (ru?'Rumble':'Duels')+' · '+(S.one?'1v1':S.players==='2v2'?'2v2':S.players==='ffa'?'Free for all':'1v1');}
 /* loadout showcase panel: paints one item (tab 'pri' = gun, 'let' = lethal; k null = Random). Used for your pick, and for a gun you hover */

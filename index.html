@@ -7731,10 +7731,12 @@ function armIK(A,T,pole){const V=IKv,S=A.p.position,a=A.up,b=A.fore;
   V.u.copy(V.n).multiplyScalar(cA).addScaledVector(V.p,sA);V.e.copy(S).addScaledVector(V.u,a);V.v.copy(V.n).multiplyScalar(L).add(S).sub(V.e).normalize();
   V.y.copy(V.u).negate();V.z.copy(V.v).addScaledVector(V.u,-V.u.dot(V.v));if(V.z.lengthSq()<1e-6)V.z.copy(V.p);V.z.normalize();V.x.crossVectors(V.y,V.z);
   V.m.makeBasis(V.x,V.y,V.z);A.p.quaternion.setFromRotationMatrix(V.m);A.e.rotation.set(-Math.acos(clamp(V.u.dot(V.v),-1,1)),0,0);}
-/* ===== Held guns never sink into the body (Pete, 26 Nov: the M4 came out through Johnny Rotten's back). The characters are chunky, so a rifle
-   gripped in front of the chest buried its stock deep in the torso. Each frame the gun is placed as before, then its sample points are tested against a
-   depth map of the torso and head (front and back surface per 2.5 cm cell, built once per character from its meshes, in upper-body space); if any point
-   is inside, the gun slides clear, beside the body or forward, whichever is the shorter move; the legs are checked as boxes each frame. The hands follow it, as before, by IK. ===== */
+/* ===== Held guns never poke out of the body (Pete, 26 Nov: the M4 came out through Johnny Rotten's back; 27 Nov: the AKM was held "all over the place").
+   The characters are chunky and the guns long, so the stock always goes into the chest, like a stock tucked into the shoulder; that's fine as long as it
+   ends inside the body. Each frame the gun is placed as before, then its sample points are tested against a depth map of the torso and head (front and
+   back surface per 2.5 cm cell, built once per character from its meshes, in upper-body space); if any point would come out of the BACK, the gun eases
+   forward just enough to hide it. It only ever moves forward (never sideways, never jumping between the two) and only for the rigid torso and head
+   (not the swinging legs), so it stays put while you move. The hands follow it, as before, by IK. ===== */
 const BPC=.025,bpk=(a,b)=>(Math.round(a/BPC)+512)*1024+Math.round(b/BPC)+512;
 function bodyProf(ch){const M=ch.mTorso&&ch.mTorso.geometry;if(!M)return null;if(ch.bprof&&ch.bprof.g===M)return ch.bprof;const up=ch.upIn||ch.body;up.updateMatrixWorld(true);
   const inv=new THREE.Matrix4().copy(up.matrixWorld).invert(),Z=new Map(),X=new Map(),Y=new Map(),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),p=new THREE.Vector3(),mt=new THREE.Matrix4();
@@ -7743,9 +7745,7 @@ function bodyProf(ch){const M=ch.mTorso&&ch.mTorso.geometry;if(!M)return null;if
     for(let t=0;t<n;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;a.fromBufferAttribute(P,i0).applyMatrix4(mt);b.fromBufferAttribute(P,i1).applyMatrix4(mt);c.fromBufferAttribute(P,i2).applyMatrix4(mt);
       const L=Math.max(a.distanceTo(b),b.distanceTo(c),c.distanceTo(a)),k=Math.min(40,Math.ceil(L/(BPC*.7)));
       for(let u=0;u<=k;u++)for(let v=0;v<=k-u;v++){p.copy(a).multiplyScalar(1-(u+v)/k).addScaledVector(b,u/k).addScaledVector(c,v/k);put(p.x,p.y,p.z);}}}
-  /* conservative: each cell also takes its neighbours' front/outer surface, so a sloping surface inside a cell is never under-counted */
-  const grow=G=>{const O=new Map();for(const [k,e] of G){let f=e[0];for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const n=G.get(k+dx*1024+dy);if(n&&n[0]>f)f=n[0];}O.set(k,[f,e[1]]);}return O;};
-  return ch.bprof={g:M,Z:grow(Z),X:grow(X),Y};} /* Y: widest point of each 2.5 cm slice, the fallback where the side profile has a gap */
+  return ch.bprof={g:M,Z,X,Y};} /* Z: per 2.5 cm (x,y) cell the front and back surface [zFront,zBack]; X: per (y,z) cell the outer/inner side [xMax,xMin]; Y: widest point of each 2.5 cm slice, the fallback where X has a gap */
 /* sample points of a held gun (rig space, before the rig's scale): ~1400 points spread over its surface by area, so big flat parts like a stock are always covered */
 function gunSamp(P){if(P.samp)return P.samp;const tri=[];let tot=0;const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();
   for(const q of P.parts){const A=q.geo.attributes.position,I=q.geo.index,n=I?I.count:A.count;for(let t=0;t<n;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;a.fromBufferAttribute(A,i0);b.fromBufferAttribute(A,i1);c.fromBufferAttribute(A,i2);
@@ -7755,23 +7755,16 @@ function gunSamp(P){if(P.samp)return P.samp;const tri=[];let tot=0;const a=new T
     for(let d=0;d<3;d++)out[k*3+d]=tri[o+1+d]+(tri[o+4+d]-tri[o+1+d])*u+(tri[o+7+d]-tri[o+1+d])*v;}
   return P.samp=out;}
 const GCV=new THREE.Vector3();
-/* how far the gun has to move forward (z) or outward (x) so none of it is inside the torso or head; GCN.z / GCN.x */
+/* GCN.z: how far a gun has to move forward so none of it comes out of the BACK of the torso or head (moving forward never changes which (x,y) cell a point
+   is in, so one pass is exact). GCN.x (shoulder launchers only): how far it has to move outward so none of it is inside the torso or head; it rides on the
+   shoulder and its back end sticks out behind, as it should */
 const GCN={z:0,x:0};
 let GM=.035; /* clearance margin, 3.5 cm (6 cm for shoulder launchers, which sit by the head as it nods) */
-function gunClear(ch,P,R){GCN.z=GCN.x=0;const B=bodyProf(ch);if(!B)return GCN;const S=gunSamp(P),m=R.matrix,v=GCV;
-  for(let i=0;i<S.length;i+=3){v.set(S[i],S[i+1],S[i+2]).applyMatrix4(m);
-    const e=B.Z.get(bpk(v.x,v.y));if(e&&v.z<e[0]+GM){if(e[0]+GM-v.z>GCN.z)GCN.z=e[0]+GM-v.z;
-      const r=B.X.get(bpk(v.y,v.z))||B.Y.get(Math.round(v.y/BPC));if(r&&r[0]+GM-v.x>GCN.x)GCN.x=r[0]+GM-v.x;}
-    const L=ch._lb;if(L)for(let k=0;k<L.length;k+=6)if(v.x>L[k]&&v.x<L[k+3]&&v.y>L[k+1]&&v.y<L[k+4]&&v.z>L[k+2]&&v.z<L[k+5]){if(L[k+5]+GM-v.z>GCN.z)GCN.z=L[k+5]+GM-v.z;if(L[k+3]+GM-v.x>GCN.x)GCN.x=L[k+3]+GM-v.x;}}
+function gunClear(ch,P,R,side){GCN.z=GCN.x=0;const B=bodyProf(ch);if(!B)return GCN;const S=gunSamp(P),m=R.matrix,v=GCV;
+  for(let i=0;i<S.length;i+=3){v.set(S[i],S[i+1],S[i+2]).applyMatrix4(m);const e=B.Z.get(bpk(v.x,v.y));if(!e)continue;
+    if(side){if(v.z<e[0]+GM&&v.z>e[1]-GM){const r=B.X.get(bpk(v.y,v.z))||B.Y.get(Math.round(v.y/BPC));if(r&&r[0]+GM-v.x>GCN.x)GCN.x=r[0]+GM-v.x;}}
+    else if(v.z<e[1]+GM&&e[1]+GM-v.z>GCN.z)GCN.z=e[1]+GM-v.z;}
   GCN.z=Math.min(GCN.z,.8);GCN.x=Math.min(GCN.x,.8);return GCN;}
-/* the legs move, so each frame they are boxes (slightly shrunk, they're rounded) in upper-body space: ch._lb = [x0,y0,z0,x1,y1,z1, ...] */
-const LBV=new THREE.Vector3(),LBM=new THREE.Matrix4(),LBI=new THREE.Matrix4();
-function legBoxes(ch){const up=ch.upIn||ch.body,out=ch._lb||(ch._lb=[]);out.length=0;if(!ch.mTorso)return out;up.updateWorldMatrix(true,false);LBI.copy(up.matrixWorld).invert();
-  for(const L of [ch.lL&&ch.lL.p,ch.lR&&ch.lR.p]){if(!L)continue;L.updateWorldMatrix(true,true);L.traverse(o=>{if(!o.isMesh||!o.visible||!o.geometry)return;const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
-    LBM.multiplyMatrices(LBI,o.matrixWorld);let x0=9,y0=9,z0=9,x1=-9,y1=-9,z1=-9;const cx=(bb.min.x+bb.max.x)/2,cy=(bb.min.y+bb.max.y)/2,cz=(bb.min.z+bb.max.z)/2,hx=(bb.max.x-bb.min.x)*.43,hy=(bb.max.y-bb.min.y)*.47,hz=(bb.max.z-bb.min.z)*.43;
-    for(let c=0;c<8;c++){LBV.set(cx+(c&1?hx:-hx),cy+(c&2?hy:-hy),cz+(c&4?hz:-hz)).applyMatrix4(LBM);if(LBV.x<x0)x0=LBV.x;if(LBV.y<y0)y0=LBV.y;if(LBV.z<z0)z0=LBV.z;if(LBV.x>x1)x1=LBV.x;if(LBV.y>y1)y1=LBV.y;if(LBV.z>z1)z1=LBV.z;}
-    out.push(x0,y0,z0,x1,y1,z1);});}
-  return out;}
 function heldRig(ch,id){ch.held??={};if(ch.held[id])return ch.held[id];const P=heldParts(id),rig=new THREE.Group();rig.rotation.order='YXZ';
   // mirrored across x so the gun matches the first-person view (ejection port, second pistol on the left hand's side)
   rig.scale.set(-P.s,P.s,P.s);for(const q of P.parts){const me=new THREE.Mesh(q.geo,q.mat);me.castShadow=true;rig.add(me);}
@@ -7795,9 +7788,8 @@ function holdGun(f,ch,dt,sp,lean,on){const id=gunOf(f),C=HOLD[id],low=f.guns&&f.
   const gx=sx*(tw?.3:shd?.62:.22+.15*r),gy=sy-(shd?.12:tw?.42:.24)-(tw?.25:.2)*r-.12*rl-.35*sw+bob*(.035+.03*r),gz=(tw?.55:shd?.2:.36)+.06*r-.1*rl-.07*k;
   R.rotation.set(-p*(1-r*.7)-lean+(tw?.7:.4)*r+.32*rl+.7*sw-.06*k*(shd?3:1),tw?-.04:-.06-.55*r-.15*rl,tw?0:.22*r+.5*rl);
   const s=P.s;HV.r.set(-H.r[0]*s,H.r[1]*s,H.r[2]*s).applyEuler(R.rotation);R.position.set(gx,gy,gz).sub(HV.r);R.updateMatrix();
-  legBoxes(ch);GM=shd?.06:.035;{const N=gunClear(ch,P,R),sx2=f.hClrX==null?N.x<=N.z:f.hClrX?N.x<N.z+.12:N.x<N.z-.12,ax=sx2?'x':'z'; /* keep to one way unless the other is clearly shorter, so it doesn't flick between them */let need=sx2?N.x:N.z;
-   {const b0=R.position[ax];for(let it=0;it<3&&need>0;it++){R.position[ax]=b0+need;R.updateMatrix();const more=gunClear(ch,P,R)[ax];if(!more)break;need+=more;}} /* more passes catch parts a move pushed into another part of the body */
-   f.hClr=Math.max(need,f.hClrX===sx2?(f.hClr||0)-dt*2:0);f.hClrX=sx2;R.position.set(gx,gy,gz).sub(HV.r);R.position[ax]+=f.hClr;R.updateMatrix();} /* never inside the body: slide it clear, outward (beside the body) or forward, whichever is the shorter move, easing back slowly */
+  GM=shd?.06:.035;{const ax=shd?'x':'z',need=gunClear(ch,P,R,shd)[ax];if(f.hClrG!==sid){f.hClrG=sid;f.hClr=need;}const h=f.hClr||0;f.hClr=damp(h,need,need>h?16:6,dt);if(need>h+.12)f.hClr=need-.12; /* one way only (forward; outward for a shoulder launcher), eased (quick to clear, slow to settle back), never more than 12 cm short */
+   R.position[ax]+=f.hClr;R.updateMatrix();}
   HV.r.fromArray(H.r).applyMatrix4(R.matrix);
   // left hand: handguard (kept within reach), sliding to the magazine and down (mag out) during a reload; for Dual Pistols the second grip
   let lt=tw?H.l:[H.l[0],H.l[1],Math.min(H.l[2],H.r[2]+.62)];

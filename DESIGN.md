@@ -93,6 +93,7 @@ Last updated: 2026-11-27
 - Strafing (Pete, 24-25 Nov): small, quick side steps, never a wide stance or a crossover. The hips turn only a little (up to about 20°) towards where you're going, with the upper body twisting back to keep the aim. Side steps are shorter, quicker and lower, and a planted foot only trails a short way behind the hip before it slides along. The feet never cross. Shoes stay level and on top of the floor: the bottom of each shin bends at the ankle, and a stretched leg lifts its foot, so shoes never dip through the floor.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
+- Gun carry (Pete, 27 Nov: the AKM was held "all over the place"): rifles, SMGs, shotguns, snipers and the crossbow sit in front of the chest with the stock tucked into the body, like a stock in the shoulder; a stock must never come out of the back (26 Nov, Johnny Rotten's M4). To hide it the gun only ever eases forward, never sideways, and only the torso and head count (not the swinging legs), so it stays steady while you walk, run or strafe. Shoulder launchers ride on the shoulder and only ease outward.
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
 
 ### Finishers
@@ -132,6 +133,7 @@ Last updated: 2026-11-27
 ## Part 3 – Daily log (newest first)
 
 ### 2026-11-27
+- Gun carry steadied (Pete: Lil Pink's AKM was all over the place): the 26 Nov fix held every rifle out at the side and slid it in and out by up to 30 cm with each step while moving. Now the gun stays in front of the chest with the stock tucked in and only eases forward as far as needed to keep the stock from coming out of the back; the legs no longer push it about.
 - Valley: every building's doors made bigger so every character walks straight in: cabin and mill doors 3 m × 2.8 m (were 1.8 × 2.3), barn west door 3.8 × 3.2 m (was 2 × 2.6) with a white frame, hayloft door 2.6 × 2.6 m, boathouse doors 3-3.2 × 3 m (were 2.2-2.4 × 2.4); cabin porches widened, tables, stools, the millstone and a crate moved out of the doorways.
 - Weapon skins: every gun now has 4 options. M4: Lime Rush swapped for Cosmic, plus the new Damascus (folded silver steel, lime accents); Crossbow gets Blood Diamond; HDR gets the new Carbon Lime (carbon fibre, glowing lime stripes).
 - New map: the Valley (120 × 100 m), built from concept A after an AAA review pass: real terrain that blocks shots and sight, heaped cliffs, rock masses with leaning-slab ramps, waterfall, mill, rapids, rock arch, lake island, rope bridges, four ziplines (bots too), village, barn with loft, boathouse on stilts, river cave, grass tufts, flowers and pebbles.

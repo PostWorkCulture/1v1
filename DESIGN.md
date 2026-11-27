@@ -57,7 +57,7 @@ Last updated: 2026-11-26
 
 ### Weapons
 - Style: realistic, detailed, premium finish with shine, trims and glow, never toy-like. Weapon previews/pictures always match the latest models.
-- One gun and the bat (Pete, 24 Nov): you carry a single gun, picked from one list of 11, plus the bat. There is no secondary slot. The list, in order: M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher, HDR (long-range sniper), Vanguard (semi-auto marksman sniper, replaced the Kar98). The Swarm stays a pickup (2 shots, each a burst of 4 micro-missiles, then your gun comes back) and the shop Flamethrower is still sold; each one temporarily replaces your gun, then gives it back.
+- One gun and the bat (Pete, 24 Nov): you carry a single gun, picked from one list of 11, plus the bat. There is no secondary slot. The list, in order: M4 (all-round rifle), AKM (long-range rifle), Crossbow, SPAS-12, MP5 (all-round SMG), Vector (point-blank SMG), UMP (longer-range SMG), Dual Pistols, Rocket Launcher, HDR (long-range sniper), Vanguard (semi-auto marksman sniper, replaced the Kar98). The Swarm (2 shots, each a burst of 4 micro-missiles, then your gun comes back) is bought from the shop since 27 Nov (no longer lying on the map), and the shop Flamethrower is still sold; each one temporarily replaces your gun, then gives it back.
 - M4 is first in the gun list; snipers sit at the end; Random is the default for gun and lethal and sits at the end of each row, jiggling slightly. On phones there is no Random anywhere (map, character, gun, lethal; Pete 26 Nov): any Random pick becomes a real one, and phone gun/lethal tiles are all picture (no names or tags), four across.
 - Loadout is one page, no tabs: the showcase (whatever you last picked, big, with its stats) on the left; the gun grid on the right, then a clear empty row's worth of space, then the lethals.
 - The game is hard, fast and simple, not a realistic sim (Pete, 24 Nov): every gun aims down sights as fast as the quickest SMG (0.07 s, snipers included); there's no reload button, a gun reloads only once its mag is empty (bots too, no topping up), and no gun takes longer than 1.5 s to reload; hip fire is half as wide as it was on the ARs and SMGs; weapon swaps are instant; no stamina (double jump is free).
@@ -76,7 +76,7 @@ Last updated: 2026-11-26
 - Molotov (replaced the Cluster Grenade, 25 Nov): 2 per round; smashes on whatever it hits first (no bounce, no fuse) into a pool of fire about 3.5 m across that burns for 5 s; anyone in it (the thrower too) takes about 20 a second and keeps burning 1 s after stepping out; it sets off barrels and mines; it fizzles in water; it smashes through glass like the other throwables.
 - Your crosshair style, colour and size apply to every gun when not scoped, snipers and the Rocket Launcher included (Pete 26 Nov).
 - Throwables land where the crosshair points, all the same speed; aim trail ends in a small solid dot with a dark outline. Grenade is the first lethal. Stun lasts 1 s. No Flash Bang. Mines always sit on a surface; mines you laid before dying vanish 3 s after you respawn (ones laid after respawning stay).
-- Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina; shop reach 3.6 m. Pickups (armour, Swarm, speed shoes) grab from 1.75 m and mines go off from 2.2 m (26 Nov: made easier). Gold Grenade: double damage, an explosion twice the size of a normal one, and a slight shake of your screen wherever you are. Flamethrower: 16 m wide jet, 6 a tick (downs someone up close in about a second), 3 s of fuel, harder burn.
+- Shop: vending machine with a glowing SHOP sign, lucky-dip (stand at it, bing, random pickup); Gold Grenade first; no Health/Stamina; shop reach 3.6 m. Shop items (27 Nov): Gold Grenade, Armour (fills you to full, 100), Swarm, Flamethrower, Speed (+50% for 30 s); no Grenades 3-pack. Pickups (armour plates, speed shoes) grab from 1.75 m and mines go off from 2.2 m (26 Nov: made easier). Gold Grenade: double damage, an explosion twice the size of a normal one, and a slight shake of your screen wherever you are. Flamethrower: 16 m wide jet, 6 a tick (downs someone up close in about a second), 3 s of fuel, harder burn.
 
 ### Sound
 - Top quality, never cheesy or harsh; preview new sounds before publishing. Sources: CC0 Freesound/Pixabay/Kenney etc. (ElevenLabs is unreliable).
@@ -129,6 +129,9 @@ Last updated: 2026-11-26
 ---
 
 ## Part 3 – Daily log (newest first)
+
+### 2026-11-27
+- Shop: Grenades 3-pack removed; Armour now gives full armour (100); Speed +50% (was +25%); the Swarm moved from a random map pickup into the shop (and onto the vending machine shelf where the grenades were).
 
 ### 2026-11-26
 - Street Life: about 5 m of lawn round the back of each building by the fence (buildings scaled 2.0 to 1.85 and moved in to x 18.6, road a lane narrower: asphalt ±4.5 m, pavements to 6.5 m); the home's outside chimney stack removed; home furniture pushed back against walls and into corners (coffee table, kitchen island).

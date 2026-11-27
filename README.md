@@ -112,6 +112,8 @@ Characters (10 in the menu), each a sculpted 3D model: Wednesday (a goth runner)
 
 **Slower movement (24 Nov 2026)** – everyone, players and bots, moves 25% slower than before: about 9.5 m/s running with a gun out (was about 12.7), slower again while aiming; the bat still makes you 20% faster.
 
+**Shop changes (27 Nov 2026)** – the shop now sells Gold Grenade, Armour, Swarm, Flamethrower and Speed. The Grenades 3-pack is gone. Armour now fills you straight to full (100). Speed is now +50% for 30 seconds (was +25%). The Swarm no longer turns up lying on the map: you buy it from the shop instead, and it swaps in for your gun like the Flamethrower (two bursts of micro-missiles, then your gun comes back). On the vending machine its pod sits on the shelf where the grenades were. Bots buy it now and then too.
+
 **Strafing, drums and pickups (26 Nov 2026)** – moving left or right (strafing) is now 82% of your running speed, so side-to-side isn't so quick. Explosive drums now come in five colours (red, blue, green, yellow and white) and are on every map, Sky High, Lagoon and The House included. Pickups are easier to grab: armour, the Swarm and speed shoes from 1.75 m (was about 1.1 m), mines go off when someone comes within 2.2 m (was 1.7 m), and you can use the shop from a little further away (3.6 m).
 
 **Stronger death darkness (26 Nov 2026)** – when you die the screen now goes much darker: the black closes in over almost all of it, leaving only a small dim window in the middle, and stays a little longer (2.2 s, was 1.45 s) before opening again.

@@ -26,7 +26,7 @@ const walk = d => { for (const e of fs.readdirSync(path.join(repo, d), {withFile
 for (const d of ['images', 'chars']) if (fs.existsSync(path.join(repo, d))) walk(d);
 const rows = found.map(p => { const s = stat(p), b = M.baked[p];
   const status = M.ignored[p] ? 'ignored' : !b ? 'NEW' : (b.bytes !== s.bytes || b.mtime !== s.mtime) ? 'CHANGED' : 'done';
-  return {status, source: p, mb: +(s.bytes / 1048576).toFixed(1), out: b?.out || '', note: M.ignored[p] || ''}; })
+  return {status, source: p, mb: +(s.bytes / 1048576).toFixed(1), out: b?.out || '', note: M.ignored[p] || (M.incoming?.[p] ? [M.incoming[p].for, M.incoming[p].tripo && 'tripo ' + M.incoming[p].tripo].filter(Boolean).join(', ') : '')}; })
   .sort((x, y) => ['NEW', 'CHANGED', 'done', 'ignored'].indexOf(x.status) - ['NEW', 'CHANGED', 'done', 'ignored'].indexOf(y.status) || x.source.localeCompare(y.source));
 if (a.includes('--json')) console.log(JSON.stringify(rows, null, 1));
 else for (const r of rows) console.log(`${r.status.padEnd(8)} ${String(r.mb).padStart(6)} MB  ${r.source}${r.out ? '  ->  ' + r.out : ''}${r.note ? '  (' + r.note + ')' : ''}`);

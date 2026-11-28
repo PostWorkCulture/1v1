@@ -1,11 +1,12 @@
 # Model tools (Tripo → game)
 
-These scripts turn raw Tripo exports (30–70 MB, 4K textures) into the small GLBs the game loads. The `tripo-model-intake` skill drives them; you can also run them by hand.
+These scripts turn raw Tripo exports (30–70 MB, 4K textures) into the small GLBs the game loads. The `/triposelect` skill drives them; you can also run them by hand.
 
 One-off setup: `cd tools/models && npm install`. `render.mjs` also needs Playwright and Chromium, so it runs in Claude's cloud workspace. GitHub Pages never sees this folder, because the deploy step deletes `tools/`.
 
 | Script | What it does |
 |---|---|
+| `sort.mjs` | Files a downloaded export into the right folder: `character` goes to `images/Characters`, `vehicle` (cars, trains, wagons) to `images/Vehicles`, `landscape` (scenery and props) to `images/Landscape`, and `weapon` to `images/Weapons`. It never overwrites, checks the copy, then removes the download, and notes the file in `manifest.json` under `incoming`. |
 | `scan.mjs` | Lists every Tripo export under `images/` and `chars/` as NEW, CHANGED, done or ignored, using `manifest.json`. `--record` marks a source as baked and `--ignore` skips it from then on. |
 | `bake.mjs` | Cleans, simplifies and normalises a model, and shrinks its textures. `--kind char` also splits it into the six rig parts. |
 | `split.mjs` | The character splitter, used by `bake.mjs`. Cuts are auto-detected; override them with `--neck`, `--hip` and `--armx` (metres on the 3.03 m model). |

@@ -7706,6 +7706,7 @@ function legKnees(ch,M,add){M.knee??={L:splitLeg(M.parts.legL,.5,M.col),R:splitL
 const HOLD={sniper:{s:.78,h:{r:[0,-.2,-.36],l:[.02,-.04,.5]}},reaper:{s:.8,h:{r:[0,-.2,-.34],l:[.02,-.04,.48]}},titan:{s:.76,h:{r:[0,-.2,-.36],l:[.02,-.06,.46]}},vanguard:{s:.86,h:{r:[0,-.2,-.3],l:[.02,-.05,.42]}},phantom:{s:.86,h:{r:[0,-.2,-.3],l:[.02,-.05,.4]}},
   ar:{},gar:{},smg:{},vector:{},shotgun:{},crossbow:{nf:1},rocket:{nf:1,sh:1},ump:{},swarm:{nf:1,s:.92},duals:{twin:1},flamer:{nf:1}};
 const HELD={};
+const HELD_K=.75; /* guns held by the characters are drawn at 75% (Pete, 28 Nov: they looked way too big); the hands, flashes and body clearance all scale with it. The first-person gun is not affected */
 function heldParts(id){if(HELD[id])return HELD[id];const g=heroModel(id,B.roundedBox,true),C=HOLD[baseGun(id)];g.updateMatrixWorld(true);const by={};
   g.traverse(o=>{if(!o.isMesh||Array.isArray(o.material)||(!o.visible&&!(o.material&&o.material.userData.fired)))return;const q=o.geometry.clone().applyMatrix4(o.matrixWorld);(by[o.material.uuid]??={mat:o.material,list:[]}).list.push(q);});
   const parts=[];for(const k in by){const L=by[k].list,names=Object.keys(L[0].attributes).filter(n=>L.every(q=>q.attributes[n]&&q.attributes[n].itemSize===L[0].attributes[n].itemSize));
@@ -7714,7 +7715,7 @@ function heldParts(id){if(HELD[id])return HELD[id];const g=heroModel(id,B.rounde
     for(const q of L){const c=q.attributes.position.count;if(q.index)for(const i of q.index.array)idx.push(i+vo);else for(let i=0;i<c;i++)idx.push(i+vo);vo+=c;}
     out.setIndex(idx);out.computeBoundingSphere();parts.push({geo:out,mat:by[k].mat});for(const q of L)q.dispose();}
   const u=g.userData,H=(C&&C.h)||u.hands||{r:[0,-.2,-.13],l:[.05,-.04,.5]};
-  return HELD[id]={parts,H,s:(C&&C.s)||1,muz:[u.muzY??.05,u.muzZ||1.2],twin:!!H.twin,dx:(H.twin?H.l[0]:0)};}
+  return HELD[id]={parts,H,s:((C&&C.s)||1)*HELD_K,muz:[u.muzY??.05,u.muzZ||1.2],twin:!!H.twin,dx:(H.twin?H.l[0]:0)};}
 function armElbows(ch,M,add){M.elbow??={L:splitLeg(M.parts.armL,.5,M.col),R:splitLeg(M.parts.armR,.5,M.col)};const E=M.elbow;
   for(const [s,o] of [['L',ch.aL],['R',ch.aR]]){const k=E[s];add(k.thigh,o.p);const j=new THREE.Group();j.position.set(0,k.ky,0);o.p.add(j);
     const fa=add(k.shin,j);fa.position.y=-k.ky;const cp=add(k.cap,j);cp.position.set(k.cx,0,k.cz);if(M.capMat)cp.material=M.capMat;o.e=j;

@@ -13,7 +13,7 @@ How to use it:
 
 Updating: a scheduled task adds the day's entry to Part 3 (and adjusts Parts 1–2) at the end of each day, from that day's commits. Chats that make a design decision can also update it in the same commit. Pushing only this file does not redeploy the game.
 
-Last updated: 2026-11-27
+Last updated: 2026-11-28
 
 ---
 
@@ -93,6 +93,7 @@ Last updated: 2026-11-27
 - Strafing (Pete, 24-25 Nov): small, quick side steps, never a wide stance or a crossover. The hips turn only a little (up to about 20°) towards where you're going, with the upper body twisting back to keep the aim. Side steps are shorter, quicker and lower, and a planted foot only trails a short way behind the hip before it slides along. The feet never cross. Shoes stay level and on top of the floor: the bottom of each shin bends at the ankle, and a stretched leg lifts its foot, so shoes never dip through the floor.
 - All roughly the same height, same speed, no abilities; differ only in look. Pickers show no speed/health.
 - Characters visibly hold their real gun; crouch is a ready-to-fire kneel.
+- Held gun size (Pete, 28 Nov: guns looked way too big): every gun a character holds is drawn at 75% of its old size (picked from 100/85/75/65%). Your own first-person gun is unchanged.
 - Gun carry (Pete, 27 Nov: the AKM was held "all over the place"): rifles, SMGs, shotguns, snipers and the crossbow sit in front of the chest with the stock tucked into the body, like a stock in the shoulder; a stock must never come out of the back (26 Nov, Johnny Rotten's M4). To hide it the gun only ever eases forward, never sideways, and only the torso and head count (not the swinging legs), so it stays steady while you walk, run or strafe. Shoulder launchers ride on the shoulder and only ease outward.
 - Downed: faint dark-red smoke. Revive: no effect. Respawn: no burst.
 
@@ -131,6 +132,9 @@ Last updated: 2026-11-27
 ---
 
 ## Part 3 – Daily log (newest first)
+
+### 2026-11-28
+- Guns held by the characters drawn at 75% of their old size (Pete: way too big); first-person gun unchanged.
 
 ### 2026-11-27
 - Gun carry steadied (Pete: Lil Pink's AKM was all over the place): the 26 Nov fix held every rifle out at the side and slid it in and out by up to 30 cm with each step while moving. Now the gun stays in front of the chest with the stock tucked in and only eases forward as far as needed to keep the stock from coming out of the back; the legs no longer push it about.
